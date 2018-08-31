@@ -14,7 +14,8 @@
 # In[1]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import Workbook
 import pandas as pd
 
 
@@ -29,19 +30,16 @@ from PIL import ImageGrab
 # In[3]:
 
 
-from IPython.core.display import HTML
-css = open('data/style-table.css').read() + open('data/style-notebook.css').read()
-HTML('<style>{}</style>'.format(css))
-
-
-# This directory stuff is for my system only. I think its a good idea but I need some input. In the end I think the directory naming, creation and organization will have to be optional. Personally, I am going to include the monthly utility to create the structure in this program.  The ability to configure it would be a nice feature.
+# This directory stuff is for my system only. I think its a good idea but I need 
+# some input. In the end I think the directory naming, creation and organization will 
+# have to be optional. Personally, I am going to include the monthly utility to create 
+# the structure in this program.  The ability to configure it would be a nice feature.
 
 # In[47]:
 
 
 theDate=datetime.date.today()
 # theDate = datetime.date(2018,8,29)
-theDate
 
 
 # In[48]:
@@ -66,7 +64,6 @@ else :
         os.mkdir(outDir)
 
 
-theDirectory
 
 
 # In[50]:
@@ -76,8 +73,6 @@ infile=os.path.join(theDirectory, 'trades.csv')
 if not os.path.exists(infile) :
     print('Input file: ' + infile + ' does not exist')
 
-infile
-
 
 # In[51]:
 
@@ -85,43 +80,12 @@ infile
 devOutDir = os.path.join(os.getcwd(), 'out')
 if not os.path.isdir(devOutDir) :
     os.mkdir(devOutDir)
-
-
-
-# In[52]:
-
-
+devOutFile = os.path.join(devOutDir, outname)
 
 outdir=os.path.join(theDirectory,'out')
-outFile=os.path.join(outdir, theDate.strftime("Trades_%A_%m%d.xlsx"))
-outFile
+outFile=os.path.join(outdir, outname)
 
-
-# In[ ]:
-
-
-# tfile="TradesWithHolds.csv"
-# tfile="TradesExcelEdited.csv"
-# tfile="TradesWithBothHolds.csv"
-
-#The copied path from file explorer fails
-# t=os.path.join("C:\trader\journal\_08_August\Week_3\_0817_Friday", "Trades.csv")
-
-
-# In[ ]:
-
-
-trades = pd.read_csv(tfile)
-
-
-# In[ ]:
-
-
-trades
-
-
-# In[ ]:
-
+trades = pd.read_csv(infile)
 
 def checkRequiredInputFields(dframe) :
     RequiredFields = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'P / L']
@@ -132,10 +96,6 @@ def checkRequiredInputFields(dframe) :
         err='You are missing some fields in your input file:\n'
         err += str((set(RequiredFields) - set(ActualFields)))
         raise ValueError(err)
-
-
-# In[ ]:
-
 
 def createDf(dframe, numRow) :
     ''' Creates a new DataFrame with  the length numRow. Each cell is filled with empty string '''
@@ -166,11 +126,10 @@ def addRows(dframe, numRow) :
     
 
 
-# ### Make sure the hour string is 0 padded.  Should probably change these to data types. 
+# Make sure the hour string is 0 padded.  Should probably change these to data types. 
 
-# ### Todo- This, and the duration, will get more complex with the IB report format. The html report uses a long timedate format
-
-# In[ ]:
+# Todo- This, and the duration, will get more complex with the IB report format. The 
+# html report uses a long timedate format
 
 
 def zeroPadTimeStr(dframe, timeHeading) :
@@ -188,9 +147,9 @@ def zeroPadTimeStr(dframe, timeHeading) :
                 
 
 
-# ### Todo. Doctor an input csv file to include fractional numer of shares for testing. Make it more modular by checking for 'HOLD'. It might be useful in a windowed version with menus to do things seperately.
-
-# In[ ]:
+# Todo. Doctor an input csv file to include fractional numer of shares for testing. Make 
+# it more modular by checking for 'HOLD'. It might be useful in a windowed version with 
+# menus to do things seperately.
 
 
 def mkShortsNegative(dframe, side, qty) :
@@ -202,10 +161,8 @@ def mkShortsNegative(dframe, side, qty) :
     return dframe
 
 
-# ### def getListTickerDF(df) will take a dataframe that includes tickers in column 'Symb' and returns a python list of DataFrames , 1 for each ticker.
-
-# In[ ]:
-
+# def getListTickerDF(df) will take a dataframe that includes tickers in column 'Symb' and 
+# returns a python list of DataFrames , 1 for each ticker.
 
 def getListTickerDF(dframe, tickCol = 'Symb') :
     ldf_tick = list()
@@ -213,11 +170,6 @@ def getListTickerDF(dframe, tickCol = 'Symb') :
         ldf = dframe[dframe[tickCol] == ticker]
         ldf_tick.append(ldf)
     return ldf_tick
-
-
-# In[ ]:
-
-
 
 def getOvernightTrades(dframe, tickCol='Symb', qtyCol='Qty') :
     ''' getOvernightTrades(dframe) takes the DataFrame and returns a list of lists 
@@ -231,10 +183,9 @@ def getOvernightTrades(dframe, tickCol='Symb', qtyCol='Qty') :
     return overnightTrade
 
 
-# ### Note that this does not yet include those shares that are held before the days trading began. Redo this to remake the list of data frames from the Symbols of Swing List then make a list of data frams that  excludes those then merge them together
-
-# In[ ]:
-
+# Note that this does not yet include those shares that are held before the days trading 
+# began. Redo this to remake the list of data frames from the Symbols of Swing List then 
+# make a list of data frams that  excludes those then merge them together
 
 def askUser(st, question, ix, default) :
     while True :
@@ -252,11 +203,6 @@ def askUser(st, question, ix, default) :
         st[ix] = response
         return st
 
-
-# In[ ]:
-
-
-# for i in range(len(swingTrade)) :
 def figureOvernightTransactions() :
     swingTrade = getOvernightTrades(trades)
     for i in range(len(swingTrade)) :
@@ -296,10 +242,6 @@ def figureOvernightTransactions() :
                 print ("reset version ", i, swingTrade)
     return swingTrade
 
-
-# In[ ]:
-
-
 def insertOvernightRowold(dframe, swingTrade, time='Time', symbol='Symb', side='Side', price='Price', qty='Qty', acct="Account", PL='P / L') :
     newdf = createDf(trades, 0)
     for ldf in getListTickerDF(dframe) :
@@ -324,10 +266,6 @@ def insertOvernightRowold(dframe, swingTrade, time='Time', symbol='Symb', side='
                         ldf.at[i, PL] = 0
         newdf = newdf.append(ldf, ignore_index = True)
     return newdf
-
-
-# In[ ]:
-
 
 def insertOvernightRow(dframe, st, time='Time', symbol='Symb', side='Side', price='Price', qty='Qty', acct="Account", PL='P / L') :
     newdf = createDf(trades, 0)
@@ -378,10 +316,6 @@ def insertOvernightRow(dframe, st, time='Time', symbol='Symb', side='Side', pric
         newdf = newdf.append(ldf, ignore_index = True, sort = False)
     return newdf
 
-
-# In[ ]:
-
-
 def writeShareBalance(dframe) :
     prevBal = 0
     for i, row in dframe.iterrows():
@@ -394,10 +328,6 @@ def writeShareBalance(dframe) :
         dframe.at[i,'Balance'] = newBalance 
         prevBal = newBalance    
     return nt
-
-
-# In[ ]:
-
 
 def addStartTime(dframe) :
     newTrade = True
@@ -425,13 +355,6 @@ def addStartTime(dframe) :
             newTrade = True
     return dframe
         
-
-
-# ## Now that we have Trade index and start times everything else in this file should use filters nt[nt.Tindex == "Trade 1"] . This way each trade can be treated as an object that includes a variable number of transactions.
-
-# In[ ]:
-
-
 def addTradeIndex(dframe) :
 
     TCount = 1
@@ -451,15 +374,9 @@ def addTradeIndex(dframe) :
     numTrades = TCount
     print(numTrades)        
     return dframe
-
-
-# ### This will blow up from wrong types if there is some kind of anomaly. The blank rows in Sum col are str and the filled rows are float. Don't fix it until it blows up. (or you need change this 'now' to production code for some reason) That way we have some case to fix.
-
-# ###### nt['P / L'].sum()
-# ###### nt['P / L'].dtype
-
-# In[ ]:
-
+# This will blow up from wrong types if there is some kind of anomaly. The blank rows in 
+# Sum col are str and the filled rows are float. Don't fix it until it blows up. (or you 
+# need change this 'now' to production code for some reason) That way we have some case to fix.
 
 def addTradePL (dframe) :
     tradeTotal = 0.0
@@ -471,10 +388,6 @@ def addTradePL (dframe) :
             dframe.at[i, 'Sum'] = sumtotal
             tradeTotal = 0
     return dframe
-
-
-# In[ ]:
-
 
 def addTradeDuration(dframe) :
     
@@ -501,10 +414,6 @@ def addTradeName(dframe) :
                 longShort = " Short"
             dframe.at[i, 'Name'] = row['Symb'] + longShort
     return dframe
-
-
-# In[ ]:
-
 
 # Note that .sum() should work on this but it failed when I tried it.
 def addSummaryPL(dframe) :
@@ -537,10 +446,6 @@ def addSummaryPL(dframe) :
         ''')
     return dframe
 
-
-# In[ ]:
-
-
 # Adjust size to keep the aspect ration
 # The actual version should calculate the height based
 # no the number of cells between entries. That 
@@ -553,10 +458,6 @@ def adjustSizeByHeight(sz, newHeight=425) :
     newWidth = int((newHeight/h) * w)
     newheight = int(newHeight)
     return(newWidth, newHeight)
-
-
-# In[ ]:
-
 
 def getPilImageFromClipboard() :
     for i in range (5) :
@@ -571,11 +472,6 @@ def getPilImageFromClipboard() :
             if response.lower().startswith('q') :
                 return null
     print("Moving on")
-# img = getPilImageFromClipboard()
-# img
-
-
-# In[ ]:
 
 
 # orig: an image file name
@@ -593,13 +489,8 @@ def getResizeName(orig) :
         newName += x[1]
     return (newName, os.path.splitext(newName)[1][1:])
 
-# getResizeName('fred.png')
-
-
-# In[ ]:
-
-
-# dframe contains the transactions of a single trade.  Single trade ends when the balance of shares is 0
+# dframe contains the transactions of a single trade.  Single trade ends when the balance 
+# of shares is 0
 # Return value is a string 'Long' or 'Short'
 def getLongOrShort(dframe) :
     tsx = dframe[dframe.Balance == 0]
@@ -612,15 +503,14 @@ def getLongOrShort(dframe) :
     else :
         return 'Long'
     
-
-    
-
-
-# ###### dframe contains the transactions of a single trade.  longOrShort needs to be a str 'Long' or 'Short'. Will raise an exception if they are not Returns a tuple of dataFrames (entries, exits)-- not ready for prime time
+# dframe contains the transactions of a single trade.  longOrShort needs to be a str 'Long' 
+# or 'Short'. Will raise an exception if they are not Returns a tuple of dataFrames 
+# (entries, exits)-- not ready for prime time
 # def getEntriesAndExits(dframe,longOrShort) :
 #     if longOrShort.lower() not in ['long', 'short'] :
 #         #Programming error if we are here
-#         raise NameError('getEntriesAndExits requires a parameter of either Long or Short. %s is not acceptible' % longOrShort)
+#         raise NameError('getEntriesAndExits requires a parameter of either Long or Short. 
+#             %s is not acceptible' % longOrShort)
 #         return None
 #     f_ent, f_ext = ('B', 'S') if longOrShort == 'Long' else ('S', 'B')
 #     ent = tdf[tdf.Side.str.startswith(f_ent)]
@@ -632,224 +522,36 @@ def getLongOrShort(dframe) :
 
 
 checkRequiredInputFields(trades)
-
-
-# In[ ]:
-
-
 trades = zeroPadTimeStr(trades, 'Time')
-
-
-# In[ ]:
-
-
-trades
-
-
-# In[ ]:
-
-
 trades = trades.sort_values(['Symb', 'Time'])
-
-
-# In[ ]:
-
-
-trades
-
-
-# In[ ]:
-
-
 trades = mkShortsNegative(trades, 'Side', 'Qty')
-
-
-# In[ ]:
-
-
-trades
-
-
-# In[ ]:
-
-
 swingTrade = getOvernightTrades(trades)
-
-
-# In[ ]:
-
-
-swingTrade
-
-
-# In[ ]:
-
-
 swingTrade = figureOvernightTransactions()
-
-
-# In[ ]:
-
-
-swingTrade
-
-
-# In[ ]:
-
-
 listdf = insertOvernightRow(trades, swingTrade)
-
-
-# In[ ]:
-
-
-listdf
-
-
-# In[ ]:
-
-
 lbls = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty','Balance', 'Account', "P / L", 'Sum', 'Duration', 'Name']
-
-
-# In[ ]:
-
 
 for l in lbls :
     if l not in listdf.columns :
         listdf[l] = ''
+
 # trades.columns
 newTrades = listdf[lbls]
 newTrades.copy()
-# newTrades.columns
-
-
-# In[ ]:
-
-
 nt = newTrades.sort_values(['Symb', 'Time'])
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = writeShareBalance(nt)
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = addStartTime(nt)
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = nt.sort_values(['Start', 'Time'])
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = addTradeIndex(nt)
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = addTradePL(nt)
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = addTradeDuration(nt)
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt = addTradeName(nt)
-
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 nt=addRows(nt,1)
-
-
-# In[ ]:
-
-
 nt = addSummaryPL(nt)
-# nt = addSummaryPL(nt)
 
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
-# adjustSizeByHeight ((1024,2037))
-
-
-# In[ ]:
-
-
-# Request a clipboard copy of an image. Resze it to newSize height. Save it with a new name. Return the name. Hackiness lives
-# until I figure how to create a proper openpyxl Image object from a PIL Image object that doesn't make the Workbook puke.
+# Request a clipboard copy of an image. Resze it to newSize height. Save it with a new name. 
+# Return the name. Hackiness lives
+# until I figure how to create a proper openpyxl Image object from a PIL Image object that 
+# doesn't make the Workbook puke.
 def getAndResizeImage (newSize) :
     try :
 #         pilImage= PILImage.open(imgName)
@@ -863,12 +565,9 @@ def getAndResizeImage (newSize) :
         print("An exception occured '%s'" % e)
     return resizeName
 
-
-# In[ ]:
-
-
-# Now  we are going to add each trade and insert space to put in pictures with circles and arrows and 
-# paragraph on the back of each one to be used as evidence against you in a court of law (or court of bb opionion)
+# Now  we are going to add each trade and insert space to put in pictures with circles and 
+#arrows and paragraph on the back of each one to be used as evidence against you in a court 
+# of law (or court of bb opionion)
 insertsize=25
 dframe = nt
 ldf = list()
@@ -884,18 +583,8 @@ while True :
 len(ldf)
 
 dframe = addRows(dframe, 2)
-
-
-# In[ ]:
-
-
-# ldf
-
-
-# ### TODO The Hold is not operating correctly. This method is writen like I intend it to function
-
-# In[ ]:
-
+# TODO The Hold is not operating correctly. This method is writen like I intend it to 
+# function
 
 entries = list()
 exits= list()
@@ -910,29 +599,11 @@ for tdf in ldf:
         
     break
 
-
-# In[ ]:
-
-
 for tdf in ldf:
     print (tdf.Tindex.unique()[0].replace(' ','') + '.jpeg')
 
-
-# In[ ]:
-
-
 s = 'Trade 1'.replace(" ", "") + '.jpeg'
 s
-
-
-# In[ ]:
-
-
-ldf[1]
-
-
-# In[ ]:
-
 
 print(ldf[0].Tindex.unique()[0])
 print (ldf[0].Name.unique()[-1])
@@ -940,15 +611,14 @@ print(ldf[0].Start.unique()[0])
 print (ldf[0].Duration.unique()[-1])
 
 
-# The Dataframe grabshere rely far too much on proper placement by this program. This is no longer DataFrame like data. At this point, the trades will be encapsulated in objects.
+# The Dataframe grabshere rely far too much on proper placement by this program. This is no 
+# longer DataFrame like data. At this point, the trades will be encapsulated in objects.
 
-# In[ ]:
-
-
-imageLocation = list()
+# In[ ]:imageLocation = list()
 newdf = createDf(dframe,  10)
 topMargin = 10
 dframe = newdf.append(dframe, ignore_index = True)
+imageLocation = list()
 for tdf in ldf :
 
     # TODO handle empty string in the tdf
@@ -965,16 +635,8 @@ for tdf in ldf :
 
 len(dframe)
 
-
-# In[ ]:
-
-
 for x in imageLocation :
     print(x)
-
-
-# In[ ]:
-
 
 # for tdf in ldf :
 #     dframe = dframe.append(tdf, ignore_index = True)
@@ -982,21 +644,9 @@ for x in imageLocation :
 #     print(count, ": ", len(dframe))
     
 nt = dframe
+# TODO - Catch Permission Denied exception and inform the user
 
 
-# In[ ]:
-
-
-# nt
-
-
-# #####  TODO - Catch Permission Denied exception and inform the user
-
-# In[ ]:
-
-
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl import Workbook
 wb = Workbook()
 ws = wb.active
 
@@ -1009,32 +659,12 @@ for r in dataframe_to_rows(nt, index=False, header=False):
 
 for name, cell  in zip(nt.columns, ws[topMargin]) :
     cell.value = name
-#     print(name, cell.value)
-
-
-# In[ ]:
-
 
 for c in ws[10] :
     print (c.value)
 
-
-# In[ ]:
-
-
-nt
-
-
-# In[ ]:
-
-
 for i in imageLocation :
-#     print("Copy an image into the clipboard for {0}, beginning {1} and lasting {3}".format(i[0], i[1], [2]))
     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(i[2], i[3], i[4]))
-
-
-# In[ ]:
-
 
 imgName = 'tempImage.jpg'
 for loc in imageLocation :
@@ -1052,66 +682,20 @@ for loc in imageLocation :
         print(cellname)
             
             
-            
-            
-            
-            
-            
-            
-
     except IOError as e :
         print("An exception occured '%s'" % e)
-        
-            
-
-
-# In[ ]:
-
 
 for c in ws[10]:
     print(c.value)
 
-
-# In[ ]:
-
-
 wb.save('out/diditwork.xlsx')
 
 
-# In[ ]:
-
-
-# name=datetime.date.today().strftime("Trades_%A_%m%d.csv")
-
-# nt.to_csv(name, index=False)
-# nt.to_excel("AddingPictures.xlsx", index=False)
-namexl
-
-
-# In[ ]:
-
-
-tdir='C:\\trader\\journal\\_08_August\\Week_4\\_0821_Tuesday\\'
+# tdir='C:\\trader\\journal\\_08_August\\Week_4\\_0821_Tuesday\\'
 # tdir = "out"
 # outfile=tdir+ name
 # nt.to_csv(outfile)
 
+# nt.to_excel(outFile, index=False)
 
-# In[ ]:
-
-
-jname=os.path.join(tdir,namexl)
-jname
-
-
-# In[ ]:
-
-
-nt.to_excel(jname, index=False)
-
-
-# In[ ]:
-
-
-jname
 
