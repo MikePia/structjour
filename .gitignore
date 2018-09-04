@@ -4,3 +4,9 @@ Untitled*
 __pycache__
 data/
 out/
+.project
+.settings
+*.png
+*.pyc
+.pydev*
+
