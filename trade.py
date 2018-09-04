@@ -1,320 +1,32 @@
+import datetime, os
 
-# coding: utf-8
-
-# ### Add a module that accesses strategies to help with the daily analysis. Should include descriptions of accepted strategies and personal strategies. Save the material in a sqllite db. Unspecified version for this one. Probably an elemental version of this in version 1. 
-# ###### Morning ORB, ABCD, VWAP Reversal (Bull Flag and Fallen angel for low float).
-# ###### Late Morning VWAP false break out and VWAP reversal
-# ###### Mid-Day VWAP Moving Average Trend VWAP false breakout
-# ###### Close VWAP MA Trend
-# ### Prototype version will have the features of version 1 but run in Jupyter notebook.
-# ### Version 1 will include the kind of wizard daily review with prompts to get the picture (videos in an unspecified version) and the stops, targets, explanation and analysis. The nature of those will change when this moves to a windowed app
-# ### Version 2 is going to be the summary stuff.
-# ### Version 2.5 will include archive saving of all the input of Trades from DAS (Datess may be an issue as DAS Trades window is time only (I think)
-
-# In[1]:
-
-
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl import Workbook
-import pandas as pd
-
-
-# In[2]:
-
-
-import datetime, os, openpyxl
 from PIL import Image as PILImage
 from PIL import ImageGrab
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image
+from openpyxl.utils.dataframe import dataframe_to_rows
+
+from journalfiles import JournalFiles
+import pandas as pd
+from structjour.pandasutil import DataFrameUtil, InputDataFrame
 
 
-# In[3]:
-
-
-# This directory stuff is for my system only. I think its a good idea but I need 
-# some input. In the end I think the directory naming, creation and organization will 
-# have to be optional. Personally, I am going to include the monthly utility to create 
-# the structure in this program.  The ability to configure it would be a nice feature.
-
-# In[47]:
-
-
-theDate=datetime.date.today()
-# theDate = datetime.date(2018,8,29)
-
-
-# In[48]:
-
-
-inname = 'trades.csv'
-outname = theDate.strftime("Trades_%A_%m%d.xlsx")
-print (inname, outname)
-
-
-# In[49]:
-
-
-theDirectory = theDate.strftime(r"C:\trader\journal\_%m_%B\Week_5\_%m%d_%A")
-outDir = os.path.join(theDirectory, 'out')
-if not os.path.isdir(theDirectory) :
-    print('oops')
-    raise(NameError('theDirectory ' + theDirectory + ' is not found.'))
-else :
-    if not os.path.isdir(outDir) :
-        print('creating directory ' + outDir )
-        os.mkdir(outDir)
-
-
-
-
-# In[50]:
-
-
-infile=os.path.join(theDirectory, 'trades.csv')
-if not os.path.exists(infile) :
-    print('Input file: ' + infile + ' does not exist')
-
-
-# In[51]:
-
-
-devOutDir = os.path.join(os.getcwd(), 'out')
-if not os.path.isdir(devOutDir) :
-    os.mkdir(devOutDir)
-devOutFile = os.path.join(devOutDir, outname)
-
-outdir=os.path.join(theDirectory,'out')
-outFile=os.path.join(outdir, outname)
-
-trades = pd.read_csv(infile)
-
-def checkRequiredInputFields(dframe) :
-    RequiredFields = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'P / L']
-    ActualFields=dframe.columns
-    if set (RequiredFields) <= (set (ActualFields)) :
-        print("got it")
-    else :
-        err='You are missing some fields in your input file:\n'
-        err += str((set(RequiredFields) - set(ActualFields)))
-        raise ValueError(err)
-
-def createDf(dframe, numRow) :
-    ''' Creates a new DataFrame with  the length numRow. Each cell is filled with empty string '''
-
-    ll=list()
-    r=list()
-    for i in range(len(dframe.columns)) :
-        r.append('')
-        
-    for i in range(numRow) :
-        ll.append(r)
-    newdf= pd.DataFrame(ll, columns=dframe.columns)
-
-    return newdf
-
-
-# In[ ]:
-
-
-def addRows(dframe, numRow) :
-    newdf= createDf(dframe, numRow)
-        
-    
-    dframe = dframe.append(newdf, ignore_index=True, sort=False)
-    
-    return dframe
-
-    
-
-
+# TODO Add a module that accesses strategies to help with the daily analysis. Should include descriptions of accepted strategies 
+# and personal strategies. Save the material in a sqllite db. Unspecified version for this one. Probably an elemental version of 
+# this in version 1. 
+#     Morning ORB, ABCD, VWAP Reversal (Bull Flag and Fallen angel for low float).
+#     Late Morning VWAP false break out and VWAP reversal
+#     Mid-Day VWAP Moving Average Trend VWAP false breakout
+#     Close VWAP MA Trend
+# Version 0 will be console app and include prompts for required input and the stops, targets, explanation and analysis. 
+# The nature of those will change when this moves to a windowed app
+# TODOVersion 1 will have a gui and can include videos 
+# Version 2 is going to be the summary stuff.
+# Version 2.5 will include archive saving of all the input of Trades from DAS (Datess may be an issue as DAS Trades window is time only (I think)
 # Make sure the hour string is 0 padded.  Should probably change these to data types. 
-
-# Todo- This, and the duration, will get more complex with the IB report format. The 
-# html report uses a long timedate format
+# jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
 
 
-def zeroPadTimeStr(dframe, timeHeading) :
-    '''Guarantee that the time format xx:xx:xx'''
-    
-
-    for i, row in dframe.iterrows():
-        tm = row[timeHeading]
-        tms=tm.split(":")
-        if int(len(tms[0]) < 2) :
-            if tms[0].startswith("0") == False :
-                tm= "0" + tm
-                dframe.at[i, timeHeading] = tm
-    return dframe
-                
-
-
-# Todo. Doctor an input csv file to include fractional numer of shares for testing. Make 
-# it more modular by checking for 'HOLD'. It might be useful in a windowed version with 
-# menus to do things seperately.
-
-
-def mkShortsNegative(dframe, side, qty) :
-    ''' Fix the shares sold to be negative values. Currently assuming DAS values 'B', 'S', 'SS' for 'Side'. 
-    '''
-    for i, row in dframe.iterrows():
-        if row[side] != 'B' and row[qty] > 0:
-            dframe.at[i, qty] = ((dframe.at[i, qty]) * -1)
-    return dframe
-
-
-# def getListTickerDF(df) will take a dataframe that includes tickers in column 'Symb' and 
-# returns a python list of DataFrames , 1 for each ticker.
-
-def getListTickerDF(dframe, tickCol = 'Symb') :
-    ldf_tick = list()
-    for ticker in dframe[tickCol].unique() :
-        ldf = dframe[dframe[tickCol] == ticker]
-        ldf_tick.append(ldf)
-    return ldf_tick
-
-def getOvernightTrades(dframe, tickCol='Symb', qtyCol='Qty') :
-    ''' getOvernightTrades(dframe) takes the DataFrame and returns a list of lists 
-        (symb, qty) of trades that have overnight shares. '''
-    
-    ldf_tick = getListTickerDF(dframe, tickCol)
-    overnightTrade = list()
-    for ticker in ldf_tick :
-        if ticker[qtyCol].sum() != 0 :
-            overnightTrade.append([ticker[tickCol].unique()[0], ticker[qtyCol].sum(), 0, 0])
-    return overnightTrade
-
-
-# Note that this does not yet include those shares that are held before the days trading 
-# began. Redo this to remake the list of data frames from the Symbols of Swing List then 
-# make a list of data frams that  excludes those then merge them together
-
-def askUser(st, question, ix, default) :
-    while True :
-        try :
-            response = input(question)
-            if len(response) < 1 :
-                response = default
-            else :
-                response = int(response)
-        except Exception as ex:
-            print(ex)
-            print("please enter a number")
-            continue
-       
-        st[ix] = response
-        return st
-
-def figureOvernightTransactions() :
-    swingTrade = getOvernightTrades(trades)
-    for i in range(len(swingTrade)) :
-        tryAgain =  True
-        while tryAgain == True :
-
-            xticker = 0      #Candy coaters
-            xbalance = 1
-            xbefore = 2
-            xafter = 3
-            print(swingTrade[i])
-            print ("There is an unbalanced amount of shares of {0} in the amount of {1}".format(swingTrade[i][xticker], swingTrade[i][xbalance]))
-
-            question = "How many shares of {0} are you holding now? (Enter for {1})".format(swingTrade[i][xticker], swingTrade[i][xbalance])
-            swingTrade[i] = askUser(swingTrade[i], question, xafter, swingTrade[i][xbalance])
-
-            if swingTrade[i][xafter] != swingTrade[i][xbalance]:
-
-                difference = swingTrade[i][xbalance] - swingTrade[i][xafter]
-                statement = "There is now a prior unbalanced amount of shares of {0} in the amount of {1}"
-                print(statement.format(swingTrade[i][xticker], difference))
-                question = "How many shares of {0} were you holding before?".format(swingTrade[i][xticker])
-                swingTrade[i] = askUser(swingTrade[i], question, xbefore, difference)
-
-            unaccounted = swingTrade[i][xbefore] + swingTrade[i][xafter] - swingTrade[i][xbalance]
-            if unaccounted == 0 :
-                print("That works.")
-                tryAgain = False
-            else :
-                print()
-                print("There are {1} unaccounted for shares in {0}".format(swingTrade[i][xticker], unaccounted))
-                print()
-                print("That does not add up. Starting over ...")
-                print()
-                print ("Prior to reset version ", i, swingTrade)
-                swingTrade[i] = getOvernightTrades(trades)[i]
-                print ("reset version ", i, swingTrade)
-    return swingTrade
-
-def insertOvernightRowold(dframe, swingTrade, time='Time', symbol='Symb', side='Side', price='Price', qty='Qty', acct="Account", PL='P / L') :
-    newdf = createDf(trades, 0)
-    for ldf in getListTickerDF(dframe) :
-        found=False
-        for ticker, balance, before, after in swingTrade:
-            if ticker == ldf.Symb.unique()[0] :
-#                 print ("Got {0} with the balance {1}". format (ticker, balance))
-                found = True
-                ldf = addRows(ldf, 1)
-                for i, row in ldf.iterrows():
-
-                    if i == len(ldf) -1 :
-                        ldf.at[i, time] = '23:59:59'
-                        ldf.at[i, symbol] = ticker
-                        if balance > 0 :
-                            ldf.at[i, side] = "HOLD+"
-                        else :
-                            ldf.at[i, side] = "HOLD-"
-                        ldf.at[i, price] = 0
-                        ldf.at[i, qty] = after
-                        ldf.at[i, acct] = 'ZeroSubstance'
-                        ldf.at[i, PL] = 0
-        newdf = newdf.append(ldf, ignore_index = True)
-    return newdf
-
-def insertOvernightRow(dframe, st, time='Time', symbol='Symb', side='Side', price='Price', qty='Qty', acct="Account", PL='P / L') :
-    newdf = createDf(trades, 0)
-    
-    for ldf in getListTickerDF(dframe) :
-        found=False
-        for ticker, balance, before, after in swingTrade:
-            if ticker == ldf.Symb.unique()[0] :
-                print ("Got {0} with the balance {1}, before {2} and after {3}". format (ticker, balance, before, after))
-                if before != 0 :
-                    newldf = createDf(trades, 1)
-                    print("length:   ", len(newldf))
-                    for i, row in newldf.iterrows():
-
-                        if i == len(newldf) -1 :
-                            print("Though this seems unnecessary it will make it more uniform ")
-                            newldf.at[i, time] = '00:00:01'
-                            newldf.at[i, symbol] = ticker
-                            if before > 0 :
-                                newldf.at[i, side] = "HOLD+"
-                            else :
-                                newldf.at[i, side] = "HOLD-"
-                            newldf.at[i, price] = 0
-                            newldf.at[i, qty] = before
-                            newldf.at[i, acct] = 'ZeroSubstance'
-                            newldf.at[i, PL] = 0
-                            
-                            ldf = newldf.append(ldf, ignore_index = True)
-                        break #This should be unnecessary as newldf should always be the length of 1 here
-                if after != 0 :
-                    print("Are we good?")
-                    ldf = addRows(ldf, 1)
-        
-                    for i, row in ldf.iterrows():
-
-                        if i == len(ldf) -1 :
-                            ldf.at[i, time] = '23:59:59'
-                            ldf.at[i, symbol] = ticker
-                            if balance > 0 :
-                                ldf.at[i, side] = "HOLD+"
-                            else :
-                                ldf.at[i, side] = "HOLD-"
-                            ldf.at[i, price] = 0
-                            ldf.at[i, qty] = after
-                            ldf.at[i, acct] = 'ZeroSubstance'
-                            ldf.at[i, PL] = 0
-        
-        newdf = newdf.append(ldf, ignore_index = True, sort = False)
-    return newdf
 
 def writeShareBalance(dframe) :
     prevBal = 0
@@ -470,7 +182,7 @@ def getPilImageFromClipboard() :
                 return im
         else :
             if response.lower().startswith('q') :
-                return null
+                return None
     print("Moving on")
 
 
@@ -487,6 +199,7 @@ def getResizeName(orig) :
         newName += '.jpeg'
     else :
         newName += x[1]
+    newName = os.path.join(jf.outdir, newName)
     return (newName, os.path.splitext(newName)[1][1:])
 
 # dframe contains the transactions of a single trade.  Single trade ends when the balance 
@@ -517,25 +230,36 @@ def getLongOrShort(dframe) :
 #     ext = tdf[tdf.Side.str.startswith(f_ext)]
 #     return ent, ext
 # getEntriesAndExits(tdf, 'Short')[0]
+finalReqCol = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty','Balance', 'Account', "P / L", 'Sum', 'Duration', 'Name']
 
-# In[ ]:
 
+# jf = JournalFiles(theDate=datetime.date(2018, 8,31), outdir = "out", mydevel=True)
+jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 
-checkRequiredInputFields(trades)
-trades = zeroPadTimeStr(trades, 'Time')
+trades = pd.read_csv(jf.inpathfile)
+
+idf = InputDataFrame()
+
+reqCol = idf.reqCol.values()
+
+DataFrameUtil.checkRequiredInputFields(trades, reqCol)
+
+trades = idf.zeroPadTimeStr(trades)
 trades = trades.sort_values(['Symb', 'Time'])
-trades = mkShortsNegative(trades, 'Side', 'Qty')
-swingTrade = getOvernightTrades(trades)
-swingTrade = figureOvernightTransactions()
-listdf = insertOvernightRow(trades, swingTrade)
-lbls = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty','Balance', 'Account', "P / L", 'Sum', 'Duration', 'Name']
+trades = idf.mkShortsNegative(trades)
 
-for l in lbls :
+swingTrade = idf.getOvernightTrades(trades)
+
+swingTrade = idf.figureOvernightTransactions(trades)
+listdf = idf.insertOvernightRow(trades, swingTrade)
+
+
+for l in finalReqCol :
     if l not in listdf.columns :
         listdf[l] = ''
 
 # trades.columns
-newTrades = listdf[lbls]
+newTrades = listdf[finalReqCol]
 newTrades.copy()
 nt = newTrades.sort_values(['Symb', 'Time'])
 nt = writeShareBalance(nt)
@@ -545,7 +269,7 @@ nt = addTradeIndex(nt)
 nt = addTradePL(nt)
 nt = addTradeDuration(nt)
 nt = addTradeName(nt)
-nt=addRows(nt,1)
+nt=DataFrameUtil.addRows(nt,1)
 nt = addSummaryPL(nt)
 
 # Request a clipboard copy of an image. Resze it to newSize height. Save it with a new name. 
@@ -582,7 +306,7 @@ while True :
         break
 len(ldf)
 
-dframe = addRows(dframe, 2)
+dframe = DataFrameUtil.addRows(dframe, 2)
 # TODO The Hold is not operating correctly. This method is writen like I intend it to 
 # function
 
@@ -611,11 +335,12 @@ print(ldf[0].Start.unique()[0])
 print (ldf[0].Duration.unique()[-1])
 
 
-# The Dataframe grabshere rely far too much on proper placement by this program. This is no 
-# longer DataFrame like data. At this point, the trades will be encapsulated in objects.
+# The Dataframe grabs here rely far too much on proper placement by this program. This is no 
+# longer DataFrame like data manipulation. The manipulation is far too specific to the
+# processing. At this point, the trades should be encapsulated in objects.
 
 # In[ ]:imageLocation = list()
-newdf = createDf(dframe,  10)
+newdf = DataFrameUtil.createDf(dframe,  10)
 topMargin = 10
 dframe = newdf.append(dframe, ignore_index = True)
 imageLocation = list()
@@ -630,7 +355,7 @@ for tdf in ldf :
     print(len(tdf) + len(dframe) + 2)
 
     dframe = dframe.append(tdf, ignore_index = True)
-    dframe = addRows(dframe, insertsize)
+    dframe = DataFrameUtil.addRows(dframe, insertsize)
     print(count, ": ", len(dframe))
 
 len(dframe)
@@ -676,7 +401,7 @@ for loc in imageLocation :
         resizeName, ext = getResizeName(loc[1])
         print (resizeName)
         pilImage.save(resizeName, ext)
-        img = openpyxl.drawing.image.Image(resizeName)
+        img = Image(resizeName)
         cellname = 'E' + str(loc[0])
         ws.add_image(img, cellname)
         print(cellname)
@@ -688,7 +413,7 @@ for loc in imageLocation :
 for c in ws[10]:
     print(c.value)
 
-wb.save('out/diditwork.xlsx')
+wb.save(jf.outpathfile)
 
 
 # tdir='C:\\trader\\journal\\_08_August\\Week_4\\_0821_Tuesday\\'
