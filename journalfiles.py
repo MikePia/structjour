@@ -82,19 +82,32 @@ class JournalFiles :
       
     def _whichWeek(self, month, testday, year=2018) :
         ''' Calculates which number work week a day is in '''
+        #TODO Rework .... again .... use isoweek() for Mon-Sun week
 
         beginDate = datetime.date(year, month, 1)
         testDate = datetime.date(year, month, testday)
         idow = int(beginDate.strftime("%w"))
-        if idow == 1 :
-            firstMonday = datetime.date(year, month, 1)
-        else :
-            firstMonday = datetime.date(year, month, 9 - idow)
-
-        td = testDate.day
-        diff = td - firstMonday.day
-        week = (diff // 7) + 2
-        return(week)
+        
+        
+        #{ dayOfWeekOf1stDayOfMonth:DayOf1stMonday}
+        dayOfFirstMonday= {  0:(2,1), 1:(1,1), 2:(7,2), 3:(6,2), 4:(5,2), 5:(4,2), 6:(3,1) }
+        # aka (9 - idow) % 7 (if 0 then 7)
+        
+        fm = datetime.date(year, month, dayOfFirstMonday[idow][0])
+        adjuster = 1 if fm.day < 4 else 2
+        day = testDate.day
+        week = ((day - fm.day)//7)  + adjuster
+        week = 1 if week < 1 else week 
+        return week   
+        
+    def mkOutdir (self):
+        if not os.path.exists(self.outdir) :
+            try :
+                os.mkdir(self.outdir) 
+            except FileNotFoundError as ex:
+                print (ex)
+                return False
+        return True
     
     def _checkPaths(self):
         '''
