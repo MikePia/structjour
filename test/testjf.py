@@ -169,29 +169,89 @@ class TestJF(unittest.TestCase):
         else :
             self.fail("Failed to throw expected exception")       
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    #Redundant
+    def test_whichWeekFromWeekend(self):
+        '''Testing beginning day on the weekend using Sept of 2018 9/1 thru 9/16'''
+        jf = JournalFiles(indir="../data", mydevel=True)
+        jf._printValues()
+        for i in range(1,10) :
+            x = jf._whichWeek(9,i)
+            self.assertEqual(1,x,"whichWeek is wrong! for September {0}".format(i))
+        for i in range(10,17) :
+            x = jf._whichWeek(9,i)
+            self.assertEqual(2,x,"whichWeek is wrong! for September {0}".format(i))
+
+        for i in range(17,24) :
+            x = jf._whichWeek(9,i)
+            self.assertEqual(3,x,"whichWeek is wrong! for September {0}".format(i))
+    #Redundant
+    def test_whichWeekFromMonday(self):
+        '''Testing beginning day on the weekend using Oct 2018'''
+        jf = JournalFiles(indir="../data", mydevel=True)
+        jf._printValues()
+        for i in range(1,8) :
+            x = jf._whichWeek(10,i)
+            self.assertEqual(1,x,"whichWeek is wrong! for October {0}".format(i))
+        for i in range(8,15) :
+            x = jf._whichWeek(10,i)
+            self.assertEqual(2,x,"whichWeek is wrong! for September {0}".format(i))
+
+        for i in range(15,22) :
+            x = jf._whichWeek(10,i)
+            self.assertEqual(3,x,"whichWeek is wrong! for September {0}".format(i))
+
+    #Redundant
+    def test_whichWeekFromThursday(self):
+        '''Testing beginning day on the Thursday using Nov 2018'''
+        jf = JournalFiles(indir="../data", mydevel=True)
+        jf._printValues()
+        for i in range(1,5) :
+            x = jf._whichWeek(11,i)
+            self.assertEqual(1,x,"whichWeek is wrong! for October {0}".format(i))
+        for i in range(5,12) :
+            x = jf._whichWeek(11,i)
+            self.assertEqual(2,x,"whichWeek is wrong! for September {0}".format(i))
+
+        for i in range(12,19) :
+            x = jf._whichWeek(11,i)
+            self.assertEqual(3,x,"whichWeek is wrong! for September {0}".format(i))            
             
+    def test_whichWeek(self) :
+        '''Testing beginning day on the Thursday using Nov 2018'''
+        #TODO check isocalendar for a less convoluted version of this method
+        #But right now, I think, ... finally ... its bullet proof ... i hope (but hacky with those string comparisons)
+        jf = JournalFiles(indir="../data", mydevel=True)
+        
+        dj1 = datetime.date(2018,1,1)
+        dj1ord = dj1.toordinal()
+        week = 0
+        oldMonth = 'January'
+        for dord in range(dj1ord, dj1ord+365) :
+            cdate = datetime.date.fromordinal(dord)
+            cdate.
+            dow = cdate.strftime('%A')+ ','
+            mon = cdate.strftime('%B')
+            day = cdate.strftime('%d')+ ','
     
-    
+            if dow.startswith("Monday") and not day.startswith('02') and not day.startswith('03'):
+                week = week + 1
+            if oldMonth != mon :
+                week = 1
+            if not dow.startswith('Saturday') and not dow.startswith('Sunday') :
+                if day.startswith('01') or dow.startswith('Monday') or dow.startswith('Friday') :
+                    jfweek = jf._whichWeek(cdate.month, cdate.day)
+                    self.assertEqual(jfweek, week)
+#                     print("{0:10}{1:10}{2:4}week {3:4} == {4}".format(dow, mon, day,week, jfweek))
+            oldMonth = mon
+#             if dow == "Sunday," :
+#                 print()
+        
+
+
+
+
+
+
+
+
+

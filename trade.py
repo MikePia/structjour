@@ -232,9 +232,9 @@ def getLongOrShort(dframe) :
 # getEntriesAndExits(tdf, 'Short')[0]
 finalReqCol = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty','Balance', 'Account', "P / L", 'Sum', 'Duration', 'Name']
 
-
-# jf = JournalFiles(theDate=datetime.date(2018, 8,31), outdir = "out", mydevel=True)
-jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
+# jf= JournalFiles(indir =r'C:\trader\journal\_09_September\Week_1\_0904_Tuesday', infile='trades1.csv', mydevel=True)
+jf = JournalFiles(theDate=datetime.date(2018, 9,4), mydevel=True)
+# jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 
 trades = pd.read_csv(jf.inpathfile)
 
@@ -413,8 +413,13 @@ for loc in imageLocation :
 for c in ws[10]:
     print(c.value)
 
-wb.save(jf.outpathfile)
-
+jf.mkOutdir() 
+try :
+    wb.save(jf.outpathfile)
+except Exception as ex :
+    print(ex)
+    print("Failed to create file {0}".format(jf.outpathfile))
+    print("Created images were saved in {0}".format(jf.outdir))
 
 # tdir='C:\\trader\\journal\\_08_August\\Week_4\\_0821_Tuesday\\'
 # tdir = "out"

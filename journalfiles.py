@@ -82,7 +82,7 @@ class JournalFiles :
       
     def _whichWeek(self, month, testday, year=2018) :
         ''' Calculates which number work week a day is in '''
-        #TODO Rework .... again .... use isoweek() for Mon-Sun week
+        #TODO Rework .... again .... use isoweek() for Mon-Sun week. Harder than it should have been.
 
         beginDate = datetime.date(year, month, 1)
         testDate = datetime.date(year, month, testday)
