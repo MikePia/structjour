@@ -228,7 +228,6 @@ class TestJF(unittest.TestCase):
         oldMonth = 'January'
         for dord in range(dj1ord, dj1ord+365) :
             cdate = datetime.date.fromordinal(dord)
-            cdate.
             dow = cdate.strftime('%A')+ ','
             mon = cdate.strftime('%B')
             day = cdate.strftime('%d')+ ','

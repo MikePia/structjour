@@ -126,6 +126,8 @@ class JournalFiles :
         if not os.path.exists(self.outdir) :
             
             checkUpOne = os.path.split(self.outdir)[0]
+            if len(checkUpOne) < 1 :
+                checkUpOne = "."
             if not os.path.exists(checkUpOne) :
                 #If the parent exists, Structjour will create the out directory when it comes to it. 
                 # Otherwise, trash this puppy

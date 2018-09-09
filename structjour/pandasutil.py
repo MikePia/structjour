@@ -4,6 +4,7 @@ Created on Sep 2, 2018
 @author: Mike Petersen
 '''
 import pandas as pd
+from structjour.tradeutil import ReqCol 
 
 
 class DataFrameUtil(object):
@@ -15,7 +16,7 @@ class DataFrameUtil(object):
 
     def __init__(self, params):
         '''
-        Constructor
+        Constructor which may never be used. (but it could be)
         '''
 
     @classmethod
@@ -76,38 +77,34 @@ class InputDataFrame(object):
     '''Manipulation of the original import of the trade transactions. Abstract the label schema
     to a dictionary. Import from all soures is equalized here.'''
     def __init__(self, source="DAS"):
-        '''Set the required columns in the import file.'''
-        self.reqCol={}
-        self.reqColKeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL']
-        self._DASColVal = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L']
-        self.source=source
-        self._setup()
+#         '''Set the required columns in the import file.'''
+        if source != 'DAS' :
+            print("Only DAS is currently supported")
+            raise(ValueError)
+#         self.reqCol={}
+#         self.reqColKeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL']
+#         self._DASColVal = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L']
+#         self.source=source
+#         self._setup()
         
-    
-    def _setup (self):
-        if self.source == 'DAS' :
-            k=self._DASColVal
         
-        self.reqCol = dict(zip(self.reqColKeys, k))
-    
     def zeroPadTimeStr(self, dframe) :
         '''
         Guarantee that the time format xx:xx:xx
         Devel note: Currently accounts for only a single time format. 
         '''
-        time = self.reqCol['time']
+        
+        rc = ReqCol()
+#         time = rc.time
         for i, row in dframe.iterrows():
-            tm = row[time]
+            tm = row[rc.time]
             tms=tm.split(":")
             if int(len(tms[0]) < 2) :
                 if tms[0].startswith("0") == False :
                     tm= "0" + tm
-                    dframe.at[i, time] = tm
+                    dframe.at[i, rc.time] = tm
         return dframe
     
-                
-
-
     # Todo.  Doctor an input csv file to include fractional numer of shares for testing. 
     #        Make it more modular by checking for 'HOLD'. 
     #        It might be useful in a windowed version with menus to do things seperately.
@@ -115,29 +112,33 @@ class InputDataFrame(object):
     def mkShortsNegative(self, dframe) :
         ''' Fix the shares sold to be negative values. '''
         
-        side = self.reqCol['side']
-        shares = self.reqCol['shares']
+        rc = ReqCol()
         
         for i, row in dframe.iterrows():
-            if row[side] != 'B' and row[shares] > 0:
-                dframe.at[i, shares] = ((dframe.at[i, shares]) * -1)
+            if row[rc.side] != 'B' and row[rc.shares] > 0:
+                dframe.at[i, rc.shares] = ((dframe.at[i, rc.shares]) * -1)
         return dframe
     
     def getListTickerDF(self, dframe) :
         '''
-        Returns a python list of all tickers traded in todays input file.
+        Returns a python list of all tickers/account traded in todays input file.
         :param:dframe: The DataFrame with the days trades that includes the column tickCol (Symb by default and in DAS).
         :param:tickCol: The required column that contains the ticker symbols
         :return: The list of tickers in the days trades represented by the DataFrame 
         '''
-    
-        tickerCol=self.reqCol['ticker']
+        rc = ReqCol()
         
-        ldf_tick = list()
-        for ticker in dframe[tickerCol].unique() :
-            ldf = dframe[dframe[tickerCol] == ticker]
-            ldf_tick.append(ldf)
-        return ldf_tick
+        listOfTickers = list()
+        for symb in dframe[rc.ticker].unique() :
+            for acct in dframe[rc.acct][dframe[rc.ticker]==symb].unique()  :
+                ldf = dframe[dframe[rc.ticker]==symb][dframe[rc.acct]==acct]
+                listOfTickers.append(ldf)
+#         
+#         ldf_tick = list()
+#         for ticker in dframe[rc.ticker].unique() :
+#             ldf = dframe[dframe[rc.ticker] == ticker]
+#             ldf_tick.append(ldf)
+        return listOfTickers
     
     def getOvernightTrades(self, dframe) :
         ''' 
@@ -145,23 +146,21 @@ class InputDataFrame(object):
         opened, or from after the trades file was exported or both. 
         :param:dframe: The DataFrame with the days trades that includes the columns tickCol and qtyCol 
         (Symb and Qty by default and in DAS).
-        :param:tickCol: The required column that contains the ticker symbols
-        :param:qtyCol: The required column that contains the quantity of shares in each transaction
         :return: A list of lists with the ticker and quantity of tickers with positions outside todays transactions. 
         '''
-        tickCol = self.reqCol['ticker']
-        shares = self.reqCol['shares']
+        rc = ReqCol()
         
-        ldf_tick = self. getListTickerDF(dframe)
+        ldf_tick = self.getListTickerDF(dframe)
         overnightTrade = list()
         i = 0
         for ticker in ldf_tick :
-            if ticker[shares].sum() != 0 :
+            if ticker[rc.shares].sum() != 0 :
                 overnightTrade.append(dict())
-                overnightTrade[i]['ticker'] = ticker[tickCol].unique()[0]
-                overnightTrade[i]['shares'] = ticker[shares].sum()
+                overnightTrade[i]['ticker'] = ticker[rc.ticker].unique()[0]
+                overnightTrade[i]['shares'] = ticker[rc.shares].sum()
                 overnightTrade[i]['before'] = 0
                 overnightTrade[i]['after'] = 0
+                overnightTrade[i]['acct'] = ticker[rc.acct].unique()[0]
                 i = i + 1
         return overnightTrade
     
@@ -187,24 +186,30 @@ class InputDataFrame(object):
             return response
     
     def figureOvernightTransactions(self, dframe) :
+        
+        rc = ReqCol()
+
         swingTrade = self.getOvernightTrades(dframe)
         for i in range(len(swingTrade)) :
             tryAgain =  True
             while tryAgain == True :
     
                 print(swingTrade[i])
-                print ("There is an unbalanced amount of shares of {0} in the amount of {1}".format(
-                    swingTrade[i]['ticker'], swingTrade[i]['shares']))
+                question= '''There is an unbalanced amount of shares of {0} in the amount of {1} 
+                    in the account {2}. How many shares of {0} are you holding now? 
+                    (Enter for {1}) '''.format(swingTrade[i]['ticker'], swingTrade[i]['shares'], swingTrade[i]['acct'])
     
-                question = "How many shares of {0} are you holding now? (Enter for {1})".format(swingTrade[i]['ticker'], swingTrade[i]['shares'])
+#                 question = " How many shares of {0} are you holding now? (Enter for {1})".format ( swingTrade[i]['ticker'], swingTrade[i]['shares'] )
                 swingTrade[i]['after'] = self.askUser(swingTrade[i], question)
                 swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['after']
     
                 if swingTrade[i]['shares'] != 0 :
     
-                    statement = "There is now a prior unbalanced amount of shares of {0} in the amount of {1}"
-                    print(statement.format(swingTrade[i]['ticker'], swingTrade[i]['shares']))
-                    question = "How many shares of {0} were you holding before? (Enter for {1}".format(swingTrade[i]['ticker'], swingTrade[i]['shares'])
+                    question = '''There is now a prior unbalanced amount of shares of {0} amount 
+                    of {1} in the account {2}. How many shares of {0} were you holding before? 
+                    (Enter for {1}) '''.format(swingTrade[i]['ticker'], -swingTrade[i]['shares'], swingTrade[i]['acct'])
+                    
+#                     question = "How many shares of {0} were you holding before? (Enter for {1}".format(swingTrade[i]['ticker'], swingTrade[i]['shares'])
                     swingTrade[i]['before'] = self.askUser(swingTrade[i], question)
                     swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['before']
     
@@ -223,61 +228,65 @@ class InputDataFrame(object):
         return swingTrade
     
     def insertOvernightRow(self, dframe, swTrade) :
+        
+        rc = ReqCol()
+        
         newdf = DataFrameUtil.createDf(dframe, 0)
         
+        
         for ldf in self.getListTickerDF(dframe) :
-            for i in range(len(swTrade)) :
-                if swTrade[i]['ticker'] == ldf.Symb.unique()[0] :
-                    print ("Got {0} with the balance {1}, before {2} and after {3}". format (swTrade[i]['ticker'], 
-                                                                                             swTrade[i]['shares'],
-                                                                                             swTrade[i]['before'],
-                                                                                             swTrade[i]['after']))
+#             print(ldf[rc.ticker].unique()[0], ldf[rc.acct].unique()[0])
+            for trade in swTrade :
+                if trade['ticker'] == ldf[rc.ticker].unique()[0] and trade['acct'] == ldf[rc.acct].unique()[0]:
+                    print ("Got {0} with the balance {1}, before {2} and after {3} in {4}". format (trade['ticker'], 
+                                                                                             trade['shares'],
+                                                                                             trade['before'],
+                                                                                             trade['after'],
+                                                                                             trade['acct']))
                     
                     #insert a non transaction HOLD row before transactions of the same ticker
-                    if swTrade[i]['before'] != 0 :
+                    if trade['before'] != 0 :
                         newldf = DataFrameUtil.createDf(dframe, 1)
                         print("length:   ", len(newldf))
                         for j, row in newldf.iterrows():
     
                             if j == len(newldf) -1 :
                                 print("Though this seems unnecessary it will make it more uniform ")
-                                newldf.at[j, self.reqCol['time']] = '00:00:01'
-                                newldf.at[j, self.reqCol['ticker']] = swTrade[i]['ticker']
-                                if swTrade[i]['before'] > 0 :
-                                    newldf.at[j, self.reqCol['side']] = "HOLD+"
+                                newldf.at[j, rc.time] = '00:00:01'
+                                newldf.at[j, rc.ticker] = trade['ticker']
+                                if trade['before'] > 0 :
+                                    newldf.at[j, rc.side] = "HOLD+"
                                 else :
-                                    newldf.at[j, self.reqCol['side']] = "HOLD-"
-                                newldf.at[j, self.reqCol['price']] = 0
-                                newldf.at[j, self.reqCol['shares']] = swTrade[i]['before']
-                                newldf.at[j, self.reqCol['acct']] = 'ZeroSubstance'
-                                newldf.at[j, self.reqCol['PL']] = 0
+                                    newldf.at[j, rc.side] = "HOLD-"
+                                newldf.at[j, rc.price] = 0
+                                newldf.at[j, rc.shares] = trade['before']
+                                newldf.at[j, rc.acct] = trade['acct']    #ZeroSubstance'
+                                newldf.at[j, rc.PL] = 0
                                 
                                 ldf = newldf.append(ldf, ignore_index = True)
                             break #This should be unnecessary as newldf should always be the length of 1 here
                         
                     # Insert a non-transaction HOLD row after transactions from the same ticker    
-                    if swTrade[i]['after'] != 0 :
+                    if trade['after'] != 0 :
                         print("Are we good?")
                         ldf = DataFrameUtil.addRows(ldf, 1)
             
                         for j, row in ldf.iterrows():
     
                             if j == len(ldf) -1 :
-                                ldf.at[j, self.reqCol['time']] = '23:59:59'
-                                ldf.at[j, self.reqCol['ticker']] = swTrade[i]['ticker']
+                                ldf.at[j, rc.time] = '23:59:59'
+                                ldf.at[j, rc.ticker] = trade['ticker']
 
-                                if swTrade[i]['after']> 0 :
-                                    ldf.at[j, self.reqCol['side']] = "HOLD+"
+                                if trade['after']> 0 :
+                                    ldf.at[j, rc.side] = "HOLD+"
                                 else :
-                                    ldf.at[j, self.reqCol['side']] = "HOLD-"
-                                ldf.at[j, self.reqCol['price']] = 0
-                                ldf.at[j, self.reqCol['shares']] = swTrade[i]['after']
-                                ldf.at[j, self.reqCol['acct']] = 'ZeroSubstance'
-                                ldf.at[j, self.reqCol['PL']] = 0
+                                    ldf.at[j, rc.side] = "HOLD-"
+                                ldf.at[j, rc.price] = 0
+                                ldf.at[j, rc.shares] = trade['after']
+                                ldf.at[j, rc.acct] = trade['acct']   #'ZeroSubstance'
+                                ldf.at[j, rc.PL] = 0
             
             newdf = newdf.append(ldf, ignore_index = True, sort = False)
         return newdf
-    
-        
     
 print('hello dataframe')
