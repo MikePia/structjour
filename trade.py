@@ -11,26 +11,13 @@ from structjour.pandasutil import DataFrameUtil, InputDataFrame
 from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 #TradeUtil, FinReqCol, ReqCol, 
 
-
-# TODO Add a module that accesses strategies to help with the daily analysis. Should include descriptions of accepted strategies 
-# and personal strategies. Save the material in a sqllite db. Unspecified version for this one. Probably an elemental version of 
-# this in version 1. 
-#     Morning ORB, ABCD, VWAP Reversal (Bull Flag and Fallen angel for low float).
-#     Late Morning VWAP false break out and VWAP reversal
-#     Mid-Day VWAP Moving Average Trend VWAP false breakout
-#     Close VWAP MA Trend
-# Version 0 will be console app and include prompts for required input and the stops, targets, explanation and analysis. 
-# The nature of those will change when this moves to a windowed app
-# TODOVersion 1 will have a gui and can include videos 
-# Version 2 is going to be the summary stuff.
-# Version 2.5 will include archive saving of all the input of Trades from DAS (Datess may be an issue as DAS Trades window is time only (I think)
-# Make sure the hour string is 0 padded.  Should probably change these to data types. 
 # jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
 
 # jf= JournalFiles(indir =r'C:\trader\journal\_09_September\Week_1\_0904_Tuesday', infile='trades1.csv', mydevel=True)
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
-jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
+# jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
+jf = JournalFiles(outdir="out", mydevel = True)
 tu = TradeUtil()
 trades = pd.read_csv(jf.inpathfile)
 idf = InputDataFrame()

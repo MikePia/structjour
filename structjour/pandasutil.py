@@ -1,11 +1,12 @@
 '''
-Created on Sep 2, 2018
+Created on Sep 2, 2018C
 
 @author: Mike Petersen
 '''
+import sys
 import pandas as pd
-from structjour.tradeutil import ReqCol 
 
+from structjour.tradeutil import ReqCol 
 
 class DataFrameUtil(object):
     '''
@@ -22,14 +23,17 @@ class DataFrameUtil(object):
     @classmethod
     def checkRequiredInputFields(cls, dframe, requiredFields) :
         '''
-        Checks that dframe has the fields in the array requiredFields. Succeeds silently. Raises a ValueError on failure.
-        :param:dframe:          The DataFrame tha is being checked.
+        Checks that dframe has the fields in the array requiredFields. Also checks that there are no duplicate fields
+        Returns True on success. Raises a ValueError on failure.
+        :param:dframe:          The DataFrame that is being checked.
         :param:requiredFields:  The fields that are required. 
         '''
-
         actualFields=dframe.columns
+        if len(actualFields) != len(set(actualFields)) :
+            err = 'Your DataFrame has duplicate columns'
+            raise(ValueError(err))
         if set (requiredFields) <= (set (actualFields)) :
-            print("got it")
+            return True
         else :
             err='Your DataFrame is missing some required fields:\n'
             err += str((set(requiredFields) - set(actualFields)))
@@ -86,7 +90,65 @@ class InputDataFrame(object):
 #         self._DASColVal = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L']
 #         self.source=source
 #         self._setup()
+
+    def _checkUniqueSIMTX(self, dframe):
+        '''Check the SIM transactions for uniqueness within (ticker, time, account). I believe these are always necessariy unique.
+        I need to know if they are not.  If found,the program should fail or alert the user and work around
+        '''
+        rc = ReqCol()
         
+
+        df =dframe[dframe['Cloid'] == "AUTO" ]
+        tickerlist = list()
+        for i, row in df.iterrows():
+            tickerlist.append( (row[rc.time], row[rc.ticker], row[rc.acct]) )
+    
+            tickerset = set(tickerlist)
+            try :
+                assert(len(tickerset) == len (tickerlist) )
+            except ValueError as ex :
+                err = "Found a Sim ticket that is not unique. Alert the media.... (Now)"
+                print("{0}{1}".format(err, ex))
+                sys.exit(-1)
+
+    def getListOfTicketDF(self, dframe):
+        ''' 
+        Take the standard trades.csv DataFrame and return transactsion for each ticket as a python list 
+        of DataFrames. This is made more interesting by the SIM transactions which have no ticket ID (Cloid). 
+        They are identified in DAS by 'AUTO.' We will give them one. Presumably one ticket per SIM transaction, 
+        but check for uniqueness and fail it if it is ever not true.
+        
+        NOTE: This SIM ticket will most definitely
+        not be found unique between different days
+        if/when that is an issue, fixit.
+        '''
+        self._checkUniqueSIMTX(dframe)
+        
+        SIMdf =dframe[dframe['Cloid'] == "AUTO" ]
+        for i, row in SIMdf.iterrows():
+            tickName = "SIMTick_{0}".format(i)
+            print(tickName)
+            SIMdf.at[i, "Cloid"] = tickName
+            
+                
+            
+        listOfTickets = list()
+        for ticketID in dframe.Cloid.unique():
+            if ticketID == "AUTO" :
+                continue
+            t = dframe[dframe['Cloid'] == ticketID ]
+            listOfTickets.append(t)
+        
+        
+            
+        #Add the altered sim tickets to the ptyhon list, One list element per ticket (in SIM -- each row wil be a DF)
+        for simTkt in SIMdf.Cloid.unique():
+            print(simTkt)
+            t = SIMdf[SIMdf['Cloid'] == simTkt]
+            listOfTickets.append(t)            
+            
+        
+        return listOfTickets
         
     def zeroPadTimeStr(self, dframe) :
         '''
@@ -142,11 +204,16 @@ class InputDataFrame(object):
     
     def getOvernightTrades(self, dframe) :
         ''' 
-        Returns a python list (Symb, Qty, 0, 0) of the tickers traded today that have positions from before the market,
-        opened, or from after the trades file was exported or both. 
-        :param:dframe: The DataFrame with the days trades that includes the columns tickCol and qtyCol 
-        (Symb and Qty by default and in DAS).
-        :return: A list of lists with the ticker and quantity of tickers with positions outside todays transactions. 
+        :dep:getListTickerDF: Requires transactions from a single ticker in a single account.  
+        :dep:mkShortsNegative: Qunatity of shares need to be positive for a buy and negative for a sell or short. 
+        We will not know whether the overnight trade is before or after or both. 
+        :param:dframe: The DataFrame with the days trades that includes the columns rc.ticker and rc.shares 
+        :return:overnightTrades: The structure is a list of dict. The dict has the keys (ticker, shares, before, after, acct). 
+                                Elsewhere in the program the variable is referred to as swingTrade or swtrade.
+            :ticker:                     The stock ticker
+            :shares: :before: :after:    The accounting of overnight shares. At the end of this method, all shares
+                                         are in shares. Don't have the info for before or after.
+            :acct:                       The account for this transaction
         '''
         rc = ReqCol()
         

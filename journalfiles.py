@@ -131,7 +131,7 @@ class JournalFiles :
             if not os.path.exists(checkUpOne) :
                 #If the parent exists, Structjour will create the out directory when it comes to it. 
                 # Otherwise, trash this puppy
-                err = "Fatal error:{0} Neither output directory nor its parent can be located: {1}".format("JournalFiles._checkPaths", self.outputdir)
+                err = "Fatal error:{0} Neither output directory nor its parent can be located: {1}".format("JournalFiles._checkPaths", self.outdir)
                 self._printValues()
                 raise NameError(err)
             
