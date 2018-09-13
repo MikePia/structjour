@@ -5,7 +5,7 @@ Created on Sep 9, 2018
 '''
 import unittest
 import os
-from structjour.pandasutil import DataFrameUtil, InputDataFrame
+from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
 import pandas as pd
 from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 from journalfiles import JournalFiles
@@ -15,12 +15,65 @@ class Test(unittest.TestCase):
     
     
     def testGetListOfTicketDF(self):
-        jf = JournalFiles(outdir = '../out/', mydevel = True)
+        rc = ReqCol()
+        
+        jf = JournalFiles(indir = '../data', infile='trades.910.tickets.csv', outdir = '../out/', mydevel = True)
+        
+#         idf = InputDataFrame()
+        tkt = Ticket(jf)
+#         tkt.setup()
+        tktList = tkt.getListOfTicketDF()
+        
+        totalTX = 0
+        for ticket in tktList :
+            self.assertEqual(len(ticket[rc.side].unique()), 1, "There can only be one side, long or short, in a ticket")
+            self.assertEqual(len(ticket[rc.ticker].unique()), 1,"There can only be one ticker in a ticket")
+            self.assertEqual(len(ticket['Cloid'].unique()), 1, "There can be only one Cloid in a ticket")
+            self.assertEqual(len(ticket[rc.acct].unique()),  1, "There can be only one account in a ticket")
+
+            totalTX = totalTX + len(ticket)
+
         trades = pd.read_csv(jf.inpathfile)
-        idf = InputDataFrame()
-        tktList = idf.getListOfTicketDF(trades)
-                  
-    
+        msg = "There is a discrepancy in number of transactions between the original and the tickets"
+        self.assertEqual(len(trades), totalTX, msg)
+        
+    def testCreateSingleTicket(self):
+        rc = ReqCol()
+        jf=JournalFiles(indir=r"../data", infile = "trades.910.tickets.csv", outdir= r"../out")
+        tkt = Ticket(jf)
+
+        listTick = tkt.getListOfTicketDF()
+        totalSharesForDay = 0
+        for tick in listTick :
+                
+            singleTicket = tkt.createSingleTicket(tick)
+            self.assertIsInstance(singleTicket, type(pd.DataFrame()), "Failed to create a DataFrame")
+            self.assertEqual(len(singleTicket), 1, "Failed to create a single item ticket")
+            self.assertLessEqual(singleTicket[rc.price].unique()[0], tick[rc.price].max())
+            self.assertGreaterEqual(singleTicket[rc.price].unique()[0], tick[rc.price].min())
+            
+            totalSharesForDay = totalSharesForDay + tick[rc.shares].sum()
+
+        dframe = pd.read_csv(jf.inpathfile)
+        self.assertEquals(dframe[rc.shares].sum(), totalSharesForDay, "Failed to acount for all the shares transacted in the day")
+
+    def testNewSingleTxPerTicket(self):
+        rc = ReqCol()
+        jf=JournalFiles(indir=r"../data", infile = "trades.910.tickets.csv", outdir= r"../out")
+        origdframe = pd.read_csv(jf.inpathfile)
+        originfile=jf.infile
+        tkt = Ticket(jf)
+
+#         listTick = tkt.getListOfTicketDF()
+        newDF, jf = tkt.newDFSingleTxPerTicket()
+        
+        self.assertNotEqual(originfile, jf.infile)
+        newdframe = pd.read_csv(jf.inpathfile)
+        print ("Original len: {0}: Original sum: {1}.".format(len(origdframe),origdframe[rc.PL].sum()))
+        print ("The new  len: {0}: The new sum:  {1}.".format(len(newdframe),newdframe[rc.PL].sum()))
+        print ("The new  len: {0}: The new sum:  {1}.".format(len(newDF),newDF[rc.PL].sum()))
+        self.assertAlmostEqual(origdframe[rc.PL].sum(), newdframe[rc.PL].sum(),places=10)
+        self.assertAlmostEqual(newDF[rc.PL].sum(), newdframe[rc.PL].sum(),places=10)
 
 
     def testCheckRequiredColumnsThrow(self):
@@ -95,7 +148,7 @@ class Test(unittest.TestCase):
         cause this test to fail) Right now I have only one case to test ('data/TradesExcelEdited.csv')so wtf, leave 
         it till I have a test case.
         '''
-        infile=r"../data/TradesExcelEdited.csv"
+        infile=r"../data/trades.8.ExcelEdited.csv"
         if not os.path.exists(infile) :
             err="Test is improperly setup. {0}".format(infile)
             self.assertTrue(False, err)
@@ -168,8 +221,8 @@ class Test(unittest.TestCase):
         '''
     
         indir=r"../data"
-        infile = "TradesWithBothHolds.csv"
-        infile2="tradesWithChangingHolds9.7.csv"
+        infile = "trades.8.WithBothHolds.csv"
+        infile2="trades.907.WithChangingHolds.csv"
 #         infile3="TradesWithHolds.csv"          #skipping-- edited by Excel
     
         data = [

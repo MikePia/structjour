@@ -48,13 +48,13 @@ class JournalFiles :
 
     def indir(self, indir=None):
         if indir :
-            self.indir = indir
+            self.indir = os.path.normpath(indir)
             self.inpathfile = os.path.join(self.indir, self.infile)
         return self.indir
     
     def outdir(self, outdir=None):
         if outdir :
-            self.outdir = outdir
+            self.outdir = os.path.normpath(outdir)
             self.outpathfile = os.path.join(self.outdir, self.outfile)
         return self.outdir
 
@@ -134,7 +134,12 @@ class JournalFiles :
                 err = "Fatal error:{0} Neither output directory nor its parent can be located: {1}".format("JournalFiles._checkPaths", self.outdir)
                 self._printValues()
                 raise NameError(err)
-            
+    def resetInfile(self, infile):
+
+        self.infile = infile
+        inpathfile = os.path.join(self.indir, self.infile)
+        self.inpathfile = inpathfile
+        self._checkPaths()
         
     def _printValues(self):
         '''Development helper'''

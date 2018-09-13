@@ -7,7 +7,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 from journalfiles import JournalFiles
 import pandas as pd
-from structjour.pandasutil import DataFrameUtil, InputDataFrame
+from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
 from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 #TradeUtil, FinReqCol, ReqCol, 
 
@@ -17,9 +17,14 @@ from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
-jf = JournalFiles(outdir="out", mydevel = True)
+jf = JournalFiles(theDate=datetime.date(2018,9,11), mydevel = True)
+# jf=JournalFiles(indir=r"data", infile = "trades.910.tickets.csv", outdir= r"out")
+        
+tkt = Ticket(jf)
+
 tu = TradeUtil()
-trades = pd.read_csv(jf.inpathfile)
+trades, jf =tkt.newDFSingleTxPerTicket()
+# trades = pd.read_csv(jf.inpathfile)
 idf = InputDataFrame()
 reqCol = ReqCol()
 finalReqCol = FinReqCol()
