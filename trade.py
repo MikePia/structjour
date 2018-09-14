@@ -17,8 +17,8 @@ from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
-jf = JournalFiles(theDate=datetime.date(2018,9,11), mydevel = True)
-# jf=JournalFiles(indir=r"data", infile = "trades.910.tickets.csv", outdir= r"out")
+# jf = JournalFiles(theDate=datetime.date(2018,9,11), mydevel = True)
+jf=JournalFiles(outdir='out/',mydevel=True)
         
 tkt = Ticket(jf)
 
@@ -107,9 +107,10 @@ dframe = newdf.append(dframe, ignore_index = True)
 # to place images within the excel file.
 imageLocation = list()
 for tdf in ldf :
-    imageName='{0}_{1}_{2}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
+    imageName='{0}_{1}_{2}_{3}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
            tdf[finalReqCol.name].unique()[-1].replace(' ','-'),
-           tdf[finalReqCol.start].unique()[-1])
+           tdf[finalReqCol.start].unique()[-1],
+           tdf[finalReqCol.dur].unique()[-1])
 
     # TODO handle empty string in the tdf
     imageLocation.append([len(tdf) + len(dframe) + 2, 
