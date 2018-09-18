@@ -318,15 +318,35 @@ class ToCSV_Ticket(object):
         necessarily unique. I need to know if they are not.  If found,the program should fail or alert the 
         user and work around
         '''
+        pass
         rc = ReqCol()
         dframe = self.df
+         
+        #HACK ALERT
+        #This is guaranteed to cause some future problem
+        # If Cloid has some Sim ids ('AUTO') the column must have some str elements. Without this
+        # it throws a TypeError and a Future Warning about changing code. For DataFrame columns 
+        # without any sim trades there are only floats. This is not guaranteed behavior, just obaserved
+        # from my runs. And there there is some weirdness between numpy types and python regarding 
+        # what type to return for this comparison
+#         if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
         
+        doSomething = False
+        for t in dframe['Cloid'] :
+            if isinstance(t, str) :
+                doSomething = True
+                break
+        if not doSomething :
+            return
+
+
 
         df =dframe[dframe['Cloid'] == "AUTO" ]
+    
         tickerlist = list()
         for i, row in df.iterrows():
             tickerlist.append( (row[rc.time], row[rc.ticker], row[rc.acct]) )
-    
+     
             tickerset = set(tickerlist)
             try :
                 assert(len(tickerset) == len (tickerlist) )
@@ -374,6 +394,10 @@ class ToCSV_Ticket(object):
         presumably one ticket per SIM transaction, but check for uniqueness and fail it if it is ever not true
         :return: The penultimate step, returns a list of DataFrames, 1 row per ticket.
         
+        HACK ALERT: This got real ugly when I sent in a trades.csv without any sim trades.  The import alters
+        the type. Without no Sim included, they are all floats. With at least one Sim transaction, they are 
+        str. But that is not guaranteed.
+        
         
         NOTE: This SIM ticket will most definitely
         not be found unique between different days
@@ -383,11 +407,19 @@ class ToCSV_Ticket(object):
         dframe = self.df
         self._checkUniqueSIMTX()
         
+        doSomething = False
+        for t in dframe['Cloid'] :
+            if isinstance(t, str) :
+                doSomething = True
+                break
+        
+        
         #Get the SIM transactions from the origainal DataFtame. Change the Cloid from Auto to SIMTick__XX
-        SIMdf =dframe[dframe['Cloid'] == "AUTO" ]
-        for i, row in SIMdf.iterrows():
-            tickName = "SIMTick_{0}".format(i)
-            SIMdf.at[i, "Cloid"] = tickName
+        if doSomething:
+            SIMdf =dframe[dframe['Cloid'] == "AUTO" ]
+            for i, row in SIMdf.iterrows():
+                tickName = "SIMTick_{0}".format(i)
+                SIMdf.at[i, "Cloid"] = tickName
         
         #For each unique ticket ID (akaCloid), create a DataFrame and add it to a list of DataFrames    
         listOfTickets = list()
@@ -398,9 +430,11 @@ class ToCSV_Ticket(object):
             listOfTickets.append(t)
         print("before last loop {0}".format(len(listOfTickets)))
         # Combine the two above into a python list of DataFrames
-        for simTkt in SIMdf.Cloid.unique():
-            t = SIMdf[SIMdf['Cloid'] == simTkt]
-            listOfTickets.append(t)            
+        
+        if doSomething :
+            for simTkt in SIMdf.Cloid.unique():
+                t = SIMdf[SIMdf['Cloid'] == simTkt]
+                listOfTickets.append(t)            
         print("after last loop {0}".format(len(listOfTickets)))
             
         return listOfTickets
