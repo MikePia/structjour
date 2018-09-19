@@ -6,6 +6,7 @@ Created on Aug 30, 2018
 import unittest
 import datetime
 import os
+import sys
 from journalfiles import JournalFiles
 from structjour.pandasutil import DataFrameUtil
 
@@ -41,7 +42,7 @@ class TestJF(unittest.TestCase):
             
             
     def test_IndirCreate(self):
-        f = "TradesExcelEdited.csv"
+        f = "Trades.8.ExcelEdited.csv"
         jf = JournalFiles(indir = r"..\data", infile=f)
     
         self.assertEqual(os.path.realpath(os.path.join(r'..\data', f)), os.path.realpath(jf.inpathfile), "Structjour failed to correctly set the input file")
@@ -117,9 +118,15 @@ class TestJF(unittest.TestCase):
         '''
         dout = r"..\out"
         din = r"..\data"
-        fin = 'TradesWithBothHolds.csv'
-        
-        jf = JournalFiles(indir=din, infile=fin, outdir = dout, mydevel=True)
+        fin = 'Trades.8.WithBothHolds.csv'
+        try :
+            jf = JournalFiles(indir=din, infile=fin, outdir = dout, mydevel=True)
+        except NameError as ex : 
+            print(ex)
+            print("testDevelIndirOutdirCreat  requires ..\{0}".format(fin))
+            print("This test requires having files in the right locations. Do you have files in the right locations?") 
+            sys.exit(-1)
+            
         jf._printValues()
             
         self.assertEqual( os.path.realpath (r'..\out'), 

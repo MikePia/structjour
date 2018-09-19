@@ -18,13 +18,15 @@ from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
 # jf = JournalFiles(theDate=datetime.date(2018,9,11), mydevel = True)
-jf=JournalFiles(outdir='out/',mydevel=True)
+jf=JournalFiles(mydevel=True)
+jf._printValues()
         
 tkt = Ticket(jf)
 
 tu = TradeUtil()
 trades, jf =tkt.newDFSingleTxPerTicket()
 # trades = pd.read_csv(jf.inpathfile)
+
 idf = InputDataFrame()
 reqCol = ReqCol()
 finalReqCol = FinReqCol()
@@ -140,16 +142,11 @@ for r in dataframe_to_rows(nt, index=False, header=False):
 for name, cell  in zip(nt.columns, ws[topMargin]) :
     cell.value = name
 
-# for c in ws[10] :
-#     print (c.value)
 
-# for i in imageLocation :
-#     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(i[2], i[3], i[4]))
 
-imgName = 'tempImage.jpg'
 
 XL = XLImage()
-#         
+         
 for loc in imageLocation :
 #     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
     img = XL.getAndResizeImage(loc[2], jf.outdir)
