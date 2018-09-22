@@ -18,7 +18,7 @@ from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
 # jf = JournalFiles(theDate=datetime.date(2018,9,11), mydevel = True)
-jf=JournalFiles(mydevel=True)
+jf=JournalFiles(outdir='out/', mydevel=True)
 jf._printValues()
         
 tkt = Ticket(jf)

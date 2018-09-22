@@ -311,6 +311,9 @@ class ToCSV_Ticket(object):
     def __init__(self, jf) :
         self.jf = jf
         self.df = pd.read_csv(self.jf.inpathfile)
+        rc = ReqCol()
+        DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
+
 
     def _checkUniqueSIMTX(self):
         '''
@@ -333,7 +336,7 @@ class ToCSV_Ticket(object):
         
         doSomething = False
         for t in dframe['Cloid'] :
-            if isinstance(t, str) :
+           if isinstance(t, str) :
                 doSomething = True
                 break
         if not doSomething :

@@ -244,6 +244,11 @@ class TradeUtil(object):
         return dframe
    
     def addTradeIndex(self, dframe) :
+        '''
+        Labels and numbers the trades by populating the TIndex column. 'Trade 1' for example includes the transactions 
+        between the initial purchase or short of a stock and its subsequent 0 position. (If the stock is held overnight, 
+        non-transaction rows have been inserted to account for todays' activities.)
+        '''
         
         c = self._frc
 
@@ -264,11 +269,9 @@ class TradeUtil(object):
         numTrades = TCount
         print(numTrades)        
         return dframe
-    # This will blow up from wrong types if there is some kind of anomaly. The blank rows in 
-    # Sum col are str and the filled rows are float. Don't fix it until it blows up. (or you 
-    # need change this 'now' to production code for some reason) That way we have some case to fix.
     
     def addTradePL (self, dframe) :
+        ''' Add a trade summary P/L. That is total the transaction P/L and write a summary P/L for the trade in the c.sum column '''
 
         c = self._frc        
 
@@ -283,6 +286,7 @@ class TradeUtil(object):
         return dframe
     
     def addTradeDuration(self, dframe) :
+        ''' Get a time delta beween the time of the first and last transaction. Place it in the c.dur column'''
         
         c = self._frc
 
@@ -297,12 +301,9 @@ class TradeUtil(object):
         return dframe
     
     
-    # In[ ]:
-    
-        
-    
     def addTradeName(self, dframe) :
-        
+        '''Create a name for this trade like 'AMD Short'. Place it in the c.name column'''
+            
         c= self._frc
         
         for i, row in dframe.iterrows():
@@ -315,7 +316,9 @@ class TradeUtil(object):
     
     # Note that .sum() should work on this but it failed when I tried it.
     def addSummaryPL(self, dframe) :
-        
+        ''' Create a summary of the P/L for the day, place it in new row. Sum up the transactions in c.PL
+        and redundantly sum up the trade P/L in c.sum. These should be the same amount. '''
+        # TODO sum up the seperate accounts and make a new labeled entry for each account
         c = self._frc
         
         count=0
