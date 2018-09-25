@@ -134,7 +134,11 @@ class InputDataFrame(object):
         listOfTickers = list()
         for symb in dframe[rc.ticker].unique() :
             for acct in dframe[rc.acct][dframe[rc.ticker]==symb].unique()  :
-                ldf = dframe[dframe[rc.ticker]==symb][dframe[rc.acct]==acct]
+
+#                 ldf = dframe[dframe[rc.ticker]==symb][dframe[rc.acct]==acct]
+                ldf = dframe[dframe[rc.ticker]==symb]
+                ldf = ldf[ldf[rc.acct]==acct]
+
                 listOfTickers.append(ldf)
 #         
 #         ldf_tick = list()
@@ -336,7 +340,7 @@ class ToCSV_Ticket(object):
         
         doSomething = False
         for t in dframe['Cloid'] :
-           if isinstance(t, str) :
+            if isinstance(t, str) :
                 doSomething = True
                 break
         if not doSomething :

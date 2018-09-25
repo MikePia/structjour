@@ -9,6 +9,8 @@ from journalfiles import JournalFiles
 import pandas as pd
 from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
 from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
+from withstyle.thetradeobject import SumReqFields, TheTradeObject
+from withstyle.tradestyle import TradeFormat
 #TradeUtil, FinReqCol, ReqCol, 
 
 # jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
@@ -54,50 +56,30 @@ nt=DataFrameUtil.addRows(nt,1)
 nt = tu.addSummaryPL(nt)
     
 ldf=tu.getTradeList(nt)
-# 
-# 
-# # Now  we are going to add each trade and insert space to put in pictures with circles and 
-# #arrows and paragraph on the back of each one to be used as evidence against you in a court 
-# # of law (or court of bb opionion)
-# insertsize=25
-# dframe = nt
-# ldf = list()
-# count = 1
-# while True :
-#     tradeStr = "Trade " + str(count)
-#     count = count + 1
-#     tdf = dframe[dframe.Tindex == tradeStr]
-#     if len(tdf) > 0 :
-#         ldf.append(tdf)
-#     else :
-#         break
-# len(ldf)
 
 dframe = DataFrameUtil.addRows(nt, 2)
 
 
-entries = list()
-exits= list()
-for tdf in ldf:
-    longOrShort = tu.getLongOrShort(tdf)
-    
-    ent = tdf[tdf.Side == 'B']
-    ext = tdf[tdf.Side.str.startswith('S')]
-    entries.append(ent)
-    exits.append(ext)
-    print(tu.getLongOrShort(tdf))
-        
-    break
-
-for tdf in ldf:
-    print (tdf.Tindex.unique()[0].replace(' ','') + '.jpeg')
+# entries = list()
+# exits= list()
+# for tdf in ldf:
+#     longOrShort = tu.getLongOrShort(tdf)
+#     
+#     ent = tdf[tdf.Side == 'B']
+#     ext = tdf[tdf.Side.str.startswith('S')]
+#     entries.append(ent)
+#     exits.append(ext)
+#     print(tu.getLongOrShort(tdf))
+#         
+#     break
 # 
-# s = 'Trade 1'.replace(" ", "") + '.jpeg'
-# s
+# for tdf in ldf:
+#     print (tdf.Tindex.unique()[0].replace(' ','') + '.jpeg')
+# 
+# print(ldf[0].Tindex.unique()[0])
+# print (ldf[0].Name.unique()[-1])
+# print(ldf[0].Start.unique()[0])
 
-print(ldf[0].Tindex.unique()[0])
-print (ldf[0].Name.unique()[-1])
-print(ldf[0].Start.unique()[0])
 print (ldf[0].Duration.unique()[-1])
 
 topMargin = 10
@@ -126,11 +108,7 @@ for tdf in ldf :
     dframe = DataFrameUtil.addRows(dframe, insertsize)
     print(len(dframe))
 
-len(dframe)
-
-    
 nt = dframe
-
 
 wb = Workbook()
 ws = wb.active
@@ -146,12 +124,29 @@ for name, cell  in zip(nt.columns, ws[topMargin]) :
 
 
 XL = XLImage()
-         
-for loc in imageLocation :
+
+srf = SumReqFields()
+tradeSummaries = list()
+tf = TradeFormat(wb)
+assert (len(ldf) == len(imageLocation))
+     
+response = input("Would you like to enter strategy names, targets and stops?")
+interview = True if response.lower().startswith('y') else False
+for loc, tdf in zip(imageLocation, ldf) :
 #     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
     img = XL.getAndResizeImage(loc[2], jf.outdir)
     cellname = 'J' + str(loc[0])
     ws.add_image(img, cellname)
+    
+    #Put together the summary info and interview the trader
+    tto=TheTradeObject(tdf, interview)
+    tto.runSummary()
+    tradeSummaries.append(tto)
+    
+    #Place the format shapes/styles in the worksheet
+    tf.formatTrade(ws, anchor=(1, loc[0]))
+    
+print("Done with interview")
 
 
 jf.mkOutdir() 

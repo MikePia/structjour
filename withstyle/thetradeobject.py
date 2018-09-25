@@ -40,13 +40,17 @@ class SumReqFields(object):
                   'stophead', 'stoploss', 'sldiff',
                   'rrhead', 'rr', 'maxhead', 'maxloss', 'explain', 'notes']
         
+        
+        # This includes all the locations that are likely to have data associated with them.  Blank cells are added to tfcolumns  Each of these are added as 
+        # attributes Unnecessarily as but it should reduce errors to use attributes instead of strings
         rc = dict(zip(rckeys, rcvals))
         
         # The user should generally use these as dot accessors to get the columns names. <soapbox> I am against strings as the primary navigation
         # in a programming language. Leave that to SQL in VB or html. A level of abstraction is safer. rc.name rather than rc['Name']
         # Dictionary type is for programmers/implementation, not users/interface. </soapbox>
+       
         self.name     = rc['name']
-        self.acct      = rc['acct']
+        self.acct     = rc['acct']
         self.PL       = rc['PL']
         self.start    = rc['start']
         self.dur      = rc['dur']
@@ -88,6 +92,9 @@ class SumReqFields(object):
         self.rc = rc
         self.columns = rc.values()
         
+        
+        #The cell called 'normxx' are not in any other place This will be used to set the style for each cell/merged group of the TradeObject in excell. They ar not in rckeys 
+        
         self.tfcolumns = { 
             self.name     : [[(1, 1), (3, 2)],'titleStyle'],
             self.acct      : [[(4 ,1), (6, 2)],'titleStyle'],
@@ -119,15 +126,30 @@ class SumReqFields(object):
             self.targhead : [(1, 7),'normStyle'],
             self.targ     : [(2, 7),'normStyle'],
             self.targdiff : [(3, 7),'normStyle'],
+            "norm47"      : [(4, 7),'normStyle'],
+            "norm57"      : [(5, 7),'normStyle'],
+            "norm67"      : [(6, 7),'normStyle'],          
             self.stophead : [(1, 8),'normStyle'],
             self.stoploss : [(2, 8),'normStyle'],
             self.sldiff   : [(3, 8),'normStyle'],
+            "norm48"      : [(4, 8),'normStyle'],
+            "norm58"      : [(5, 8),'normStyle'],
+            "norm68"      : [(6, 8),'normStyle'],
             self.rrhead   : [(1, 9),'normStyle'],
             self.rr       : [(2, 9),'normStyleRR'],
+            "norm39"      : [(3, 9),'normStyle'],
+            "norm49"      : [(4, 9),'normStyle'],
+            "norm59"      : [(5, 9),'normStyle'],
+            "norm69"      : [(6, 9),'normStyle'],
             self.maxhead  : [(1, 10),'normStyle'],
             self.maxloss  : [(2, 10),'normStyle'],
+            "norm310"     : [(3, 10),'normStyle'],
+            "norm410"     : [(4, 10),'normStyle'],
+            "norm510"     : [(5, 10),'normStyle'],
+            "norm610"     : [(6, 10),'normStyle'],
+
             self.explain  : [[(1,11), (6,16)],'noteStyle'],
-            self.notes    : [[(1,17), (2,22)],'noteStyle']
+            self.notes    : [[(1,17), (6,22)],'noteStyle']
     
                      }
             #TODO get a list of namd styles and verify that all of these strings are on the list. Come up with a mechanism to make this configurable by the user
@@ -138,7 +160,7 @@ class TheTradeObject(object):
     '''Summarize one trade at a time'''
 
 
-    def __init__(self, df):
+    def __init__(self, df, interview):
         '''
         Create a dataframe that includes all the summary material for review. Some of this data comes from the program
         and some of it comes from the user. The user will determine which parts to fill out from a couple of options.
@@ -146,13 +168,14 @@ class TheTradeObject(object):
         '''
         
         
-        
+        self.interview = interview
         col=srf.tfcolumns.keys()
         TheTrade = pd.DataFrame(columns=col)
         TheTrade = DataFrameUtil.addRows(TheTrade, 1)
 
         ix = df.index[-1]
         ix0 = df.index[0]
+        self.interview=None
 
         
         #TODO This list should be retrieved from TheStrategyObject
@@ -169,6 +192,8 @@ class TheTradeObject(object):
         self.shares = 0
         
     def runSummary(self):
+        
+            
         self.__setName()
         self.__setAcct()
         self.__setSum()
@@ -176,17 +201,22 @@ class TheTradeObject(object):
         self.__setDur()
         self.__setMarketValue()
         
-        # Place items requireing user input in seperate method
-        self.__setStrategy()            # Goes in Different method
         self.__setShares()
         self.__setHeaders()
-        self.__setEntries()
-        self.__setTarget()              # Goes in Different method
-        self.__setStop()         # Goes in Different method
-        self.__setMaxLoss()
-        return self.__setRiskReward()
+        ret = self.__setEntries()
+        
+        if self.interview == True :
+            print ("WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO NELLY")
+            self.__setStrategy()     
+            self.__setTarget()       
+            self.__setStop()         
+            self.__setMaxLoss()
+            ret = self.__setRiskReward()
+        return ret
     
 
+    def getName(self):
+        return self.TheTrade[srf.name]
         
     def __setName(self):
         self.TheTrade[srf.name]=self.df.loc[self.ix][frc.name]
@@ -210,7 +240,7 @@ class TheTradeObject(object):
         self.TheTrade[srf.dur]=duration
         return self.TheTrade
 
-    def getStrategy(self) :
+    def __getStrategy(self) :
 
         s="What was the strategy?" 
     
@@ -232,7 +262,7 @@ class TheTradeObject(object):
         return ireply -1
 
     def __setStrategy(self):
-        reply = self.getStrategy()
+        reply = self.__getStrategy()
     
 
         if reply == 9 :
@@ -297,8 +327,9 @@ class TheTradeObject(object):
         for i, price in zip(range (len(S)), S) :
             col = "Exit" + str(i+1)
             self.TheTrade[col] = price
-        return self.TheTrade[[srf.entryhead, srf.entry1, srf.entry2, srf.entry3, srf.entry4, srf.entry5, 
-                              srf.exithead, srf.exit1, srf.exit2, srf.exit3, srf.exit4, srf.exit5]]
+        return self.TheTrade
+    #[[srf.entryhead, srf.entry1, srf.entry2, srf.entry3, srf.entry4, srf.entry5, 
+    #                          srf.exithead, srf.exit1, srf.exit2, srf.exit3, srf.exit4, srf.exit5]]
     
     def __setTarget(self) :
         target = 0
