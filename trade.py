@@ -19,8 +19,8 @@ from withstyle.tradestyle import TradeFormat
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
-# jf = JournalFiles(theDate=datetime.date(2018,9,11), mydevel = True)
-jf=JournalFiles(outdir='out/', mydevel=True)
+jf = JournalFiles(theDate=datetime.date(2018,9,11), outdir='out/', mydevel = True)
+# jf=JournalFiles(outdir='out/', mydevel=True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -60,25 +60,6 @@ ldf=tu.getTradeList(nt)
 dframe = DataFrameUtil.addRows(nt, 2)
 
 
-# entries = list()
-# exits= list()
-# for tdf in ldf:
-#     longOrShort = tu.getLongOrShort(tdf)
-#     
-#     ent = tdf[tdf.Side == 'B']
-#     ext = tdf[tdf.Side.str.startswith('S')]
-#     entries.append(ent)
-#     exits.append(ext)
-#     print(tu.getLongOrShort(tdf))
-#         
-#     break
-# 
-# for tdf in ldf:
-#     print (tdf.Tindex.unique()[0].replace(' ','') + '.jpeg')
-# 
-# print(ldf[0].Tindex.unique()[0])
-# print (ldf[0].Name.unique()[-1])
-# print(ldf[0].Start.unique()[0])
 
 print (ldf[0].Duration.unique()[-1])
 

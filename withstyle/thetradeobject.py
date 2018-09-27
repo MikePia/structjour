@@ -175,7 +175,6 @@ class TheTradeObject(object):
 
         ix = df.index[-1]
         ix0 = df.index[0]
-        self.interview=None
 
         
         #TODO This list should be retrieved from TheStrategyObject
@@ -205,8 +204,8 @@ class TheTradeObject(object):
         self.__setHeaders()
         ret = self.__setEntries()
         
+        print("Side = ", self.df.loc[self.ix0][frc.side])
         if self.interview == True :
-            print ("WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO NELLY")
             self.__setStrategy()     
             self.__setTarget()       
             self.__setStop()         
@@ -278,6 +277,7 @@ class TheTradeObject(object):
         return self.TheTrade
         
     def __getShares(self):
+        #TODO Rethink this for HOLDs
         if self.shares == 0 :
             if self.side.startswith("B"):
                 self.shares = self.df[frc.bal].max()
@@ -348,8 +348,16 @@ class TheTradeObject(object):
                 
                 continue
             break
+        
+        pd.to_numeric(self.TheTrade[srf.targ] , errors='coerce')
         self.TheTrade[srf.targ] = target
-        self.TheTrade[srf.targdiff] = target - self.TheTrade[srf.entry1]
+        
+        # If this is a trade with a privious holding, the diff in price of the target has no meaning
+        if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
+            return
+
+        diff = target - self.TheTrade[srf.entry1]
+        self.TheTrade[srf.targdiff] = diff
         return self.TheTrade
 
     def __setStop(self) :
@@ -367,7 +375,13 @@ class TheTradeObject(object):
                 ''')
                 continue
             break
+        
         self.TheTrade[srf.stoploss] = stop
+        
+        # If this is a trade with a privious holding, the diff in price of the stophas no meaning
+        if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
+            return
+
         self.TheTrade[srf.sldiff] = stop - self.TheTrade[srf.entry1]
         return self.TheTrade
     

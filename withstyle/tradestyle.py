@@ -161,6 +161,11 @@ class TradeFormat (object):
         return (icell, end)
     
 
+    def popTheTrade(self, ws, tf, row):
+        anchor = "A:" + row
+        srf.tfcolumns
+        
+        
     def formatTrade(self, ws, tstyle=None, anchor = None) :
         if anchor:
             self.tradeAnchor = anchor
@@ -181,28 +186,22 @@ class TradeFormat (object):
 
         
         # Leave this in till we get till the good stuff gets as a visual check we be on track
-        cc = ws[c((1,1), anchor=anc)]
-        ws[c((1,2), anchor=anc)] = 'Some trade short eh?'
-        cc.value = 'Trade 4 -- MU Long'
+
         
         
-        ws[c((7,5), anchor=anc)] = "Its the end of the world as we know it, and its really past due.!"
-        
-        nn = ws[c((1,11), anchor=anc)]
-        nn.value = \
-'''It was a long trade, it was a short trade it was a trade 
-with too many words associated  with it it w as a trade with 
-not enough said about it. All in all I am not saying anything 
-new here  and in fact i am not saying anything at all i assure 
-if you detect an y  meaning herea youo are mistaken'''
+        ws[c((7,5), anchor=anc)]  = "(Explanatory note for strategy)"
+        ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
+        ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"
     
 
-  
 
-    def c(self, icell,  add= None) :
-        if add :
-            icell = (icell[0] + add[0], icell[1] + add[1])
-        return "{0}{1}".format(get_column_letter(icell[0]),icell[1])
+
+  
+# 
+#     def c(self, icell,  add= None) :
+#         if add :
+#             icell = (icell[0] + add[0], icell[1] + add[1])
+#         return "{0}{1}".format(get_column_letter(icell[0]),icell[1])
     
    
     
