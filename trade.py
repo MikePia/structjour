@@ -11,6 +11,7 @@ from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as
 from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 from withstyle.thetradeobject import SumReqFields, TheTradeObject
 from withstyle.tradestyle import TradeFormat
+from withstyle.tradestyle import c as tcell
 #TradeUtil, FinReqCol, ReqCol, 
 
 # jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
@@ -19,8 +20,8 @@ from withstyle.tradestyle import TradeFormat
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 9, 7), outdir = 'out', mydevel = True)
-jf = JournalFiles(theDate=datetime.date(2018,9,11), outdir='out/', mydevel = True)
-# jf=JournalFiles(outdir='out/', mydevel=True)
+#jf=JournalFiles(outdir='out/', mydevel=True)
+jf = JournalFiles(mydevel = True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -113,6 +114,7 @@ assert (len(ldf) == len(imageLocation))
      
 response = input("Would you like to enter strategy names, targets and stops?")
 interview = True if response.lower().startswith('y') else False
+
 for loc, tdf in zip(imageLocation, ldf) :
 #     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
     img = XL.getAndResizeImage(loc[2], jf.outdir)
@@ -127,7 +129,41 @@ for loc, tdf in zip(imageLocation, ldf) :
     #Place the format shapes/styles in the worksheet
     tf.formatTrade(ws, anchor=(1, loc[0]))
     
+    for key in srf.tfcolumns.keys()  :
+        cell = srf.tfcolumns[key][0]
+        if isinstance(cell, list) :
+            cell = cell[0]
+        tradeval = tto.TheTrade[key].unique()[0]
+        if not tradeval :
+            continue
+    #     print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval, tcell(cell, anchor=(1, loc[0]))))
+
+
+        ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
+    
 print("Done with interview")
+
+
+
+
+
+
+# 
+# for loc, tdf in zip(imageLocation, ldf) :
+# #     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
+#     img = XL.getAndResizeImage(loc[2], jf.outdir)
+#     cellname = 'J' + str(loc[0])
+#     ws.add_image(img, cellname)
+#     
+#     #Put together the summary info and interview the trader
+#     tto=TheTradeObject(tdf, interview)
+#     tto.runSummary()
+#     tradeSummaries.append(tto)
+#     
+#     #Place the format shapes/styles in the worksheet
+#     tf.formatTrade(ws, anchor=(1, loc[0]))
+#     
+# print("Done with interview")
 
 
 jf.mkOutdir() 

@@ -182,13 +182,7 @@ class TradeFormat (object):
             else :
                 ws[c(val[0], anchor=anc)].style = self.styles[val[1]]
         
-    
-
-        
-        # Leave this in till we get till the good stuff gets as a visual check we be on track
-
-        
-        
+            
         ws[c((7,5), anchor=anc)]  = "(Explanatory note for strategy)"
         ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
         ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"

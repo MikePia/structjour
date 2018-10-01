@@ -304,27 +304,39 @@ class TheTradeObject(object):
         return self.TheTrade[[srf.entryhead, srf.exithead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
   
     def __setEntries(self):
-        B=list()
-        S=list()
-        
+        entries=list()
+        exits=list()
+        #TODO Fix the hold entry
+#         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
+        long = False            
+
         for i, row in self.df.iterrows() :
-            if(row[frc.side]).startswith('B') :
-                B.append(row[frc.price])
+            if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+') :
+                long = True
+            
+            if long :
+                if (row[frc.side]).startswith('B') :
+                    entries.append(row[frc.price])
+                else :
+                    exits.append(row[frc.price])
             else :
-                S.append(row[frc.price])
-    
-        if len(B) > 5 :
-            more = len(B) - 5
+                if (row[frc.side]).startswith('B') :
+                    exits.append(row[frc.price])
+                else :
+                    entries.append(row[frc.price])
+
+        if len(entries) > 5 :
+            more = len(entries) - 5
             self.TheTrade.Entry5 =  "Plus {} more.".format(more)
-        for i, price in zip(range (len(B)), B) :
+        for i, price in zip(range (len(entries)), entries) :
             col = "Entry" + str(i+1)
             self.TheTrade[col] = price
-    
 
-        if len(S) > 5 :
-            more = len(S) - 5
+
+        if len(exits) > 5 :
+            more = len(exits) - 5
             self.TheTrade.Exits5 =  "Plus {} more.".format(more)
-        for i, price in zip(range (len(S)), S) :
+        for i, price in zip(range (len(exits)), exits) :
             col = "Exit" + str(i+1)
             self.TheTrade[col] = price
         return self.TheTrade

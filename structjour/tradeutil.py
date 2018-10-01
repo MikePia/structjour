@@ -149,6 +149,7 @@ class XLImage(object):
             
             
             resizeName, ext = self.getResizeName(name, outdir)
+            #TODO handle permission denied error (if the file is open)
             pilImage.save(resizeName, ext)
             img = Image(resizeName)
                 

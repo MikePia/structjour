@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
             insz=(random.randint(200,2500),random.randint(200,2500))
             w,h   = xl.adjustSizeByHeight(insz)
             self.assertAlmostEqual(insz[0]/insz[1], w/h, delta=pixDelta)      
-        #TestChanging heaights
+        #TestChanging heights
         for i in range(10) :
             insz=(random.randint(200,2500),random.randint(200,2500))
             nh=(random.randint(200,700))
