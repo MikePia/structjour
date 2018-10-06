@@ -186,7 +186,7 @@ class Test(unittest.TestCase):
         for i in range(6) :
             self.assertEqual ( apd[rc.shares][i], shares[i] * mult[i])
 
-    def testGetListDF(self) :
+    def testGetListTickerDF(self) :
     
         rc = ReqCol()
 
@@ -250,21 +250,6 @@ class Test(unittest.TestCase):
                 err = "Failed to find {0} in {1}".format(l, infile)
                 self.assertIn(l, tradeList, err)
         
-
-# st = testGetOvernightTrades()
-                
-    
-    
-    
-    
-    
-    
-    
-    
-    
-            
-  
-
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testCheckRequiredColumns']

@@ -11,8 +11,10 @@ from openpyxl.drawing.image import Image
 
 class FinReqCol(object) :
     '''
-    Some sugar to take the strings out of all the client code. The identifying strings are managed here. To get
-    a list of columns use the dictionary frc (frc.values())).
+    Intended to serve as the adapter class for multiple input files. FinReqCol manages the column names fot 
+    the output file. It includes some of the input columns and additional columns  to identify seprate trades and sorting.
+    The columns we add are tix, start, bal, sum, dur, and name
+    :SeeAlso: withstyle.thetradeobject.SumReqFields
     '''
     def __init__(self, source = 'DAS') :
         
@@ -20,10 +22,14 @@ class FinReqCol(object) :
             print("Only DAS is implemented")
             raise(ValueError)
 
+
+        # frcvals are the actual column titles (to be abstracted when we add new input files)
+        # frckeys are the abstracted names for use with all file types
         frcvals = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty','Balance', 'Account', "P / L", 'Sum', 'Duration', 'Name']
         frckeys = ['tix', 'start', 'time', 'ticker', 'side', 'price', 'shares', 'bal', 'acct', 'PL', 'sum', 'dur', 'name']
         frc = dict(zip(frckeys, frcvals))
 
+        #Suggested way to address the columns for the main output DataFrame. 
         self.tix = frc['tix']
         self.start = frc['start']
         self.time = frc['time']
@@ -42,11 +48,12 @@ class FinReqCol(object) :
         self.frc = frc
         self.columns = list(frc.values())
 
-    def hello(self):
-        print('hello FinReqCol', self.tix)
         
 class ReqCol(object):
-    '''The required columns of the input data'''
+    '''
+    Intended as an adapter class for multiple input types. ReqCol are the columns for the original input file
+    All of these are required.
+    '''
     
     
         
@@ -57,10 +64,13 @@ class ReqCol(object):
             print("Only DAS is currently supported")
             raise(ValueError)
         
+        # rcvals are the actual column titles (to be abstracted when we add new input files)
+        # rckeys are the abstracted names for use with all file types
         rckeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL']
         rcvals = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L']
         rc  = dict(zip(rckeys, rcvals))
 
+        #Suggested way to address the columns for the main input DataFrame. 
         self.time = rc['time']
         self.ticker = rc['ticker']
         self.side = rc['side']
@@ -209,9 +219,9 @@ class TradeUtil(object):
         
         for i, row in dframe.iterrows():
             qty = (dframe.at[i, c.shares])
-            if row[c.side].startswith("HOLD") :
-#                 print("got it at ", qty)
-                qty = qty * -1
+#             if row[c.side].startswith("HOLD") :
+# #                 print("got it at ", qty)
+#                 qty = qty * -1
             newBalance = qty + prevBal
     
             dframe.at[i, c.bal] = newBalance 

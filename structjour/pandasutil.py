@@ -94,7 +94,9 @@ class InputDataFrame(object):
     def zeroPadTimeStr(self, dframe) :
         '''
         Guarantee that the time format xx:xx:xx
-        Devel note: Currently accounts for only a single time format. 
+        Devel note: Currently accounts for only a single time format. Note that it is only a problem if the column formatted
+        in the df as string. Date formats use numbers. And the only time I have encountered it as a string is when I have opened it in Excel and saved it.
+        @test
         '''
         
         rc = ReqCol()
@@ -113,7 +115,8 @@ class InputDataFrame(object):
     #        It might be useful in a windowed version with menus to do things seperately.
     #        Currently relying on values of side as 'B' , 'S', 'SS' 
     def mkShortsNegative(self, dframe) :
-        ''' Fix the shares sold to be negative values. '''
+        ''' Fix the shares sold to be negative values. 
+        @testpu'''
         
         rc = ReqCol()
         
@@ -126,7 +129,6 @@ class InputDataFrame(object):
         '''
         Returns a python list of all tickers/account traded in todays input file.
         :param:dframe: The DataFrame with the days trades that includes the column tickCol (Symb by default and in DAS).
-        :param:tickCol: The required column that contains the ticker symbols
         :return: The list of tickers in the days trades represented by the DataFrame 
         '''
         rc = ReqCol()
@@ -141,24 +143,22 @@ class InputDataFrame(object):
 
                 listOfTickers.append(ldf)
 #         
-#         ldf_tick = list()
-#         for ticker in dframe[rc.ticker].unique() :
-#             ldf = dframe[dframe[rc.ticker] == ticker]
-#             ldf_tick.append(ldf)
+#        This code is too interdependent. gtoOvernightTrade, figureOvernightTrades, askUser
+#         and insertOvernightRow combined with the data
         return listOfTickers
     
     def getOvernightTrades(self, dframe) :
         ''' 
-        :dep:getListTickerDF: Requires transactions from a single ticker in a single account.  
-        :dep:mkShortsNegative: Qunatity of shares need to be positive for a buy and negative for a sell or short. 
-        We will not know whether the overnight trade is before or after or both. 
-        :param:dframe: The DataFrame with the days trades that includes the columns rc.ticker and rc.shares 
+        Create the overnightTrade (aka swingTrade data structure) from the list of overnight holds. Overnight holds are inferred
+            from an unbalanced number of shares. Until we ask the user, we won't know whether before or after or both. 
+        :param:dframe: The Original unaltered input file with the days trades that includes the columns rc.ticker and rc.shares 
         :return:overnightTrades: The structure is a list of dict. The dict has the keys (ticker, shares, before, after, acct). 
-                                Elsewhere in the program the variable is referred to as swingTrade or swtrade.
+                                        Elsewhere in the program the variable is referred to as swingTrade or swtrade.
             :ticker:                     The stock ticker
             :shares: :before: :after:    The accounting of overnight shares. At the end of this method, all shares
                                          are in shares. Don't have the info for before or after.
             :acct:                       The account for this transaction
+        @testpu
         '''
         rc = ReqCol()
         
@@ -177,20 +177,24 @@ class InputDataFrame(object):
         return overnightTrade
     
     
-    # Note that this does not yet include those shares that are held before the days trading 
-    # began. Redo this to remake the list of data frames from the Symbols of Swing List then 
-    # make a list of data frams that  excludes those then merge them together
     
-    def askUser(self, swTradeItem, question) :
+    def askUser(self, shares, question) :
+        '''
+        Ask the user a question regarding how many shares they are holding.
+        :params:shares: The number of shares outof balance. Its inserted into the question and
+                        used as a default response.
+        :return: The number response for the number of shares.
+        '''
         while True :
             try :
                 response = input(question)
                 if len(response) < 1 :
-                    response = swTradeItem['shares']
+                    response = shares
                 else :
                     response = int(response)
             except Exception as ex:
                 print(ex)
+                print()
                 print("please enter a number")
                 response = 0
                 continue
@@ -198,6 +202,10 @@ class InputDataFrame(object):
             return response
     
     def figureOvernightTransactions(self, dframe) :
+        '''
+        Determine how of the unbalanced shares were held before and after the days trade (as in the file).
+        Get the raw data from getOvernightTrade then ask the user number of shares before and after.
+        '''
         
         rc = ReqCol()
 
@@ -212,7 +220,7 @@ class InputDataFrame(object):
                     (Enter for {1}) '''.format(swingTrade[i]['ticker'], swingTrade[i]['shares'], swingTrade[i]['acct'])
     
 #                 question = " How many shares of {0} are you holding now? (Enter for {1})".format ( swingTrade[i]['ticker'], swingTrade[i]['shares'] )
-                swingTrade[i]['after'] = self.askUser(swingTrade[i], question)
+                swingTrade[i]['after'] = self.askUser(swingTrade[i]['shares'], question)
                 swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['after']
     
                 if swingTrade[i]['shares'] != 0 :
@@ -222,7 +230,7 @@ class InputDataFrame(object):
                     (Enter for {1}) '''.format(swingTrade[i]['ticker'], -swingTrade[i]['shares'], swingTrade[i]['acct'])
                     
 #                     question = "How many shares of {0} were you holding before? (Enter for {1}".format(swingTrade[i]['ticker'], swingTrade[i]['shares'])
-                    swingTrade[i]['before'] = self.askUser(swingTrade[i], question)
+                    swingTrade[i]['before'] = self.askUser(swingTrade[i]['shares'], question)
                     swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['before']
     
                 if swingTrade[i]['shares']== 0 :
@@ -267,9 +275,9 @@ class InputDataFrame(object):
                                 newldf.at[j, rc.time] = '00:00:01'
                                 newldf.at[j, rc.ticker] = trade['ticker']
                                 if trade['before'] > 0 :
-                                    newldf.at[j, rc.side] = "HOLD+"
-                                else :
                                     newldf.at[j, rc.side] = "HOLD-"
+                                else :
+                                    newldf.at[j, rc.side] = "HOLD+"
                                 newldf.at[j, rc.price] = float(0.0)
                                 newldf.at[j, rc.shares] = trade['before']
                                 newldf.at[j, rc.acct] = trade['acct']    #ZeroSubstance'
@@ -302,13 +310,12 @@ class InputDataFrame(object):
         return newdf
     
     
-    
-    
 class ToCSV_Ticket(object):
     '''
     Take an input CSV file of all trade transactions and reduce the transactions to tickets. Use the 
     JournalFiles class as the single point of contact with  input and output.  When the new file is 
     created, alter the Journalfiles indir/infile to the new file
+    :params:jf: The JournalFile Object. It has the input files we need.
     '''
     
     
@@ -335,7 +342,7 @@ class ToCSV_Ticket(object):
         # it throws a TypeError and a Future Warning about changing code. For DataFrame columns 
         # without any sim trades there are only floats. This is not guaranteed behavior, just obaserved
         # from my runs. And there there is some weirdness between numpy types and python regarding 
-        # what type to return for this comparison
+        # what type to return for this comparison--and it may change in the future.
 #         if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
         
         doSomething = False
@@ -474,4 +481,4 @@ class ToCSV_Ticket(object):
         
         return newDF, self.jf
     
-print('hello dataframe')
+# print('hello dataframe')

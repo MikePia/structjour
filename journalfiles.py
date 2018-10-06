@@ -17,7 +17,7 @@ class JournalFiles :
         :param: outdir      The name of the output directory. By default, this will be indir/'out'. Structjour willalso place copied charts in this directory.
         :param: theDate:    The date of the transactions in the input file. (Currently DAS Pro Trades export file only)
         :param: infile:     The name of the input file. ('trades.csv' by default)
-        :param: outfile:    The name of the outfile. Leave this blank to accept t
+       
         
         '''
         if theDate :
