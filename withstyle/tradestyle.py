@@ -76,6 +76,13 @@ class TradeFormat (object):
     # make this a singleton (---no singleton, it doesn't address the issue)
     def __init__(self, wb, a=(1,1) ):
         self.tradeAnchor = a
+        
+        self.styles = dict()
+        
+            
+            
+            
+        
         titleStyle = NamedStyle(name="titleStyle")
         titleStyle.font = Font(color="FFFFFF", size=16)
         titleStyle.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
@@ -84,68 +91,248 @@ class TradeFormat (object):
                                  right=Side(style='double'), 
                                  top=Side(style='double'), 
                                  bottom=Side(style='double'))
-        titleStyle.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
-        wb.add_named_style(titleStyle) #This will be done automatically if you use it...
+        self.addNamedStyle(titleStyle, 'titleStyle', wb)
         
-        
-        titleStyleStratNotes = NamedStyle(name="titleStyleStratNotes")
-        titleStyleStratNotes.font = Font(color="FFFFFF", size=8)
-        titleStyleStratNotes.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
-        titleStyleStratNotes.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
-        titleStyleStratNotes.border = Border(left=Side(style='double'),
-                                 right=Side(style='double'), 
+                
+        #######################################         titleLeft       ###################################################
+        titleLeft= NamedStyle(name="titleLeft")
+        titleLeft.font = Font(color="FFFFFF", size=16)
+        titleLeft.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
+        titleLeft.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        titleLeft.border = Border(left=Side(style='double'),
                                  top=Side(style='double'), 
                                  bottom=Side(style='double'))
-        titleStyleStratNotes.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
-        wb.add_named_style(titleStyleStratNotes) #This will be done automatically if you use it...
+        self.addNamedStyle(titleLeft, 'titleLeft', wb)
         
-        
-       
+        #######################################     titleNumberRight     ###################################################
+        titleNumberRight= NamedStyle(name="titleNumberRight")
+        titleNumberRight.font = Font(color="FFFFFF", size=16)
+        titleNumberRight.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
+        titleNumberRight.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        titleNumberRight.border = Border(right=Side(style='double'),
+                                 top=Side(style='double'), 
+                                 bottom=Side(style='double'))
+        titleNumberRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        self.addNamedStyle(titleNumberRight, 'titleNumberRight', wb)
 
-        noteStyle = NamedStyle(name="noteStyle")
-        noteStyle.font = Font(color="000000", size=10)
-        noteStyle.alignment = Alignment(horizontal="left", vertical="top", wrapText=True)
-        noteStyle.fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
-        noteStyle.border = Border(left=Side(style='double'),
-                                  right=Side(style='double'), 
-                                  top=Side(style='double'), 
-                                  bottom=Side(style='double'))
-        wb.add_named_style (noteStyle)
+
+        #######################################     titleRight     ###################################################
+        titleRight= NamedStyle(name="titleRight")
+        titleRight.font = Font(color="FFFFFF", size=16)
+        titleRight.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
+        titleRight.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        titleRight.border = Border(right=Side(style='double'),
+                           top=Side(style='double'), 
+                           bottom=Side(style='double'))
+#         titleRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
         
-        
+        self.addNamedStyle(titleRight, 'titleRight', wb)
+
+        #######################################     normRight     ###################################################        
         normStyle = NamedStyle(name = "normStyle")
         normStyle.font = Font(color="FFFFFF", size=11)
-        normStyle.alignment = Alignment(horizontal="left", vertical="bottom")
+        normStyle.alignment = Alignment(horizontal="left", vertical="center")
         normStyle.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
         normStyle.border = Border(left=Side(style='double'),
                                   right=Side(style='double'), 
                                   top=Side(style='double'), 
                                   bottom=Side(style='double'))
         normStyle.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
-        wb.add_named_style (normStyle)
+        
+        self.addNamedStyle(normStyle, 'normStyle', wb)
        
-       
-        normStyleRR = NamedStyle(name = "normStyleRR")
-        normStyleRR.font = Font(color="FFFFFF", size=11)
-        normStyleRR.alignment = Alignment(horizontal="left", vertical="bottom")
-        normStyleRR.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
-        normStyleRR.border = Border(left=Side(style='double'),
+        #######################################     normalNumber     ###################################################        
+        normalNumber= NamedStyle(name = "normalNumber")
+        normalNumber.font = Font(color="FFFFFF", size=11)
+        normalNumber.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumber.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumber.border = Border(left=Side(style='double'),
+                                 right=Side(style='double'), 
+                                 top=Side(style='double'), 
+                                 bottom=Side(style='double'))
+        normalNumber.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumber, 'normalNumber', wb)
+        
+        
+        
+        #######################################     normalFraction     ###################################################
+        normalFraction = NamedStyle(name = "normalFraction")
+        normalFraction.font = Font(color="FFFFFF", size=11)
+        normalFraction.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalFraction.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalFraction.border = Border(left=Side(style='double'),
                                   right=Side(style='double'), 
                                   top=Side(style='double'), 
                                   bottom=Side(style='double'))
-        normStyleRR.number_format = '# ??/??'
-        wb.add_named_style (normStyleRR)
+        normalFraction.number_format = '# ??/??'
         
-        # TODO Have not created a seperate titleStyleLink style, using titleStyle
-        self.styles = dict(
-            titleStyle = titleStyle,
-            titleStyleStratNotes = titleStyleStratNotes,
-            titleStyleLink = titleStyle,
-            normStyle = normStyle,
-            normStyleRR = normStyleRR,
-            noteStyle  = noteStyle
+        self.addNamedStyle(normalFraction, 'normalFraction',  wb) 
+
+        #######################################     linkStyle    ###################################################        
+        linkStyle = NamedStyle(name="linkStyle")
+        linkStyle.font = Font(color="FFFFFF", size=16)
+        linkStyle.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
+        linkStyle.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        linkStyle.border = Border(left=Side(style='double'),
+                                 right=Side(style='double'), 
+                                 top=Side(style='double'), 
+                                 bottom=Side(style='double'))
+        self.addNamedStyle(linkStyle, 'linkStyle', wb)
+        
+        #######################################     normalNumberTopLeft     ###################################################        
+        normalNumberTopLeft= NamedStyle(name = "normalNumberTopLeft")
+        normalNumberTopLeft.font = Font(color="FFFFFF", size=11)
+        normalNumberTopLeft.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberTopLeft.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberTopLeft.border = Border(left=Side(style='double'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='double'), 
+                                 bottom=Side(style='thin'))
+        normalNumberTopLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberTopLeft, 'normalNumberTopLeft', wb)
+
+        
+        #######################################     normalNumberTop     #################################################        
+        normalNumberTop= NamedStyle(name = "normalNumberTop")
+        normalNumberTop.font = Font(color="FFFFFF", size=11)
+        normalNumberTop.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberTop.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberTop.border = Border(left=Side(style='thin'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='double'), 
+                                 bottom=Side(style='thin'))
+        normalNumberTop.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberTop, 'normalNumberTop', wb)       
+        
+        #######################################     normalNumberTopRight     #################################################        
+        normalNumberTopRight = NamedStyle(name = "normalNumberTopRight")
+        normalNumberTopRight.font = Font(color="FFFFFF", size=11)
+        normalNumberTopRight.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberTopRight.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberTopRight.border = Border(left=Side(style='thin'),
+                                 right=Side(style='double'), 
+                                 top=Side(style='double'), 
+                                 bottom=Side(style='thin'))
+        normalNumberTopRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberTopRight, 'normalNumberTopRight', wb)
+        
+        #######################################     normalSubLeft     #################################################
+        normalSubLeft= NamedStyle(name = "normalSubLeft")
+        normalSubLeft.font = Font(color="FABF8F", size=11)
+        normalSubLeft.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalSubLeft.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalSubLeft.border = Border(left=Side(style='double'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
+#         normalSubLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+
+        self.addNamedStyle(normalSubLeft, 'normalSubLeft', wb)
+       
+        
+        #######################################     normalSub     #################################################
+        normalSub= NamedStyle(name = "normalSub")
+        normalSub.font = Font(color="FABF8F", size=11)
+        normalSub.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalSub.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalSub.border = Border(left=Side(style='thin'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
+#         normalSub.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+
+        self.addNamedStyle(normalSub,  'normalSub', wb)
+        
+        #######################################     normalSubRight     #################################################
+        normalSubRight= NamedStyle(name = "normalSubRight")
+        normalSubRight.font = Font(color="FABF8F", size=11)
+        normalSubRight.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalSubRight.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalSubRight.border = Border(left=Side(style='thin'),
+                                 right=Side(style='double'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
+#         normalSubLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalSubRight, 'normalSubRight', wb)
+        
+        #######################################     normalSubNumberBottomLeft     #################################################
+        normalSubNumberBottomLeft= NamedStyle(name = "normalSubNumberBottomLeft")
+        normalSubNumberBottomLeft.font = Font(color="FABF8F", size=11)
+        normalSubNumberBottomLeft.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalSubNumberBottomLeft.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalSubNumberBottomLeft.border = Border(left=Side(style='double'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='double'))
+        normalSubNumberBottomLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalSubNumberBottomLeft, 'normalSubNumberBottomLeft', wb)
+        
+        #######################################     normalNumberBottom     #################################################
+        normalNumberBottom= NamedStyle(name = "normalNumberBottom")
+        normalNumberBottom.font = Font(color="FABF8F", size=11)
+        normalNumberBottom.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberBottom.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberBottom.border = Border(left=Side(style='thin'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='double'))
+        normalNumberBottom.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberBottom, 'normalNumberBottom', wb)
+        
+        #######################################     normalSubNumberBottomRight     #################################################
+        normalSubNumberBottomRight= NamedStyle(name = "normalSubNumberBottomRight")
+        normalSubNumberBottomRight.font = Font(color="FABF8F", size=11)
+        normalSubNumberBottomRight.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalSubNumberBottomRight.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalSubNumberBottomRight.border = Border(left=Side(style='thin'),
+                                 right=Side(style='double'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='double'))
+        normalSubNumberBottomRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalSubNumberBottomRight, 'normalSubNumberBottomRight', wb)
+        
+        #######################################     explain     #################################################
+        explain = NamedStyle(name="explain")
+        explain.font = Font(color="000000", size=10)
+        explain.alignment = Alignment(horizontal="left", vertical="top", wrapText=True)
+        explain.fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+        explain.border = Border(left=Side(style='double'),
+                                  right=Side(style='double'), 
+                                  top=Side(style='double'), 
+                                  bottom=Side(style='double'))
+        self.addNamedStyle(explain, 'explain', wb)
+        
+        #######################################     noteStyle     #################################################
+        noteStyle = NamedStyle(name="noteStyle")
+        noteStyle.font = Font(color="E26B0A", size=10)
+        noteStyle.alignment = Alignment(horizontal="left", vertical="top", wrapText=True)
+        noteStyle.fill = PatternFill(start_color='FFFFCC', end_color='FFFFCC', fill_type='solid')
+        noteStyle.border = Border(left=Side(style='double'),
+                                  right=Side(style='double'), 
+                                  top=Side(style='double'), 
+                                  bottom=Side(style='double'))
+        self.addNamedStyle(noteStyle, 'noteStyle', wb)
+        
+    def addNamedStyle(self, ns, strNs, wb):
+        '''
+        Register named style if it is not lready and add the style to the dict self.styles
+        :params:ns The NamedStyle
+        :params:strNs: The NamedStyle represented as a string
+        :params:wb Workbook
+        '''
+        if strNs not in wb.named_styles :
+            wb.add_named_style(ns)
             
-        )
+        self.styles[strNs] = ns
+        
 
     def mergeStuff(self, ws, icell, end, anchor=None) :
         if anchor :
@@ -183,7 +370,6 @@ class TradeFormat (object):
                 ws[c(val[0], anchor=anc)].style = self.styles[val[1]]
         
             
-        ws[c((7,5), anchor=anc)]  = "(Explanatory note for strategy)"
         ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
         ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"
     
