@@ -4,24 +4,23 @@ import datetime, os
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image
 from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from journalfiles import JournalFiles
-# import pandas as pd
 from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
 from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 from withstyle.thetradeobject import SumReqFields, TheTradeObject
 from withstyle.tradestyle import TradeFormat
 from withstyle.tradestyle import c as tcell
-#TradeUtil, FinReqCol, ReqCol, 
 
 # jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
 
 # jf= JournalFiles(indir =r'C:\trader\journal\_09_September\Week_1\_0904_Tuesday', infile='trades1.csv', mydevel=True)
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
-# jf = JournalFiles(theDate = datetime.date(2018, 9, 28), outdir = 'out/', mydevel = True)
+jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
 #jf=JournalFiles(outdir='out/', mydevel=True)
-jf = JournalFiles(mydevel = True)
+# jf = JournalFiles(mydevel = True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -58,8 +57,8 @@ nt = tu.addTradeName(nt)
 nt=DataFrameUtil.addRows(nt,1)
 nt = tu.addSummaryPL(nt)
 ldf=tu.getTradeList(nt)
+inputlen = len(nt)              # Get the length of the input file in order to style it in the Workbook
 dframe = DataFrameUtil.addRows(nt, 2)
-# print (ldf[0].Duration.unique()[-1])
 
 
 
@@ -101,6 +100,15 @@ for r in dataframe_to_rows(nt, index=False, header=False):
 for name, cell  in zip(nt.columns, ws[topMargin]) :
     cell.value = name
 
+#Style the table, and the top paragraph.  Add and style the inspire quote
+tblRng= "{0}:{1}".format(tcell((1,topMargin)), tcell((len(nt.columns),topMargin+inputlen)))
+tab = Table(displayName="Table1", ref=tblRng)
+style = TableStyleInfo(name="TableStyleMedium1", showFirstColumn=False,
+                       showLastColumn=False, showRowStripes=True, showColumnStripes=False)
+tab.tableStyleInfo = style
+
+ws.add_table(tab)
+
 
 
 
@@ -120,7 +128,7 @@ for loc, tdf in zip(imageLocation, ldf) :
     cellname = 'J' + str(loc[0])
     ws.add_image(img, cellname)
     
-    #Put together the summary info and interview the trader
+    #Put together the trade summary info for each trade and interview the trader
     tto=TheTradeObject(tdf, interview)
     tto.runSummary()
     tradeSummaries.append(tto)
@@ -134,12 +142,23 @@ for loc, tdf in zip(imageLocation, ldf) :
         if isinstance(cell, list) :
             cell = cell[0]
         tradeval = tto.TheTrade[key].unique()[0]
-        if not tradeval :
-            continue
     #     print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval, tcell(cell, anchor=(1, loc[0]))))
 
 
+        # Put some formulas in each trade Summary
+        if key in srf.tfformulas :
+            
+            anchor=(1,loc[0])
+            formula=srf.tfformulas[key][0]
+            args=[]
+            for c in srf.tfformulas[key][1:] :
+                args.append(tcell(c, anchor=anchor))
+            tradeval = formula.format(*args)
+            
+        if not tradeval :
+            continue
         ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
+
     
 print("Done with interview")
 

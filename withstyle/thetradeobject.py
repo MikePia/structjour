@@ -10,7 +10,7 @@ from structjour.tradeutil import  FinReqCol
 # columns/data for the summary trade dataframe, known on this page as TheTrade.
 frc = FinReqCol()
 
-class SumReqFields(object):
+class   SumReqFields(object):
     '''
     Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject and TheTradeStyle. These columns are used
     in a DataFrame (aka TheTrade) that summarizes each single trade with a single row. This summary information includes information from
@@ -216,6 +216,26 @@ class SumReqFields(object):
             self.explain  : [[(1, 11), (6, 16)], 'explain'],
             self.notes    : [[(1, 17), (6, 22)], 'noteStyle']
             }
+        self.tfformulas = dict()
+        self.tfformulas[self.targdiff] = ["={0}-{1}", 
+                                          self.tfcolumns[self.targ][0], 
+                                          self.tfcolumns[self.entry1][0]
+                                          ]
+        self.tfformulas[self.sldiff] = ["={0}-{1}", 
+                                          self.tfcolumns[self.stoploss][0], 
+                                          self.tfcolumns[self.entry1][0]
+                                          ]
+        self.tfformulas[self.rr] = ["={0}/{1}", 
+                                          self.tfcolumns[self.sldiff][0], 
+                                          self.tfcolumns[self.targdiff][0]
+                                          ]
+        self.tfformulas[self.maxloss] = ['=(LEFT({0},SEARCH(" ",{1},1)))*{2}', 
+                                          self.tfcolumns[self.shares][0][0], 
+                                          self.tfcolumns[self.shares][0][0],
+                                          self.tfcolumns[self.sldiff][0]
+                                          ]
+        
+            
                           
         self.rc = rc  
         self.columns = rc.values()
@@ -273,8 +293,11 @@ class TheTradeObject(object):
         self.shares = 0
         
     def runSummary(self):
-        
-            
+        '''
+        Populate a DataFrome (self.TheTrade) with all the trade summary information, one row per trade.
+        The information will then populate the the openpyxl / excel Trade Summary. The user interview for
+        target stoploss, and strategy happen in their respective methods.
+        '''
         self.__setName()
         self.__setAcct()
         self.__setSum()
@@ -459,6 +482,7 @@ class TheTradeObject(object):
         return self.TheTrade
     
     def __setTarget(self) :
+        '''Interview the user for the target. targdiff is handled as a formula elsewhere'''
         target = 0
         
         try :
@@ -494,15 +518,15 @@ class TheTradeObject(object):
         pd.to_numeric(self.TheTrade[srf.targ] , errors='coerce')
         self.TheTrade[srf.targ] = target
         
-        # If this is a trade with a privious holding, the diff in price of the target has no meaning
+        # If this is a trade with a privious holding, 
+        # Planning to change the target diff to a formula-- add formulas to tfcolumns
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
             return
 
-        diff = target - self.TheTrade[srf.entry1]
-        self.TheTrade[srf.targdiff] = diff
         return self.TheTrade
 
     def __setStop(self) :
+        '''Interview the user and git the stoploss. sldiff is handled elsewhere as an excel formula.'''
         stop = 0
         try :
             p= float(self.TheTrade[srf.entry1])
@@ -537,19 +561,18 @@ class TheTradeObject(object):
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
             return
 
-        self.TheTrade[srf.sldiff] = stop - self.TheTrade[srf.entry1]
+#         self.TheTrade[srf.sldiff] = stop - self.TheTrade[srf.entry1]
         return self.TheTrade
     
     def __setMaxLoss(self):
-        #TODO write some tests that check for unknown types in the SLDiff col. Then fix this to handle them.
-        
-        self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.__getShares()
+        #Handled as an excel formula elsewhere
+#         self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.__getShares()
         return self.TheTrade
 
     def __setRiskReward(self):
-        #Write some tests that check for unknown types and then handle them here
+        #Handled as an excel formula elsewhere
                 
-        self.TheTrade.RR = self.TheTrade.StopLoss / self.TheTrade.Target
+#         self.TheTrade.RR = self.TheTrade.StopLoss / self.TheTrade.Target
         return self.TheTrade
         
 

@@ -279,7 +279,7 @@ class InputDataFrame(object):
                                 else :
                                     newldf.at[j, rc.side] = "HOLD+"
                                 newldf.at[j, rc.price] = float(0.0)
-                                newldf.at[j, rc.shares] = trade['before']
+                                newldf.at[j, rc.shares] = -trade['before']
                                 newldf.at[j, rc.acct] = trade['acct']    #ZeroSubstance'
                                 newldf.at[j, rc.PL] = 0
                                 
@@ -302,7 +302,7 @@ class InputDataFrame(object):
                                 else :
                                     ldf.at[j, rc.side] = "HOLD-"
                                 ldf.at[j, rc.price] = float(0.0)
-                                ldf.at[j, rc.shares] = trade['after']
+                                ldf.at[j, rc.shares] = -trade['after']
                                 ldf.at[j, rc.acct] = trade['acct']   #'ZeroSubstance'
                                 ldf.at[j, rc.PL] = 0
             
