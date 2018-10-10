@@ -131,7 +131,7 @@ class TradeFormat (object):
         #######################################     normRight     ###################################################        
         normStyle = NamedStyle(name = "normStyle")
         normStyle.font = Font(color="FFFFFF", size=11)
-        normStyle.alignment = Alignment(horizontal="left", vertical="center")
+        normStyle.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
         normStyle.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
         normStyle.border = Border(left=Side(style='double'),
                                   right=Side(style='double'), 
@@ -334,18 +334,25 @@ class TradeFormat (object):
         self.styles[strNs] = ns
         
 
-    def mergeStuff(self, ws, icell, end, anchor=None) :
+    def mergeStuff(self, ws, begin, end, anchor=None) :
+        '''
+        Perform a merge cell
+        :params:ws: The Worksheet 
+        :params:begin: The top left cell as a tuple of ints (2,3)
+        :params:end: The bottom right cell as a tuple of ints
+        :parmas:anchor: Translation
+        '''
         if anchor :
             anchor = (anchor[0] - 1, anchor[1] - 1)
-            icell = (icell[0] + anchor[0], icell[1] + anchor[1])
+            begin = (begin[0] + anchor[0], begin[1] + anchor[1])
             end = (end [0] + anchor[0], end[1] + anchor[1])
 
-        ws.merge_cells(start_row=icell[1], 
-                       start_column=icell[0], 
+        ws.merge_cells(start_row=begin[1], 
+                       start_column=begin[0], 
                        end_row=end[1], 
                        end_column=end[0])
 
-        return (icell, end)
+        return (begin, end)
     
 
     def popTheTrade(self, ws, tf, row):

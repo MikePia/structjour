@@ -1,10 +1,7 @@
 import pandas as pd
-# import datetime
-# from journalfiles import JournalFiles
 from structjour.pandasutil import DataFrameUtil 
-# InputDataFrame, ToCSV_Ticket as Ticket
 from structjour.tradeutil import  FinReqCol
-# XLImage, TradeUtil
+
 
 # Use to access columns in the (altered) input dataframe, known on this page as df. Use srf (SumReqFields instance) to access
 # columns/data for the summary trade dataframe, known on this page as TheTrade.
@@ -12,9 +9,9 @@ frc = FinReqCol()
 
 class   SumReqFields(object):
     '''
-    Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject and TheTradeStyle. These columns are used
-    in a DataFrame (aka TheTrade) that summarizes each single trade with a single row. This summary information includes information from
-    the user, target, stop, strategy, notes etc. 
+    Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject and TheTradeStyle. 
+    These columns are used in a DataFrame (aka TheTrade) that summarizes each single trade with a single row. This 
+    summary information includes information from the user, target, stop, strategy, notes etc.
     '''
 
     def __init__(self):
@@ -23,7 +20,7 @@ class   SumReqFields(object):
         # rckeys are the abstracted names for use with all file types
         #While placing these here are not really necessary, it provides code style consistency with the use of ReqCol and FinReqCol
         rcvals = ['Name', 'Account', 'Strategy','P/LHead', 'P / L', 'StartHead', 'Start','DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
-                  'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff',  'RRHead', 'RR', 'MaxHead', 'MaxLoss', 'Link1', 'Link2', 'Link3', 
+                  'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff',  'RRHead', 'RR', 'MaxHead', 'MaxLoss', 'MstkHead', 'MstkVal', 'MstkNote', 'Link1',
                  'EntryHead', 'Entry1', 'Entry2', 'Entry3', 'Entry4', 'Entry5', 'EntTime1',  'EntTime2',  'EntTime3',  'EntTime4',  'EntTime5', 
                  'EntShare1', 'EntShare2', 'EntShare3', 'EntShare4', 'EntShare5', 'EntAvg1', 'EntAvg2',  'EntAvg3', 'EntAvg4', 'EntAvg5',   
                  
@@ -34,7 +31,7 @@ class   SumReqFields(object):
 #         rcvals2 =[  'StratNote', 'Link5', 'Link6', ]
         
         rckeys = ['name', 'acct', 'strat','plhead', 'pl', 'starthead', 'start','durhead', 'dur', 'sharehead', 'shares', 'mkthead', 'mktval',
-                 'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff',  'rrhead', 'rr', 'maxhead', 'maxloss', 'link1', 'link2', 'link3', 
+                 'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff',  'rrhead', 'rr', 'maxhead', 'maxloss', 'mstkhead', 'mstkval', 'mstknote', 'link1', 
                  'entryhead', 'entry1', 'entry2', 'entry3', 'entry4', 'entry5', 'enttime1',  'enttime2',  'enttime3',  'enttime4',  'enttime5', 
                  'entshare1', 'entshare2', 'entshare3', 'entshare4', 'entshare5', 'entavg1', 'entavg2',  'entavg3', 'entavg4', 'entavg5',   
                  
@@ -48,6 +45,10 @@ class   SumReqFields(object):
         # This includes all the locations that are likely to have data associated with them.  Blank cells are added to tfcolumns  Each of these are added as 
         # attributes Unnecessarily as but it should reduce errors to use attributes instead of strings
         rc = dict(zip(rckeys, rcvals))
+        
+       
+        
+        
         
         # #Suggested way to address the columns for the TheTrade DataFrame. 
         self.name     = rc['name']                    
@@ -73,10 +74,10 @@ class   SumReqFields(object):
         self.rr       = rc['rr']        
         self.maxhead  = rc['maxhead']   
         self.maxloss  = rc['maxloss']   
+        self.mstkhead = rc['mstkhead']
+        self.mstkval  = rc['mstkval']
+        self.mstknote = rc['mstknote']
         self.link1    = rc['link1']     
-        self.link2    = rc['link2']     
-        self.link3    = rc['link3']     
-#         self.link4    = rc['link4']
         self.entryhead= rc['entryhead']
         self.entry1   = rc['entry1']   
         self.entry2   = rc['entry2']   
@@ -155,10 +156,10 @@ class   SumReqFields(object):
             self.maxhead  : [(7,16), 'normStyle'],
             self.maxloss  : [(8,16), 'normStyle'],
             "ex2"         : [(9,16), 'normStyle'],
-            self.link1    : [[(7, 17), (9, 18)], 'linkStyle'],         
-            self.link2    : [[(7, 19), (9, 20)], 'linkStyle'], 
-            self.link3    : [[(7, 21), (9, 22)], 'linkStyle'],
-#             self.link4    : [[(7, 23), (9, 24)], 'linkStyle'],
+            self.mstkhead : [[(7, 17), (7,18)], 'normStyle'],
+            self.mstkval  : [[(8, 17), (9, 18)], 'titleNumberRight' ],
+            self.mstknote : [[(7, 19), (9, 20)], 'normStyle'], 
+            self.link1    : [[(7, 21), (9, 22)], 'linkStyle'],
             self.entryhead: [[(1, 3), (1, 6)], 'normStyle'],
             self.entry1   : [(2,3), 'normalNumberTopLeft'],
             self.entry2   : [(3,3), 'normalNumberTop'],
@@ -247,6 +248,8 @@ class   SumReqFields(object):
         
         df = pd.DataFrame(_styles, columns=['st'])
         return df['st'].unique()
+    
+    
 
 
 
@@ -316,6 +319,7 @@ class TheTradeObject(object):
             self.__setStop()         
             self.__setMaxLoss()
             ret = self.__setRiskReward()
+            self.__setStopLossMistake()
         return ret
     
 
@@ -420,6 +424,7 @@ class TheTradeObject(object):
         self.TheTrade[srf.stophead] = 'Stop'
         self.TheTrade[srf.rrhead] = 'R:R'
         self.TheTrade[srf.maxhead] = 'Max Loss'
+        self.TheTrade[srf.mstkhead] = "Proceeds Lost"
         return self.TheTrade[[srf.entryhead, srf.exithead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
   
     def __setEntries(self):
@@ -522,6 +527,10 @@ class TheTradeObject(object):
         # Planning to change the target diff to a formula-- add formulas to tfcolumns
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
             return
+        
+        # Although we will use an excel formula, place it in the df for our use.
+        diff = target - self.TheTrade[srf.entry1]
+        self.TheTrade[srf.targdiff] = diff
 
         return self.TheTrade
 
@@ -561,12 +570,13 @@ class TheTradeObject(object):
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
             return
 
-#         self.TheTrade[srf.sldiff] = stop - self.TheTrade[srf.entry1]
+        # Although we will use an excel formula, place it in the df for our use.
+        self.TheTrade[srf.sldiff] = stop - self.TheTrade[srf.entry1]
         return self.TheTrade
     
     def __setMaxLoss(self):
-        #Handled as an excel formula elsewhere
-#         self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.__getShares()
+        # Although we will use an excel formula, place it in the df for our use.
+        self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.__getShares()
         return self.TheTrade
 
     def __setRiskReward(self):
@@ -574,9 +584,18 @@ class TheTradeObject(object):
                 
 #         self.TheTrade.RR = self.TheTrade.StopLoss / self.TheTrade.Target
         return self.TheTrade
-        
-
-
+    
+    def __setStopLossMistake(self):
+        '''
+        If the amount lost from a trade exceeds the Max Loss, post the difference in mstkval and fill in mstknote. Note that
+        this is not done with a formula because the space can be used for any mistake and should be filled in by the 
+        user if, for example, the its sold before a target and the trade never approached the stoploss.
+        '''
+        if self.TheTrade[srf.pl].unique()[0] < 0 :
+    
+            if abs(self.TheTrade[srf.pl].unique()[0]) > abs(self.TheTrade[srf.maxloss].unique()[0]) :
+                self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[0]) - abs(self.TheTrade[srf.maxloss].unique()[0])
+                self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
 
 
 
