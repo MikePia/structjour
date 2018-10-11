@@ -16,6 +16,7 @@ class MistakeSummary(object):
     def __init__(self, numTrades, anchor=(1, 1)):
 
         self.anchor = anchor
+        self.numTrades = numTrades
 
 
 
@@ -45,23 +46,23 @@ class MistakeSummary(object):
         formulas = dict()
         srf=SumReqFields()
         for i in range(numTrades) :
-#             t="=" +str(i+1) + " "
-            f ='=CONCAT("{0} ",'.format(str(i+1))
-            f = f  + '{0}," ",{1})'
-            n = "name" + str(i + 1)
-            formulas[n] = [f,
-               srf.tfcolumns[srf.name][0][0],
-               srf.tfcolumns[srf.acct][0][0]
-               ]
+
             p = "pl" + str(i + 1)
             formulas[p] = ['={0}', srf.tfcolumns[srf.mstkval][0][0] ]
             m = "mistake" + str(i + 1)
             formulas[m] = ['={0}', srf.tfcolumns[srf.mstknote][0][0] ]
+    
+    
 
         self.formulas = formulas
         self.mistakeFields = mistakeFields
 
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
+        headers=dict()
+        headers['title']       = "Mistake Summary"
+        headers['headname']    = "Name"
+        headers['headpl']      = "Lost PL"
+        headers['headmistake'] = "Mistake"
         for key in self.mistakeFields.keys() :
             rng = self.mistakeFields[key][0]
             style = self.mistakeFields[key][1]
@@ -72,6 +73,30 @@ class MistakeSummary(object):
                 ws[tcell(rng[0], anchor=anchor)].style = tf.styles[style]
                 mrng = tcell(rng[0], rng[1], anchor=anchor)
                 style_range(ws, mrng, border=tf.styles[style].border)
+                if key in headers.keys() :
+                    ws[tcell(rng[0], anchor=anchor)] = headers[key]
 
             else:
                 ws[tcell(rng, anchor=anchor)].style = tf.styles[style]
+                if key in headers.keys() :
+                    ws[tcell(rng, anchor=anchor)] = headers[key]
+        # The total sum formula is done here. It is self contained to references to the Mistake Summary form
+        totcell = self.mistakeFields['total'][0]
+        begincell=(totcell[0], totcell[1] - self.numTrades)
+        endcell=(totcell[0], totcell[1] - 1)
+        rng= tcell(begincell, endcell, anchor = anchor)
+        totcell = tcell(totcell, anchor = anchor)
+        f = '=SUM({0})'.format(rng)
+        ws[totcell] = f
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                

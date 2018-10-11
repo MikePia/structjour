@@ -12,15 +12,16 @@ from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
 from withstyle.thetradeobject import SumReqFields, TheTradeObject
 from withstyle.tradestyle import TradeFormat
 from withstyle.tradestyle import c as tcell
+from withstyle.mstksum import MistakeSummary
 
 # jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
 
 # jf= JournalFiles(indir =r'C:\trader\journal\_09_September\Week_1\_0904_Tuesday', infile='trades1.csv', mydevel=True)
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
-# jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
+jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
 #jf=JournalFiles(outdir='out/', mydevel=True)
-jf = JournalFiles(mydevel = True, outdir='out/')
+# jf = JournalFiles(mydevel = True, outdir='out/')
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -87,7 +88,7 @@ for tdf in ldf :
 
     dframe = dframe.append(tdf, ignore_index = True)
     dframe = DataFrameUtil.addRows(dframe, insertsize)
-    print(len(dframe))
+#     print(len(dframe))
 
 nt = dframe
 
@@ -100,7 +101,7 @@ for r in dataframe_to_rows(nt, index=False, header=False):
 for name, cell  in zip(nt.columns, ws[topMargin]) :
     cell.value = name
 
-#Style the table, and the top paragraph.  Add and style the inspire quote
+#Style the table, and the top paragraph.  Add and style the inspire quote. Create the SummaryMistake form (populate it below in a loop)
 tblRng= "{0}:{1}".format(tcell((1,topMargin)), tcell((len(nt.columns),topMargin+inputlen)))
 tab = Table(displayName="Table1", ref=tblRng)
 style = TableStyleInfo(name="TableStyleMedium1", showFirstColumn=False,
@@ -112,12 +113,16 @@ ws.add_table(tab)
 
 
 
+
 XL = XLImage()
 
 srf = SumReqFields()
 tradeSummaries = list()
 tf = TradeFormat(wb)
 assert (len(ldf) == len(imageLocation))
+mstkAnchor = (len(dframe.columns) + 2, 1)
+mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+mistake.mstkSumStyle(ws, tf, mstkAnchor)
      
 response = input("Would you like to enter strategy names, targets and stops?")
 interview = True if response.lower().startswith('y') else False
@@ -131,7 +136,7 @@ for loc, tdf in zip(imageLocation, ldf) :
     #Put together the trade summary info for each trade and interview the trader
     tto=TheTradeObject(tdf, interview)
     tto.runSummary()
-    tradeSummaries.append(tto)
+    tradeSummaries.append(tto.TheTrade)
     
     #Place the format shapes/styles in the worksheet
     tf.formatTrade(ws, anchor=(1, loc[0]))
@@ -161,6 +166,33 @@ for loc, tdf in zip(imageLocation, ldf) :
 
     
 print("Done with interview")
+
+for i in range(len(tradeSummaries)):
+    key="name" + str(i+1)
+    cell = mistake.mistakeFields[key][0][0]
+    cell = tcell(cell, anchor=mistake.anchor)
+    ts=tradeSummaries[i]
+    s="{0} {1} {2}".format(i+1, ts.Name.unique()[0], ts.Account.unique()[0])
+#     print(s)
+    ws[cell] = s
+    
+tokens=["pl", "mistake"]
+for token in tokens :
+    for i in range(len(tradeSummaries)):
+        key=token + str(i+1)
+        if isinstance(mistake.mistakeFields[key][0], list) :
+            cell = mistake.mistakeFields[key][0][0]
+        else :
+            cell = cell = mistake.mistakeFields[key][0]
+        cell = tcell(cell, anchor=mistake.anchor)
+    #     print(cell)
+        formula = mistake.formulas[key][0]
+        targetcell = mistake.formulas[key][1]
+        targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0]))
+        formula = formula.format(targetcell)
+
+        print("ws[{0}]='{1}'".format(cell,formula))
+        ws[cell]=formula
 
 
 

@@ -594,7 +594,7 @@ class TheTradeObject(object):
         if self.TheTrade[srf.pl].unique()[0] < 0 :
     
             if abs(self.TheTrade[srf.pl].unique()[0]) > abs(self.TheTrade[srf.maxloss].unique()[0]) :
-                self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[0]) - abs(self.TheTrade[srf.maxloss].unique()[0])
+                self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[0]) - abs(self.TheTrade[srf.pl].unique()[0])
                 self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
 
 
