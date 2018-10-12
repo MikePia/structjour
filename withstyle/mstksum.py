@@ -19,7 +19,8 @@ class MistakeSummary(object):
         self.numTrades = numTrades
 
 
-
+        # Create the data structure to make a styled shape 
+        # [key][rng,style]
         mistakeFields = {
             'title'       : [[(1, 1), (8, 2)], 'titleStyle' ],
             'headname'    : [[(1, 3), (2, 3)], 'normStyle'],
@@ -28,6 +29,7 @@ class MistakeSummary(object):
 
             }
 
+        # Dynamically add rows to mistakeFields
         for i in range(numTrades) :
             n = "name" + str(i + 1)
             p = "pl" + str(i + 1)
@@ -43,6 +45,8 @@ class MistakeSummary(object):
         mistakeFields['total'] = [(3, 4 + numTrades), 'normalNumber']
         mistakeFields['blank2'] = [[(4, 4 + numTrades), (8, 4 + numTrades)], 'normStyle']
 
+        # Excel formulas belong in the mstkval and mstknote columns. The cell translation 
+        # can't be done till we create and populate the Workbook
         formulas = dict()
         srf=SumReqFields()
         for i in range(numTrades) :
@@ -52,17 +56,20 @@ class MistakeSummary(object):
             m = "mistake" + str(i + 1)
             formulas[m] = ['={0}', srf.tfcolumns[srf.mstknote][0][0] ]
     
-    
-
         self.formulas = formulas
         self.mistakeFields = mistakeFields
 
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
+        
         headers=dict()
         headers['title']       = "Mistake Summary"
         headers['headname']    = "Name"
         headers['headpl']      = "Lost PL"
         headers['headmistake'] = "Mistake"
+        
+        # Merge the cells, apply the styles, and populate the fields we can--the 
+        # fields that don't know any details todays trades (other than how many trades)
+        # That includes the non-formula fields and the sum formula below 
         for key in self.mistakeFields.keys() :
             rng = self.mistakeFields[key][0]
             style = self.mistakeFields[key][1]
@@ -80,6 +87,7 @@ class MistakeSummary(object):
                 ws[tcell(rng, anchor=anchor)].style = tf.styles[style]
                 if key in headers.keys() :
                     ws[tcell(rng, anchor=anchor)] = headers[key]
+                    
         # The total sum formula is done here. It is self contained to references to the Mistake Summary form
         totcell = self.mistakeFields['total'][0]
         begincell=(totcell[0], totcell[1] - self.numTrades)
