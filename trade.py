@@ -8,7 +8,8 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from journalfiles import JournalFiles
 from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
-from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
+from structjour.tradeutil import ReqCol, FinReqCol, TradeUtil
+from structjour.xlimage import XLImage
 from withstyle.thetradeobject import SumReqFields, TheTradeObject
 from withstyle.tradestyle import TradeFormat
 from withstyle.tradestyle import c as tcell
@@ -19,9 +20,9 @@ from withstyle.mstksum import MistakeSummary
 # jf= JournalFiles(indir =r'C:\trader\journal\_09_September\Week_1\_0904_Tuesday', infile='trades1.csv', mydevel=True)
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
-jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
+# jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
 #jf=JournalFiles(outdir='out/', mydevel=True)
-# jf = JournalFiles(mydevel = True, outdir='out/')
+jf = JournalFiles(mydevel = True)
 jf._printValues()
         
 tkt = Ticket(jf)

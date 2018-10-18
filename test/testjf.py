@@ -13,7 +13,8 @@ from structjour.pandasutil import DataFrameUtil
 def itsTheWeekend() :
     '''
     This is a hacky thing to take care of (most) non trading days aka Saturday and Sunday and solely for my development environment.
-    (if its a holiday you shouldn't be working anyway so it serves you right)
+    (if its a holiday you shouldn't be working anyway so it serves you right). Errors occur because on the weekend no trades.csv file
+    was created. I don't want to alter the code to test the dynamic file selection on weekends so I will change the day.
     :Return: The date of the last weekday to have occurred. AKA Friday if today is a weekend day. Otherwise returns today
     '''
     d = datetime.date.today()

@@ -7,7 +7,8 @@ import unittest
 import os
 from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
 import pandas as pd
-from structjour.tradeutil import ReqCol, FinReqCol, XLImage, TradeUtil
+from structjour.tradeutil import ReqCol, FinReqCol  #, TradeUtil
+# from structjour.xlimage import XLImage
 from journalfiles import JournalFiles
 
 
