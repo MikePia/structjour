@@ -21,8 +21,8 @@ from withstyle.mstksum import MistakeSummary
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
-#jf=JournalFiles(outdir='out/', mydevel=True)
-jf = JournalFiles(mydevel = True)
+jf=JournalFiles(outdir='out/', mydevel=True)
+# jf = JournalFiles(mydevel = True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -70,26 +70,51 @@ newdf = DataFrameUtil.createDf(dframe,  topMargin)
 insertsize = 25
 dframe = newdf.append(dframe, ignore_index = True)
 
-#Add rows and append each trade, leaving space for an image. Create a list of names and row numbers 
-# to place images within the excel file (imageLocation data structure).
-imageLocation = list()
-for tdf in ldf :
-    imageName='{0}_{1}_{2}_{3}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
+def createImageLocation(df, ldf, summarySize) :
+    #Add rows and append each trade, leaving space for an image. Create a list of names and row numbers 
+    # to place images within the excel file (imageLocation data structure).
+    imageLocation = list()
+    count=0
+    for tdf in ldf :
+        imageName='{0}_{1}_{2}_{3}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
            tdf[finalReqCol.name].unique()[-1].replace(' ','-'),
            tdf[finalReqCol.start].unique()[-1],
            tdf[finalReqCol.dur].unique()[-1])
-
-    # TODO handle empty string in the tdf
-    imageLocation.append([len(tdf) + len(dframe) + 2, 
+        imageLocation.append([len(tdf) + len(df) + 3, 
                           tdf.Tindex.unique()[0].replace(' ', '') + '.jpeg',
                           imageName,
                           tdf.Start.unique()[-1],
                         tdf.Duration.unique()[-1]])
-    print(len(tdf) + len(dframe) + 2)
+        print(count, imageName, len(imageLocation), len(tdf) + len(df) + 3)
+        count = count + 1
+        
+        df = df.append(tdf, ignore_index = True)
+        df = DataFrameUtil.addRows(df, summarySize)
+    return imageLocation, df
 
-    dframe = dframe.append(tdf, ignore_index = True)
-    dframe = DataFrameUtil.addRows(dframe, insertsize)
-#     print(len(dframe))
+imageLocation, dframe = createImageLocation(dframe, ldf, insertsize)
+
+
+# #Add rows and append each trade, leaving space for an image. Create a list of names and row numbers 
+# # to place images within the excel file (imageLocation data structure).
+# imageLocation = list()
+# for tdf in ldf :
+#     imageName='{0}_{1}_{2}_{3}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
+#            tdf[finalReqCol.name].unique()[-1].replace(' ','-'),
+#            tdf[finalReqCol.start].unique()[-1],
+#            tdf[finalReqCol.dur].unique()[-1])
+# 
+#     # TODO handle empty string in the tdf
+#     imageLocation.append([len(tdf) + len(dframe) + 2, 
+#                           tdf.Tindex.unique()[0].replace(' ', '') + '.jpeg',
+#                           imageName,
+#                           tdf.Start.unique()[-1],
+#                         tdf.Duration.unique()[-1]])
+#     print(len(tdf) + len(dframe) + 2)
+# 
+#     dframe = dframe.append(tdf, ignore_index = True)
+#     dframe = DataFrameUtil.addRows(dframe, insertsize)
+# #     print(len(dframe))
 
 nt = dframe
 
