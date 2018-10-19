@@ -71,7 +71,12 @@ def c(icell, end=None, anchor= None) :
     
 
 class TradeFormat (object):
-    ''' Create the shape of the trade summary in an excel file and apply the styles defined here and named in for each cell in SumReqFields.tfcolumns'''
+    ''' 
+    Deal with everything that formats the openpyxl object to create the excel doc. That includes:
+        Create the shape of the trade summary in an excel file.
+        Apply the styles defined here and named in for each cell in SumReqFields.tfcolumns
+        Create the sheet
+        '''
     # TODO openpyxl throws an exception if you name a named style twice.  Do something to deal with it. Either catch the exception or check if the style exists or 
     # make this a singleton (---no singleton, it doesn't address the issue)
     def __init__(self, wb, a=(1,1) ):
@@ -380,7 +385,7 @@ class TradeFormat (object):
         ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
         ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"
     
-
+    
 
 
   

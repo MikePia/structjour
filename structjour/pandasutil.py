@@ -340,7 +340,7 @@ class ToCSV_Ticket(object):
         #This is guaranteed to cause some future problem
         # If Cloid has some Sim ids ('AUTO') the column must have some str elements. Without this
         # it throws a TypeError and a Future Warning about changing code. For DataFrame columns 
-        # without any sim trades there are only floats. This is not guaranteed behavior, just obaserved
+        # without any sim trades there are only floats. This is not guaranteed behavior, just observed
         # from my runs. And there there is some weirdness between numpy types and python regarding 
         # what type to return for this comparison--and it may change in the future.
 #         if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
@@ -409,7 +409,7 @@ class ToCSV_Ticket(object):
         :return: The penultimate step, returns a list of DataFrames, 1 row per ticket.
         
         HACK ALERT: This got real ugly when I sent in a trades.csv without any sim trades.  The import alters
-        the type. Without no Sim included, they are all floats. With at least one Sim transaction, they are 
+        the type. With no Sim included, they are all floats. With at least one Sim transaction, they are 
         str. But that is not guaranteed.
         
         

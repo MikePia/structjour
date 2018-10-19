@@ -598,7 +598,7 @@ class TheTradeObject(object):
                 self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
 
 
-
+    
 
 
 

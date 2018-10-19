@@ -1,18 +1,20 @@
 import datetime, os
 
 
-from openpyxl import Workbook
-from openpyxl.drawing.image import Image
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.worksheet.table import Table, TableStyleInfo
+# from openpyxl import Workbook
+# from openpyxl.drawing.image import Image
+# from openpyxl.utils.dataframe import dataframe_to_rows
+# from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from journalfiles import JournalFiles
 from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
 from structjour.tradeutil import ReqCol, FinReqCol, TradeUtil
 from structjour.xlimage import XLImage
-from withstyle.thetradeobject import SumReqFields, TheTradeObject
+from withstyle.layoutsheet import LayoutSheet
+from withstyle.thetradeobject import SumReqFields 
+# , TheTradeObject
 from withstyle.tradestyle import TradeFormat
-from withstyle.tradestyle import c as tcell
+# from withstyle.tradestyle import c as tcell
 from withstyle.mstksum import MistakeSummary
 
 # jf = JournalFiles(indir= "C:\trader\journal\_08_August\Week_5\_0831_Friday",mydevel=True)
@@ -21,7 +23,7 @@ from withstyle.mstksum import MistakeSummary
 # jf = JournalFiles(theDate=datetime.date(2018, 9,6), outdir = 'out', mydevel=True)
 # jf = JournalFiles(indir='data', infile='TradesWithHolds.csv', outdir = "out", mydevel=True)
 # jf = JournalFiles(theDate = datetime.date(2018, 10, 1), outdir = 'out/', mydevel = True)
-jf=JournalFiles(outdir='out/', mydevel=True)
+jf=JournalFiles(infile="trades2.csv", outdir="out/", mydevel=True)
 # jf = JournalFiles(mydevel = True)
 jf._printValues()
         
@@ -58,90 +60,23 @@ nt = tu.addTradeDuration(nt)
 nt = tu.addTradeName(nt)
 nt=DataFrameUtil.addRows(nt,1)
 nt = tu.addSummaryPL(nt)
-ldf=tu.getTradeList(nt)
+ldf=tu.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
 inputlen = len(nt)              # Get the length of the input file in order to style it in the Workbook
 dframe = DataFrameUtil.addRows(nt, 2)
 
 
 
 #Process the openpyxl excel object using the output file DataFrame. Insert images and Trade Summaries.
-topMargin = 10
-newdf = DataFrameUtil.createDf(dframe,  topMargin)
-insertsize = 25
-dframe = newdf.append(dframe, ignore_index = True)
+sumSize = 25
+margin=25
 
-def createImageLocation(df, ldf, summarySize) :
-    #Add rows and append each trade, leaving space for an image. Create a list of names and row numbers 
-    # to place images within the excel file (imageLocation data structure).
-    imageLocation = list()
-    count=0
-    for tdf in ldf :
-        imageName='{0}_{1}_{2}_{3}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
-           tdf[finalReqCol.name].unique()[-1].replace(' ','-'),
-           tdf[finalReqCol.start].unique()[-1],
-           tdf[finalReqCol.dur].unique()[-1])
-        imageLocation.append([len(tdf) + len(df) + 3, 
-                          tdf.Tindex.unique()[0].replace(' ', '') + '.jpeg',
-                          imageName,
-                          tdf.Start.unique()[-1],
-                        tdf.Duration.unique()[-1]])
-        print(count, imageName, len(imageLocation), len(tdf) + len(df) + 3)
-        count = count + 1
-        
-        df = df.append(tdf, ignore_index = True)
-        df = DataFrameUtil.addRows(df, summarySize)
-    return imageLocation, df
-
-imageLocation, dframe = createImageLocation(dframe, ldf, insertsize)
-
-
-# #Add rows and append each trade, leaving space for an image. Create a list of names and row numbers 
-# # to place images within the excel file (imageLocation data structure).
-# imageLocation = list()
-# for tdf in ldf :
-#     imageName='{0}_{1}_{2}_{3}.jpeg'.format (tdf[finalReqCol.tix].unique()[-1].replace(' ',''), 
-#            tdf[finalReqCol.name].unique()[-1].replace(' ','-'),
-#            tdf[finalReqCol.start].unique()[-1],
-#            tdf[finalReqCol.dur].unique()[-1])
-# 
-#     # TODO handle empty string in the tdf
-#     imageLocation.append([len(tdf) + len(dframe) + 2, 
-#                           tdf.Tindex.unique()[0].replace(' ', '') + '.jpeg',
-#                           imageName,
-#                           tdf.Start.unique()[-1],
-#                         tdf.Duration.unique()[-1]])
-#     print(len(tdf) + len(dframe) + 2)
-# 
-#     dframe = dframe.append(tdf, ignore_index = True)
-#     dframe = DataFrameUtil.addRows(dframe, insertsize)
-# #     print(len(dframe))
-
-nt = dframe
-
-wb = Workbook()
-ws = wb.active
-
-for r in dataframe_to_rows(nt, index=False, header=False):
-    ws.append(r)
-
-for name, cell  in zip(nt.columns, ws[topMargin]) :
-    cell.value = name
-
-#Style the table, and the top paragraph.  Add and style the inspire quote. Create the SummaryMistake form (populate it below in a loop)
-tblRng= "{0}:{1}".format(tcell((1,topMargin)), tcell((len(nt.columns),topMargin+inputlen)))
-tab = Table(displayName="Table1", ref=tblRng)
-style = TableStyleInfo(name="TableStyleMedium1", showFirstColumn=False,
-                       showLastColumn=False, showRowStripes=True, showColumnStripes=False)
-tab.tableStyleInfo = style
-
-ws.add_table(tab)
-
-
-
-
+# Create the space in dframe to add the summary information for each trade. Then create the Workbook.
+ls = LayoutSheet(sumSize,margin, inputlen)
+imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+wb, ws, nt =ls.createWorkbook(dframe)
+ls.styleTop(ws, nt)
 
 XL = XLImage()
-
 srf = SumReqFields()
 tradeSummaries = list()
 tf = TradeFormat(wb)
@@ -153,95 +88,11 @@ mistake.mstkSumStyle(ws, tf, mstkAnchor)
 response = input("Would you like to enter strategy names, targets and stops?")
 interview = True if response.lower().startswith('y') else False
 
-for loc, tdf in zip(imageLocation, ldf) :
-#     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
-    img = XL.getAndResizeImage(loc[2], jf.outdir)
-    cellname = 'J' + str(loc[0])
-    ws.add_image(img, cellname)
-    
-    #Put together the trade summary info for each trade and interview the trader
-    tto=TheTradeObject(tdf, interview)
-    tto.runSummary()
-    tradeSummaries.append(tto.TheTrade)
-    
-    #Place the format shapes/styles in the worksheet
-    tf.formatTrade(ws, anchor=(1, loc[0]))
-    
-    #populate the trade information
-    for key in srf.tfcolumns.keys()  :
-        cell = srf.tfcolumns[key][0]
-        if isinstance(cell, list) :
-            cell = cell[0]
-        tradeval = tto.TheTrade[key].unique()[0]
-    #     print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval, tcell(cell, anchor=(1, loc[0]))))
-
-
-        # Put some formulas in each trade Summary
-        if key in srf.tfformulas :
-            
-            anchor=(1,loc[0])
-            formula=srf.tfformulas[key][0]
-            args=[]
-            for c in srf.tfformulas[key][1:] :
-                args.append(tcell(c, anchor=anchor))
-            tradeval = formula.format(*args)
-            
-        if not tradeval :
-            continue
-        ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
+tradeSummaries = ls.createSummaries(imageLocation, ldf, XL, jf, interview, srf, ws, tradeSummaries, tf)
 
     
-print("Done with interview")
 
-for i in range(len(tradeSummaries)):
-    key="name" + str(i+1)
-    cell = mistake.mistakeFields[key][0][0]
-    cell = tcell(cell, anchor=mistake.anchor)
-    ts=tradeSummaries[i]
-    s="{0} {1} {2}".format(i+1, ts.Name.unique()[0], ts.Account.unique()[0])
-#     print(s)
-    ws[cell] = s
+ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)    
     
-tokens=["pl", "mistake"]
-for token in tokens :
-    for i in range(len(tradeSummaries)):
-        key=token + str(i+1)
-        if isinstance(mistake.mistakeFields[key][0], list) :
-            cell = mistake.mistakeFields[key][0][0]
-        else :
-            cell = cell = mistake.mistakeFields[key][0]
-        cell = tcell(cell, anchor=mistake.anchor)
-    #     print(cell)
-        formula = mistake.formulas[key][0]
-        targetcell = mistake.formulas[key][1]
-        targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0]))
-        formula = formula.format(targetcell)
+ls.save(wb, jf)
 
-        print("ws[{0}]='{1}'".format(cell,formula))
-        ws[cell]=formula
-
-
-
-#Write the file
-jf.mkOutdir() 
-saveName=jf.outpathfile
-count=1
-while True :
-    try :
-        wb.save(saveName)
-    except PermissionError as ex :
-        print(ex)
-        print("Failed to create file {0}.{1}".format(saveName, ex))
-        print("Images from the clipboard were saved  in {0}".format(jf.outdir))
-        (nm, ext) = os.path.splitext(jf.outpathfile)
-        saveName = "{0}({1}){2}".format(nm,count,ext)
-        print("Will try to save as {0}".format(saveName))
-        count=count+1
-        if count==6:
-            print("Giving up. PermissionError")
-            raise (PermissionError("Failed to create file {0}".format(saveName)))
-        continue
-    except Exception as ex:
-        print (ex)
-    break
-print("Done!")
