@@ -1,6 +1,6 @@
 import pandas as pd
-from structjour.pandasutil import DataFrameUtil 
-from structjour.tradeutil import  FinReqCol
+from journal.dfutil import DataFrameUtil 
+from journal.tradeutil import  FinReqCol
 
 
 # Use to access columns in the (altered) input dataframe, known on this page as df. Use srf (SumReqFields instance) to access

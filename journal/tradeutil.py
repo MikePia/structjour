@@ -4,6 +4,9 @@ Created on Sep 5, 2018
 @author: Mike Petersen
 '''
 import sys, datetime
+# from journal.pandasutil import DataFrameUtil
+from journal.dfutil import DataFrameUtil
+# import str
 
 # from tkinter.tix import Balloon
 
@@ -97,6 +100,31 @@ class TradeUtil(object):
         Constructor
         '''
         self._frc = FinReqCol(source)
+        
+    def processOutputDframe(self, trades):
+        finalReqCol = FinReqCol()
+
+        #Process the output file DataFrame
+        trades = self.addFinReqCol(trades)
+        newTrades = trades[finalReqCol.columns]
+        newTrades.copy()
+        nt = newTrades.sort_values([finalReqCol.ticker,finalReqCol.acct,  finalReqCol.time])
+        nt = self.writeShareBalance(nt)
+        nt = self.addStartTime(nt)
+        nt = nt.sort_values([finalReqCol.start, finalReqCol.acct, finalReqCol.time])
+        nt = self.addTradeIndex(nt)
+        nt = self.addTradePL(nt)
+        nt = self.addTradeDuration(nt)
+        nt = self.addTradeName(nt)
+        nt = DataFrameUtil.addRows(nt,1)
+        nt = self.addSummaryPL(nt)
+        ldf= self.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
+
+        inputlen = len(nt)              # Get the length of the input file in order to style it in the Workbook
+        dframe = DataFrameUtil.addRows(nt, 2)
+        return inputlen, dframe, ldf
+
+
                 
             
     def writeShareBalance(self, dframe) :
@@ -302,6 +330,6 @@ class TradeUtil(object):
                 dframe[l] = ''
         return dframe
     
-   
+print("readit")   
         
         

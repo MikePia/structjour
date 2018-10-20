@@ -7,9 +7,10 @@ import datetime, os
 # from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from journalfiles import JournalFiles
-from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
-from structjour.tradeutil import ReqCol, FinReqCol, TradeUtil
-from structjour.xlimage import XLImage
+from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
+from journal.dfutil import DataFrameUtil
+from journal.tradeutil import ReqCol, FinReqCol, TradeUtil
+from journal.xlimage import XLImage
 from withstyle.layoutsheet import LayoutSheet
 from withstyle.thetradeobject import SumReqFields 
 # , TheTradeObject
@@ -34,26 +35,11 @@ trades, jf =tkt.newDFSingleTxPerTicket()
 # trades = pd.read_csv(jf.inpathfile)
 
 idf = InputDataFrame()
-finalReqCol = FinReqCol()
 trades = idf.processInputFile(trades)
 
-#Process the output file DataFrame
-trades = tu.addFinReqCol(trades)
-newTrades = trades[finalReqCol.columns]
-newTrades.copy()
-nt = newTrades.sort_values([finalReqCol.ticker,finalReqCol.acct,  finalReqCol.time])
-nt = tu.writeShareBalance(nt)
-nt = tu.addStartTime(nt)
-nt = nt.sort_values([finalReqCol.start, finalReqCol.acct, finalReqCol.time])
-nt = tu.addTradeIndex(nt)
-nt = tu.addTradePL(nt)
-nt = tu.addTradeDuration(nt)
-nt = tu.addTradeName(nt)
-nt=DataFrameUtil.addRows(nt,1)
-nt = tu.addSummaryPL(nt)
-ldf=tu.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
-inputlen = len(nt)              # Get the length of the input file in order to style it in the Workbook
-dframe = DataFrameUtil.addRows(nt, 2)
+inputlen, dframe, ldf = tu.processOutputDframe(trades)
+
+
 
 
 

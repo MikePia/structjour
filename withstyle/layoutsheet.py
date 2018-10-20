@@ -8,8 +8,8 @@ import os
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-from structjour.pandasutil import DataFrameUtil 
-from structjour.tradeutil import FinReqCol
+from journal.dfutil import DataFrameUtil
+from journal.tradeutil import FinReqCol
 from withstyle.tradestyle import c as tcell
 from openpyxl.worksheet.table import Table, TableStyleInfo
 

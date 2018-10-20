@@ -5,10 +5,10 @@ Created on Sep 9, 2018
 '''
 import unittest
 import os
-from structjour.pandasutil import DataFrameUtil, InputDataFrame, ToCSV_Ticket as Ticket
+from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
+from journal.dfutil import DataFrameUtil
 import pandas as pd
-from structjour.tradeutil import ReqCol, FinReqCol  #, TradeUtil
-# from structjour.xlimage import XLImage
+from journal.tradeutil import ReqCol, FinReqCol  #, TradeUtil
 from journalfiles import JournalFiles
 
 

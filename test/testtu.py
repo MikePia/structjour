@@ -4,7 +4,7 @@ Created on Sep 8, 2018
 @author: Mike Petersen
 '''
 import unittest
-from structjour.xlimage import XLImage
+from journal.xlimage import XLImage
 import random
 from datetime import datetime
 

@@ -8,7 +8,7 @@ import datetime
 import os
 import sys
 from journalfiles import JournalFiles
-from structjour.pandasutil import DataFrameUtil
+from journal.dfutil import DataFrameUtil
 
 def itsTheWeekend() :
     '''
