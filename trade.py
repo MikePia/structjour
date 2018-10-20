@@ -34,17 +34,8 @@ trades, jf =tkt.newDFSingleTxPerTicket()
 # trades = pd.read_csv(jf.inpathfile)
 
 idf = InputDataFrame()
-reqCol = ReqCol()
 finalReqCol = FinReqCol()
-
-#Process the input file DataFrame
-DataFrameUtil.checkRequiredInputFields(trades, reqCol.columns)
-trades = idf.zeroPadTimeStr(trades)
-trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.time])
-trades = idf.mkShortsNegative(trades)
-swingTrade = idf.getOvernightTrades(trades)
-swingTrade = idf.figureOvernightTransactions(trades)
-trades = idf.insertOvernightRow(trades,swingTrade)
+trades = idf.processInputFile(trades)
 
 #Process the output file DataFrame
 trades = tu.addFinReqCol(trades)

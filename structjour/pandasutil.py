@@ -91,6 +91,22 @@ class InputDataFrame(object):
 #         self.source=source
 #         self._setup()
 
+    def processInputFile(self, trades ) :
+        reqCol = ReqCol()
+
+        #Process the input file DataFrame
+        DataFrameUtil.checkRequiredInputFields(trades, reqCol.columns)
+        trades = self.zeroPadTimeStr(trades)
+        trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.time])
+        trades = self.mkShortsNegative(trades)
+        swingTrade = self.getOvernightTrades(trades)
+        swingTrade = self.figureOvernightTransactions(trades)
+        trades = self.insertOvernightRow(trades,swingTrade)
+        return trades
+
+        
+    
+
     def zeroPadTimeStr(self, dframe) :
         '''
         Guarantee that the time format xx:xx:xx
