@@ -8,7 +8,7 @@ from journal.dfutil import DataFrameUtil
 from journal.tradeutil import ReqCol, FinReqCol, TradeUtil
 
 from withstyle.layoutsheet import LayoutSheet
-from withstyle.thetradeobject import SumReqFields 
+
 from withstyle.tradestyle import TradeFormat
 from withstyle.mstksum import MistakeSummary
 
@@ -41,7 +41,7 @@ wb, ws, nt =ls.createWorkbook(dframe)
 ls.styleTop(ws, nt)
 
 
-srf = SumReqFields()
+
 tradeSummaries = list()
 tf = TradeFormat(wb)
 assert (len(ldf) == len(imageLocation))
@@ -52,7 +52,7 @@ mistake.mstkSumStyle(ws, tf, mstkAnchor)
 response = input("Would you like to enter strategy names, targets and stops?")
 interview = True if response.lower().startswith('y') else False
 
-tradeSummaries = ls.createSummaries(imageLocation, ldf, jf, interview, srf, ws, tradeSummaries, tf)
+tradeSummaries = ls.createSummaries(imageLocation, ldf, jf, interview, ws, tradeSummaries, tf)
 
     
 

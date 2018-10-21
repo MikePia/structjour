@@ -13,7 +13,8 @@ from journal.dfutil import DataFrameUtil
 from journal.tradeutil import FinReqCol
 from journal.xlimage import XLImage
 from withstyle.tradestyle import c as tcell
-from withstyle.thetradeobject import TheTradeObject
+from withstyle.thetradeobject import TheTradeObject, SumReqFields 
+
 
 
 class LayoutSheet(object):
@@ -92,11 +93,13 @@ class LayoutSheet(object):
     
         ws.add_table(tab)
         
-    def createSummaries(self, imageLocation, ldf, jf, interview, srf, ws, tradeSummaries, tf) :
+    def createSummaries(self, imageLocation, ldf, jf, interview, ws, tradeSummaries, tf) :
         for loc, tdf in zip(imageLocation, ldf) :
             #     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
         
             XL = XLImage()
+            srf = SumReqFields()
+            
             img = XL.getAndResizeImage(loc[2], jf.outdir)
             cellname = 'J' + str(loc[0])
             ws.add_image(img, cellname)
