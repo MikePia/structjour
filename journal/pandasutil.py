@@ -311,12 +311,9 @@ class ToCSV_Ticket(object):
             tickerlist.append( (row[rc.time], row[rc.ticker], row[rc.acct]) )
      
             tickerset = set(tickerlist)
-            try :
-                assert(len(tickerset) == len (tickerlist) )
-            except ValueError as ex :
-                err = "Found a Sim ticket that is not unique. This should not be possible. Please send the csv file to the deveoper"
-                print("{0}{1}".format(err, ex))
-                sys.exit(-1)
+            if len(tickerset) != len (tickerlist) :
+                print("\nFound a Sim ticket that is not unique. This should not be possible (but it happens).{}".format(tickerlist[-1]))
+                return
     
     def createSingleTicket(self, tickTx):
         '''
@@ -354,7 +351,8 @@ class ToCSV_Ticket(object):
         Take the standard trades.csv DataFrame and return transactsion for each ticket as a python list 
         of DataFrames. This is made more interesting by the SIM transactions which have no ticket ID (Cloid). 
         They are identified in DAS by 'AUTO.' We will give them an ID unique for this run. There is only, 
-        presumably one ticket per SIM transaction, but check for uniqueness and fail it if it is ever not true
+        presumably one ticket per SIM transaction, but check for uniqueness and report. (Found one on 10/22/28
+        -- a SIM trade on SQ. Changed the code not to fail in the event of an identical transx.)
         :return: The penultimate step, returns a list of DataFrames, 1 row per ticket.
         
         HACK ALERT: This got real ugly when I sent in a trades.csv without any sim trades.  The import alters
@@ -391,14 +389,12 @@ class ToCSV_Ticket(object):
                 continue
             t = dframe[dframe['Cloid'] == ticketID ]
             listOfTickets.append(t)
-        print("before last loop {0}".format(len(listOfTickets)))
         # Combine the two above into a python list of DataFrames
         
         if doSomething :
             for simTkt in SIMdf.Cloid.unique():
                 t = SIMdf[SIMdf['Cloid'] == simTkt]
                 listOfTickets.append(t)            
-        print("after last loop {0}".format(len(listOfTickets)))
             
         return listOfTickets
     

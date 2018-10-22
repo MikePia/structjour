@@ -93,12 +93,17 @@ class LayoutSheet(object):
     
         ws.add_table(tab)
         
-    def createSummaries(self, imageLocation, ldf, jf, interview, ws, tradeSummaries, tf) :
+    def createSummaries(self, imageLocation, ldf, jf, ws, tf) :
+        tradeSummaries = list()
+        XL = XLImage()
+        srf = SumReqFields()
+        
+        response = input("Would you like to enter strategy names, targets and stops?")
+        interview = True if response.lower().startswith('y') else False
+
         for loc, tdf in zip(imageLocation, ldf) :
             #     print('Copy an image into the clipboard for {0} beginning {1}, and lasting {2}'.format(loc[1], loc[2], loc[3]))
         
-            XL = XLImage()
-            srf = SumReqFields()
             
             img = XL.getAndResizeImage(loc[2], jf.outdir)
             cellname = 'J' + str(loc[0])

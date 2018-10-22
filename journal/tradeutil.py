@@ -93,8 +93,6 @@ class TradeUtil(object):
     that makes review of the trade the prime concern using an openpyxl excel object.
     '''
 
-
-
     def __init__(self, source='DAS'):
         '''
         Constructor
@@ -116,7 +114,7 @@ class TradeUtil(object):
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
         nt = self.addTradeName(nt)
-        nt = DataFrameUtil.addRows(nt,1)
+        nt = DataFrameUtil.addRows(nt,2)
         nt = self.addSummaryPL(nt)
         ldf= self.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
 
@@ -124,9 +122,6 @@ class TradeUtil(object):
         dframe = DataFrameUtil.addRows(nt, 2)
         return inputlen, dframe, ldf
 
-
-                
-            
     def writeShareBalance(self, dframe) :
         prevBal = 0
         c = self._frc
@@ -158,7 +153,6 @@ class TradeUtil(object):
                 else :
                     oldTime = dframe.at[i, c.time]
                     dframe.at[i, c.start] = oldTime
-                    
                     
                 newTrade = False
             else :
@@ -192,7 +186,6 @@ class TradeUtil(object):
             if row[c.bal] == 0 :
                 prevEndTrade = 0
         numTrades = TCount
-        print(numTrades)        
         return dframe
     
     def addTradePL (self, dframe) :
@@ -241,37 +234,41 @@ class TradeUtil(object):
     
     # Note that .sum() should work on this but it failed when I tried it.
     def addSummaryPL(self, dframe) :
-        ''' Create a summary of the P/L for the day, place it in new row. Sum up the transactions in c.PL
-        and redundantly sum up the trade P/L in c.sum. These should be the same amount. '''
+        ''' 
+        Create a summary of the P/L for the day, place it in new row. 
+        Sum up the transactions in c.PL for Live and Sim Seperately.
+        We rely on the account number starting with 'U' or 'TR' to determine
+        live or SIM. These two columns should add to the same amount. '''
         # TODO sum up the seperate accounts and make a new labeled entry for each account
         c = self._frc
         
         count=0
         tot=0.0
         tot2 = 0.0
+        totLive = 0.0
+        totSim = 0.0
         for i, row in dframe.iterrows():
             count=count+1
-            if count < len(dframe) :
+            if count < len(dframe)-1 :
                 tot=tot+row[c.PL]
                 if row[c.bal] == 0 :
-     
                     tot2 = tot2 + row[c.sum]
-                if count == len(dframe) -1 :
+                    if row[c.acct].startswith('TR') :
+                        totSim = totSim + row[c.sum]
+                    else :
+                        assert(row[c.acct].startswith('U'))
+                        totLive = totLive + row[c.sum]
+                if count == len(dframe) -2 :
                     lastCol = row[c.PL]
-    
-                    print("Last col?", row[c.PL])
        
-            else :
+            elif count == len(dframe) -1 :
                 dframe.at[i, c.PL] = tot
-                dframe.at[i, c.sum] = tot2
+                dframe.at[i, c.sum] = totSim
+            else :
+                assert (count == len(dframe))
+                dframe.at[i, c.sum] = totLive
     
-        if lastCol > 0:
     
-            print('''
-            Some shares are unaccounted for. Please send the original csv file to the developer in 
-            order to fix ths issue in the software. Please remove the account number  or change its value
-            to anything else.
-            ''')
         return dframe
     
    
