@@ -9,7 +9,7 @@ from withstyle.mstksum import MistakeSummary
 
 # jf=JournalFiles(theDate=datetime.date(2018, 10, 19), infile="trades2.csv", outdir="out/", mydevel=True)
 
-jf=JournalFiles(mydevel=True)
+jf=JournalFiles(infile="hypothetical.csv", mydevel=True, outdir="out/")
 jf._printValues()
         
 tkt = Ticket(jf)

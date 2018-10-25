@@ -1,6 +1,8 @@
 import pandas as pd
 from journal.dfutil import DataFrameUtil 
 from journal.tradeutil import  FinReqCol
+# from withstyle.tradestyle import srf
+# from tornado.test.web_test import ErrorHandlerXSRFTest
 
 
 # Use to access columns in the (altered) input dataframe, known on this page as df. Use srf (SumReqFields instance) to access
@@ -19,25 +21,33 @@ class   SumReqFields(object):
         # rcvals are the actual column titles 
         # rckeys are the abstracted names for use with all file types
         #While placing these here are not really necessary, it provides code style consistency with the use of ReqCol and FinReqCol
-        rcvals = ['Name', 'Account', 'Strategy','P/LHead', 'P / L', 'StartHead', 'Start','DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
-                  'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff',  'RRHead', 'RR', 'MaxHead', 'MaxLoss', 'MstkHead', 'MstkVal', 'MstkNote', 'Link1',
-                 'EntryHead', 'Entry1', 'Entry2', 'Entry3', 'Entry4', 'Entry5', 'EntTime1',  'EntTime2',  'EntTime3',  'EntTime4',  'EntTime5', 
-                 'EntShare1', 'EntShare2', 'EntShare3', 'EntShare4', 'EntShare5', 'EntAvg1', 'EntAvg2',  'EntAvg3', 'EntAvg4', 'EntAvg5',   
-                 
-                 'ExitHead', 'Exit1', 'Exit2', 'Exit3', 'Exit4', 'Exit5', 'ExtTime1', 'ExtTime2', 'ExtTime3', 'ExtTime4', 'ExtTime5',
-                 'ExtShare1', 'ExtShare2', 'ExtShare3', 'ExtShare4', 'ExtShare5', 'ExtPL1', 'ExtPL2', 'ExtPL3', 'ExtPL4', 'ExtPL5',   
-                 'Explain', 'Notes'
+        rcvals = ['Name', 'Account', 'Strategy', 'Link1',
+                  'P/LHead', 'P / L', 'StartHead', 'Start','DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
+                  'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff',  'RRHead', 'RR', 'MaxHead', 'MaxLoss', 
+                  'MstkHead', 'MstkVal', 'MstkNote', 
+                  
+                  'EntryHead', 'Entry1', 'Entry2', 'Entry3', 'Entry4', 'Entry5', 'Entry6', 'Entry7', 'Entry8', 
+                  'Exit1', 'Exit2', 'Exit3', 'Exit4', 'Exit5', 'Exit6', 'Exit7', 'Exit8',
+                  'Time1', 'Time2', 'Time3', 'Time4', 'Time5', 'Time6', 'Time7', 'Time8',
+                  'EShare1', 'EShare2', 'EShare3', 'EShare4', 'EShare5',  'EShare6', 'EShare7', 'EShare8', 
+                  'Diff1', 'Diff2', 'Diff3', 'Diff4', 'Diff5', 'Diff6', 'Diff7', 'Diff8', 
+                  'PL1', 'PL2', 'PL3', 'PL4', 'PL5', 'PL6', 'PL7', 'PL8',                    
+                  'Explain', 'Notes'
                   ]
 #         rcvals2 =[  'StratNote', 'Link5', 'Link6', ]
         
-        rckeys = ['name', 'acct', 'strat','plhead', 'pl', 'starthead', 'start','durhead', 'dur', 'sharehead', 'shares', 'mkthead', 'mktval',
-                 'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff',  'rrhead', 'rr', 'maxhead', 'maxloss', 'mstkhead', 'mstkval', 'mstknote', 'link1', 
-                 'entryhead', 'entry1', 'entry2', 'entry3', 'entry4', 'entry5', 'enttime1',  'enttime2',  'enttime3',  'enttime4',  'enttime5', 
-                 'entshare1', 'entshare2', 'entshare3', 'entshare4', 'entshare5', 'entavg1', 'entavg2',  'entavg3', 'entavg4', 'entavg5',   
-                 
-                 'exithead', 'exit1', 'exit2', 'exit3', 'exit4', 'exit5', 'exttime1', 'exttime2', 'exttime3', 'exttime4', 'exttime5',
-                 'extshare1', 'extshare2', 'extshare3', 'extshare4', 'extshare5', 'extpl1', 'extpl2', 'extpl3', 'extpl4', 'extpl5',   
-                 'explain', 'notes'
+        rckeys = ['name', 'acct', 'strat', 'link1',
+                  'plhead', 'pl', 'starthead', 'start','durhead', 'dur', 'sharehead', 'shares', 'mkthead', 'mktval',
+                 'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff',  'rrhead', 'rr', 'maxhead', 'maxloss', 
+                 'mstkhead', 'mstkval', 'mstknote',
+                  
+                 'entryhead', 'entry1', 'entry2', 'entry3', 'entry4', 'entry5', 'entry6', 'entry7', 'entry8', 
+                 'exit1', 'exit2', 'exit3', 'exit4', 'exit5', 'exit6', 'exit7', 'exit8',  
+                 'time1', 'time2', 'time3', 'time4', 'time5',  'time6', 'time7', 'time8', 
+                 'eshare1', 'eshare2', 'eshare3', 'eshare4', 'eshare5', 'eshare6', 'eshare7', 'eshare8', 
+                 'diff1', 'diff2',  'diff3',  'diff4', 'diff5',  'diff6',  'diff7',  'diff8',
+                  'pl1', 'pl2', 'pl3', 'pl4', 'pl5', 'pl6', 'pl7', 'pl8', 
+                  'explain', 'notes'
                   ]
 #         rckeys2 = ['stratnote', 'link5', 'link6']
         
@@ -46,14 +56,14 @@ class   SumReqFields(object):
         # attributes Unnecessarily as but it should reduce errors to use attributes instead of strings
         rc = dict(zip(rckeys, rcvals))
         
-       
         
-        
-        
+         
         # #Suggested way to address the columns for the TheTrade DataFrame. 
         self.name     = rc['name']                    
         self.acct     = rc['acct']                 
-        self.strat    = rc['strat']                
+        self.strat    = rc['strat']     
+        self.link1    = rc['link1']     
+        
         self.plhead   = rc['plhead']    
         self.pl       = rc['pl']                   
         self.starthead= rc['starthead'] 
@@ -64,6 +74,7 @@ class   SumReqFields(object):
         self.shares   = rc['shares'] 
         self.mkthead  = rc['mkthead']
         self.mktval   = rc['mktval'] 
+        
         self.targhead = rc['targhead']  
         self.targ     = rc['targ']      
         self.targdiff = rc['targdiff']  
@@ -74,59 +85,74 @@ class   SumReqFields(object):
         self.rr       = rc['rr']        
         self.maxhead  = rc['maxhead']   
         self.maxloss  = rc['maxloss']   
+        
+        
+        
         self.mstkhead = rc['mstkhead']
         self.mstkval  = rc['mstkval']
         self.mstknote = rc['mstknote']
-        self.link1    = rc['link1']     
         self.entryhead= rc['entryhead']
         self.entry1   = rc['entry1']   
         self.entry2   = rc['entry2']   
         self.entry3   = rc['entry3']   
         self.entry4   = rc['entry4']   
         self.entry5   = rc['entry5']   
-        self.enttime1 = rc['enttime1']             
-        self.enttime2 = rc['enttime2']
-        self.enttime3 = rc['enttime3']
-        self.enttime4 = rc['enttime4']
-        self.enttime5 = rc['enttime5']             
-        self.entshare1=rc['entshare1']  
-        self.entshare2= rc['entshare2'] 
-        self.entshare3= rc['entshare3'] 
-        self.entshare4= rc['entshare4'] 
-        self.entshare5= rc['entshare5'] 
-        self.entavg1  = rc['entavg1'] 
-        self.entavg2  = rc['entavg2'] 
-        self.entavg3  = rc['entavg3'] 
-        self.entavg4  = rc['entavg4'] 
-        self.entavg5  = rc['entavg5'] 
-        self.exithead = rc['exithead'] 
+        self.entry6   = rc['entry6']
+        self.entry7   = rc['entry7']
+        self.entry8   = rc['entry8']   
+        
         self.exit1    = rc['exit1']    
         self.exit2    = rc['exit2']    
         self.exit3    = rc['exit3']    
         self.exit4    = rc['exit4']    
         self.exit5    = rc['exit5']    
-        self.exttime1 = rc['exttime1'] 
-        self.exttime2 = rc['exttime2'] 
-        self.exttime3 = rc['exttime3'] 
-        self.exttime4 = rc['exttime4'] 
-        self.exttime5 = rc['exttime5']  
-        self.extshare1= rc['extshare1'] 
-        self.extshare2= rc['extshare2'] 
-        self.extshare3= rc['extshare3'] 
-        self.extshare4= rc['extshare4'] 
-        self.extshare5= rc['extshare5'] 
-        self.extpl1   = rc['extpl1']   
-        self.extpl2   = rc['extpl2']   
-        self.extpl3   = rc['extpl3']   
-        self.extpl4   = rc['extpl4']   
-        self.extpl5   = rc['extpl5']   
+        self.exit6    = rc['exit6']    
+        self.exit7    = rc['exit7']    
+        self.exit8    = rc['exit8']    
+        
+        self.time1 =  rc['time1']             
+        self.time2 =  rc['time2']
+        self.time3 =  rc['time3']
+        self.time4 =  rc['time4']
+        self.time5 =  rc['time5']
+        self.time6 =  rc['time6']
+        self.time7 =  rc['time7']
+        self.time8 =  rc['time8']    
+        
+        self.eshare1= rc['eshare1']  
+        self.eshare2= rc['eshare2'] 
+        self.eshare3= rc['eshare3'] 
+        self.eshare4= rc['eshare4'] 
+        self.eshare5= rc['eshare5'] 
+        self.eshare6= rc['eshare6'] 
+        self.eshare7= rc['eshare7'] 
+        self.eshare8= rc['eshare8'] 
+        
+        self.diff1  = rc['diff1']
+        self.diff2  = rc['diff2']
+        self.diff3  = rc['diff3']
+        self.diff4  = rc['diff4']
+        self.diff5  = rc['diff5']
+        self.diff6  = rc['diff6']
+        self.diff7  = rc['diff7']
+        self.diff8  = rc['diff8']
+        
+        self.pl1  = rc['pl1']
+        self.pl2  = rc['pl2']
+        self.pl3  = rc['pl3']
+        self.pl4  = rc['pl4']
+        self.pl5  = rc['pl5']
+        self.pl6  = rc['pl6']
+        self.pl7  = rc['pl7']
+        self.pl8  = rc['pl8']
+        
         self.explain  = rc['explain']  
         self.notes    = rc['notes']    
-        
+         
         self.rc = rc
         self.columns = rc.values()
-        
-        
+         
+         
         # To add a style to the TradeSummary, define the NamedStyle in withstyle.tradestyle.TradeFormat. Follow the pattern of the
         # others. Then place the name here with its cell location (anchor at (1,1)) and its associated data column in TheTrade DataFrame
 #         ex1="ex1"
@@ -134,89 +160,96 @@ class   SumReqFields(object):
             self.name     : [[(1, 1), (3, 2)], 'titleStyle'],
             self.acct     : [[(4, 1), (6, 2)], 'titleStyle'],
             self.strat    : [[(7, 1), (9, 2)], 'titleStyle'],         
-            self.plhead   : [[(7, 3), (7, 4)], 'titleLeft'],      
-            self.pl       : [[(8, 3), (9, 4)], 'titleNumberRight'],
-            self.starthead: [[(7, 5), (7, 6)], 'titleLeft'],     
-            self.start    : [[(8, 5), (9, 6)], 'titleRight'],
-            self.durhead  : [[(7, 7), (7, 8)], 'titleLeft'],      
-            self.dur      : [[(8, 7), (9, 8)], 'titleRight'],
-            self.sharehead: [[(7, 9), (7, 10)], 'titleLeft'],     
-            self.shares   : [[(8, 9), (9, 10)], 'titleRight'],        
-            self.mkthead  : [[(7, 11), (7, 12)], 'titleLeft'],     
-            self.mktval   : [[(8, 11), (9, 12)], 'titleNumberRight'], 
-            self.targhead : [(7,13), 'normStyle'],
-            self.targ     : [(8,13), 'normalNumber'],
-            self.targdiff : [(9,13), 'normStyle'],
-            self.stophead : [(7,14), 'normStyle'],      
-            self.stoploss : [(8,14), 'normStyle'],
-            self.sldiff   : [(9,14), 'normStyle'],
-            self.rrhead   : [(7,15), 'normStyle'],
-            self.rr       : [(8,15), 'normalFraction'],
-            "ex1"           : [(9,15), 'normStyle'],
-            self.maxhead  : [(7,16), 'normStyle'],
-            self.maxloss  : [(8,16), 'normStyle'],
-            "ex2"         : [(9,16), 'normStyle'],
-            self.mstkhead : [[(7, 17), (7,18)], 'normStyle'],
-            self.mstkval  : [[(8, 17), (9, 18)], 'titleNumberRight' ],
-            self.mstknote : [[(7, 19), (9, 20)], 'normStyle'], 
-            self.link1    : [[(7, 21), (9, 22)], 'linkStyle'],
-            self.entryhead: [[(1, 3), (1, 6)], 'normStyle'],
-            self.entry1   : [(2,3), 'normalNumberTopLeft'],
-            self.entry2   : [(3,3), 'normalNumberTop'],
-            self.entry3   : [(4,3), 'normalNumberTop'],
-            self.entry4   : [(5,3), 'normalNumberTop'],
-            self.entry5   : [(6,3), 'normalNumberTop'],
-            self.enttime1 : [(2,4), 'normalSubLeft'],
-            self.enttime2 : [(3,4), 'normalSub'],
-            self.enttime3 : [(4,4), 'normalSub'],
-            self.enttime4 : [(5,4), 'normalSub'],
-            self.enttime5 : [(6,4), 'normalSub'],
-            self.entshare1: [(2,5), 'normalSubLeft'],
-            self.entshare2: [(3,5), 'normalSub'],
-            self.entshare3: [(4,5), 'normalSub'],
-            self.entshare4: [(5,5), 'normalSub'],
-            self.entshare5: [(6,5), 'normalSubRight'],
-            self.entavg1  : [(2,6), 'normalSubNumberBottomLeft'],
-            self.entavg2  : [(3,6), 'normalNumberBottom'],
-            self.entavg3  : [(4,6), 'normalNumberBottom'],
-            self.entavg4  : [(5,6), 'normalNumberBottom'],
-            self.entavg5  : [(6,6), 'normalSubNumberBottomRight'],
-            self.exithead : [[(1, 7), (1, 10)], 'normStyle'],     
-            self.exit1    : [(2,7), 'normalNumberTopLeft'],    
-            self.exit2    : [(3,7), 'normalNumberTop'],             
-            self.exit3    : [(4,7), 'normalNumberTop'],             
-            self.exit4    : [(5,7), 'normalNumberTop'],             
-            self.exit5    : [(6,7), 'normalNumberTop'],             
-            self.exttime1 : [(2,8), 'normalSubLeft'],          
-            self.exttime2 : [(3,8), 'normalSub'],              
-            self.exttime3 : [(4,8), 'normalSub'],              
-            self.exttime4 : [(5,8), 'normalSub'],              
-            self.exttime5 : [(6,8), 'normalSub'],              
-            self.extshare1: [(2,9), 'normalSubLeft'],          
-            self.extshare2: [(3,9), 'normalSub'],              
-            self.extshare3: [(4,9), 'normalSub'],              
-            self.extshare4: [(5,9), 'normalSub'],              
-            self.extshare5: [(6,9), 'normalSubRight'],         
-            self.extpl1   : [(2,10), 'normalSubNumberBottomLeft'], 
-            self.extpl2   : [(3,10), 'normalNumberBottom'],     
-            self.extpl3   : [(4,10), 'normalNumberBottom'],     
-            self.extpl4   : [(5,10), 'normalNumberBottom'],     
-            self.extpl5   : [(6,10), 'normalSubNumberBottomRight'],
-#             "ex3"         : [(1,11), 'normStyle'],
-#             "ex4"         : [(2,11), 'normStyle'],
-#             "ex5"         : [(3,11), 'normStyle'],
-#             "ex6"         : [(4,11), 'normStyle'],
-#             "ex7"         : [(5,11), 'normStyle'],
-#             "ex8"         : [(6,11), 'normStyle'],
-#             "ex9"         : [(1,12), 'normStyle'],
-#             "ex10"        : [(2,12), 'normStyle'],
-#             "ex911"       : [(3,12), 'normStyle'],
-#             "ex12"        : [(4,12), 'normStyle'],
-#             "ex13"        : [(5,12), 'normStyle'],
-#             "ex14"        : [(6,12), 'normStyle'],
-            self.explain  : [[(1, 11), (6, 16)], 'explain'],
-            self.notes    : [[(1, 17), (6, 22)], 'noteStyle']
+            self.link1    : [[(10, 1),(12,2)], 'linkStyle'],
+            
+            self.plhead   : [[(1, 3), (1, 4)], 'titleLeft'],      
+            self.pl       : [[(2, 3), (3, 4)], 'titleNumberRight'],
+            self.starthead: [[(1, 5), (1, 6)], 'titleLeft'],     
+            self.start    : [[(2, 5), (3, 6)], 'titleRight'],
+            self.durhead  : [[(1, 7), (1, 8)], 'titleLeft'],      
+            self.dur      : [[(2, 7), (3, 8)], 'titleRight'],
+            self.sharehead: [[(1, 9), (1, 10)], 'titleLeft'],     
+            self.shares   : [[(2, 9), (3, 10)], 'titleRight'],        
+            self.mkthead  : [[(1, 11), (1, 12)], 'titleLeft'],     
+            self.mktval   : [[(2, 11), (3, 12)], 'titleNumberRight'], 
+            
+            self.targhead : [(1,13), 'normStyle'],
+            self.targ     : [(2,13), 'normalNumber'],
+            self.targdiff : [(3,13), 'normStyle'],
+            self.stophead : [(1,14), 'normStyle'],      
+            self.stoploss : [(2,14), 'normStyle'],
+            self.sldiff   : [(3,14), 'normStyle'],
+            self.rrhead   : [(1,15), 'normStyle'],
+            self.rr       : [(2,15), 'normalFraction'],
+            "ex1"           : [(3,15), 'normStyle'],
+            self.maxhead  : [(1,16), 'normStyle'],
+            self.maxloss  : [(2,16), 'normStyle'],
+            "ex2"         : [(3,16), 'normStyle'],
+            
+            self.mstkhead : [[(1, 17), (1,18)], 'normStyle'],
+            self.mstkval  : [[(2, 17), (3, 18)], 'titleNumberRight' ],
+            self.mstknote : [[(1, 19), (3, 20)], 'normStyle'], 
+            self.entryhead: [[(4, 3), (4, 8)], 'normStyle'],
+            
+            self.entry1   : [(5,3), 'normalNumberTopLeft'],
+            self.entry2   : [(6,3), 'normalNumberTop'],
+            self.entry3   : [(7,3), 'normalNumberTop'],
+            self.entry4   : [(8,3), 'normalNumberTop'],
+            self.entry5   : [(9,3), 'normalNumberTop'],
+            self.entry6   : [(10,3), 'normalNumberTop'],
+            self.entry7   : [(11,3), 'normalNumberTop'],
+            self.entry8   : [(12,3), 'normalNumberTopRight'],
+            
+            self.exit1    : [(5, 4),  'normalNumberLeft'],    
+            self.exit2    : [(6, 4),  'normalNumberInside'],             
+            self.exit3    : [(7, 4),  'normalNumberInside'],             
+            self.exit4    : [(8, 4),  'normalNumberInside'],             
+            self.exit5    : [(9, 4),  'normalNumberInside'],
+            self.exit6    : [(10,4),  'normalNumberInside'],
+            self.exit7    : [(11,4),  'normalNumberInside'],
+            self.exit8    : [(12,4),  'normalNumberRight'],             
+            
+            self.time1 : [(5, 5),  'normalSubLeft'],          
+            self.time2 : [(6, 5),  'normalSub'],              
+            self.time3 : [(7, 5),  'normalSub'],              
+            self.time4 : [(8, 5),  'normalSub'],              
+            self.time5 : [(9, 5),  'normalSub'],
+            self.time6 : [(10,5), 'normalSub'],
+            self.time7 : [(11,5), 'normalSub'],
+            self.time8 : [(12,5), 'normalSubRight'],              
+            
+            self.eshare1:  [(5, 6), 'normalSubLeft'],          
+            self.eshare2:  [(6, 6), 'normalSub'],              
+            self.eshare3:  [(7, 6), 'normalSub'],              
+            self.eshare4:  [(8, 6), 'normalSub'],              
+            self.eshare5:  [(9, 6), 'normalSub'],
+            self.eshare6:  [(10,6), 'normalSub'],
+            self.eshare7:  [(11,6), 'normalSub'],
+            self.eshare8:  [(12,6), 'normalSubRight'],
+            
+            self.diff1  :  [(5, 7),  'normalSubLeft'],
+            self.diff2  :  [(6, 7),  'normalSub'],
+            self.diff3  :  [(7, 7),  'normalSub'],
+            self.diff4  :  [(8, 7),  'normalSub'],
+            self.diff5  :  [(9, 7),  'normalSub'],
+            self.diff6  :  [(10,7),  'normalSub'],
+            self.diff7  :  [(11,7),  'normalSub'],
+            self.diff8  :  [(12,7),  'normalSubRight'],     
+            
+            self.pl1  :  [(5, 8),  'normalSubNumberBottomLeft'],
+            self.pl2  :  [(6, 8),  'normalSubNumberBottom'],
+            self.pl3  :  [(7, 8),  'normalSubNumberBottom'],
+            self.pl4  :  [(8, 8),  'normalSubNumberBottom'],
+            self.pl5  :  [(9, 8),  'normalSubNumberBottom'],
+            self.pl6  :  [(10,8),  'normalSubNumberBottom'],
+            self.pl7  :  [(11,8),  'normalSubNumberBottom'],
+            self.pl8  :  [(12,8),  'normalSubNumberBottomRight'],           
+            
+            self.explain  : [[(4, 9), (12, 14)], 'explain'],
+            self.notes    : [[(4, 15), (12, 20)], 'noteStyle']
             }
+        
+        # Set up the excel formulas for the trade summaries. The ones for Mistake Summary are in their class
         self.tfformulas = dict()
         self.tfformulas[self.targdiff] = ["={0}-{1}", 
                                           self.tfcolumns[self.targ][0], 
@@ -235,13 +268,14 @@ class   SumReqFields(object):
                                           self.tfcolumns[self.shares][0][0],
                                           self.tfcolumns[self.sldiff][0]
                                           ]
-        
-            
-                          
+         
+             
+                           
         self.rc = rc  
         self.columns = rc.values()
-        
+         
     def getStyles(self):
+        '''Retrieves a list of the style names from tfcolumns'''
         _styles = []
         for v in list(self.tfcolumns.values()) :
             _styles.append(v[1])
@@ -310,6 +344,7 @@ class TheTradeObject(object):
         
         self.__setShares()
         self.__setHeaders()
+        self.__setExplainNotes()
         ret = self.__setEntries()
         
         print("Side = ", self.df.loc[self.ix0][frc.side])
@@ -418,90 +453,120 @@ class TheTradeObject(object):
         self.TheTrade[srf.durhead  ] = "Dur"
         self.TheTrade[srf.sharehead] = "Pos"
         self.TheTrade[srf.mkthead]   = "Mkt"
-        self.TheTrade[srf.entryhead] = 'Entries'
-        self.TheTrade[srf.exithead] = 'Exits'
+        self.TheTrade[srf.entryhead] = 'Entries and Exits'
+#         self.TheTrade[srf.exithead] = 'Exits'
         self.TheTrade[srf.targhead] = 'Target'
         self.TheTrade[srf.stophead] = 'Stop'
         self.TheTrade[srf.rrhead] = 'R:R'
         self.TheTrade[srf.maxhead] = 'Max Loss'
         self.TheTrade[srf.mstkhead] = "Proceeds Lost"
-        return self.TheTrade[[srf.entryhead, srf.exithead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
+        return self.TheTrade[[srf.entryhead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
   
     def __setEntries(self):
         entries=list()
-        exits=list()
+#         exits=list()
         #TODO Fix the hold entry
 #         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
         long = False            
-
+        entry1=0
+        count=0
         for i, row in self.df.iterrows() :
             if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+') :
                 long = True
-            
+            diff=0
+            if count == 0:
+                entry1 = row[frc.price] 
+            else :
+                # For entries overnight with no Price value, figure it out based on PL/Shares and put it in.
+                if count == 1 and entry1 == 0:
+                    entry1= row[frc.price] + (row[frc.PL] / row[frc.shares]) 
+                    entries[0][0] = entry1
+                diff = entry1 - row[frc.price]
+                
             if long :
                 if (row[frc.side]).startswith('B') :
-                    entries.append([row[frc.price],row[frc.time], row[frc.shares],34.56])
+                    entries.append(
+                        [row[frc.price],
+                         row[frc.time], 
+                         row[frc.shares],
+                         0, 
+                         diff, 
+                         "Entry"])
                 else :
-                    exits.append([row[frc.price], row[frc.time], row[frc.shares], row[frc.PL]])
+                    entries.append([
+                        row[frc.price], 
+                        row[frc.time], 
+                        row[frc.shares], 
+                        row[frc.PL], 
+                        diff, 
+                        "Exit"])
             else :
                 if (row[frc.side]).startswith('B') :
-                    exits.append([row[frc.price], row[frc.time], row[frc.shares], row[frc.PL]])
+                    entries.append([
+                        row[frc.price], 
+                        row[frc.time], 
+                        row[frc.shares], 
+                        row[frc.PL], 
+                        diff, 
+                        "Exit"])
                 else :
-                    entries.append([row[frc.price],row[frc.time], row[frc.shares],34.56])
+                    entries.append([
+                        row[frc.price],
+                        row[frc.time], 
+                        row[frc.shares], 
+                        0, diff, 
+                        "Entry"])
+            count = count + 1
 
-        if len(entries) > 5 :
-            more = len(entries) - 5
-            self.TheTrade.Entry5 =  "Plus {} more.".format(more)
+        if len(entries) > 8 :
+            more = len(entries) - 8
+            self.TheTrade[srf.pl8] =  "Plus {} more.".format(more)
         for i, price in zip(range (len(entries)), entries) :
-            col = "Entry" + str(i+1)
+            
+            #Entry Price
+            if price[5] == "Entry" :
+                col = "Entry" + str(i+1)
+            else :
+                col = "Exit" + str(i+1)
             self.TheTrade[col] = price[0]
 
-            col="EntTime" + str(i+1)
+            #Entry Time
+            col="Time" + str(i+1)
             self.TheTrade[col] = price[1]
     
-            col= "EntShare" + str(i+1)
+            #Entry Shares
+            col= "EShare" + str(i+1)
             self.TheTrade[col] = price[2]
             
-            col= "EntAvg" + str(i+1)
-            self.TheTrade[col] = price[3]
-
-
-        if len(exits) > 5 :
-            more = len(exits) - 5
-            self.TheTrade.Exits5 =  "Plus {} more.".format(more)
-        for i, price in zip(range (len(exits)), exits) :
-            col = "Exit" + str(i+1)
-            self.TheTrade[col] = price[0]
-            
-            col="ExtTime" + str(i+1)
-            self.TheTrade[col] = price[1]
-    
-            col= "ExtShare" + str(i+1)
-            self.TheTrade[col] = price[2]
-            
-            col= "ExtPL" + str(i+1)
+            #Entry P/L
+            col= "PL" + str(i+1)
             self.TheTrade[col] = price[3]
             
-            
-            
-        return self.TheTrade
+            #Entry diff
+            col= "Diff" + str(i+1)
+            self.TheTrade[col] = price[4]
+
     
     def __setTarget(self) :
         '''Interview the user for the target. targdiff is handled as a formula elsewhere'''
         target = 0
-        
+        shares = self.TheTrade[srf.shares].unique()[0]
         try :
             p= float(self.TheTrade[srf.entry1])
             p=f'{p:.3f}'
         except :
             question = '''
+            Your position was {0}.
             What was your target?
-                 '''
+                 '''.format(shares)
         else :
+            side = self.TheTrade[srf.name].unique()[0].split()[1].lower()
+            
             question = '''
-                Your entry was {0}.
+                Your entry was {0} at {1}.
+                your position was {2}.
                 What was your target?.
-                     '''.format(p)
+                     '''.format(side, p, shares)
         while True:
             try :
                 
@@ -523,7 +588,7 @@ class TheTradeObject(object):
         pd.to_numeric(self.TheTrade[srf.targ] , errors='coerce')
         self.TheTrade[srf.targ] = target
         
-        # If this is a trade with a privious holding, 
+        # TODO update--Unecessary? If this is a trade with a previous holding, 
         # Planning to change the target diff to a formula-- add formulas to tfcolumns
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
             return
@@ -537,18 +602,23 @@ class TheTradeObject(object):
     def __setStop(self) :
         '''Interview the user and git the stoploss. sldiff is handled elsewhere as an excel formula.'''
         stop = 0
+        
+        shares = self.TheTrade[srf.shares].unique()[0]
         try :
             p= float(self.TheTrade[srf.entry1])
             p=f'{p:.3f}'
         except :
             question = '''
+            Your position was {0}.
             What was your stop?
-                 '''
+                 '''.format(shares)
         else :
+            side = self.TheTrade[srf.name].unique()[0].split()[1].lower()
             question = '''
-                Your entry was {0}.
+                Your entry was {0} at {1}.
+                your position was {2}.
                 What was your stop?.
-                     '''.format(p)
+                     '''.format(side, p, shares)
         
         while True:
             try :
@@ -596,6 +666,14 @@ class TheTradeObject(object):
             if abs(self.TheTrade[srf.pl].unique()[0]) > abs(self.TheTrade[srf.maxloss].unique()[0]) :
                 self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[0]) - abs(self.TheTrade[srf.pl].unique()[0])
                 self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
+            else :
+                # HACKALERT Without inserting this blank space, referencing cell (e.g. =Q42) displays a the number 0. 
+                # This out hacks excel to display nothing.
+                self.TheTrade[srf.mstknote] = " "
+                
+    def __setExplainNotes(self) :
+        self.TheTrade[srf.explain] = "Technical description of the trade"
+        self.TheTrade[srf.notes] = "Evaluation of the trade"
 
 
     

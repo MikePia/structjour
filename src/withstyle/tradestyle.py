@@ -1,10 +1,8 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-# from openpyxl.utils import coordinate_from_string, column_index_from_string
-
 from openpyxl.styles import (PatternFill,  Border, Side, 
                              Alignment, Font, NamedStyle)
-# Currently unused styles GradientFill, Protection, colors, Color,  
+
 from withstyle.thetradeobject import SumReqFields
 
 #global variable
@@ -86,8 +84,9 @@ class TradeFormat (object):
         
             
             
-            
-        
+        # This code is subject to change on a whim. Primary importance is easy to find styles and 
+        # consistent layout
+        #######################################         titleStyle       ###################################################
         titleStyle = NamedStyle(name="titleStyle")
         titleStyle.font = Font(color="FFFFFF", size=16)
         titleStyle.alignment = Alignment(horizontal="center", vertical="center", wrapText=True)
@@ -225,6 +224,45 @@ class TradeFormat (object):
         
         self.addNamedStyle(normalNumberTopRight, 'normalNumberTopRight', wb)
         
+        #######################################     normalNumberLeft     #################################################        
+        normalNumberLeft= NamedStyle(name = "normalNumberLeft")
+        normalNumberLeft.font = Font(color="FFFFFF", size=11)
+        normalNumberLeft.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberLeft.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberLeft.border = Border(left=Side(style='double'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
+        normalNumberLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberLeft, 'normalNumberLeft', wb)    
+        
+        #######################################     normalNumberRight     #################################################        
+        normalNumberRight= NamedStyle(name = "normalNumberRight")
+        normalNumberRight.font = Font(color="FFFFFF", size=11)
+        normalNumberRight.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberRight.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberRight.border = Border(left=Side(style='thin'),
+                                 right=Side(style='double'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
+        normalNumberRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberRight, 'normalNumberRight', wb)    
+        
+        #######################################     normalNumberInside     #################################################        
+        normalNumberInside= NamedStyle(name = "normalNumberInside")
+        normalNumberInside.font = Font(color="FFFFFF", size=11)
+        normalNumberInside.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalNumberInside.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalNumberInside.border = Border(left=Side(style='thin'),
+                                 right=Side(style='thin'), 
+                                 top=Side(style='thin'), 
+                                 bottom=Side(style='thin'))
+        normalNumberInside.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        
+        self.addNamedStyle(normalNumberInside, 'normalNumberInside', wb)    
+        
         #######################################     normalSubLeft     #################################################
         normalSubLeft= NamedStyle(name = "normalSubLeft")
         normalSubLeft.font = Font(color="FABF8F", size=11)
@@ -234,7 +272,6 @@ class TradeFormat (object):
                                  right=Side(style='thin'), 
                                  top=Side(style='thin'), 
                                  bottom=Side(style='thin'))
-#         normalSubLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
 
         self.addNamedStyle(normalSubLeft, 'normalSubLeft', wb)
        
@@ -248,7 +285,6 @@ class TradeFormat (object):
                                  right=Side(style='thin'), 
                                  top=Side(style='thin'), 
                                  bottom=Side(style='thin'))
-#         normalSub.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
 
         self.addNamedStyle(normalSub,  'normalSub', wb)
         
@@ -278,18 +314,18 @@ class TradeFormat (object):
         
         self.addNamedStyle(normalSubNumberBottomLeft, 'normalSubNumberBottomLeft', wb)
         
-        #######################################     normalNumberBottom     #################################################
-        normalNumberBottom= NamedStyle(name = "normalNumberBottom")
-        normalNumberBottom.font = Font(color="FABF8F", size=11)
-        normalNumberBottom.alignment = Alignment(horizontal="left", vertical="bottom")
-        normalNumberBottom.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
-        normalNumberBottom.border = Border(left=Side(style='thin'),
+        #######################################     normalSubNumberBottom     #################################################
+        normalSubNumberBottom= NamedStyle(name = "normalNumberBottom")
+        normalSubNumberBottom.font = Font(color="FABF8F", size=11)
+        normalSubNumberBottom.alignment = Alignment(horizontal="left", vertical="bottom")
+        normalSubNumberBottom.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        normalSubNumberBottom.border = Border(left=Side(style='thin'),
                                  right=Side(style='thin'), 
                                  top=Side(style='thin'), 
                                  bottom=Side(style='double'))
-        normalNumberBottom.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalSubNumberBottom.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
         
-        self.addNamedStyle(normalNumberBottom, 'normalNumberBottom', wb)
+        self.addNamedStyle(normalSubNumberBottom, 'normalSubNumberBottom', wb)
         
         #######################################     normalSubNumberBottomRight     #################################################
         normalSubNumberBottomRight= NamedStyle(name = "normalSubNumberBottomRight")
@@ -382,8 +418,8 @@ class TradeFormat (object):
                 ws[c(val[0], anchor=anc)].style = self.styles[val[1]]
         
             
-        ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
-        ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"
+#         ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
+#         ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"
     
     
 

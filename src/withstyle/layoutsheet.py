@@ -98,7 +98,7 @@ class LayoutSheet(object):
         XL = XLImage()
         srf = SumReqFields()
         
-        response = input("Would you like to enter strategy names, targets and stops?")
+        response = input("Would you like to enter strategy names, targets and stops?     ")
         interview = True if response.lower().startswith('y') else False
 
         for loc, tdf in zip(imageLocation, ldf) :
@@ -106,7 +106,9 @@ class LayoutSheet(object):
         
             
             img = XL.getAndResizeImage(loc[2], jf.outdir)
-            cellname = 'J' + str(loc[0])
+            
+            #This is the location to place the chart on the page. Its kind of hidden in the deep recesses here.
+            cellname = 'M' + str(loc[0])
             ws.add_image(img, cellname)
     
             #Put together the trade summary info for each trade and interview the trader
@@ -144,6 +146,16 @@ class LayoutSheet(object):
         return tradeSummaries
             
     def createMistakeForm(self, tradeSummaries, mistake, ws, imageLocation) :
+        '''
+        Populate the mistake summaries form. Many entries are simple excel formulas found in 
+        the dict mistake. Here we translate the cell addresses and populate the worksheet.
+        :params:tradeSummaries: A dataframe containing the the trade summaries info, one line per trade.
+        :parmas:mistake: A dataframe containing the info to populate the mistake summary.
+        :params:ws: The openpyxl worksheet object.
+        :imageLocation: A list containing the locations in the worksheet for each of the trades in tradeSummaries.
+        '''
+        
+        # Populate the name fields
         for i in range(len(tradeSummaries)):
             key="name" + str(i+1)
             cell = mistake.mistakeFields[key][0][0]
@@ -153,6 +165,7 @@ class LayoutSheet(object):
         #     print(s)
             ws[cell] = s
     
+        # Populate the pl (loss) fields and the mistake fields. These are all simple formulas.   
         tokens=["pl", "mistake"]
         for token in tokens :
             for i in range(len(tradeSummaries)):
