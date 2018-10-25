@@ -10,9 +10,9 @@ from openpyxl.drawing.image import Image
 
 class XLImage(object):
         
+#     20.238095238095237
     
-    
-    def adjustSizeByHeight(self, sz, newHeight=425, numCells=0, pixPerCell = 20.238095238095237) :
+    def adjustSizeByHeight(self, sz, newHeight=425, numCells=0, pixPerCell = 19.3) :
         ''' 
         Adjust size to keep the aspect ratio the same as determined by newHeight
         :param:sz: A tuple of ints in the form (width, height).
@@ -24,6 +24,7 @@ class XLImage(object):
         :param:pixPerCell: The aproximate number of pixels per excel row.  Because this is determined by issues
                             beyond our control, it will have to be configurable in user settings     
         '''
+        #TODO Make some contraption to adjust the size by the user. 
         w,h = sz
         if numCells > 0:
             newHeight = numCells * pixPerCell
@@ -83,7 +84,7 @@ class XLImage(object):
             Copy an image to the clipboard using snip for {0}
             '''.format(name)
             pilImage = self.getPilImageFromClipboard(msg) 
-            newSize = self.adjustSizeByHeight(pilImage.size)
+            newSize = self.adjustSizeByHeight(pilImage.size, numCells=20)
             pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
             
             

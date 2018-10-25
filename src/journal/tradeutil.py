@@ -218,7 +218,6 @@ class TradeUtil(object):
                 dframe.at[i, c.dur] = diff
         return dframe
     
-    
     def addTradeName(self, dframe) :
         '''Create a name for this trade like 'AMD Short'. Place it in the c.name column'''
             
@@ -232,7 +231,6 @@ class TradeUtil(object):
                 dframe.at[i, c.name] = row[c.ticker] + longShort
         return dframe
     
-    # Note that .sum() should work on this but it failed when I tried it.
     def addSummaryPL(self, dframe) :
         ''' 
         Create a summary of the P/L for the day, place it in new row. 
@@ -240,6 +238,7 @@ class TradeUtil(object):
         We rely on the account number starting with 'U' or 'TR' to determine
         live or SIM. These two columns should add to the same amount. '''
         # TODO sum up the seperate accounts and make a new labeled entry for each account
+        # Note that .sum() should work on this but it failed when I tried it.
         c = self._frc
         
         count=0
@@ -271,11 +270,10 @@ class TradeUtil(object):
     
         return dframe
     
-   
-    # dframe contains the transactions of a single trade.  Single trade ends when the balance 
-    # of shares is 0
-    # Return value is a string 'Long' or 'Short'
     def getLongOrShort(self, dframe) :
+        # dframe contains the transactions of a single trade.  Single trade ends when the balance 
+        # of shares is 0
+        # Return value is a string 'Long' or 'Short'
         tsx = dframe[dframe.Balance == 0]
     
         
@@ -285,7 +283,6 @@ class TradeUtil(object):
             return 'Short'    
         else :
             return 'Long'
-
    
     def getTradeList (self, dframe) :
         '''
@@ -319,7 +316,6 @@ class TradeUtil(object):
         print("Got {0} trades".format(len(ldf)))
         return ldf
     
-        
     def addFinReqCol (self, dframe) :
         c = self._frc  
         for l in c.columns :
@@ -327,6 +323,4 @@ class TradeUtil(object):
                 dframe[l] = ''
         return dframe
     
-print("readit")   
-        
         
