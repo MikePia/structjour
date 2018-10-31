@@ -345,6 +345,7 @@ class TheTradeObject(object):
         self.__setShares()
         self.__setHeaders()
         self.__setExplainNotes()
+        self.__blandSpaceInMstkNote()
         ret = self.__setEntries()
         
         print("Side = ", self.df.loc[self.ix0][frc.side])
@@ -481,7 +482,7 @@ class TheTradeObject(object):
                 if count == 1 and entry1 == 0:
                     entry1= row[frc.price] + (row[frc.PL] / row[frc.shares]) 
                     entries[0][0] = entry1
-                diff = entry1 - row[frc.price]
+                diff =  row[frc.price] -entry1
                 
             if long :
                 if (row[frc.side]).startswith('B') :
@@ -666,10 +667,11 @@ class TheTradeObject(object):
             if abs(self.TheTrade[srf.pl].unique()[0]) > abs(self.TheTrade[srf.maxloss].unique()[0]) :
                 self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[0]) - abs(self.TheTrade[srf.pl].unique()[0])
                 self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
-            else :
-                # HACKALERT Without inserting this blank space, referencing cell (e.g. =Q42) displays a the number 0. 
-                # This out hacks excel to display nothing.
-                self.TheTrade[srf.mstknote] = " "
+
+    def __blandSpaceInMstkNote(self):
+        # HACKALERT Without inserting this blank space, referencing cell (e.g. =Q42) displays a the number 0. 
+        # This out hacks excel to display nothing.
+        self.TheTrade[srf.mstknote] = "Final note"
                 
     def __setExplainNotes(self) :
         self.TheTrade[srf.explain] = "Technical description of the trade"

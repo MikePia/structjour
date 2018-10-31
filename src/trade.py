@@ -9,7 +9,7 @@ from withstyle.mstksum import MistakeSummary
 
 # jf=JournalFiles(theDate=datetime.date(2018, 10, 19), infile="trades2.csv", outdir="out/", mydevel=True)
 
-jf=JournalFiles(infile="hypothetical.csv", mydevel=True, outdir="out/")
+jf=JournalFiles(outdir="out/", mydevel=True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -30,9 +30,9 @@ margin=25
 ls = LayoutSheet(sumSize,margin, inputlen)
 imageLocation, dframe = ls.createImageLocation(dframe, ldf)
 wb, ws, nt =ls.createWorkbook(dframe)
-ls.styleTop(ws, nt)
 
 tf = TradeFormat(wb)
+ls.styleTop(ws, nt, tf)
 assert (len(ldf) == len(imageLocation))
 
 mstkAnchor = (len(dframe.columns) + 2, 1)

@@ -9,4 +9,5 @@ out/
 *.png
 *.pyc
 .pydev*
+*.sqlite
 

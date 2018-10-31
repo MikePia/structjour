@@ -4,15 +4,19 @@ Created on Oct 18, 2018
 @author: Mike Petersen
 '''
 import os
+import sqlite3
 
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
+# from inspiration.inspire import Inspire
+from inspiration.inspire import Inspire
 from journal.dfutil import DataFrameUtil
 from journal.tradeutil import FinReqCol
 from journal.xlimage import XLImage
 from withstyle.tradestyle import c as tcell
+from withstyle.tradestyle import style_range
 from withstyle.thetradeobject import TheTradeObject, SumReqFields 
 
 
@@ -82,7 +86,7 @@ class LayoutSheet(object):
         return wb, ws, nt
     
     
-    def styleTop(self, ws, nt) :
+    def styleTop(self, ws, nt, tf) :
         ##Style the table, and the top paragraph.  Add and style the inspire quote. Create the SummaryMistake form (populate it below in a loop)
         tblRng= "{0}:{1}".format(tcell((1,self.topMargin)), tcell((len(nt.columns),self.topMargin + self.inputlen)))
         tab = Table(displayName="Table1", ref=tblRng)
@@ -90,8 +94,26 @@ class LayoutSheet(object):
                                showLastColumn=False, showRowStripes=True, showColumnStripes=False)
         tab.tableStyleInfo = style
     
-    
         ws.add_table(tab)
+        
+        # A1:M5 inspire quote
+        tf.mergeStuff(ws, (1,1), (13,5))
+        ws["A1"].style = tf.styles["normStyle"]
+        style_range(ws, "A1:M5", border=tf.styles["normStyle"].border)
+        inspire = Inspire()
+        ws["A1"] = inspire.getrandom().replace("\t", "        ")
+        
+        # A6:M24 introductory notes
+        tf.mergeStuff(ws, (1,6), (13,24))
+        ws["A6"].style = tf.styles["explain"]
+        style_range(ws, "A6:M24", border=tf.styles["explain"].border)
+        
+        
+        
+        
+        
+        
+        
         
     def createSummaries(self, imageLocation, ldf, jf, ws, tf) :
         tradeSummaries = list()
