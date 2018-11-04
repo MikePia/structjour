@@ -22,10 +22,10 @@ class MistakeSummary(object):
         # Create the data structure to make a styled shape 
         # [key][rng,style]
         mistakeFields = {
-            'title'       : [[(1, 1), (8, 2)], 'titleStyle' ],
+            'title'       : [[(1, 1), (11, 2)], 'titleStyle' ],
             'headname'    : [[(1, 3), (2, 3)], 'normStyle'],
             'headpl'      : [(3, 3), 'normalNumber'],
-            'headmistake' : [[(4, 3), (8, 3)], 'normStyle'],
+            'headmistake' : [[(4, 3), (11, 3)], 'normStyle'],
 
             }
 
@@ -36,14 +36,14 @@ class MistakeSummary(object):
             m = "mistake" + str(i + 1)
             ncells = [(1, 4 + i), (2, 4 + i)]  # [(1,4), (2,4)]
             pcells = (3, 4 + i)
-            mcells = [(4, 4 + i), (8, 4 + i)]
+            mcells = [(4, 4 + i), (11, 4 + i)]
             mistakeFields[n] = [ncells, 'normStyle']
             mistakeFields[p] = [pcells, 'normalNumber']
-            mistakeFields[m] = [mcells, 'normStyle']
+            mistakeFields[m] = [mcells, 'finalNoteStyle']
 
         mistakeFields['blank1'] = [[(1, 4 + numTrades), (2, 4 + numTrades)], 'normStyle']
         mistakeFields['total'] = [(3, 4 + numTrades), 'normalNumber']
-        mistakeFields['blank2'] = [[(4, 4 + numTrades), (8, 4 + numTrades)], 'normStyle']
+        mistakeFields['blank2'] = [[(4, 4 + numTrades), (11, 4 + numTrades)], 'normStyle']
 
         # Excel formulas belong in the mstkval and mstknote columns. The cell translation 
         # can't be done till we create and populate the Workbook
@@ -65,7 +65,7 @@ class MistakeSummary(object):
         headers['title']       = "Mistake Summary"
         headers['headname']    = "Name"
         headers['headpl']      = "Lost PL"
-        headers['headmistake'] = "Mistake"
+        headers['headmistake'] = "Mistake or pertinent feature of trade."
         
         # Merge the cells, apply the styles, and populate the fields we can--the 
         # fields that don't know any details todays trades (other than how many trades)

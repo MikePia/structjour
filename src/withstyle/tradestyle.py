@@ -119,6 +119,17 @@ class TradeFormat (object):
         titleNumberRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
         self.addNamedStyle(titleNumberRight, 'titleNumberRight', wb)
 
+        #######################################     finalNoteStyle     ###################################################
+        finalNoteStyle = NamedStyle(name = "finalNoteStyle")
+        finalNoteStyle.font = Font(color="FFFFFF", size=8)
+        finalNoteStyle.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        finalNoteStyle.fill = PatternFill(start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        finalNoteStyle.border = Border(left=Side(style='double'),
+                                  right=Side(style='double'), 
+                                  top=Side(style='double'), 
+                                  bottom=Side(style='double'))
+        
+        self.addNamedStyle(finalNoteStyle, 'finalNoteStyle', wb)
 
         #######################################     titleRight     ###################################################
         titleRight= NamedStyle(name="titleRight")
@@ -132,7 +143,7 @@ class TradeFormat (object):
         
         self.addNamedStyle(titleRight, 'titleRight', wb)
 
-        #######################################     normRight     ###################################################        
+        #######################################     normStyle     ###################################################        
         normStyle = NamedStyle(name = "normStyle")
         normStyle.font = Font(color="FFFFFF", size=11)
         normStyle.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)

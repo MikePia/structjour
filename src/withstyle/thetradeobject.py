@@ -188,7 +188,7 @@ class   SumReqFields(object):
             
             self.mstkhead : [[(1, 17), (1,18)], 'normStyle'],
             self.mstkval  : [[(2, 17), (3, 18)], 'titleNumberRight' ],
-            self.mstknote : [[(1, 19), (3, 20)], 'normStyle'], 
+            self.mstknote : [[(1, 19), (3, 20)], 'finalNoteStyle'], 
             self.entryhead: [[(4, 3), (4, 8)], 'normStyle'],
             
             self.entry1   : [(5,3), 'normalNumberTopLeft'],
@@ -259,7 +259,7 @@ class   SumReqFields(object):
                                           self.tfcolumns[self.stoploss][0], 
                                           self.tfcolumns[self.entry1][0]
                                           ]
-        self.tfformulas[self.rr] = ["={0}/{1}", 
+        self.tfformulas[self.rr] = ["=ABS({0}/{1})", 
                                           self.tfcolumns[self.sldiff][0], 
                                           self.tfcolumns[self.targdiff][0]
                                           ]
@@ -433,7 +433,7 @@ class TheTradeObject(object):
     def __getShares(self):
         #TODO Rethink this for HOLDs
         if self.shares == 0 :
-            if self.side.startswith("B"):
+            if self.side.startswith("B") or self.side.startswith("HOLD+") :
                 self.shares = self.df[frc.bal].max()
             else :
                 self.shares = self.df[frc.bal].min()
@@ -662,8 +662,10 @@ class TheTradeObject(object):
         this is not done with a formula because the space can be used for any mistake and should be filled in by the 
         user if, for example, the its sold before a target and the trade never approached the stoploss.
         '''
+        if isinstance(self.TheTrade[srf.maxloss].unique()[0], str) :
+            # There is no entry in entry1 so maxLoss has no meaning here.
+            return
         if self.TheTrade[srf.pl].unique()[0] < 0 :
-    
             if abs(self.TheTrade[srf.pl].unique()[0]) > abs(self.TheTrade[srf.maxloss].unique()[0]) :
                 self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[0]) - abs(self.TheTrade[srf.pl].unique()[0])
                 self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
