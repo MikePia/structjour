@@ -188,7 +188,7 @@ class LayoutSheet(object):
             ws[cell] = s
     
         # Populate the pl (loss) fields and the mistake fields. These are all simple formulas.   
-        tokens=["pl", "mistake"]
+        tokens=["tpl", "pl", "mistake"]
         for token in tokens :
             for i in range(len(tradeSummaries)):
                 key=token + str(i+1)
@@ -206,6 +206,87 @@ class LayoutSheet(object):
                 print("ws[{0}]='{1}'".format(cell,formula))
                 ws[cell]=formula
                 
+    def createDailySummaryForm(self, TheTradeList, mistake, ws, anchor):
+        '''
+        Create the shape and populate the daily Summary Form
+        :params:listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one is a single row DataFrame
+        containg all the data in the trade summaries.
+        :params:mistke: 
+        :params:ws: The openpyxl Worksheet object
+        '''
+        srf=SumReqFields()
+        liveWins=list()
+        liveLosses=list()
+        simWins=list()
+        simLosses=list()
+        maxTrade = (0, "notrade")
+        minTrade = (0, "notrade")
+        #Didnot save the Trade number in TheTrade.  These should be the same order...
+        count = 0
+        
+         
+        for TheTrade in TheTradeList :
+            pl = TheTrade[srf.pl].unique()[0]
+            live = True if TheTrade[srf.acct].unique()[0] == "Live" else False
+            count = count + 1
+            if pl > maxTrade[0] :
+                maxTrade = (pl, "Trade{0}, {1}, {2}".format(count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
+            if pl < minTrade[0] :
+                minTrade = (pl, "Trade{0}, {1}, {2}".format(count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
+                
+            if live:
+                if pl > 0 :
+                    liveWins.append(pl)
+                else :
+                    liveLosses.append(pl)
+            else :
+                if pl > 0 :
+                    simWins.append(pl)
+                else :
+                    simLosses.append(pl)
+                    
+        anchor = (anchor[0], anchor[1] + mistake.numTrades + 5)    
+        
+        dailySumData = dict()   
+        dailySumData['livetot'] = sum([sum(liveWins), sum(liveLosses)]) 
+        
+        numt = len(liveWins) + len(liveLosses)
+        if numt == 0 : 
+            dailySumData['livetotnote'] = "0 Trades"
+        else :                                  
+            dailySumData['livetotnote'] = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}".format(numt, "" if numt  == 1 else "s", 
+                                              len(liveWins), "" if len(liveWins) == 1 else "s",
+                                              len(liveLosses), "" if len(liveLosses) == 1 else "s")      
+        dailySumData['simtot']  = sum([sum(simWins), sum(simLosses)])
+         
+        # 9 trades,  3 Winners, 6 Losers
+        numt=len(simWins) + len(simLosses)
+        if numt == 0 : 
+            dailySumData['simtotnote']  = "0 Trades"
+        else :                                  #4 trades, 1 Winner, 3 Losers
+            dailySumData['simtotnote'] = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}".format(numt, "" if numt == 1 else "s", 
+                                              len(simWins), "" if len(simWins) == 1 else "s",
+                                              len(simLosses), "" if len(simLosses) == 1 else "s")      
+        
+               
+        dailySumData['highest']     = maxTrade[0]  
+        dailySumData['highestnote'] = maxTrade[1]
+        dailySumData['lowest']      = minTrade[0]
+        dailySumData['lowestnote']  = minTrade[1]
+        dailySumData['avgwin']      = sum([sum(liveWins), sum(simWins)]) / (len(liveWins) + len(simWins))
+        dailySumData['avgwinnote']  = "X {} =  ${:.2f}".format(len(liveWins) + len(simWins), sum([sum(liveWins), sum(simWins)]))
+        dailySumData['avgloss']     = sum([sum(liveLosses), sum(simLosses)]) / (len(liveLosses) + len(simLosses))
+        dailySumData['avglossnote'] = "X {} =  (${:.2f})".format(len(liveLosses) + len(simLosses), abs(sum([sum(liveLosses), sum(simLosses)])))
+                                  
+        for key in dailySumData.keys() :
+            rng = mistake.dailySummaryFields[key][0]
+            if isinstance(rng, list) :
+                rng = rng[0]
+            ws[tcell(rng, anchor=anchor)] = dailySumData[key] 
+
+    
+    
+    
     def save(self, wb, jf):
         #Write the file
         jf.mkOutdir() 

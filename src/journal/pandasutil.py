@@ -312,7 +312,7 @@ class ToCSV_Ticket(object):
      
             tickerset = set(tickerlist)
             if len(tickerset) != len (tickerlist) :
-                print("\nFound a Sim ticket that is not unique. This should not be possible (but it happens).{}".format(tickerlist[-1]))
+#                 print("\nFound a Sim ticket that is not unique. This should not be possible (but it happens).{}".format(tickerlist[-1]))
                 return
     
     def createSingleTicket(self, tickTx):

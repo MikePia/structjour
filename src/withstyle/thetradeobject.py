@@ -18,9 +18,12 @@ class   SumReqFields(object):
 
     def __init__(self):
         
-        # rcvals are the actual column titles 
-        # rckeys are the abstracted names for use with all file types
-        #While placing these here are not really necessary, it provides code style consistency with the use of ReqCol and FinReqCol
+        ''' rcvals are the actual column titles 
+        rckeys are the abstracted names for use with all file types
+        The abstraction provides code style consistency for this program (like ReqCol and FinReqCol)
+            and a means to change the whole thing managed here alone'''
+        # TODO (maybe) make these things pluggable to alow the creation of any shape and style by plugging in a module. Might possibe by
+        #   plugging in tfcoumns and tfformulas alone, and leaving the rest
         rcvals = ['Name', 'Account', 'Strategy', 'Link1',
                   'P/LHead', 'P / L', 'StartHead', 'Start','DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
                   'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff',  'RRHead', 'RR', 'MaxHead', 'MaxLoss', 
@@ -249,7 +252,12 @@ class   SumReqFields(object):
             self.notes    : [[(4, 15), (12, 20)], 'noteStyle']
             }
         
-        # Set up the excel formulas for the trade summaries. The ones for Mistake Summary are in their class
+        # Set up the excel formulas for the trade summaries. The ones for Mistake Summary are in 
+        # their class
+        # In this dict, the values are a list in which the first entry is the formula itsef
+        # with format specifiers {} for the referenced addresses. The rest of the list is the location
+        # of the cells within the trade summary form at A1. To fill this in translate the cell addresses
+        # and replace the specifiers.
         self.tfformulas = dict()
         self.tfformulas[self.targdiff] = ["={0}-{1}", 
                                           self.tfcolumns[self.targ][0], 
@@ -373,7 +381,6 @@ class TheTradeObject(object):
     def __setSum(self):
         self.TheTrade[srf.pl]=self.df.loc[self.ix][frc.sum]
         return self.TheTrade
-
     def __setStart(self):
         self.TheTrade[srf.start]=self.df.loc[self.ix][frc.start]
         return self.TheTrade
@@ -430,7 +437,7 @@ class TheTradeObject(object):
             raise ValueError
         return self.TheTrade
         
-    def __getShares(self):
+    def getShares(self):
         #TODO Rethink this for HOLDs
         if self.shares == 0 :
             if self.side.startswith("B") or self.side.startswith("HOLD+") :
@@ -440,27 +447,26 @@ class TheTradeObject(object):
         return self.shares
             
     def __setShares(self):
-        self.TheTrade.Shares = "{0} shares".format(self.__getShares())
+        self.TheTrade.Shares = "{0} shares".format(self.getShares())
         return self.TheTrade
         
     def __setMarketValue(self):
-        mkt = self.__getShares() * self.df.loc[self.ix0][frc.price]
+        mkt = self.getShares() * self.df.loc[self.ix0][frc.price]
         self.TheTrade.MktVal   = mkt
         return self.TheTrade
 
     def __setHeaders(self):
-        self.TheTrade[srf.plhead] = "P/L"
+        self.TheTrade[srf.plhead]    = "P/L"
         self.TheTrade[srf.starthead] = "Start"
         self.TheTrade[srf.durhead  ] = "Dur"
         self.TheTrade[srf.sharehead] = "Pos"
         self.TheTrade[srf.mkthead]   = "Mkt"
         self.TheTrade[srf.entryhead] = 'Entries and Exits'
-#         self.TheTrade[srf.exithead] = 'Exits'
-        self.TheTrade[srf.targhead] = 'Target'
-        self.TheTrade[srf.stophead] = 'Stop'
-        self.TheTrade[srf.rrhead] = 'R:R'
-        self.TheTrade[srf.maxhead] = 'Max Loss'
-        self.TheTrade[srf.mstkhead] = "Proceeds Lost"
+        self.TheTrade[srf.targhead]  = 'Target'
+        self.TheTrade[srf.stophead]  = 'Stop'
+        self.TheTrade[srf.rrhead]    = 'R:R'
+        self.TheTrade[srf.maxhead]   = 'Max Loss'
+        self.TheTrade[srf.mstkhead]  = "Proceeds Lost"
         return self.TheTrade[[srf.entryhead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
   
     def __setEntries(self):
@@ -647,7 +653,7 @@ class TheTradeObject(object):
     
     def __setMaxLoss(self):
         # Although we will use an excel formula, place it in the df for our use.
-        self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.__getShares()
+        self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.getShares()
         return self.TheTrade
 
     def __setRiskReward(self):
@@ -671,8 +677,6 @@ class TheTradeObject(object):
                 self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
 
     def __blandSpaceInMstkNote(self):
-        # HACKALERT Without inserting this blank space, referencing cell (e.g. =Q42) displays a the number 0. 
-        # This out hacks excel to display nothing.
         self.TheTrade[srf.mstknote] = "Final note"
                 
     def __setExplainNotes(self) :

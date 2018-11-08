@@ -11,6 +11,8 @@ srf = SumReqFields()
 def style_range(ws, cell_range, border=Border(), fill=None, font=None, alignment=None):
     """
     Apply styles to a range of cells as if they were a single cell.
+    I am using this borrowed code for assigning borders in a merged 
+    range
 
     :param ws:  Excel worksheet instance
     :param range: An excel range to style (e.g. A1:F20)

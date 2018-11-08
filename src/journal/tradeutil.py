@@ -313,7 +313,7 @@ class TradeUtil(object):
                 ldf.append(tdf)
             else :
                 break
-        print("Got {0} trades".format(len(ldf)))
+#         print("Got {0} trades".format(len(ldf)))
         return ldf
     
     def addFinReqCol (self, dframe) :

@@ -7,9 +7,9 @@ from withstyle.layoutsheet import LayoutSheet
 from withstyle.tradestyle import TradeFormat
 from withstyle.mstksum import MistakeSummary
 
-# jf=JournalFiles(theDate=datetime.date(2018, 11, 2), infile="trades1.csv", outdir="out/", mydevel=True)
+jf=JournalFiles(theDate=datetime.date(2018,11,6), outdir="out/", mydevel=True)
 
-jf=JournalFiles(mydevel=True)
+# jf=JournalFiles(mydevel=True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -38,9 +38,11 @@ assert (len(ldf) == len(imageLocation))
 mstkAnchor = (len(dframe.columns) + 2, 1)
 mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
 mistake.mstkSumStyle(ws, tf, mstkAnchor)
+mistake.dailySumStyle(ws, tf, ldf, mstkAnchor)
      
 tradeSummaries = ls.createSummaries(imageLocation, ldf, jf, ws, tf)
-ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)    
+ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)  
+ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)  
     
 ls.save(wb, jf)
 
