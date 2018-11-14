@@ -308,7 +308,7 @@ when the match is even.'''
     def getQuote(self, name):
         qs = self.df[self.df['name'] ==name]
 
-        for i, q in qs.iterrows():
+        for dummy_i, q in qs.iterrows():
             print("{0}, {1}\n{2}\n\t\t-{3}\n".format(q['name'], q['on'],q['quote'], q['who']))
         
 #         for q in qs : 
@@ -322,7 +322,3 @@ when the match is even.'''
 i = Inspire()
 q = i.getrandom()
 print(q)
-# i.getQuote("Spade")
-# print("\n{}\n".format(i.getrandom()))
-# 
-# print(i.df[i.df['name'] =="Dalio"]['quote'].unique()[0])

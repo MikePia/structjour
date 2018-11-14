@@ -9,6 +9,7 @@ import sqlite3
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.styles import Font, colors
 
 # from inspiration.inspire import Inspire
 from inspiration.inspire import Inspire
@@ -169,23 +170,51 @@ class LayoutSheet(object):
             
     def createMistakeForm(self, tradeSummaries, mistake, ws, imageLocation) :
         '''
-        Populate the mistake summaries form. Many entries are simple excel formulas found in 
-        the dict mistake. Here we translate the cell addresses and populate the worksheet.
+        Populate most of the mistake summaries form including the formulas retrieved from mistake. We
+        do the cel translations here. Also the names are hyperlinked to the Trade Summary Form and the links
+        are returned to the Mistake form, links are styled blue with double underline in both places.
         :params:tradeSummaries: A dataframe containing the the trade summaries info, one line per trade.
         :parmas:mistake: A dataframe containing the info to populate the mistake summary.
         :params:ws: The openpyxl worksheet object.
         :imageLocation: A list containing the locations in the worksheet for each of the trades in tradeSummaries.
         '''
         
-        # Populate the name fields
+        # Populate the name fields as hyperlinks
         for i in range(len(tradeSummaries)):
             key="name" + str(i+1)
             cell = mistake.mistakeFields[key][0][0]
             cell = tcell(cell, anchor=mistake.anchor)
+            targetcell = (1, imageLocation[i][0])
+            targetcell = tcell(targetcell)
             ts=tradeSummaries[i]
-            s="{0} {1} {2}".format(i+1, ts.Name.unique()[0], ts.Account.unique()[0])
-        #     print(s)
-            ws[cell] = s
+            cellval="{0} {1} {2}".format(i+1, ts.Name.unique()[0], ts.Account.unique()[0])
+            link="#{}!{}".format(ws.title, targetcell)
+            
+            ws[cell].hyperlink=(link)
+            ws[cell] = cellval
+            ws[cell].font = Font(color=colors.WHITE, underline="double")
+            
+            link="#{}!{}".format(ws.title, cell)
+            ws[targetcell].hyperlink = (link)
+            ws[targetcell].font = Font(color=colors.WHITE, size=16, underline="double")
+            
+#             ft1 = Font(color=colors.RED,
+#          size=11)
+# ft2 = Font(color=colors.RED,
+#          size=22,
+#           italic=True)
+# 
+# a1.font=ft1
+# d4.font=ft2
+# 
+# a1.font
+# 
+# a1.value="Its the end of the wolrd as we know it ..."
+# d4.value="... And its about god damn time!"
+# wb.save('out/fontStyle.xlsx')
+            
+            
+            
     
         # Populate the pl (loss) fields and the mistake fields. These are all simple formulas.   
         tokens=["tpl", "pl", "mistake"]

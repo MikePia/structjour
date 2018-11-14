@@ -1,4 +1,5 @@
 import pandas as pd
+
 from journal.dfutil import DataFrameUtil 
 from journal.tradeutil import  FinReqCol
 # from withstyle.tradestyle import srf
@@ -470,6 +471,13 @@ class TheTradeObject(object):
         return self.TheTrade[[srf.entryhead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
   
     def __setEntries(self):
+        '''
+        This method places in the trade summary form the entries, exits, time of 
+        transaction, number of shares, and the difference between price of this 
+        transaction and the 1st entry (or over night hold entry).  The strategy I 
+        adopted for overnight hold is not ideal. Keep brainstorming for alternitives. 
+        The logic tree to make entries/exits is convoluted.
+        '''
         entries=list()
 #         exits=list()
         #TODO Fix the hold entry
@@ -477,28 +485,53 @@ class TheTradeObject(object):
         long = False            
         entry1=0
         count=0
+        exitPrice = 0
+        partEntryPrice = 0
+        if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+') :
+            long = True
+        if self.df.loc[self.ix0][frc.price] == 0 :
+            for i, row in self.df.iterrows() :
+                if long and count and row[frc.side].startswith('S') :
+                    exitPrice = exitPrice + abs(row[frc.price] * row[frc.shares])
+                elif count :
+                    partEntryPrice = partEntryPrice + abs(row[frc.price] * row[frc.shares])
+                count = count + 1
+        entryPrice=exitPrice - self.df.loc[self.ix][frc.sum]
+        entry1 = (entryPrice - partEntryPrice)/self.df.loc[self.ix0][frc.shares]
+        self.df.loc[self.ix0][frc.price] = entry1
+
+            
         for i, row in self.df.iterrows() :
-            if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+') :
-                long = True
+            #ix0 is the index of the first row in df -- a dataframe holding one trade in at least rows (1 row per ticket)
+            # if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+') :
+            #     long = True
             diff=0
             if count == 0:
                 entry1 = row[frc.price] 
             else :
-                # For entries overnight with no Price value, figure it out based on PL/Shares and put it in.
-                if count == 1 and entry1 == 0:
-                    entry1= row[frc.price] + (row[frc.PL] / row[frc.shares]) 
-                    entries[0][0] = entry1
+                # For entries overnight with no Price value ... Because of differences in how DAS calculates the profit
+                #SCHNORLEKIN
+                # # We can't figure the average HOLD price till we are all out. 
+                # if (entry1 == 0 and long ):
+                #     maxshares= max(self.df[frc.bal])
+                #     totalprofit=self.df.loc[self.ix][frc.sum]
+                #     totaldiff = totalprofit/maxshares
+                #     # orignalprice=self.df.loc[self.ix][]
+                #     self.df.loc[self.ix0][frc.sum]/max(self.df[frc.bal])
+                #     entry1= row[frc.price] + (row[frc.PL] / -row[frc.shares]) 
+                #     entries[0][0] = entry1
                 diff =  row[frc.price] -entry1
                 
             if long :
-                if (row[frc.side]).startswith('B') :
+                if (row[frc.side]).startswith('B') or (row[frc.side]).lower().startswith("hold+"):
+                   
                     entries.append(
                         [row[frc.price],
-                         row[frc.time], 
-                         row[frc.shares],
-                         0, 
-                         diff, 
-                         "Entry"])
+                        row[frc.time], 
+                        row[frc.shares],
+                        0, 
+                        diff, 
+                        "Entry"])
                 else :
                     entries.append([
                         row[frc.price], 
@@ -552,6 +585,7 @@ class TheTradeObject(object):
             #Entry diff
             col= "Diff" + str(i+1)
             self.TheTrade[col] = price[4]
+        return self.TheTrade
 
     
     def __setTarget(self) :
@@ -682,13 +716,3 @@ class TheTradeObject(object):
     def __setExplainNotes(self) :
         self.TheTrade[srf.explain] = "Technical description of the trade"
         self.TheTrade[srf.notes] = "Evaluation of the trade"
-
-
-    
-
-
-
-
-
-
-

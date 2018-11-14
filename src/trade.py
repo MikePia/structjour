@@ -7,9 +7,9 @@ from withstyle.layoutsheet import LayoutSheet
 from withstyle.tradestyle import TradeFormat
 from withstyle.mstksum import MistakeSummary
 
-jf=JournalFiles(theDate=datetime.date(2018,11,6), outdir="out/", mydevel=True)
+jf=JournalFiles(theDate=datetime.date(2018,11,13), outdir="out/", mydevel=True)
 
-# jf=JournalFiles(mydevel=True)
+# jf=JournalFiles(outdir="out/",mydevel=True)
 jf._printValues()
         
 tkt = Ticket(jf)
@@ -45,4 +45,3 @@ ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)
 ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)  
     
 ls.save(wb, jf)
-

@@ -96,11 +96,22 @@ class MistakeSummary(object):
         self.dailySummaryFields = dailySummaryFields
 
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
+        '''
+        Create the shape and stye for the Mistake summary form, populate the static values. The
+        rest is done in layoutsheet including formulas (with cell translation) and the names, each with
+        a hyperinks to the Trade Summary form.
+        :params:ws: The openpyx worksheet object
+        :params:tf: The TradeFormat object which has the styles
+        :anchor:anchor: The cell value at the Top left of the form in tuple form.
+        ''' 
         
         headers=dict()
         headers['title']       = "Mistake Summary"
         headers['headname']    = "Name"
-        headers['headpl']      = "Lost PL"
+        headers['headpl']      = "P / L"
+        headers['headLossPL']      = "Lost P/L"
+        
+        
         headers['headmistake'] = "Mistake or pertinent feature of trade."
         
         # Merge the cells, apply the styles, and populate the fields we can--the 
@@ -144,40 +155,7 @@ class MistakeSummary(object):
         using the Trade Summaries object instead of the trades object... may do that later, but now-- I'm
         going to finish this version-- momentum and all.
         '''
-#         srf=SumReqFields()
-#         liveTotal = 0
-#         simTotal = 0
-#         highestProfit = 0
-#         largestLoss = 0
-#         countLive=0
-#         countSim=0
-#         totalWins = 0
-#         totalLosses = 0
-#         numWins = 0
-#         numLosses = 0
-#         
-#         
-#         for tdf in listOfTrades :
-#             pl = tdf[srf.pl].unique()[-1]
-#             live = True if tdf[srf.acct].unique()[0].startswith("U") else False
-#             if live:
-#                 liveTotal = pl + liveTotal
-#                 countLive = countLive + 1
-#             else :
-#                 simTotal = pl + simTotal
-#                 countSim = countSim + 1
-#             if pl > 0 :
-#                 numWins = numWins + 1
-#                 totalWins = pl + totalWins
-#                 if pl > highestProfit :
-#                     highestProfit = pl
-#             else :
-#                 numLosses = numLosses + 1
-#                 totalLosses = pl + totalLosses
-#                 if pl < largestLoss :
-#                     largestLoss = pl
-#         avgWin = 0 if numWins == 0 else totalWins / numWins
-#         avgLoss = 0 if numLosses == 0 else totalLosses / numLosses
+#        
                     
         headers=dict()
         headers['title']       = "Daily P / L Summary"
@@ -188,18 +166,11 @@ class MistakeSummary(object):
         headers['headavgwin']  = "Average Win"       
         headers['headavgloss'] = "Average Loss"       
         anchor = (anchor[0], anchor[1] + self.numTrades + 5)       
-#         self.dailySummaryFields['livetot'][2] = liveTotal
-#         s=""
-#         if countLive == 0 : s = "0 Trades"
-#         else :
-#             s = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}".format(countLive, "" if countLive  == 1 else "s", 
-#                                               totalWins, "" if totalWins == 1 else "s",
-#                                               totalLosses, "" if totalLosses == 1 else "s")      #4 trades, 1 Winner, 3 Losers
-#         self.dailySummaryFields['livetotnote'][2] = s                            
+
         for key in self.dailySummaryFields :
             rng = self.dailySummaryFields[key][0]
             style = self.dailySummaryFields[key][1]
-            if isinstance(self.dailySummaryFields[key][0], list) :
+            if isinstance(rng, list) :
                 tf.mergeStuff(ws, rng[0], rng[1], anchor=anchor)
                 ws[tcell(rng[0], anchor=anchor)].style = tf.styles[style]
                 mrng = tcell(rng[0], rng[1], anchor=anchor)

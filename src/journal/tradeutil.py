@@ -126,7 +126,7 @@ class TradeUtil(object):
         prevBal = 0
         c = self._frc
         
-        for i, row in dframe.iterrows():
+        for i, dummy_row in dframe.iterrows():
             qty = (dframe.at[i, c.shares])
 #             if row[c.side].startswith("HOLD") :
 # #                 print("got it at ", qty)
@@ -185,7 +185,6 @@ class TradeUtil(object):
             dframe.at[i,c.tix] = tradeIndex 
             if row[c.bal] == 0 :
                 prevEndTrade = 0
-        numTrades = TCount
         return dframe
     
     def addTradePL (self, dframe) :
@@ -257,8 +256,8 @@ class TradeUtil(object):
                     else :
                         assert(row[c.acct].startswith('U'))
                         totLive = totLive + row[c.sum]
-                if count == len(dframe) -2 :
-                    lastCol = row[c.PL]
+                # if count == len(dframe) -2 :
+                #     lastCol = row[c.PL]
        
             elif count == len(dframe) -1 :
                 dframe.at[i, c.PL] = tot
@@ -322,5 +321,3 @@ class TradeUtil(object):
             if l not in dframe.columns :
                 dframe[l] = ''
         return dframe
-    
-        

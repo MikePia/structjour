@@ -10,4 +10,8 @@ out/
 *.pyc
 .pydev*
 *.sqlite
+.vscode
+doodles
+*.sql
+*.db
 

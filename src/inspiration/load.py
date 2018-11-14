@@ -1,5 +1,5 @@
 import sqlite3
-from inspire import Inspire
+from .inspire import Inspire
 # import pandas as pd
 
 conn = sqlite3.connect('t1.sqlite')
@@ -38,4 +38,3 @@ print()
 # for who in whos:
 #     print("{0:35}{1}".format(who[0], who[1]))
 # #         who = who.split("-")
-

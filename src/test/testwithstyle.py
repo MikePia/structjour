@@ -48,8 +48,8 @@ class Test(unittest.TestCase):
         trades = idf.processInputFile(trades)
         
         tu = TradeUtil()
-        inputlen, dframe, ldf = tu.processOutputDframe(trades)
-        
+        (dummy_len, dummy_df, ldf) = tu.processOutputDframe(trades)
+
         tto=TheTradeObject(ldf[1], True)
         return tto
         
@@ -82,7 +82,7 @@ class Test(unittest.TestCase):
         self.assertEqual(tto.TheTrade[grf.dur].unique()[0], "0 hours 1:40", "Failed to set duration time correctly")
         
     def testTheTradeObjectSetStrategy(self):
-        '''Skipping because I don't do mock... The mechanics are the same for all of theses anyway'''
+        '''Skipping because I don't do mock...(yet) The mechanics are the same for all of theses anyway'''
         
     def testTheTradeObjectSetShares(self):
         tto=self.setupForTheTradeObject()
