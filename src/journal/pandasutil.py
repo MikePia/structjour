@@ -13,16 +13,12 @@ from journal.dfutil import DataFrameUtil
 class InputDataFrame(object):
     '''Manipulation of the original import of the trade transactions. Abstract the label schema
     to a dictionary. Import from all soures is equalized here.'''
+
     def __init__(self, source="DAS"):
-#         '''Set the required columns in the import file.'''
+        '''Set the required columns in the import file.'''
         if source != 'DAS' :
             print("Only DAS is currently supported")
             raise(ValueError)
-#         self.reqCol={}
-#         self.reqColKeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL']
-#         self._DASColVal = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L']
-#         self.source=source
-#         self._setup()
 
     def processInputFile(self, trades ) :
         reqCol = ReqCol()
@@ -49,7 +45,7 @@ class InputDataFrame(object):
         '''
         
         rc = ReqCol()
-#         time = rc.time
+        #         time = rc.time
         for i, row in dframe.iterrows():
             tm = row[rc.time]
             tms=tm.split(":")
@@ -86,14 +82,14 @@ class InputDataFrame(object):
         for symb in dframe[rc.ticker].unique() :
             for acct in dframe[rc.acct][dframe[rc.ticker]==symb].unique()  :
 
-#                 ldf = dframe[dframe[rc.ticker]==symb][dframe[rc.acct]==acct]
+                # ldf = dframe[dframe[rc.ticker]==symb][dframe[rc.acct]==acct]
                 ldf = dframe[dframe[rc.ticker]==symb]
                 ldf = ldf[ldf[rc.acct]==acct]
 
                 listOfTickers.append(ldf)
-#         
-#        This code is too interdependent. gtoOvernightTrade, figureOvernightTrades, askUser
-#         and insertOvernightRow combined with the data
+        
+        # This code is too interdependent. gtoOvernightTrade, figureOvernightTrades, askUser
+        # and insertOvernightRow combined with the data
         return listOfTickers
     
     def getOvernightTrades(self, dframe) :
@@ -168,7 +164,7 @@ class InputDataFrame(object):
                     in the account {2}. How many shares of {0} are you holding now? 
                     (Enter for {1}) '''.format(swingTrade[i]['ticker'], swingTrade[i]['shares'], swingTrade[i]['acct'])
     
-#                 question = " How many shares of {0} are you holding now? (Enter for {1})".format ( swingTrade[i]['ticker'], swingTrade[i]['shares'] )
+                # question = " How many shares of {0} are you holding now? (Enter for {1})".format ( swingTrade[i]['ticker'], swingTrade[i]['shares'] )
                 swingTrade[i]['after'] = self.askUser(swingTrade[i]['shares'], question)
                 swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['after']
     
@@ -178,7 +174,7 @@ class InputDataFrame(object):
                     of {1} in the account {2}. How many shares of {0} were you holding before? 
                     (Enter for {1}) '''.format(swingTrade[i]['ticker'], -swingTrade[i]['shares'], swingTrade[i]['acct'])
                     
-#                     question = "How many shares of {0} were you holding before? (Enter for {1}".format(swingTrade[i]['ticker'], swingTrade[i]['shares'])
+                    # question = "How many shares of {0} were you holding before? (Enter for {1}".format(swingTrade[i]['ticker'], swingTrade[i]['shares'])
                     swingTrade[i]['before'] = self.askUser(swingTrade[i]['shares'], question)
                     swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['before']
     
@@ -204,7 +200,7 @@ class InputDataFrame(object):
         
         
         for ldf in self.getListTickerDF(dframe) :
-#             print(ldf[rc.ticker].unique()[0], ldf[rc.acct].unique()[0])
+            # print(ldf[rc.ticker].unique()[0], ldf[rc.acct].unique()[0])
             for trade in swTrade :
                 if trade['ticker'] == ldf[rc.ticker].unique()[0] and trade['acct'] == ldf[rc.acct].unique()[0]:
                     print ("Got {0} with the balance {1}, before {2} and after {3} in {4}". format (trade['ticker'], 
@@ -292,7 +288,7 @@ class ToCSV_Ticket(object):
         # without any sim trades there are only floats. This is not guaranteed behavior, just observed
         # from my runs. And there there is some weirdness between numpy types and python regarding 
         # what type to return for this comparison--and it may change in the future.
-#         if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
+        # if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
         
         doSomething = False
         for t in dframe['Cloid'] :
@@ -312,7 +308,7 @@ class ToCSV_Ticket(object):
      
             tickerset = set(tickerlist)
             if len(tickerset) != len (tickerlist) :
-#                 print("\nFound a Sim ticket that is not unique. This should not be possible (but it happens).{}".format(tickerlist[-1]))
+                # print("\nFound a Sim ticket that is not unique. This should not be possible (but it happens).{}".format(tickerlist[-1]))
                 return
     
     def createSingleTicket(self, tickTx):

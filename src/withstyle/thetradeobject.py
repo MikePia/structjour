@@ -302,17 +302,21 @@ class   SumReqFields(object):
 srf=SumReqFields()
 class TheTradeObject(object):
     '''
-    Summarize one trade at a time on a single row of a DataFramme. 
-    :PreRequisite: The original DtaFrame must be transformed into the output DataFrame in which trades are represented in tickets and 
-                    are seperated and labeled. 
+    Manages the creation of the Trade Summary objects from the the output DataFrame. 
+    Summarize one trade at a time on a single row of a DataFrame and include user input
+    like stop, target, and trade strategy 
+    :PreRequisite: The original DtaFrame must be transformed into the output DataFrame 
+        in which trades are represented in tickets and are seperated and labeled. 
     '''
 
 
     def __init__(self, df, interview):
         '''
-        Create a dataframe that includes all the summary material for review. Some of this data comes from the program
-        and some of it comes from the user. The user will determine which parts to fill out from a couple of options.
-        :params:df: A DataFrame that includes the transactions, or tickets, from a singel trade.
+        Create a dataframe that includes all the summary material for review. Some 
+        of this data comes from the program and some of it comes from the user. The 
+        user will determine which parts to fill out from a couple of options. 
+        :params:df: A DataFrame that includes the transactions, or tickets, 
+            from a singel trade.
         '''
         
         
@@ -496,9 +500,9 @@ class TheTradeObject(object):
                 elif count :
                     partEntryPrice = partEntryPrice + abs(row[frc.price] * row[frc.shares])
                 count = count + 1
-        entryPrice=exitPrice - self.df.loc[self.ix][frc.sum]
-        entry1 = (entryPrice - partEntryPrice)/self.df.loc[self.ix0][frc.shares]
-        self.df.loc[self.ix0][frc.price] = entry1
+            entryPrice=exitPrice - self.df.loc[self.ix][frc.sum]
+            entry1 = (entryPrice - partEntryPrice)/self.df.loc[self.ix0][frc.shares]
+            self.df.loc[self.ix0][frc.price] = entry1
 
             
         for i, row in self.df.iterrows() :

@@ -52,10 +52,10 @@ class DataFrameUtil(object):
     
         ll=list()
         r=list()
-        for i in range(len(dframe.columns)) :
+        for _ in range(len(dframe.columns)) :
             r.append('')
             
-        for i in range(numRow) :
+        for _ in range(numRow) :
             ll.append(r)
         newdf= pd.DataFrame(ll, columns=dframe.columns)
     

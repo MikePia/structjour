@@ -43,9 +43,7 @@ class JournalFiles :
             self.outpathfile = os.path.join(self.outdir, self.outfile)
             
         self._checkPaths()
-        
-               
-
+    
     def indir(self, indir=None):
         if indir :
             self.indir = os.path.normpath(indir)
@@ -152,5 +150,27 @@ class JournalFiles :
         print("outpathfile:        " +self.outpathfile)
         print("theDate:            " + self.theDate.strftime("%A, %B %d, %y"))
          
+    def indir(self, indir=None):
+        if indir :
+            self.indir = os.path.normpath(indir)
+            self.inpathfile = os.path.join(self.indir, self.infile)
+        return self.indir
+    
+    def outdir(self, outdir=None):
+        if outdir :
+            self.outdir = os.path.normpath(outdir)
+            self.outpathfile = os.path.join(self.outdir, self.outfile)
+        return self.outdir
 
+    def infile(self, infile=None):
+        if infile :
+            self.infile = infile
+            self.inpathfile = os.path.join(self.indir, self.infile)
+        return self.infile
+    
+    def outfile(self, outfile=None):
+        if outfile :
+            self.outfile = outfile
+            self.outpathfile = os.path.join(self.outdir, self.outfile)
+        return self.outfile
 
