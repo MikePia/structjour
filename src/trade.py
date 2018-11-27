@@ -7,9 +7,9 @@ from withstyle.layoutsheet import LayoutSheet
 from withstyle.tradestyle import TradeFormat
 from withstyle.mstksum import MistakeSummary
 
-# jf=JournalFiles(theDate=datetime.date(2018,11,13), outdir="out/", mydevel=True)
+jf=JournalFiles(theDate=datetime.date(2018,10,26), mydevel=True)
 
-jf=JournalFiles(mydevel=True)
+# jf=JournalFiles(mydevel=True)
 jf._printValues()
         
 tkt = Ticket(jf)

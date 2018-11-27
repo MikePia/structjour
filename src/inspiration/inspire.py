@@ -283,7 +283,10 @@ when the match is even.'''
             "Lassalle", "On Sitting", "Hugo Lassalle, Jesuit priest", \
 '''Its a fact that when you hold your eyes very still, the flow of thought will stop.'''
             ])
-
+        quotes.append([
+            "Dalio", "On opinions", "Ray Dalio, founder Bridgewater assoc", \
+'''the greatest tragedy of mankind — or one of them — is that people needlessly hold wrong opinions in their minds.'''
+            ])
 
 
         

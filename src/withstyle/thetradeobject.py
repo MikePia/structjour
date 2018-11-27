@@ -483,7 +483,7 @@ class TheTradeObject(object):
         The logic tree to make entries/exits is convoluted.
         '''
         entries=list()
-#         exits=list()
+        exits=list()
         #TODO Fix the hold entry
 #         if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
         long = False            
@@ -513,17 +513,6 @@ class TheTradeObject(object):
             if count == 0:
                 entry1 = row[frc.price] 
             else :
-                # For entries overnight with no Price value ... Because of differences in how DAS calculates the profit
-                #SCHNORLEKIN
-                # # We can't figure the average HOLD price till we are all out. 
-                # if (entry1 == 0 and long ):
-                #     maxshares= max(self.df[frc.bal])
-                #     totalprofit=self.df.loc[self.ix][frc.sum]
-                #     totaldiff = totalprofit/maxshares
-                #     # orignalprice=self.df.loc[self.ix][]
-                #     self.df.loc[self.ix0][frc.sum]/max(self.df[frc.bal])
-                #     entry1= row[frc.price] + (row[frc.PL] / -row[frc.shares]) 
-                #     entries[0][0] = entry1
                 diff =  row[frc.price] -entry1
                 
             if long :
@@ -562,6 +551,7 @@ class TheTradeObject(object):
                         "Entry"])
             count = count + 1
 
+        #TODO This is broken because we display only 8 combined entries plus exits
         if len(entries) > 8 :
             more = len(entries) - 8
             self.TheTrade[srf.pl8] =  "Plus {} more.".format(more)

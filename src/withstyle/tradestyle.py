@@ -51,7 +51,7 @@ def style_range(ws, cell_range, border=Border(), fill=None, font=None, alignment
 
 def c(icell, end=None, anchor= None) :
     '''
-    Translates numerical coordinates as tuplits to excels  string addresses e.g., (1,1) returns 'A1' 
+    Translates numerical coordinates as tuplets to excels  string addresses e.g., (1,1) returns 'A1' 
     :params:icell: The cell to translate.
     :parmas:end: Creates an excel range with icell at the top left and end at the bottom right.
     :params:anchor: A translation amount. The cell or range  will be translated by the amount of the cell -1
