@@ -35,7 +35,7 @@ class TestJF(unittest.TestCase):
         os.chdir("..")
         print("cwd:", os.getcwd())
         jf = JournalFiles()
-        jf._printValues()
+        jf.printValues()
         #Go back to the original location for all the other tests
         os.chdir(cwd)
 
@@ -128,7 +128,7 @@ class TestJF(unittest.TestCase):
             print("This test requires having files in the right locations. Do you have files in the right locations?") 
             sys.exit(-1)
             
-        jf._printValues()
+        jf.printValues()
             
         self.assertEqual( os.path.realpath (r'..\out'), 
                           os.path.realpath(jf.outdir), 
@@ -181,7 +181,7 @@ class TestJF(unittest.TestCase):
     def test_whichWeekFromWeekend(self):
         '''Testing beginning day on the weekend using Sept of 2018 9/1 thru 9/16'''
         jf = JournalFiles(indir="../data", mydevel=True)
-        jf._printValues()
+        jf.printValues()
         for i in range(1,10) :
             x = jf._whichWeek(9,i)
             self.assertEqual(1,x,"whichWeek is wrong! for September {0}".format(i))
@@ -196,7 +196,7 @@ class TestJF(unittest.TestCase):
     def test_whichWeekFromMonday(self):
         '''Testing beginning day on the weekend using Oct 2018'''
         jf = JournalFiles(indir="../data", mydevel=True)
-        jf._printValues()
+        jf.printValues()
         for i in range(1,8) :
             x = jf._whichWeek(10,i)
             self.assertEqual(1,x,"whichWeek is wrong! for October {0}".format(i))
@@ -212,7 +212,7 @@ class TestJF(unittest.TestCase):
     def test_whichWeekFromThursday(self):
         '''Testing beginning day on the Thursday using Nov 2018'''
         jf = JournalFiles(indir="../data", mydevel=True)
-        jf._printValues()
+        jf.printValues()
         for i in range(1,5) :
             x = jf._whichWeek(11,i)
             self.assertEqual(1,x,"whichWeek is wrong! for October {0}".format(i))

@@ -1,3 +1,7 @@
+'''
+@author: Mike Petersen
+Top level module currently.
+'''
 import datetime
 
 from journalfiles import JournalFiles
@@ -6,14 +10,15 @@ from journal.tradeutil import TradeUtil
 from withstyle.layoutsheet import LayoutSheet
 from withstyle.tradestyle import TradeFormat
 from withstyle.mstksum import MistakeSummary
+# pylint: disable=C0103
 
-jf=JournalFiles(theDate=datetime.date(2018,10,26), mydevel=True)
+# jf=JournalFiles(theDate=datetime.date(2018,10,26), mydevel=True)
 
-# jf=JournalFiles(mydevel=True)
-jf._printValues()
-        
+jf = JournalFiles(mydevel=True, outdir="out/")
+jf.printValues()
+
 tkt = Ticket(jf)
-trades, jf =tkt.newDFSingleTxPerTicket()
+trades, jf = tkt.newDFSingleTxPerTicket()
 # trades = pd.read_csv(jf.inpathfile)
 
 idf = InputDataFrame()
@@ -22,26 +27,28 @@ trades = idf.processInputFile(trades)
 tu = TradeUtil()
 inputlen, dframe, ldf = tu.processOutputDframe(trades)
 
-#Process the openpyxl excel object using the output file DataFrame. Insert images and Trade Summaries.
+# Process the openpyxl excel object using the output file DataFrame. Insert 
+# images and Trade Summaries.
 sumSize = 25
-margin=25
+margin = 25
 
-# Create the space in dframe to add the summary information for each trade. Then create the Workbook.
-ls = LayoutSheet(sumSize,margin, inputlen)
+# Create the space in dframe to add the summary information for each trade.
+# Then create the Workbook.
+ls = LayoutSheet(sumSize, margin, inputlen)
 imageLocation, dframe = ls.createImageLocation(dframe, ldf)
-wb, ws, nt =ls.createWorkbook(dframe)
+wb, ws, nt = ls.createWorkbook(dframe)
 
 tf = TradeFormat(wb)
 ls.styleTop(ws, nt, tf)
-assert (len(ldf) == len(imageLocation))
+assert len(ldf) == len(imageLocation)
 
 mstkAnchor = (len(dframe.columns) + 2, 1)
 mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
 mistake.mstkSumStyle(ws, tf, mstkAnchor)
 mistake.dailySumStyle(ws, tf, ldf, mstkAnchor)
-     
+
 tradeSummaries = ls.createSummaries(imageLocation, ldf, jf, ws, tf)
-ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)  
-ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)  
-    
+ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)
+ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
+
 ls.save(wb, jf)

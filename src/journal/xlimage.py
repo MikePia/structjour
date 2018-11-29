@@ -7,11 +7,12 @@ import os
 from PIL import Image as PILImage
 from PIL import ImageGrab
 from openpyxl.drawing.image import Image
+# pylint: disable=C0103
 
 class XLImage(object):
-        
+
 #     20.238095238095237
-    
+
     def adjustSizeByHeight(self, sz, newHeight=425, numCells=0, pixPerCell = 19.3) :
         ''' 
         Adjust size to keep the aspect ratio the same as determined by newHeight
@@ -32,13 +33,14 @@ class XLImage(object):
         nw=int(newWidth)
         nh=int(newHeight)
         return(nw, nh)    
-    
+
     def getDefaultPILImage(self):
         im = PILImage.open("data/defaultImage.png")
         return im
-        
-    def getPilImageFromClipboard(self, msg) :
+
+    def getPilImageFromClipboard(self, msg):
         '''
+        Ask the user if the image is ready and collect the response
         Use the PIL library to get an image from the clipboard. The ImageGrab.grabclibboard() works on
         Windows and MAC only. On failure to get an image, give the user 4 more tries or the user can opt out by
         entering 'q'.
@@ -46,12 +48,12 @@ class XLImage(object):
                     'Copy the chart for MU long at 9:35 for 2 minutes.
         :return:     The image in as a PIL object or None
         '''
-        
-        for i in range (5) :
+
+        for i in range (5):
             msg_go = "{0} {1}".format(msg, "Are you ready? (q to skip image) \n\t\t\t\t")
             response = input(msg_go)
             im = None
-            if response.lower().startswith('y') or len(response) < 1 : 
+            if response.lower().startswith('y') or response == '': 
                 im = ImageGrab.grabclipboard()
             elif response.lower().startswith('q') :
                 return self.getDefaultPILImage()
@@ -76,34 +78,30 @@ class XLImage(object):
         :param:outdir: The location to save the images.
         :return: The pathname of the image we save.
         '''
-        
-        try :
-            if not os.path.exists(outdir) :
+
+        try:
+            if not os.path.exists(outdir):
                 os.mkdir(outdir)
             msg = '''
             Copy an image to the clipboard using snip for {0}
             '''.format(name)
-            pilImage = self.getPilImageFromClipboard(msg) 
+            pilImage = self.getPilImageFromClipboard(msg)
             newSize = self.adjustSizeByHeight(pilImage.size, numCells=20)
             pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
-            
-            
+
             resizeName, ext = self.getResizeName(name, outdir)
-            #TODO handle permission denied error (if the file is open)
+            # TODO handle permission denied error (if the file is open)
             pilImage.save(resizeName, ext)
             img = Image(resizeName)
-                
+
         except IOError as e :
             print("An exception occured '%s'" % e)
             if img :
                 return img
             return None
-    
-    
+
         return img    
-    
-    
-    
+
     def getResizeName(self, orig, outdir) :
         '''
         Munge up a pathfile name by inserting _resize onto the name. Do minimal checking that it has some extension.
@@ -113,10 +111,10 @@ class XLImage(object):
         :outdir:outdir: The location to save to.
         :return: A tuple(newFileName, extension)
         '''
-        
+
         orig = orig.replace(":", "-")
-        x=os.path.splitext(orig)
-        if (len (x[1]) < 4 ) :
+        x = os.path.splitext(orig)
+        if (len(x[1]) < 4 ):
             print("please provide an image name with an image extension in its name. e.g 'png', jpg', etc")
         newName = x[0] + '_resize'
         if 'jpg' in x[1].lower() :
