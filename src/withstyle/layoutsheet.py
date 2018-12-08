@@ -127,8 +127,10 @@ class LayoutSheet(object):
             img = XL.getAndResizeImage(loc[2], jf.outdir)
 
             #This is the location to place the chart on the page. Its kind of hidden in the deep recesses here.
-            cellname = 'M' + str(loc[0])
-            ws.add_image(img, cellname)
+            if img :
+                cellname = 'M' + str(loc[0])
+                ws.add_image(img, cellname)
+                
 
             #Put together the trade summary info for each trade and interview the trader
             tto = TheTradeObject(tdf, interview)
@@ -305,8 +307,11 @@ class LayoutSheet(object):
             [sum(liveWins), sum(simWins)]) / (len(liveWins) + len(simWins))
         dailySumData['avgwinnote'] = "X {} =  ${:.2f}".format(
             len(liveWins) + len(simWins), sum([sum(liveWins), sum(simWins)]))
-        dailySumData['avgloss'] = sum([sum(liveLosses), sum(
-            simLosses)]) / (len(liveLosses) + len(simLosses))
+        if len(liveLosses) + len(simLosses) == 0:
+            dailySumData['avgloss'] = 0 
+        else:
+            dailySumData['avgloss'] = sum([sum(liveLosses), sum(
+                simLosses)]) / (len(liveLosses) + len(simLosses))
         dailySumData['avglossnote'] = "X {} =  (${:.2f})".format(
             len(liveLosses) + len(simLosses), abs(sum([sum(liveLosses), sum(simLosses)])))
 

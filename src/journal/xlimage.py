@@ -56,7 +56,8 @@ class XLImage(object):
             if response.lower().startswith('y') or response == '': 
                 im = ImageGrab.grabclipboard()
             elif response.lower().startswith('q') :
-                return self.getDefaultPILImage()
+                # return self.getDefaultPILImage()
+                return None
             if im is None :
                 print("Failed to get an image. Please select and copy an image (or press 'q')")
             else :
@@ -85,7 +86,10 @@ class XLImage(object):
             msg = '''
             Copy an image to the clipboard using snip for {0}
             '''.format(name)
+
             pilImage = self.getPilImageFromClipboard(msg)
+            if not pilImage:
+                return None
             newSize = self.adjustSizeByHeight(pilImage.size, numCells=20)
             pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
 

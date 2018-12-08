@@ -4,9 +4,11 @@ Created on Sep 8, 2018
 @author: Mike Petersen
 '''
 import unittest
-from journal.xlimage import XLImage
 import random
 from datetime import datetime
+
+from journal.xlimage import XLImage
+
 
 class Test(unittest.TestCase):
 

@@ -14,7 +14,7 @@ from withstyle.mstksum import MistakeSummary
 
 # jf=JournalFiles(theDate=datetime.date(2018,10,26), mydevel=True)
 
-jf = JournalFiles(mydevel=True, outdir="out/")
+jf = JournalFiles(mydevel=True)
 jf.printValues()
 
 tkt = Ticket(jf)
