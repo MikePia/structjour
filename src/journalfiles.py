@@ -54,30 +54,30 @@ class JournalFiles:
 
         self._checkPaths()
 
-    def indir(self, indir=None):
-        '''If indir is passed in, normalize the path. If not return None'''
-        if indir:
-            self.indir = os.path.normpath(indir)
-            self.inpathfile = os.path.join(self.indir, self.infile)
-        return self.indir
+    # def indir(self, indir=None):
+    #     '''If indir is passed in, normalize the path. If not return None'''
+    #     if indir:
+    #         self.indir = os.path.normpath(indir)
+    #         self.inpathfile = os.path.join(self.indir, self.infile)
+    #     return self.indir
 
-    def outdir(self, outdir=None):
-        if outdir:
-            self.outdir = os.path.normpath(outdir)
-            self.outpathfile = os.path.join(self.outdir, self.outfile)
-        return self.outdir
+    # def outdir(self, outdir=None):
+    #     if outdir:
+    #         self.outdir = os.path.normpath(outdir)
+    #         self.outpathfile = os.path.join(self.outdir, self.outfile)
+    #     return self.outdir
 
-    def infile(self, infile=None):
-        if infile:
-            self.infile = infile
-            self.inpathfile = os.path.join(self.indir, self.infile)
-        return self.infile
+    # def infile(self, infile=None):
+    #     if infile:
+    #         self.infile = infile
+    #         self.inpathfile = os.path.join(self.indir, self.infile)
+    #     return self.infile
 
-    def outfile(self, outfile=None):
-        if outfile:
-            self.outfile = outfile
-            self.outpathfile = os.path.join(self.outdir, self.outfile)
-        return self.outfile
+    # def outfile(self, outfile=None):
+    #     if outfile:
+    #         self.outfile = outfile
+    #         self.outpathfile = os.path.join(self.outdir, self.outfile)
+    #     return self.outfile
 
     def setMyParams(self, indir, outdir, infile):
         weekNo = str(self._whichWeek(self.theDate.month, self.theDate.day))
@@ -88,7 +88,7 @@ class JournalFiles:
         self.outdir = outdir if outdir else os.path.join(self.indir, 'out')
         self.outpathfile = os.path.join(self.outdir, self.outfile)
 
-    def _whichWeek(self, month, testday, year=2018):
+    def _whichWeek(self, month, testday, year=2019):
         ''' Calculates which number work week a day is in '''
         #TODO Rework .... again .... use isoweek() for Mon-Sun week. Harder than it should have been.
 
@@ -135,11 +135,11 @@ class JournalFiles:
         if not os.path.exists(self.outdir):
 
             checkUpOne = os.path.split(self.outdir)[0]
-            if len(checkUpOne) < 1:
+            if not checkUpOne:
                 checkUpOne = "."
             if not os.path.exists(checkUpOne):
-                #If the parent exists, Structjour will create the out directory when it comes to it.
-                # Otherwise, trash this puppy
+                # If neither outdir not its parent exists, trash this puppy. 
+                # If the parent exists, we can create outdir when needed
                 err = "Fatal error:{0} Neither output directory nor its parent can be located: {1}".format(
                     "JournalFiles._checkPaths", self.outdir)
                 self.printValues()

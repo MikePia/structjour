@@ -54,7 +54,7 @@ class InputDataFrame(object):
                     tm= "0" + tm
                     dframe.at[i, rc.time] = tm
         return dframe
-    
+
     # Todo.  Doctor an input csv file to include fractional numer of shares for testing. 
     #        Make it more modular by checking for 'HOLD'. 
     #        It might be useful in a windowed version with menus to do things seperately.
