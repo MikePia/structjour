@@ -9,9 +9,9 @@ import datetime, os
 #   %m  01 (for January)
 # def mkdir(name):
     
-def createWeeks (month, day) :
+def createWeeks (yr, month, day) :
     week = 1
-    beginDate = datetime.date(2018, month, day)
+    beginDate = datetime.date(yr, month, day)
     idow = int(beginDate.strftime("%w"))
     dow = beginDate.strftime("%A")
     dom = beginDate.strftime("%B")
@@ -35,13 +35,13 @@ def createWeeks (month, day) :
                 idow = 1
                 os.chdir("..")
                 try :
-                    printDate = datetime.date(2018, month,day)
+                    printDate = datetime.date(year, month,day)
                 except  Exception as ex :
                     print(ex)
                     break
                 break
             try :
-                printDate = datetime.date(2018, month, day)
+                printDate = datetime.date(yr, month, day)
             except :
                 break
             
@@ -80,6 +80,7 @@ while True:
         quit()
     try :
         month = int(r)
+
     except :
         print ("I didn't understand that. (q to quit)")
         continue
@@ -87,15 +88,16 @@ while True:
         print("That is not between 1 and 12. (q to quit)") 
         continue
     break
-print (month)
-d = datetime.date(2018, month, 1)
+year = datetime.datetime.today().year
+print (month, year)
+d = datetime.date(year, month, 1)
 dayOfWeek = int(d.strftime("%w"))
 day = 1
 if dayOfWeek == 0 :
     day = day + 1
 if dayOfWeek== 6 :
     day = day + 2
-dd = datetime.date(2018, month, day)
+dd = datetime.date(year, month, day)
  
 # Monday, January 1, 2018
 print(dd, dd.strftime("%A, %B %d, %Y"))
@@ -103,4 +105,4 @@ curmonth = month
 os.mkdir(dd.strftime("_%m_%B")) 
 os.chdir(dd.strftime("_%m_%B")) 
  
-createWeeks(month, day)
+createWeeks(year, month, day)
