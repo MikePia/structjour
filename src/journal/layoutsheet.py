@@ -16,9 +16,9 @@ from inspiration.inspire import Inspire
 from journal.dfutil import DataFrameUtil
 from journal.tradeutil import FinReqCol
 from journal.xlimage import XLImage
-from withstyle.tradestyle import c as tcell
-from withstyle.tradestyle import style_range
-from withstyle.thetradeobject import TheTradeObject, SumReqFields
+from journal.tradestyle import c as tcell
+from journal.tradestyle import style_range
+from journal.thetradeobject import TheTradeObject, SumReqFields
 # pylint: disable=C0103
 
 

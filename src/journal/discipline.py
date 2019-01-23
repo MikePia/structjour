@@ -4,8 +4,8 @@ from openpyxl import load_workbook
 
 
 from journal.dfutil import DataFrameUtil
-from withstyle.thetradeobject import SumReqFields
-from withstyle.tradestyle import c as tcell
+from journal.thetradeobject import SumReqFields
+from journal.tradestyle import c as tcell
 
 import pandas as pd
 # pylint: disable=C0103

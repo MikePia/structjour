@@ -3,7 +3,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import (PatternFill,  Border, Side, 
                              Alignment, Font, NamedStyle)
 
-from withstyle.thetradeobject import SumReqFields
+from journal.thetradeobject import SumReqFields
 
 #global variable
 srf = SumReqFields()

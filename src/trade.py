@@ -10,10 +10,10 @@ from PyQt5.QtWidgets import QApplication
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
 from journal.tradeutil import TradeUtil
-from withstyle.layoutsheet import LayoutSheet
-from withstyle.tradestyle import TradeFormat
-from withstyle.mstksum import MistakeSummary
-from withstyle.qtform import QtForm
+from journal.layoutsheet import LayoutSheet
+from journal.tradestyle import TradeFormat
+from journal.mstksum import MistakeSummary
+from journal.qtform import QtForm
 # pylint: disable=C0103
 
 #jf=JournalFiles(theDate=dt.date(2019,1,18), mydevel=True)

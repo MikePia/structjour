@@ -4,7 +4,7 @@ Created on Oct 10, 2018
 @author: Mike Petersen
 '''
 
-from withstyle.tradestyle import style_range, SumReqFields, c as tcell
+from journal.tradestyle import style_range, SumReqFields, c as tcell
 
 
 class MistakeSummary(object):

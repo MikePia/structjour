@@ -15,7 +15,7 @@ class FinReqCol(object) :
     Intended to serve as the adapter class for multiple input files. FinReqCol manages the column names fot 
     the output file. It includes some of the input columns and additional columns  to identify seprate trades and sorting.
     The columns we add are tix, start, bal, sum, dur, and name
-    :SeeAlso: withstyle.thetradeobject.SumReqFields
+    :SeeAlso: journal.thetradeobject.SumReqFields
     '''
     def __init__(self, source = 'DAS') :
         

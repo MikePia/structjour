@@ -11,7 +11,7 @@ import sys
 from PyQt5.QtWidgets import (QWidget, QApplication, QGridLayout, QLabel, 
                              QLineEdit, QTextEdit, QSizePolicy)
 from PyQt5.QtGui import QFont
-from withstyle.thetradeobject import TheTradeObject, SumReqFields
+from journal.thetradeobject import TheTradeObject, SumReqFields
 # pylint: disable=C0103
 # pylint: disable=C0301
 

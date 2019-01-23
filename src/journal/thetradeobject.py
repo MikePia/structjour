@@ -159,7 +159,7 @@ class SumReqFields(object):
         self.rc = rc
         self.columns = rc.values()
 
-        # To add a style to the TradeSummary, define the NamedStyle in withstyle.tradestyle.TradeFormat. Follow the pattern of the
+        # To add a style to the TradeSummary, define the NamedStyle in journal.tradestyle.TradeFormat. Follow the pattern of the
         # others. Then place the name here with its cell location (anchor at (1,1)) and its associated data column in TheTrade DataFrame
         # ex1="ex1"
         self.tfcolumns = {

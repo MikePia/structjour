@@ -7,7 +7,7 @@ import unittest
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
 from journal.tradeutil import TradeUtil
-from withstyle.thetradeobject import TheTradeObject,  SumReqFields
+from journal.thetradeobject import TheTradeObject,  SumReqFields
 
 
 
