@@ -14,5 +14,5 @@ out/
 doodles
 *.sql
 *.db
-
+src/run.py
 src/DisciplinedCopy1.xlsx

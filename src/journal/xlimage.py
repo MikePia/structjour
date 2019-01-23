@@ -73,8 +73,8 @@ class XLImage(object):
         A script to run the image manipulation in structjour. Request a clipboard copy of an image. 
         Resze it to newSize height. Save it with a new name. Return the name. Hackiness lives until 
         I figure how to create a proper openpyxl Image object from a PIL Image object that doesn't 
-        make the Workbook puke. (Saving the image is kind of a nice touch as long as the name has
-        enough information to make the file useful ... like (Trade1_TWTR-Short_930-3min.jpeg)
+        make the Workbook puke. (OTOH Saving the image is kind of a nice touch as long as the name 
+        has enough information to make the file useful ... like (Trade1_TWTR-Short_930-3min.jpeg)
         :param:name: An original name. We mark it up with _resize, save it, and return the new name.
         :param:outdir: The location to save the images.
         :return: The pathname of the image we save.

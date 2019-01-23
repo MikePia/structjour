@@ -2,7 +2,7 @@
 @author: Mike Petersen
 Top level module currently.
 '''
-# import datetime
+import datetime as dt
 import sys
 
 from PyQt5.QtWidgets import QApplication
@@ -16,9 +16,9 @@ from withstyle.mstksum import MistakeSummary
 from withstyle.qtform import QtForm
 # pylint: disable=C0103
 
-#jf=JournalFiles(theDate=datetime.date(2018,12,3), mydevel=True)
+#jf=JournalFiles(theDate=dt.date(2019,1,18), mydevel=True)
 
-jf = JournalFiles(mydevel=True, outdir='out')
+jf = JournalFiles(mydevel=True)
 jf.printValues()
 
 tkt = Ticket(jf)
