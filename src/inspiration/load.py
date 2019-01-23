@@ -1,5 +1,5 @@
 import sqlite3
-from .inspire import Inspire
+from inspiration.inspire import Inspire
 # import pandas as pd
 
 conn = sqlite3.connect('t1.sqlite')

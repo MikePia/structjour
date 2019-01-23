@@ -302,7 +302,7 @@ our emotions entirely, but the plan helps us control them so they aren't destruc
             '''When I started counting my blessings, my whole life turned around.'''
         ])
         quotes.append([
-            "Lutz", "On risk", "Robert Lutz,auto executive",
+            "Lutz", "On risk", "Robert Lutz, auto executive",
             '''If you actually 'do things' rather than merely perpetuate the status quo, there is a high probablilty, bordering on
 certainty that you will make mistakes'''
         ])
@@ -460,9 +460,13 @@ class TradingPlan(object):
                 print()
 
 
-i = Inspire()
-q = i.getrandom()
-print(q)
+def main():
+    i = Inspire()
+    q = i.getrandom()
+    print(q)
 
-tp = TradingPlan()
-tp.getRules(['a'])
+    tp = TradingPlan()
+    tp.getRules(['a'])
+
+if __name__ == '__main__':
+    main()
