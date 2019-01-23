@@ -303,12 +303,15 @@ class LayoutSheet(object):
         dailySumData['highestnote'] = maxTrade[1]
         dailySumData['lowest'] = minTrade[0]
         dailySumData['lowestnote'] = minTrade[1]
-        dailySumData['avgwin'] = sum(
-            [sum(liveWins), sum(simWins)]) / (len(liveWins) + len(simWins))
+        if (len(liveWins) + len(simWins)) == 0:
+            dailySumData['avgwin'] = 0
+        else:
+            dailySumData['avgwin'] = sum(
+                [sum(liveWins), sum(simWins)]) / (len(liveWins) + len(simWins))
         dailySumData['avgwinnote'] = "X {} =  ${:.2f}".format(
             len(liveWins) + len(simWins), sum([sum(liveWins), sum(simWins)]))
         if len(liveLosses) + len(simLosses) == 0:
-            dailySumData['avgloss'] = 0 
+            dailySumData['avgloss'] = 0
         else:
             dailySumData['avgloss'] = sum([sum(liveLosses), sum(
                 simLosses)]) / (len(liveLosses) + len(simLosses))
