@@ -293,6 +293,39 @@ when the match is even.'''
             '''Having a plan takes much of the emotion out of trading..you know exactly what o do, how and when. We can't get rid of
 our emotions entirely, but the plan helps us control them so they aren't destructive'''
         ])
+        quotes.append([
+           "Thoreau", "On Thankfulness", "Henry David Thoreau, essayist",
+            '''I am grateful for what I am and have. My thanksgiving is perpetual.'''
+        ])
+        quotes.append([
+            "Nelson", "On blessings", "Willie Nelson, Musician",
+            '''When I started counting my blessings, my whole life turned around.'''
+        ])
+        quotes.append([
+            "Lutz", "On risk", "Robert Lutz,auto executive",
+            '''If you actually 'do things' rather than merely perpetuate the status quo, there is a high probablilty, bordering on
+certainty that you will make mistakes'''
+        ])
+        quotes.append([
+            "Crosby", "On collaboration", "David Crosby, Musician",
+            '''Competitive effort winds up in war. Collaborative effort winds up in a symphony.'''
+        ])
+        quotes.append([
+            "Nagel", "On Courage", "Jack Nagel, property developer",
+            '''One sure guarantee of a mediocre life is a lif lived in fear.'''
+        ])
+        quotes.append([
+            "Emerson", "On contemplation", "Ralph Waldo Emerson, poet",
+            '''A man is what he thinks about all day long.'''
+        ])
+        quotes.append([
+            "Jung", "On Authenticity", "C.G.Jung, Psychiatrist",
+            '''The privilege of a lifetime is to become who you truly are.'''
+        ])
+        quotes.append([
+            "Grossman ", "On Risk", "Mindy Grossman, CEO of WW International",
+            '''Not taking a risk is riskier than taking a risk.'''
+        ])
 
         df = pd.DataFrame(data=quotes, columns=['name', 'on', 'who', 'quote'])
         self.df = df
@@ -301,7 +334,7 @@ our emotions entirely, but the plan helps us control them so they aren't destruc
         '''
         Get a random quote.
         '''
-        
+
         num = randint(0, len(self.df)-1)
 #         print (len(self.df), num)
         qt = self.df.loc[num]
@@ -336,18 +369,22 @@ class TradingPlan(object):
         managementRule = []
         preliminary = []
 
-        #============================================================
-        #==================== Preliminary Rules =====================
-        #============================================================
+        # ============================================================
+        # ==================== Preliminary Rules =====================
+        # ============================================================
+        preliminary.append(['With every trade, PROTECT THE CAPITAL.',
+                            'This is the first and foremost prime directive..'])
+
+
         preliminary.append(['Trade the stock market exclusively.',
                             'It is straight forward and has the most potential.'])
 
         preliminary.append(['Plan to combine day trading and swing trading. These rules are for day trading.',
                             'In spite of the downside of diversication of my time, I believe I have potential for both.'])
 
-        #===========================================================
-        #==================== Management Rules =====================
-        #===========================================================
+        # ===========================================================
+        # ==================== Management Rules =====================
+        # ===========================================================
         managementRule.append(['I would like to take a majority of low risk trades.',
                                'This is a plan to build my psychological capital and could change in the future.'])
 
@@ -360,9 +397,9 @@ class TradingPlan(object):
         managementRule.append(['Risk per trade will never exceed 2% of my trading capital.',
                                "This is standard practice from sound minds and massive experience."])
 
-        #============================================================
-        #======================= Entry Rules ========================
-        #============================================================
+        # ============================================================
+        # ======================= Entry Rules ========================
+        # ============================================================
         entryRules.append(['Identify a stop based on a technical level.',
                            'Anything else is arbitrary.'])
 
@@ -370,11 +407,9 @@ class TradingPlan(object):
                             'Max $40 risk for the month, beginning with $25 risk on 1/2/19, ).'],
                            'ORBS are big opportunity and big risk.'])
 
-        
-
-        #============================================================
-        #======================= Exit Rules =========================
-        #============================================================
+        # ============================================================
+        # ======================= Exit Rules =========================
+        # ============================================================
         exitRules.append(['With reduced risk, expect reduced profit. Take first partial at .9:1',
                           'Slightly reduced expectation could greatly reduce risk.'])
 
@@ -382,10 +417,11 @@ class TradingPlan(object):
                           'A technical level is potential resistance.'])
         exitRules.append([['Do not allow a target to pass without taking a partial',
                            'If a target is hit be sure to take some partial that is 75% or better of target.'],
-                           'Greed stands on the other side ready to take your profit away. Give it up. Don\'t think.'])
-        exitRules.append(['Do not exceed your max stop loss for the day.','This is the primary key to consistent trading.'])
+                          'Greed stands on the other side ready to take your profit away. Give it up. Don\'t think.'])
+        exitRules.append(['Do not exceed your max stop loss for the day.',
+                          'This is the primary key to consistent trading.'])
         exitRules.append(['After taking a profit, the stop loss moves to break even or better.',
-                         'The result is risk is reduced. That is the purpose of scaling out. Accept that profit potential may also be reduced.'])
+                          'The result is risk is reduced. That is the purpose of scaling out. Accept that profit potential may also be reduced.'])
         self.preliminary = preliminary
         self.entry = entryRules
         self.exit = exitRules
@@ -429,5 +465,4 @@ q = i.getrandom()
 print(q)
 
 tp = TradingPlan()
-tp.getRules(['a'], why=True)
-
+tp.getRules(['a'])
