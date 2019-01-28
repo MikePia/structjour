@@ -127,7 +127,7 @@ class JournalFiles:
     #     week = 1 if week < 1 else week
         # return week
 
-    
+
 
     def mkOutdir(self):
         '''
@@ -199,11 +199,10 @@ class JournalFiles:
 
 def notmain():
     ''' Run some local code'''
-    jf = JournalFiles()
+    # jf = JournalFiles()
     for i in range(1, 13):
         dd = pd.Timestamp(2019, i, 7)
-        w = whichWeek(dd)                # pylint: disable = W0212
-        print(d.strftime("%A %B %d"), "week", w)
+        whichWeek(dd)                # pylint: disable = W0212
 
 
 if __name__ == '__main__':

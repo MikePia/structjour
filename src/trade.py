@@ -16,9 +16,9 @@ from journal.mstksum import MistakeSummary
 from journal.qtform import QtForm
 # pylint: disable=C0103
 
-jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
+# jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
 
-# jf = JournalFiles(mydevel=True)
+jf = JournalFiles(mydevel=True)
 jf.printValues()
 
 tkt = Ticket(jf)
