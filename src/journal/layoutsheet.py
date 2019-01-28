@@ -32,8 +32,8 @@ class LayoutSheet(object):
     def __init__(self, summarySize, topMargin, inputlen):
         '''
         Constructor
-        :params:summarySize: The number of rows for each trade summary
-        :params:frq: The FinReqCol object
+        :params summarySize: The number of rows for each trade summary
+        :params frq: The FinReqCol object
         '''
         self.summarySize = summarySize
         self.topMargin = topMargin
@@ -44,6 +44,12 @@ class LayoutSheet(object):
         Create the shape of the excel document in a DataFrame by adding rows
         to place the trade summaries and images. Additionally, create the
         ImageLocation data structure to navigate the new space.
+        :params df: A df with all the required fields. Content doesn't matter.
+        :params ldf: A list of dataFrames. Each encapsulates a trade.
+        :parmas ft: Image filetype extension.
+        :return (Imagelocation, df): ImageLocation contains information about the excel document
+                    locations of trade summaries, and image locations. The dataFrame df will be
+                    used to create the workbook
         '''
         # Add rows and append each trade, leaving space for an image. Create a list of
         # names and row numbers to place images within the excel file (imageLocation
@@ -76,20 +82,30 @@ class LayoutSheet(object):
         return imageLocation, df
 
     def createWorkbook(self, dframe):
+        '''
+        Create the workbook obj and give it all the data in trades and summaries
+        Add the column names for the trade list table in the appropo spot.
+        :parmas dframe: The trades and summaries in the shape we want.
+        '''
         nt = dframe
         # def
         wb = Workbook()
         ws = wb.active
 
+        # Add all cell values from the df to the ws object
         for r in dataframe_to_rows(nt, index=False, header=False):
             ws.append(r)
 
+        # Place column names at the top table -- (under the notes and inspire quote)
         for name, cell in zip(nt.columns, ws[self.topMargin]):
             cell.value = name
         return wb, ws, nt
 
     def styleTop(self, ws, nt, tf):
-        ##Style the table, and the top paragraph.  Add and style the inspire quote. Create the SummaryMistake form (populate it below in a loop)
+        '''
+        Style the table, and the top paragraph.  Add and style the inspire quote. Create the
+        SummaryMistake form (populate it below in a loop)
+        '''
         tblRng = "{0}:{1}".format(tcell((1, self.topMargin)), tcell(
             (len(nt.columns), self.topMargin + self.inputlen)))
         tab = Table(displayName="Table1", ref=tblRng)

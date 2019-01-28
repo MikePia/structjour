@@ -397,8 +397,8 @@ class ToCSV_Ticket(object):
     def newDFSingleTxPerTicket(self, listDf=None):
         '''
         Create an alternate csv file using the single tx per ticket DataFrames we created.
-        :param:listDf: Normally leave blank. If used, listDf should be the return value from getListOfTicketDF.
-        :param:jf: A JournalFiles object as this new CSV file needs to be written into the outdir.
+        :params listDf: Normally leave blank. If used, listDf should be the return value from getListOfTicketDF.
+        :params jf: A JournalFiles object as this new CSV file needs to be written into the outdir.
         :return: The DataFrame created version of the data.
         :sideeffects: Saves a csv file of all transactions as single ticket transactions to jf.inpathfile
         '''
