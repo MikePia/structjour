@@ -4,13 +4,14 @@ Created on Sep 9, 2018
 
 @author: Mike Petersen
 '''
+from math import isclose
 import unittest
 import os
 import types
 
-from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-# from journal.dfutil import DataFrameUtil
 import pandas as pd
+
+from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
 from journal.tradeutil import ReqCol
 from journalfiles import JournalFiles
 
@@ -30,7 +31,12 @@ class Test_SingleTicket(unittest.TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
-
+        # Input test files can be added here.  Should add files that should fail in another list
+        self.infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
+                        'trades.8.csv', 'trades.907.WithChangingHolds.csv',
+                        'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
+                        'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
+                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv']
 
     def test_GetListOfTicketDF(self):
         '''
@@ -40,13 +46,9 @@ class Test_SingleTicket(unittest.TestCase):
 
         outdir = 'data/'
         # A list of files that were problematic
-        infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
-                   'trades.8.csv', 'trades.907.WithChangingHolds.csv',
-                   'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
-                   'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
-                   'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv']
+        infiles = self.infiles
 
-        otherinfiles = ['trades.911.noPL.csv', 'trades.csv']
+        # otherinfiles = ['trades.911.noPL.csv', 'trades.csv']
         for f in infiles:
             trade = os.path.join(outdir, f)
             print()
@@ -75,30 +77,49 @@ class Test_SingleTicket(unittest.TestCase):
             self.assertEqual(len(trades), totalTX, msg)
 
     def testCreateSingleTicket(self):
+        '''
+        Test the method ToCSV_Ticket.createSingleTicket.  Requires the list of dfs created by
+        getListOfTicketDF. Explicitly test that each element is a 1 row DataFrame. That the new
+        price, (the average price of its transactions) is always greater than the min and less
+        than the max. And finally check that the total number of shares (total) is the same as
+        the sum of shares in constituent transactions.
+        '''
         rc = ReqCol()
-        jf = JournalFiles(indir=r"../data",
-                          infile="trades.910.tickets.csv", outdir=r"../out")
-        tkt = Ticket(jf)
+        outdir = 'data/'
+        infiles = self.infiles
 
-        listTick = tkt.getListOfTicketDF()
-        totalSharesForDay = 0
-        for tick in listTick:
+        for infile in infiles:
+            jf = JournalFiles(indir="data/",
+                              infile=infile, outdir="out/")
+            tkt = Ticket(jf)
 
-            singleTicket = tkt.createSingleTicket(tick)
-            self.assertIsInstance(singleTicket, type(
-                pd.DataFrame()), "Failed to create a DataFrame")
-            self.assertEqual(len(singleTicket), 1,
-                             "Failed to create a single item ticket")
-            self.assertLessEqual(singleTicket[rc.price].unique()[
-                                 0], tick[rc.price].max())
-            self.assertGreaterEqual(singleTicket[rc.price].unique()[
-                                    0], tick[rc.price].min())
+            listTick = tkt.getListOfTicketDF()
+            totalSharesForDay = 0
+            for tick in listTick:
 
-            totalSharesForDay = totalSharesForDay + tick[rc.shares].sum()
+                singleTicket = tkt.createSingleTicket(tick)
+                self.assertIsInstance(singleTicket, type(
+                    pd.DataFrame()), "Failed to create a DataFrame")
+                self.assertEqual(len(singleTicket), 1,
+                                "Failed to create a single item ticket")
+                # print(tick[rc.price].min())
+                # print(singleTicket[rc.price].unique()[0])
+                # print(tick[rc.price].max())
+                # print()
+                try:
+                    isclose(singleTicket[rc.price].unique()[0], tick[rc.price].max(), abs_tol=1e-8)
+                except AssertionError:
+                    self.assertLessEqual(singleTicket[rc.price].unique()[0], tick[rc.price].max())
+                try:
+                    isclose(singleTicket[rc.price].unique()[0], tick[rc.price].min(), abs_tol=1e-8)
+                except AssertionError:
+                    self.assertGreaterEqual(singleTicket[rc.price].unique()[0], tick[rc.price].min())
 
-        dframe = pd.read_csv(jf.inpathfile)
-        self.assertEqual(dframe[rc.shares].sum(),
-                         totalSharesForDay, "Failed to acount for all the shares transacted.")
+                totalSharesForDay = totalSharesForDay + tick[rc.shares].sum()
+
+            dframe = pd.read_csv(jf.inpathfile)
+            self.assertEqual(dframe[rc.shares].sum(),
+                             totalSharesForDay, "Failed to acount for all the shares transacted.")
 
     def testNewSingleTxPerTicket(self):
         rc = ReqCol()
@@ -127,10 +148,10 @@ class Test_SingleTicket(unittest.TestCase):
 
     def testZeroPad(self):
         '''
-        Both this method and the tested method are extremely dependent on extra outside circumstances. For example
-        This method depends on the transactions to begin between 9 and 10 as recorded by DAS. (A purchase at 8 will 
-        cause this test to fail) Right now I have only one case to test ('data/TradesExcelEdited.csv')so wtf, leave 
-        it till I have a test case.
+        Both this method and the tested method are extremely dependent on extra outside
+        circumstances. For example This method depends on the transactions to begin between 9 and
+        10 as recorded by DAS. (A purchase at 8 will cause this test to fail) Right now I have only
+        one case to test ('data/TradesExcelEdited.csv')so wtf, leave it till I have a test case.
         '''
         infile = r"../data/trades.8.ExcelEdited.csv"
         if not os.path.exists(infile):
@@ -148,7 +169,7 @@ class Test_SingleTicket(unittest.TestCase):
 
         numof0s = len(t['Time'][t['Time'].str.startswith('0')])
 
-        self.assertEquals(numof9s, numof0s)
+        self.assertEqual(numof9s, numof0s)
 
     def testMkShortNegative(self):
         rc = ReqCol()
@@ -168,6 +189,9 @@ class Test_SingleTicket(unittest.TestCase):
             self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
 
     def testGetListTickerDF(self):
+        '''
+        Testing ToCSV_Ticket.getListTickerDF
+        '''
 
         rc = ReqCol()
 
@@ -185,20 +209,20 @@ class Test_SingleTicket(unittest.TestCase):
         testSet = list(zip(tickers, accounts))
 
         apd = pd.DataFrame(testSet, columns=[rc.ticker, rc.acct])
-        apd
 
         ipd = InputDataFrame()
         listDf = ipd.getListTickerDF(apd)
 
         #A dataframe for each ticker in both accounts
-        self.assertEquals(len(listDf), 6)
+        self.assertEqual(len(listDf), 6)
         for df in listDf:
-            self.assertEquals(len(df[rc.ticker].unique()), 1)
+            self.assertEqual(len(df[rc.ticker].unique()), 1)
             self.assertEqual(len(df[rc.acct].unique()), 1)
 
     def testGetOvernightTrades(self):
         '''
-        Check this with real data that is checked by hand. Add to the list whenever there is a new input file with overnight trades.
+        Check this with real data that is checked by hand. Add to the list whenever there is a new
+        input file with overnight trades.
         '''
 
         indir = r"../data"

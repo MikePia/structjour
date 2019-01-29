@@ -69,7 +69,7 @@ class InputDataFrame(object):
     def getListTickerDF(self, dframe):
         '''
         Returns a python list of all tickers/account traded in todays input file.
-        :params dframe: The DataFrame with the days trades that includes the column tickCol 
+        :params dframe: The DataFrame with the days trades that includes the column tickCol
                         (Symb by default and in DAS).
         :return: The list of tickers in the days trades represented by the DataFrame
         '''
@@ -90,7 +90,7 @@ class InputDataFrame(object):
         return listOfTickers
 
     def getOvernightTrades(self, dframe):
-        ''' 
+        '''
         Create the overnightTrade (aka swingTrade data structure) from the list of overnight holds.
                 Overnight holds are inferred from an unbalanced number of shares. Until we ask the
                 user, we won't know whether before or after or both
@@ -143,8 +143,8 @@ class InputDataFrame(object):
     def figureOvernightTransactions(self, dframe):
         '''
         Determine how of the unbalanced shares were held:  before, after or both. We have to ask.
-        FIX THIS (Won't be so bad in the Windowed version) (Could get it from exporting position 
-        window in addition Or maybe from using IBs input files instead.) 
+        FIX THIS (Won't be so bad in the Windowed version) (Could get it from exporting position
+        window in addition Or maybe from using IBs input files instead.)
         '''
 
         # rc = ReqCol()
@@ -155,11 +155,11 @@ class InputDataFrame(object):
             while tryAgain == True:
 
                 print(swingTrade[i])
-                question = '''There is an unbalanced amount of shares of {0} in the amount of {1} 
+                question = '''There is an unbalanced amount of shares of {0} in the amount of {1}
                     in the account {2}. How many shares of {0} are you holding now? 
                     (Enter for {1}) '''.format(swingTrade[i]['ticker'],
-                                                swingTrade[i]['shares'],
-                                                swingTrade[i]['acct'])
+                                               swingTrade[i]['shares'],
+                                               swingTrade[i]['acct'])
 
                 swingTrade[i]['after'] = self.askUser(
                     swingTrade[i]['shares'], question)
@@ -203,8 +203,10 @@ class InputDataFrame(object):
         for ldf in self.getListTickerDF(dframe):
             # print(ldf[rc.ticker].unique()[0], ldf[rc.acct].unique()[0])
             for trade in swTrade:
-                if trade['ticker'] == ldf[rc.ticker].unique()[0] and (
-                            trade['acct'] == ldf[rc.acct].unique()[0]):
+                if (
+                    trade['ticker'] == ldf[rc.ticker].unique()[0] and (
+                    trade['acct'] == ldf[rc.acct].unique()[0])
+                   ):
                     msg = "Got {0} with the balance {1}, before {2} and after {3} in {4}"
                     print(msg.format(trade['ticker'],
                                      trade['shares'],
@@ -213,6 +215,7 @@ class InputDataFrame(object):
                                      trade['acct']))
 
                     #insert a non transaction HOLD row before transactions of the same ticker
+                    
                     if trade['before'] != 0:
                         newldf = DataFrameUtil.createDf(dframe, 1)
                         print("length:   ", len(newldf))
@@ -232,9 +235,11 @@ class InputDataFrame(object):
                                 newldf.at[j, rc.PL] = 0
 
                                 ldf = newldf.append(ldf, ignore_index=True)
-                            break  # This should be unnecessary as newldf should always be the length of 1 here
+                            break  
 
                     # Insert a non-transaction HOLD row after transactions from the same ticker
+                    # Reusing ldf for something different here...bad form ... maybe ... 
+                    # adding columns then appending and starting over
                     if trade['after'] != 0:
                         print("Are we good?")
                         ldf = DataFrameUtil.addRows(ldf, 1)
@@ -275,9 +280,9 @@ class ToCSV_Ticket(object):
 
     def _checkUniqueSIMTX(self):
         '''
-        Check the SIM transactions for uniqueness within (ticker, time, account). I believe these are always
-        necessarily unique. I need to know if they are not.  If found,the program should fail or alert the
-        user and work around
+        Check the SIM transactions for uniqueness within (ticker, time, account). I believe these
+        are always necessarily unique. I need to know if they are not.  If found,the program
+        should fail or alert the user and work around
         '''
         rc = ReqCol()
         dframe = self.df
@@ -286,9 +291,9 @@ class ToCSV_Ticket(object):
         #This is guaranteed to cause some future problem
         # If Cloid has some Sim ids ('AUTO') the column must have some str elements. Without this
         # it throws a TypeError and a Future Warning about changing code. For DataFrame columns
-        # without any sim trades there are only floats. This is not guaranteed behavior, just observed
-        # from my runs. And there there is some weirdness between numpy types and python regarding
-        # what type to return for this comparison--and it may change in the future.
+        # without any sim trades there are only floats. This is not guaranteed behavior, just 
+        # observed from my runs. And there there is some weirdness between numpy types and python
+        # regarding what type to return for this comparison--and it may change in the future.
         # if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
 
         doSomething = False
@@ -307,7 +312,8 @@ class ToCSV_Ticket(object):
 
             tickerset = set(tickerlist)
             if len(tickerset) != len(tickerlist):
-                # print("\nFound a Sim ticket that is not unique. This should not be possible (but it happens).{}".format(tickerlist[-1]))
+                # print("\nFound a Sim ticket that is not unique.
+                # This should not be possible (but it happens).{}".format(tickerlist[-1]))
                 return
 
     def createSingleTicket(self, tickTx):
@@ -343,16 +349,16 @@ class ToCSV_Ticket(object):
         return newDf
 
     def getListOfTicketDF(self):
-        ''' 
+        '''
         Take the standard trades.csv DataFrame a list in which each list member is a DataFrame that
-        contains the transactions that create a single ticket. 
+        contains the transactions that create a single ticket.
         This is made more interesting by the SIM transactions. They have no ticket ID (Cloid). They
-        are identified in DAS by 'AUTO.' We will give them an ID unique for this run. There is only, 
+        are identified in DAS by 'AUTO.' We will give them an ID unique for this run. There is only,
         presumably one ticket per SIM transaction, but check for uniqueness and report. (Found one
         on 10/22/28 -- a SIM trade on SQ. Changed the code not to fail in the event of an identical
         transx.)
         :return: A list of DataFrames, each list member is one ticket with 1 or more transactions.
-        
+
         PROGRAMMING NOTE: This SIM ticket will most definitely not be found unique between different
         days Use the 10/22/28 input file in a test and fix it.
         '''
@@ -366,7 +372,8 @@ class ToCSV_Ticket(object):
                 doSomething = True
                 break
 
-        #Get the SIM transactions from the origainal DataFtame. Change the Cloid from Auto to SIMTick__XX
+        # Get the SIM transactions from the origainal DataFtame.
+        # Change the Cloid from Auto to SIMTick__XX
         if doSomething:
             SIMdf = dframe[dframe['Cloid'] == "AUTO"]
             for i, dummy in SIMdf.iterrows():
@@ -393,10 +400,11 @@ class ToCSV_Ticket(object):
     def newDFSingleTxPerTicket(self, listDf=None):
         '''
         Create an alternate csv file using the single tx per ticket DataFrames we created.
-        :params listDf: Normally leave blank. If used, listDf should be the return value from getListOfTicketDF.
+        :params listDf: Normally leave blank. If used, listDf should be the be a list of DFs.
         :params jf: A JournalFiles object as this new CSV file needs to be written into the outdir.
         :return: The DataFrame created version of the data.
-        :sideeffects: Saves a csv file of all transactions as single ticket transactions to jf.inpathfile
+        :sideeffects: Saves a csv file of all transactions as single ticket transactions to
+                        jf.inpathfile
         '''
         rc = ReqCol()
         if not listDf:
