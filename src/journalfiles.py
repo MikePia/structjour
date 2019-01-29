@@ -84,8 +84,7 @@ class JournalFiles:
         self._checkPaths()
 
     # TODO: add a journalroot variable and write it to db or pickle or something and expand
-    # MyDevel to a general file structure for all users
-
+    # MyDevel to a general file structure for all users and fix that ffnn hard coded path
     def setMyParams(self, indir, outdir):
         '''
         Set the file names for MyDevel. By default this uses a directory structure that we created:

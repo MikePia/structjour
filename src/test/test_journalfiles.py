@@ -10,7 +10,7 @@ import types
 import pandas as pd
 from journalfiles import JournalFiles
 from journalfiles import whichWeek
-# pylint: disable = C0103
+# pylint: disable = C0103, W0703, E1121
 
 
 def itsTheWeekend():
@@ -76,7 +76,7 @@ class TestJF(unittest.TestCase):
 
     def testDevelDefaultCreate(self):
         '''
-        Tests the default creation if its Monday to Friday.  Tests the previus Friday's date 
+        Tests the default creation if its Monday to Friday.  Tests the previus Friday's date
         using param theDate otherwise'''
         if dt.date.today() == itsTheWeekend():
             #             jf=JournalFiles(mydevel=True)
@@ -118,7 +118,7 @@ class TestJF(unittest.TestCase):
     def testDevelIndirCreate(self):
         '''
         Tests the default creation of my development environment on a day that I created a trades
-        file.  If its the weekend, it tests for Friday. If its a weekday holiday it will fail to 
+        file.  If its the weekend, it tests for Friday. If its a weekday holiday it will fail to
         find an input file and JournalFiles will raise NameError. (Go play, its a holiday).
         '''
         din = "data/"
@@ -252,12 +252,10 @@ class TestJF(unittest.TestCase):
             w = whichWeek(test1)
             self.assertEqual(w, 4)
 
-        return
-
 
 def main():
     '''
-    Test discovery is not working in vscode. Use this for debugging. 
+    Test discovery is not working in vscode. Use this for debugging.
     Then run cl python -m unittest discovery
     '''
     f = TestJF()

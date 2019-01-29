@@ -18,7 +18,7 @@ from journal.qtform import QtForm
 
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
 
-jf = JournalFiles(mydevel=True)
+jf = JournalFiles(infile='trades.csv', outdir='out/', mydevel=True)
 jf.printValues()
 
 tkt = Ticket(jf)
