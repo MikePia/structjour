@@ -251,10 +251,11 @@ class LayoutSheet(object):
     def createDailySummaryForm(self, TheTradeList, mistake, ws, anchor):
         '''
         Create the shape and populate the daily Summary Form
-        :params:listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one is a single row DataFrame
+        :params listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one is a single row DataFrame
         containg all the data in the trade summaries.
-        :params:mistke: 
-        :params:ws: The openpyxl Worksheet object
+        :params mistke: 
+        :params ws: The openpyxl Worksheet object
+        :raise Value Error: When pl is misformatted and cannot be used. 
         '''
         srf = SumReqFields()
         liveWins = list()
@@ -270,7 +271,18 @@ class LayoutSheet(object):
             pl = TheTrade[srf.pl].unique()[0]
             live = True if TheTrade[srf.acct].unique()[0] == "Live" else False
             count = count + 1
-            if pl > maxTrade[0]:
+            if isinstance(pl, str):
+                if pl == '':
+                    pl = 0
+                else:
+                    try:
+                        pl = float(pl)
+                    except NameError:
+                        raise ValueError('Malformed float for variable pl in createDailySummary')
+
+
+            # print(pl)
+            if float(pl) > maxTrade[0]:
                 maxTrade = (pl, "Trade{0}, {1}, {2}".format(
                     count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
             if pl < minTrade[0]:

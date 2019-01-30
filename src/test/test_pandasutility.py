@@ -40,7 +40,9 @@ class Test_SingleTicket(unittest.TestCase):
 
     def test_GetListOfTicketDF(self):
         '''
-        Test the method ToCSV_Ticket.getListOfTicketDF
+        Test the method ToCSV_Ticket.getListOfTicketDF.
+        Explicitly tests: Each ticket has only long or short only
+                          Each ticket has a single ticker symbol, cloid, and account
         '''
         rc = ReqCol()
 
@@ -51,9 +53,6 @@ class Test_SingleTicket(unittest.TestCase):
         # otherinfiles = ['trades.911.noPL.csv', 'trades.csv']
         for f in infiles:
             trade = os.path.join(outdir, f)
-            print()
-            print(trade)
-            print()
             jf = JournalFiles(indir=outdir, infile=f, outdir='out/', mydevel=True)
 
             tkt = Ticket(jf)
@@ -85,12 +84,13 @@ class Test_SingleTicket(unittest.TestCase):
         the sum of shares in constituent transactions.
         '''
         rc = ReqCol()
-        outdir = 'data/'
+        indir = 'data/'
+        outdir = 'out/'
         infiles = self.infiles
 
         for infile in infiles:
-            jf = JournalFiles(indir="data/",
-                              infile=infile, outdir="out/")
+            jf = JournalFiles(indir=indir,
+                              infile=infile, outdir=outdir)
             tkt = Ticket(jf)
 
             listTick = tkt.getListOfTicketDF()
@@ -101,7 +101,7 @@ class Test_SingleTicket(unittest.TestCase):
                 self.assertIsInstance(singleTicket, type(
                     pd.DataFrame()), "Failed to create a DataFrame")
                 self.assertEqual(len(singleTicket), 1,
-                                "Failed to create a single item ticket")
+                                 "Failed to create a single item ticket")
                 # print(tick[rc.price].min())
                 # print(singleTicket[rc.price].unique()[0])
                 # print(tick[rc.price].max())
@@ -113,7 +113,8 @@ class Test_SingleTicket(unittest.TestCase):
                 try:
                     isclose(singleTicket[rc.price].unique()[0], tick[rc.price].min(), abs_tol=1e-8)
                 except AssertionError:
-                    self.assertGreaterEqual(singleTicket[rc.price].unique()[0], tick[rc.price].min())
+                    self.assertGreaterEqual(singleTicket[rc.price].unique()[0], 
+                                            tick[rc.price].min())
 
                 totalSharesForDay = totalSharesForDay + tick[rc.shares].sum()
 
@@ -122,29 +123,54 @@ class Test_SingleTicket(unittest.TestCase):
                              totalSharesForDay, "Failed to acount for all the shares transacted.")
 
     def testNewSingleTxPerTicket(self):
+        '''
+        Test the method ToCSV_Ticket.newSingleTxPerTicket. That method creates a new csv file
+        reducing multi row transactions to a single row, averaging the prices, totaling the
+        amounts. 
+        Explicitly tests: A newFile has been created and made the infile of JournalFiles.
+                          The PL summary is the same between the two files .
+                          The shares total for each symbol/account/buy/sell is the same
+
+        '''
         rc = ReqCol()
-        jf = JournalFiles(indir=r"../data",
-                          infile="trades.910.tickets.csv", outdir=r"../out")
-        origdframe = pd.read_csv(jf.inpathfile)
-        originfile = jf.infile
-        tkt = Ticket(jf)
+        for infile in self.infiles:
+            # infile = "trades.910.tickets.csv"
+            outdir = 'out/'
+            indir = 'data/'
+            indir = os.path.realpath(indir)
 
-#         listTick = tkt.getListOfTicketDF()
-        newDF, jf = tkt.newDFSingleTxPerTicket()
+            inpathfile = os.path.join(indir, infile)
+            jf = JournalFiles(indir=indir, infile=infile, outdir=outdir)
 
-        self.assertNotEqual(originfile, jf.infile)
-        newdframe = pd.read_csv(jf.inpathfile)
-        print("Original len: {0}: Original sum: {1}.".format(
-            len(origdframe), origdframe[rc.PL].sum()))
-        print("The new  len: {0}: The new sum:  {1}.".format(
-            len(newdframe), newdframe[rc.PL].sum()))
-        print("The new  len: {0}: The new sum:  {1}.".format(
-            len(newDF), newDF[rc.PL].sum()))
-        self.assertAlmostEqual(
-            origdframe[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
-        self.assertAlmostEqual(
-            newDF[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
+            origdframe = pd.read_csv(jf.inpathfile)
+            originfile = jf.infile
 
+            tkt = Ticket(jf)
+            newDF, jf = tkt.newDFSingleTxPerTicket()
+
+            self.assertNotEqual(originfile, jf.infile)
+            newdframe = pd.read_csv(jf.inpathfile)
+
+            self.assertAlmostEqual(origdframe[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
+            self.assertAlmostEqual(newDF[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
+
+            for symbol in origdframe[rc.ticker].unique():
+                for accnt in origdframe[rc.acct].unique():
+                    d = origdframe
+                    n = newDF
+
+                    d = d[d[rc.ticker] == symbol]
+                    d = d[d[rc.acct] == accnt]
+                    dbuy = d[d[rc.side].str.startswith('B')]
+                    dsell = d[d[rc.side].str.startswith('S')]
+
+                    n = n[n[rc.ticker] == symbol]
+                    n = n[n[rc.acct] == accnt]
+                    nbuy = n[n[rc.side].str.startswith('B')]
+                    nsell = n[n[rc.side].str.startswith('S')]
+
+                    self.assertEqual(dbuy[rc.shares].sum(), nbuy[rc.shares].sum())
+                    self.assertEqual(dsell[rc.shares].sum(), nsell[rc.shares].sum())
 
     def testZeroPad(self):
         '''
@@ -153,25 +179,38 @@ class Test_SingleTicket(unittest.TestCase):
         10 as recorded by DAS. (A purchase at 8 will cause this test to fail) Right now I have only
         one case to test ('data/TradesExcelEdited.csv')so wtf, leave it till I have a test case.
         '''
-        infile = r"../data/trades.8.ExcelEdited.csv"
-        if not os.path.exists(infile):
-            err = "Test is improperly setup. {0}".format(infile)
-            self.assertTrue(False, err)
-            return
-        t = pd.read_csv(infile)
-        numof0s = len(t['Time'][t['Time'].str.startswith('0')])
-        numof9s = len(t['Time'][t['Time'].str.startswith('9')])
-        self.assertTrue(numof0s == 0)
-        self.assertGreater(numof9s, 0)
+        
+        indir = 'data/'
+        for infile  in self.infiles:
 
-        idf = InputDataFrame()
-        t = idf.zeroPadTimeStr(t)
+            inpathfile = os.path.join(indir, infile)
 
-        numof0s = len(t['Time'][t['Time'].str.startswith('0')])
+            t = pd.read_csv(inpathfile)
 
-        self.assertEqual(numof9s, numof0s)
+            idf = InputDataFrame()
+            t = idf.zeroPadTimeStr(t)
+
+            for x in t['Time']:
+                self.assertIsInstance(x, str, 'Excel time in {infile} is a {type(x)}')
+                self.assertEqual(len(x), 8)
+                self.assertEqual(x[2], ':')
+                self.assertEqual(x[5], ':')
+                self.assertEqual(len(x),  8)
+                (h,m,s) = x.split(':')
+                try:
+                    h = int(h)
+                    m = int(m)
+                    s = int(s)
+                    self.assertLess(h, 24)
+                    self.assertLess(m, 60)
+                    self.assertLess(s, 60)
+                except NameError:
+                    self.fail('Time has a wrong value')
 
     def testMkShortNegative(self):
+        '''
+        Test the method ToCSV_Ticket.mkShortsNegative
+        '''
         rc = ReqCol()
         side = ['B', 'S', 'S', 'SS', 'B', 'B']
         mult = [1, -1, -1, -1, 1, 1]
@@ -221,40 +260,43 @@ class Test_SingleTicket(unittest.TestCase):
 
     def testGetOvernightTrades(self):
         '''
-        Check this with real data that is checked by hand. Add to the list whenever there is a new
-        input file with overnight trades.
+        The only way to automate this is to just figure all the same data and compare it.
         '''
 
-        indir = r"../data"
-        infile = "trades.8.WithBothHolds.csv"
-        infile2 = "trades.907.WithChangingHolds.csv"
-#         infile3="TradesWithHolds.csv"          #skipping-- edited by Excel
+        indir = "data/"
 
-        data = [
-            (infile, [('MU', 'paper', 750), ('TSLA', 'paper', 50)]),
-            (infile2, [('AMD', 'paper', 600),
-                       ('FIVE', 'real', 241), ('MU', 'real', 50)]),
-        ]
-
-        for infile, tradeList in data:
-            inpathfile = os.path.normpath(os.path.join(indir, infile))
-            if not os.path.exists(inpathfile):
-                err = "Test is improperly setup. {0}".format(infile)
-                self.assertTrue(False, err)
-                return
+        for infile in self.infiles:
+            inpathfile = os.path.join(indir, infile)
+            os.path.exists(inpathfile)
 
             dframe = pd.read_csv(inpathfile)
+
+            sl = list()
+            for symbol in dframe['Symb'].unique():
+                # print(symbol)
+                df = dframe[dframe['Symb'] == symbol]
+                for account in df['Account'].unique():
+                    df1 = df[df['Account'] == account]
+                    buy = 0
+                    for dummy, row in df1.iterrows():
+                        # print(row['Side'], row['Qty'])
+                        if row['Side'].startswith('S'):
+                            buy = buy - row['Qty']
+                        elif row['Side'].startswith('B'):
+                            buy = buy + row['Qty']
+                        else:
+                            print ('error', 'Side is ', row['Side'])
+                    if buy != 0:
+                        # Create the same data format used in getOvernightTrades
+                        sl.append({'ticker' : symbol, 'shares': buy, 'before':0, 'after': 0, 'acct': account})
             idf = InputDataFrame()
             dframe = idf.mkShortsNegative(dframe)
-
             st = idf.getOvernightTrades(dframe)
-#             found = list()
-            for t in st:
-                l = (t['ticker'], 'real' if t['acct'].startswith(
-                    "U") else 'paper', t['shares'])
-#                 if l in tradeList :
-                err = "Failed to find {0} in {1}".format(l, infile)
-                self.assertIn(l, tradeList, err)
+            self.assertEqual(len(sl), len(st))
+            for trade in sl:
+                self.assertTrue(trade in sl)
+
+
 
 def main():
     '''

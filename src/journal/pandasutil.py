@@ -23,6 +23,9 @@ class InputDataFrame(object):
             raise ValueError
 
     def processInputFile(self, trades):
+        '''
+        Run the methods for this object
+        '''
         reqCol = ReqCol()
 
         #Process the input file DataFrame
@@ -204,8 +207,8 @@ class InputDataFrame(object):
             # print(ldf[rc.ticker].unique()[0], ldf[rc.acct].unique()[0])
             for trade in swTrade:
                 if (
-                    trade['ticker'] == ldf[rc.ticker].unique()[0] and (
-                    trade['acct'] == ldf[rc.acct].unique()[0])
+                        trade['ticker'] == ldf[rc.ticker].unique()[0] and (
+                        trade['acct'] == ldf[rc.acct].unique()[0])
                    ):
                     msg = "Got {0} with the balance {1}, before {2} and after {3} in {4}"
                     print(msg.format(trade['ticker'],
@@ -215,7 +218,7 @@ class InputDataFrame(object):
                                      trade['acct']))
 
                     #insert a non transaction HOLD row before transactions of the same ticker
-                    
+
                     if trade['before'] != 0:
                         newldf = DataFrameUtil.createDf(dframe, 1)
                         print("length:   ", len(newldf))
@@ -229,16 +232,16 @@ class InputDataFrame(object):
                                 else:
                                     newldf.at[j, rc.side] = "HOLD+"
                                 newldf.at[j, rc.price] = float(0.0)
-                                newldf.at[j, rc.shares] = -trade['before']
+                                newldf.at[j, rc.shares] = trade['before']
                                 # ZeroSubstance'
                                 newldf.at[j, rc.acct] = trade['acct']
                                 newldf.at[j, rc.PL] = 0
 
                                 ldf = newldf.append(ldf, ignore_index=True)
-                            break  
+                            break
 
                     # Insert a non-transaction HOLD row after transactions from the same ticker
-                    # Reusing ldf for something different here...bad form ... maybe ... 
+                    # Reusing ldf for something different here...bad form ... maybe ...
                     # adding columns then appending and starting over
                     if trade['after'] != 0:
                         print("Are we good?")
@@ -255,7 +258,10 @@ class InputDataFrame(object):
                                 else:
                                     ldf.at[j, rc.side] = "HOLD-"
                                 ldf.at[j, rc.price] = float(0.0)
-                                ldf.at[j, rc.shares] = -trade['after']
+                                
+                                # -trade makes the share balance work in excel 
+                                # for shares held after close
+                                ldf.at[j, rc.shares] = -trade['after']  
                                 # 'ZeroSubstance'
                                 ldf.at[j, rc.acct] = trade['acct']
                                 ldf.at[j, rc.PL] = 0
@@ -291,7 +297,7 @@ class ToCSV_Ticket(object):
         #This is guaranteed to cause some future problem
         # If Cloid has some Sim ids ('AUTO') the column must have some str elements. Without this
         # it throws a TypeError and a Future Warning about changing code. For DataFrame columns
-        # without any sim trades there are only floats. This is not guaranteed behavior, just 
+        # without any sim trades there are only floats. This is not guaranteed behavior, just
         # observed from my runs. And there there is some weirdness between numpy types and python
         # regarding what type to return for this comparison--and it may change in the future.
         # if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
@@ -307,7 +313,7 @@ class ToCSV_Ticket(object):
         df = dframe[dframe['Cloid'] == "AUTO"]
 
         tickerlist = list()
-        for i, row in df.iterrows():
+        for dummy, row in df.iterrows():
             tickerlist.append((row[rc.time], row[rc.ticker], row[rc.acct]))
 
             tickerset = set(tickerlist)
