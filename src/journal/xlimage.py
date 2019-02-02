@@ -7,6 +7,7 @@ import os
 from PIL import Image as PILImage
 from PIL import ImageGrab
 from openpyxl.drawing.image import Image
+from journal.pandasutil import askUser
 # pylint: disable=C0103
 
 class XLImage(object):
@@ -51,7 +52,7 @@ class XLImage(object):
 
         for i in range (5):
             msg_go = "{0} {1}".format(msg, "Are you ready? (q to skip image) \n\t\t\t\t")
-            response = input(msg_go)
+            response = askUser(0, msg_go, True)
             im = None
             if response.lower().startswith('y') or response == '': 
                 im = ImageGrab.grabclipboard()

@@ -19,6 +19,8 @@ from journal.xlimage import XLImage
 from journal.tradestyle import c as tcell
 from journal.tradestyle import style_range
 from journal.thetradeobject import TheTradeObject, SumReqFields
+
+from journal.pandasutil import askUser
 # pylint: disable=C0103
 
 
@@ -132,8 +134,9 @@ class LayoutSheet(object):
         XL = XLImage()
         srf = SumReqFields()
 
-        response = input(
-            "Would you like to enter strategy names, targets and stops?     ")
+        response = askUser(0,
+                           "Would you like to enter strategy names, targets and stops?     ",
+                           justask=True)
         interview = True if response.lower().startswith('y') else False
 
         for loc, tdf in zip(imageLocation, ldf):

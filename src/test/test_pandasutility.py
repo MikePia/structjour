@@ -52,7 +52,7 @@ class Test_SingleTicket(unittest.TestCase):
 
         # otherinfiles = ['trades.911.noPL.csv', 'trades.csv']
         for f in infiles:
-            trade = os.path.join(outdir, f)
+            # trade = os.path.join(outdir, f)
             jf = JournalFiles(indir=outdir, infile=f, outdir='out/', mydevel=True)
 
             tkt = Ticket(jf)
@@ -113,7 +113,7 @@ class Test_SingleTicket(unittest.TestCase):
                 try:
                     isclose(singleTicket[rc.price].unique()[0], tick[rc.price].min(), abs_tol=1e-8)
                 except AssertionError:
-                    self.assertGreaterEqual(singleTicket[rc.price].unique()[0], 
+                    self.assertGreaterEqual(singleTicket[rc.price].unique()[0],
                                             tick[rc.price].min())
 
                 totalSharesForDay = totalSharesForDay + tick[rc.shares].sum()
@@ -126,7 +126,7 @@ class Test_SingleTicket(unittest.TestCase):
         '''
         Test the method ToCSV_Ticket.newSingleTxPerTicket. That method creates a new csv file
         reducing multi row transactions to a single row, averaging the prices, totaling the
-        amounts. 
+        amounts.
         Explicitly tests: A newFile has been created and made the infile of JournalFiles.
                           The PL summary is the same between the two files .
                           The shares total for each symbol/account/buy/sell is the same
@@ -139,7 +139,7 @@ class Test_SingleTicket(unittest.TestCase):
             indir = 'data/'
             indir = os.path.realpath(indir)
 
-            inpathfile = os.path.join(indir, infile)
+            # inpathfile = os.path.join(indir, infile)
             jf = JournalFiles(indir=indir, infile=infile, outdir=outdir)
 
             origdframe = pd.read_csv(jf.inpathfile)
@@ -179,7 +179,7 @@ class Test_SingleTicket(unittest.TestCase):
         10 as recorded by DAS. (A purchase at 8 will cause this test to fail) Right now I have only
         one case to test ('data/TradesExcelEdited.csv')so wtf, leave it till I have a test case.
         '''
-        
+
         indir = 'data/'
         for infile  in self.infiles:
 
@@ -195,8 +195,8 @@ class Test_SingleTicket(unittest.TestCase):
                 self.assertEqual(len(x), 8)
                 self.assertEqual(x[2], ':')
                 self.assertEqual(x[5], ':')
-                self.assertEqual(len(x),  8)
-                (h,m,s) = x.split(':')
+                self.assertEqual(len(x), 8)
+                (h, m, s) = x.split(':')
                 try:
                     h = int(h)
                     m = int(m)
@@ -285,10 +285,11 @@ class Test_SingleTicket(unittest.TestCase):
                         elif row['Side'].startswith('B'):
                             buy = buy + row['Qty']
                         else:
-                            print ('error', 'Side is ', row['Side'])
+                            print('error', 'Side is ', row['Side'])
                     if buy != 0:
                         # Create the same data format used in getOvernightTrades
-                        sl.append({'ticker' : symbol, 'shares': buy, 'before':0, 'after': 0, 'acct': account})
+                        sl.append({'ticker' : symbol, 'shares': buy,
+                                   'before':0, 'after': 0, 'acct': account})
             idf = InputDataFrame()
             dframe = idf.mkShortsNegative(dframe)
             st = idf.getOvernightTrades(dframe)
@@ -296,6 +297,60 @@ class Test_SingleTicket(unittest.TestCase):
             for trade in sl:
                 self.assertTrue(trade in sl)
 
+
+    @patch('journal.pandasutil.askUser')
+    def walkit(self, mock_askUser):
+        '''Run Structjour multiple times with test files'''
+        from trade import run
+
+        tests = [[1, 'trades.1116_messedUpTradeSummary10.csv',
+                  [['PCG', 'Sim', 'Short', 'After', 4000]]],
+                 [2, 'trades.8.WithHolds.csv',
+                  [['MU', 'Sim', 'Short', 'After', 750],
+                   ['IZEA', 'SIM', 'Long', 'After', 3923]]],
+                 [3, 'trades.8.csv', []],
+                 [4, 'trades.907.WithChangingHolds.csv',
+                  [['MU', 'Live', 'Long', 'After', 50],
+                   ['AMD', 'Sim', 'Long', 'After', 600],
+                   ['FIVE', 'Live', 'Long', 'After', 241]]],
+                 [5, 'trades_190117_HoldError.csv',
+                  [['PCG', 'Live', 'Short', 'After', 169]]],
+                 [6, 'trades.8.ExcelEdited.csv', []],
+                 [7, 'trades.910.tickets.csv',
+                  [['AMD', 'Sim', 'Long', 'Before', 600]]],
+                 [8, 'trades_tuesday_1121_DivBy0_bug.csv', []],
+                 [9, 'trades.8.WithBothHolds.csv',
+                  [['MU', 'Sim', 'Short', 'Before', 750],
+                   ['TSLA', 'Sim', 'Long', 'After', 50]]],
+                 [10, 'trades1105HoldShortEnd.csv',
+                  [['AMD', 'Live', 'Short', 'After', 600]]]]
+
+
+        #Will give an arbitrary date to avoid name conflicts
+        for count, infile in enumerate(self.infiles):
+            # infile = 'trades.csv'
+            outdir = 'out/'
+            theDate = pd.Timestamp(2019, 1, count+1)
+            print(theDate)
+            indir = 'data/'
+            mydevel = True
+            # mock_askUser.
+            #         some_func.return_value = (20, False)
+            # num, stat = f2()
+            # self.assertEqual((num, stat), (40, False))
+
+            run(infile=infile, outdir=outdir, theDate=theDate, indir=indir, mydevel=mydevel)
+
+            # for i in tests:
+            #     print (i[0], i[1])
+            if tests[count][2]:
+                for j in tests[count][2]:
+                    print(infile, tests[count][1])
+                    print('     ', j)
+
+            
+            if count == 31:
+                exit()
 
 
 def main():
@@ -316,10 +371,11 @@ def main():
 def notmain():
     '''Run some local code'''
     t = Test_SingleTicket()
-    t.test_GetListOfTicketDF()
+    # t.test_GetListOfTicketDF()
+    t.walkit()
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testCheckRequiredColumns']
     # unittest.main()
-    # notmain()
-    main()
+    notmain()
+    # main()

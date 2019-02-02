@@ -11,6 +11,31 @@ from journal.dfutil import DataFrameUtil
 
 # pylint: disable = C0103
 
+def askUser(shares, question, justask=False):
+    '''
+    Ask the user a question regarding how many shares they are holding.
+    :params:shares: The number of shares outof balance. Its inserted into the question and
+                    used as a default response.
+    :return: The number response for the number of shares.
+    '''
+    while True:
+        try:
+            response = input(question)
+            if justask == True:
+                return response
+            if len(response) < 1:
+                response = shares
+            else:
+                response = int(response)
+        except Exception as ex:
+            print(ex)
+            print()
+            print("please enter a number")
+            response = 0
+            continue
+
+        return response
+
 
 class InputDataFrame(object):
     '''Manipulation of the original import of the trade transactions. Abstract the label schema
@@ -120,28 +145,7 @@ class InputDataFrame(object):
                 i = i + 1
         return overnightTrade
 
-    def askUser(self, shares, question):
-        '''
-        Ask the user a question regarding how many shares they are holding.
-        :params:shares: The number of shares outof balance. Its inserted into the question and
-                        used as a default response.
-        :return: The number response for the number of shares.
-        '''
-        while True:
-            try:
-                response = input(question)
-                if len(response) < 1:
-                    response = shares
-                else:
-                    response = int(response)
-            except Exception as ex:
-                print(ex)
-                print()
-                print("please enter a number")
-                response = 0
-                continue
 
-            return response
 
     def figureOvernightTransactions(self, dframe):
         '''
@@ -164,7 +168,7 @@ class InputDataFrame(object):
                                                swingTrade[i]['shares'],
                                                swingTrade[i]['acct'])
 
-                swingTrade[i]['after'] = self.askUser(
+                swingTrade[i]['after'] = askUser(
                     swingTrade[i]['shares'], question)
                 swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
                     swingTrade[i]['after']
@@ -177,7 +181,7 @@ class InputDataFrame(object):
                                                -swingTrade[i]['shares'],
                                                swingTrade[i]['acct'])
 
-                    swingTrade[i]['before'] = self.askUser(
+                    swingTrade[i]['before'] = askUser(
                         swingTrade[i]['shares'], question)
                     swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
                         swingTrade[i]['before']
@@ -232,7 +236,7 @@ class InputDataFrame(object):
                                 else:
                                     newldf.at[j, rc.side] = "HOLD+"
                                 newldf.at[j, rc.price] = float(0.0)
-                                newldf.at[j, rc.shares] = trade['before']
+                                newldf.at[j, rc.shares] = -trade['before']
                                 # ZeroSubstance'
                                 newldf.at[j, rc.acct] = trade['acct']
                                 newldf.at[j, rc.PL] = 0
@@ -258,7 +262,7 @@ class InputDataFrame(object):
                                 else:
                                     ldf.at[j, rc.side] = "HOLD-"
                                 ldf.at[j, rc.price] = float(0.0)
-                                
+
                                 # -trade makes the share balance work in excel 
                                 # for shares held after close
                                 ldf.at[j, rc.shares] = -trade['after']  
