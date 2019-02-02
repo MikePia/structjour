@@ -73,7 +73,7 @@ class JournalFiles:
         self.indir = indir if indir else os.path.join(self.root, 'data')
         self.outdir = outdir if outdir else os.path.join(self.root, 'out')
         self.infile = infile if infile else 'trades.csv'
-        self.outfile = self.theDate.strftime("Trades_%A_%m%d.xlsx")
+        self.outfile = os.path.splitext(self.infile)[0] +  self.theDate.strftime("%A_%m%d.xlsx")
 
         if mydevel:
             self.setMyParams(indir, outdir)
