@@ -474,7 +474,7 @@ class TheTradeObject(object):
 
     def __setEntries(self):
         '''
-        This method places in the trade summary form the entries, exits, time of 
+        This method places data into the trade summary from entries, exits, time of 
         transaction, number of shares, and the difference between price of this 
         transaction and the 1st entry (or over night hold entry).  The strategy I 
         adopted for overnight hold is not ideal. Keep brainstorming for alternitives. 
@@ -491,6 +491,8 @@ class TheTradeObject(object):
         partEntryPrice = 0
         if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+'):
             long = True
+
+        # Set the first entry price aka entry1 and place it in df. This method needs a test!
         if self.df.loc[self.ix0][frc.price] == 0:
             for i, row in self.df.iterrows():
                 if long and count and row[frc.side].startswith('S'):
@@ -500,7 +502,11 @@ class TheTradeObject(object):
                     partEntryPrice = partEntryPrice + \
                         abs(row[frc.price] * row[frc.shares])
                 count = count + 1
-            entryPrice = exitPrice - self.df.loc[self.ix][frc.sum]
+            if isinstance( self.df.loc[self.ix][frc.sum], str):
+                entryPrice = exitPrice
+                # print('wtf')
+            else:
+                entryPrice = exitPrice - self.df.loc[self.ix][frc.sum]
             entry1 = (entryPrice - partEntryPrice) / \
                 self.df.loc[self.ix0][frc.shares]
             self.df.loc[self.ix0][frc.price] = entry1
