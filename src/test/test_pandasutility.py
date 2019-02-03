@@ -298,8 +298,9 @@ class Test_SingleTicket(unittest.TestCase):
                 self.assertTrue(trade in sl)
 
 
-    @patch('journal.pandasutil.askUser')
-    def walkit(self, mock_askUser):
+    # @patch('journal.pandasutil.askUser')
+    # def walkit(self, mock_askUser):
+    def walkit(self):
         '''Run Structjour multiple times with test files'''
         from trade import run
 

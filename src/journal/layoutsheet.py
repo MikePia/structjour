@@ -20,8 +20,15 @@ from journal.tradestyle import c as tcell
 from journal.tradestyle import style_range
 from journal.thetradeobject import TheTradeObject, SumReqFields
 
-from journal.pandasutil import askUser
 # pylint: disable=C0103
+
+def askUser(question):
+    '''
+    Ask the user a question. Placed in a function to facilitate automating it.
+    :return: The response
+    '''
+    response = input(question)
+    return response
 
 
 class LayoutSheet(object):
@@ -134,9 +141,7 @@ class LayoutSheet(object):
         XL = XLImage()
         srf = SumReqFields()
 
-        response = askUser(0,
-                           "Would you like to enter strategy names, targets and stops?     ",
-                           justask=True)
+        response = askUser("Would you like to enter strategy names, targets and stops?   ")
         interview = True if response.lower().startswith('y') else False
 
         for loc, tdf in zip(imageLocation, ldf):

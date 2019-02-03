@@ -7,8 +7,15 @@ import os
 from PIL import Image as PILImage
 from PIL import ImageGrab
 from openpyxl.drawing.image import Image
-from journal.pandasutil import askUser
 # pylint: disable=C0103
+
+def askUser(question):
+    '''
+    Ask the user a question. Placed in a function to facilitate automating it.
+    :return: The response
+    '''
+    response = input(question)
+    return response
 
 class XLImage(object):
 
@@ -52,7 +59,7 @@ class XLImage(object):
 
         for i in range (5):
             msg_go = "{0} {1}".format(msg, "Are you ready? (q to skip image) \n\t\t\t\t")
-            response = askUser(0, msg_go, True)
+            response = askUser(msg_go)
             im = None
             if response.lower().startswith('y') or response == '': 
                 im = ImageGrab.grabclipboard()

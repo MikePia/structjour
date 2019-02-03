@@ -11,7 +11,7 @@ from journal.dfutil import DataFrameUtil
 
 # pylint: disable = C0103
 
-def askUser(shares, question, justask=False):
+def askUser(shares, question):
     '''
     Ask the user a question regarding how many shares they are holding.
     :params:shares: The number of shares outof balance. Its inserted into the question and
@@ -21,8 +21,6 @@ def askUser(shares, question, justask=False):
     while True:
         try:
             response = input(question)
-            if justask == True:
-                return response
             if len(response) < 1:
                 response = shares
             else:
@@ -168,10 +166,8 @@ class InputDataFrame(object):
                                                swingTrade[i]['shares'],
                                                swingTrade[i]['acct'])
 
-                swingTrade[i]['after'] = askUser(
-                    swingTrade[i]['shares'], question)
-                swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
-                    swingTrade[i]['after']
+                swingTrade[i]['after'] = askUser(swingTrade[i]['shares'], question)
+                swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['after']
 
                 if swingTrade[i]['shares'] != 0:
 
@@ -181,10 +177,8 @@ class InputDataFrame(object):
                                                -swingTrade[i]['shares'],
                                                swingTrade[i]['acct'])
 
-                    swingTrade[i]['before'] = askUser(
-                        swingTrade[i]['shares'], question)
-                    swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
-                        swingTrade[i]['before']
+                    swingTrade[i]['before'] = askUser( swingTrade[i]['shares'], question)
+                    swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['before']
 
                 if swingTrade[i]['shares'] == 0:
                     print("That works.")

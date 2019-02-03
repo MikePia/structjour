@@ -1,7 +1,8 @@
+import os
 from unittest import TestCase
 from unittest.mock import patch
 from foo import f2
-from mock import patch
+# from unittest.mock import patch
 from collections import deque
 
 import pandas as pd
@@ -9,40 +10,61 @@ import pandas as pd
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
 from journal.tradeutil import ReqCol
 from journalfiles import JournalFiles
+from journal.layoutsheet import LayoutSheet
+from trade import run
 
 
 
+
+DD = deque()
 D = deque()
+
+
+def mock_askUser(shares, question):
+    global D
+    x = D.popleft()
+    print("Returning from the mock ", x)
+    return x
 
 class MyTest(TestCase):
 
     def __init__(self, *args, **kwargs):
         super(MyTest, self).__init__(*args, **kwargs)
-        global D
+        global DD
 
-        self.D = D
-        if not D or len(D) < 6:
-            D.clear()
-
-            D = deque(['', 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', ])
+        self.DD = DD
+        if not DD or len(D) < 10:
+            DD.clear()
 
 
+            
 
+            # These are user inputs, each row corresponding to each infile. 
+            DD = deque(
+                       [
+                        [-4000, 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        [3923, -750, 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        ['n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        [600, 241, 50, 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        [-169, 'n','q', 'q', 'q', 'q', 'q', 'q'],
+                        ['n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        [0, -600, 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        ['n', 'q'],
+                        [0, 750, 50, 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q'],
+                        [-600, 'n', 'q', 'q', 'q', 'q', 'q', 'q', 'q', 'q'], 
+                       ]
+                        )
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
-    def test_f2_2(self):
-        for i in range(6):
-            self.()
+        # Input test files can be added here.  Should add files that should fail in another list
+        self.infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
+                        'trades.8.csv', 'trades.907.WithChangingHolds.csv',
+                        'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
+                        'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
+                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv']
 
-        print("after tests")
-
-
-
-    @patch('journal.pandasutil.askUser')
-    def walkit(self, mock_askUser):
-        '''Run Structjour multiple times with test files'''
-        from trade import run
-
-        tests = [[1, 'trades.1116_messedUpTradeSummary10.csv',
+        self.tests = [[1, 'trades.1116_messedUpTradeSummary10.csv',
                   [['PCG', 'Sim', 'Short', 'After', 4000]]],
                  [2, 'trades.8.WithHolds.csv',
                   [['MU', 'Sim', 'Short', 'After', 750],
@@ -65,40 +87,25 @@ class MyTest(TestCase):
                   [['AMD', 'Live', 'Short', 'After', 600]]]]
 
 
-        #Will give an arbitrary date to avoid name conflicts
-        for count, infile in enumerate(self.infiles):
-            # infile = 'trades.csv'
+
+    @patch('journal.xlimage.askUser', return_value='q')
+    @patch('journal.layoutsheet.askUser', return_value='n')
+    @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
+    def test_f2_2(self, unusedstub, unused2, unused3):
+        global D
+        global DD
+        for count, (fred, infile) in enumerate(zip(DD, self.infiles)):
+            D = deque(fred)
             outdir = 'out/'
             theDate = pd.Timestamp(2019, 1, count+1)
             print(theDate)
             indir = 'data/'
             mydevel = True
-            # mock_askUser.
-            #         some_func.return_value = (20, False)
-            # num, stat = f2()
-            # self.assertEqual((num, stat), (40, False))
 
             run(infile=infile, outdir=outdir, theDate=theDate, indir=indir, mydevel=mydevel)
-
-            # for i in tests:
-            #     print (i[0], i[1])
-            if tests[count][2]:
-                for j in tests[count][2]:
-                    print(infile, tests[count][1])
-                    print('     ', j)
-
-            
-            if count == 31:
-                exit()
+        print("after tests")
 
 
 if __name__ == '__main__':
-    # D.append(20)
-    # D.append(30)
-    # D.append(40)
-    # D.append(50)
-    # D.append(60)
-    # D.append(70)
     t = MyTest()
-    # for i in range(5):
     t.test_f2_2()
