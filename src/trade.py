@@ -63,6 +63,8 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
 
     ls.save(wb, jf)
+    print("done")
+    return jf
 
 if __name__ == '__main__':
     inf = 'trades.csv'
