@@ -489,6 +489,8 @@ class TheTradeObject(object):
         count = 0
         exitPrice = 0
         partEntryPrice = 0
+
+        # If the first trade side is 'B' or HOLD+ we are long
         if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+'):
             long = True
 

@@ -4,8 +4,9 @@ Created on Sep 5, 2018
 @author: Mike Petersen
 '''
 import sys, datetime
-# from journal.pandasutil import DataFrameUtil
+import pandas as pd
 from journal.dfutil import DataFrameUtil
+# from journal.dfutil import DataFrameUtil
 # import str
 
 # from tkinter.tix import Balloon
@@ -114,9 +115,10 @@ class TradeUtil(object):
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
         nt = self.addTradeName(nt)
+        ldf= self.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
+        ldf, nt = self.postProcessing(ldf)
         nt = DataFrameUtil.addRows(nt,2)
         nt = self.addSummaryPL(nt)
-        ldf= self.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
 
         inputlen = len(nt)              # Get the length of the input file in order to style it in the Workbook
         dframe = DataFrameUtil.addRows(nt, 2)
@@ -128,10 +130,11 @@ class TradeUtil(object):
         
         for i, dummy_row in dframe.iterrows():
             qty = (dframe.at[i, c.shares])
-#             if row[c.side].startswith("HOLD") :
+            if dummy_row[c.side].startswith("HOLD") :
 # #                 print("got it at ", qty)
-#                 qty = qty * -1
-            newBalance = qty + prevBal
+                newBalance = 0
+            else:
+                newBalance = qty + prevBal
     
             dframe.at[i, c.bal] = newBalance 
             prevBal = newBalance    
@@ -162,7 +165,7 @@ class TradeUtil(object):
                 newTrade = True
         return dframe
    
-    def addTradeIndex(self, dframe) :
+    def addTradeIndex(self, dframe):
         '''
         Labels and numbers the trades by populating the TIndex column. 'Trade 1' for example includes the transactions 
         between the initial purchase or short of a stock and its subsequent 0 position. (If the stock is held overnight, 
@@ -217,15 +220,21 @@ class TradeUtil(object):
                 dframe.at[i, c.dur] = diff
         return dframe
     
-    def addTradeName(self, dframe) :
-        '''Create a name for this trade like 'AMD Short'. Place it in the c.name column'''
-            
+    def addTradeName(self, dframe):
+        '''
+        Create a name for this trade like 'AMD Short'. Place it in the c.name column. If this is
+        not an overnight hold, then the last transaction is an exit so B indicates short. This
+        could still be a flipped position. We need the initial transactions- which are processed
+        later.
+        '''
+
         c= self._frc
-        
+
         for i, row in dframe.iterrows():
+
             longShort = " Long"
             if row[c.bal] == 0 :
-                if row[c.side] == 'B' :
+                if row[c.side] == 'B'  or row[c.side].startswith('HOLD-'):
                     longShort = " Short"
                 dframe.at[i, c.name] = row[c.ticker] + longShort
         return dframe
@@ -314,6 +323,61 @@ class TradeUtil(object):
                 break
 #         print("Got {0} trades".format(len(ldf)))
         return ldf
+
+    def postProcessing(self, ldf):
+        '''
+        A few items that need fixing up in names and initial HOLD entries. This method is called 
+        last because we need the defined trades in ldf. We locate flipped positions and change the
+        name appropriately. It does not change anything in the prices. Also update initial HOLD
+        prices with the calculated average price of pre owned shares.
+        :params ldf: A ist of DataFrames, each DataFrame represents a trade defined by the
+                     initial purchase or short of a stock and until the transaction which returns
+                     the share balance to 0. (Last entry may be a HOLD indicating shares were held
+                     overnight in the amount of the previous transaction share balance.)
+        :return (ldf, nt): The updated versions of the list of DataFrames, and the single DataFrame.
+
+        '''
+        c = self._frc  
+        dframe = pd.DataFrame()
+        for count, tdf in enumerate(ldf):
+            print()
+            print(tdf.iloc[0])
+            print(tdf.iloc[-1])
+            print(tdf.iloc[-1][c.bal])
+            print()
+            if tdf.iloc[-1][c.bal] == 0:
+                print(tdf.iloc[0][c.side])
+                if tdf.iloc[0][c.side].startswith('HOLD') or tdf.iloc[-1][c.side].startswith('HOLD'):
+                    for i, row in tdf.iterrows():
+                        print(i, row)
+                        print()
+                elif tdf.iloc[0][c.side].startswith('B') and tdf.iloc[-1][c.side].startswith('B'):
+                    print(tdf.iloc[0][c.name])
+                    tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
+                    print("found a flipper long to short")
+                    for i, row in tdf.iterrows():
+                        print(i, row)
+                        print()
+                elif not tdf.iloc[0][c.side].startswith('B') and not tdf.iloc[-1][c.side].startswith('B'):
+                    print("found a flipper short to long")
+                    tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
+                    for i, row in tdf.iterrows():
+                        print(i, row)
+                        print()
+
+                print()
+            else:
+                print('this should never run. What happned in postProcessing??????????????????????????')
+            if count == 0:
+                dframe = tdf
+            else:
+                dframe = dframe.append(tdf)
+            print(len(dframe[c.tix]))
+        return ldf, dframe
+            # for i, row in tdf.iterrows():
+            #     print(i, row)
+            #     print()
+
     
     def addFinReqCol (self, dframe) :
         c = self._frc  

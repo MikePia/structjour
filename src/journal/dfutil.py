@@ -45,8 +45,8 @@ class DataFrameUtil(object):
         ''' 
         Creates a new DataFrame with  the length numRow. Each cell is filled with empty string 
         
-        :param:dframe:            (Will be) ... An array of the labels to create columns.
-        :param:requiredFields:    The number of empty rows to create. 
+        :param dframe:  (Will be) ... An array of the labels to create columns.
+        :param numRow:  The number of empty rows to create. 
         :return:                   The new DataFrame objet
         '''
     

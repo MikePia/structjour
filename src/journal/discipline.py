@@ -316,20 +316,23 @@ def registerTrades(tsList, wb):
                     break
 
 
-disPath = os.path.normpath("Disciplined.xlsx")
-if os.path.exists(disPath):
-    wb = load_workbook(disPath)
-else:
-    print("Does not exist", disPath)
-    quit(0)
+if __name__ == '__main__':
+
+    import sys
+    disPath = os.path.normpath("Disciplined.xlsx")
+    if os.path.exists(disPath):
+        wb = load_workbook(disPath)
+    else:
+        print("Does not exist", disPath)
+        sys.exit(0)
 
 
-begin = datetime.date(2018, 10, 15)
-prefix = "C:/trader/journal/"
-flist = getDevelDailyJournalList(prefix, begin)
-registerTrades(flist, wb)
-wb.save(disPath)
-print('done!')
+    begin = datetime.date(2018, 10, 15)
+    prefix = "C:/trader/journal/"
+    flist = getDevelDailyJournalList(prefix, begin)
+    registerTrades(flist, wb)
+    wb.save(disPath)
+    print('done!')
 
 
 # wb.save

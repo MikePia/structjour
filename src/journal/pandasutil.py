@@ -1,5 +1,5 @@
 '''
-Created on Sep 2, 2018C
+Created on Sep 2, 2018
 
 @author: Mike Petersen
 '''
@@ -181,7 +181,7 @@ class InputDataFrame(object):
                     swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['before']
 
                 if swingTrade[i]['shares'] == 0:
-                    print("That works.")
+                    # print("That works.")
                     tryAgain = False
                 else:
                     print()
@@ -242,7 +242,7 @@ class InputDataFrame(object):
                     # Reusing ldf for something different here...bad form ... maybe ...
                     # adding columns then appending and starting over
                     if trade['after'] != 0:
-                        print("Are we good?")
+                        # print("Are we good?")
                         ldf = DataFrameUtil.addRows(ldf, 1)
 
                         for j, dummy in ldf.iterrows():
@@ -259,7 +259,7 @@ class InputDataFrame(object):
 
                                 # -trade makes the share balance work in excel 
                                 # for shares held after close
-                                ldf.at[j, rc.shares] = -trade['after']  
+                                ldf.at[j, rc.shares] = 0   #-trade['after']  
                                 # 'ZeroSubstance'
                                 ldf.at[j, rc.acct] = trade['acct']
                                 ldf.at[j, rc.PL] = 0
