@@ -226,9 +226,9 @@ class InputDataFrame(object):
                                 newldf.at[j, rc.time] = '00:00:01'
                                 newldf.at[j, rc.ticker] = trade['ticker']
                                 if trade['before'] > 0:
-                                    newldf.at[j, rc.side] = "HOLD-"
+                                    newldf.at[j, rc.side] = "HOLD-B"
                                 else:
-                                    newldf.at[j, rc.side] = "HOLD+"
+                                    newldf.at[j, rc.side] = "HOLD+B"
                                 newldf.at[j, rc.price] = float(0.0)
                                 newldf.at[j, rc.shares] = -trade['before']
                                 # ZeroSubstance'

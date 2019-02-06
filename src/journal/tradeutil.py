@@ -107,7 +107,7 @@ class TradeUtil(object):
         trades = self.addFinReqCol(trades)
         newTrades = trades[finalReqCol.columns]
         newTrades.copy()
-        nt = newTrades.sort_values([finalReqCol.ticker,finalReqCol.acct,  finalReqCol.time])
+        nt = newTrades.sort_values([finalReqCol.ticker, finalReqCol.acct, finalReqCol.time])
         nt = self.writeShareBalance(nt)
         nt = self.addStartTime(nt)
         nt = nt.sort_values([finalReqCol.start, finalReqCol.acct, finalReqCol.time])
@@ -115,33 +115,44 @@ class TradeUtil(object):
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
         nt = self.addTradeName(nt)
-        ldf= self.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
+        ldf = self.getTradeList(nt)         # ldf is a list of DataFrames, one per trade
         ldf, nt = self.postProcessing(ldf)
-        nt = DataFrameUtil.addRows(nt,2)
+        nt = DataFrameUtil.addRows(nt, 2)
         nt = self.addSummaryPL(nt)
 
-        inputlen = len(nt)              # Get the length of the input file in order to style it in the Workbook
+        # Get the length of the original input file before adding rows for processing Workbook
+        # later (?move this out a level)
+        inputlen = len(nt)
         dframe = DataFrameUtil.addRows(nt, 2)
         return inputlen, dframe, ldf
 
-    def writeShareBalance(self, dframe) :
+    def writeShareBalance(self, dframe):
+        '''
+        Fill in the new column that enters the share balance for a ticker. Note that for 
+        overnight holds after, the amount entered here is incorrect. It is corrected in 
+        postProcessing(). (for before trades, the amount entered hereis correct) 
+        params dframe: The DataFrame representing the initial input file plus a bit.
+        return: The same dframe with updated balance entries.
+        '''
         prevBal = 0
         c = self._frc
-        
+
         for i, dummy_row in dframe.iterrows():
             qty = (dframe.at[i, c.shares])
-            if dummy_row[c.side].startswith("HOLD") :
-# #                 print("got it at ", qty)
+
+            # This sets the after holds to 0 and leaves the before holds to set the proper balance
+            if dummy_row[c.side] == "HOLD-" or dummy_row[c.side] == "HOLD+":
+                dframe.at[i, c.bal] = 0
                 newBalance = 0
             else:
                 newBalance = qty + prevBal
-    
-            dframe.at[i, c.bal] = newBalance 
+
+            dframe.at[i, c.bal] = newBalance
             prevBal = newBalance    
         return dframe
-    
-    def addStartTime(self, dframe) :
-        
+
+    def addStartTime(self, dframe):
+
         c = self._frc
 
         newTrade = True
@@ -161,7 +172,7 @@ class TradeUtil(object):
             else :
     #             print("      Finally :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
                 dframe.at[i, c.start] = oldTime
-            if row[c.bal] == 0 :
+            if row[c.bal] == 0:
                 newTrade = True
         return dframe
    
@@ -176,16 +187,16 @@ class TradeUtil(object):
 
         TCount = 1
         prevEndTrade = -1
-    
+
         for i, row in dframe.iterrows():
-            if len(row[c.ticker]) < 1 :
+            if len(row[c.ticker]) < 1:
                 break
             tradeIndex = "Trade " + str(TCount)
             if prevEndTrade == 0:
                 TCount = TCount + 1
                 prevEndTrade = -1
             tradeIndex = "Trade " + str(TCount)
-            dframe.at[i,c.tix] = tradeIndex 
+            dframe.at[i,c.tix] = tradeIndex
             if row[c.bal] == 0 :
                 prevEndTrade = 0
         return dframe
@@ -278,12 +289,16 @@ class TradeUtil(object):
     
         return dframe
     
-    def getLongOrShort(self, dframe) :
+    def getLongOrShort(self, dframe):
+        '''
+        DELETE ME
+        '''
         # dframe contains the transactions of a single trade.  Single trade ends when the balance 
         # of shares is 0
         # Return value is a string 'Long' or 'Short'
+        raise NotImplementedError("The method getLongOrShort will be deleted. Resistance is futile etc.")
         tsx = dframe[dframe.Balance == 0]
-    
+
         
         if len(tsx) != 1 :
             return None
@@ -327,14 +342,14 @@ class TradeUtil(object):
     def postProcessing(self, ldf):
         '''
         A few items that need fixing up in names and initial HOLD entries. This method is called 
-        last because we need the defined trades in ldf. We locate flipped positions and change the
-        name appropriately. It does not change anything in the prices. Also update initial HOLD
-        prices with the calculated average price of pre owned shares.
+        after the creation of the DataFrameList (ldf). We locate flipped positions and overnight
+        holds and change the name appropriately. Also update initial HOLD prices, and balance with
+        the calculated average price of pre owned shares and initail shares respectively.
         :params ldf: A ist of DataFrames, each DataFrame represents a trade defined by the
                      initial purchase or short of a stock and until the transaction which returns
                      the share balance to 0. (Last entry may be a HOLD indicating shares were held
                      overnight in the amount of the previous transaction share balance.)
-        :return (ldf, nt): The updated versions of the list of DataFrames, and the single DataFrame.
+        :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single DataFrame.
 
         '''
         c = self._frc  
@@ -348,8 +363,26 @@ class TradeUtil(object):
             if tdf.iloc[-1][c.bal] == 0:
                 print(tdf.iloc[0][c.side])
                 if tdf.iloc[0][c.side].startswith('HOLD') or tdf.iloc[-1][c.side].startswith('HOLD'):
-                    for i, row in tdf.iterrows():
-                        print(i, row)
+                    if  tdf.iloc[-1][c.side].startswith('HOLD'):
+                        tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " OVERNIGHT"
+                        tdf.iloc[-1][c.bal] = 0
+                    if tdf.iloc[0][c.side].startswith('HOLD'):
+                        # tdf.iloc[0][c.bal] = tdf.iloc[0][c.shares] # Already done durning writeShareBal
+                        share = 0
+                        pl = 0
+                        sharelist=list()
+                        pricelist=list()
+                        for i, row in tdf.iterrows():
+                            # The math gets complicated if there are more than 2 entrances before
+                            # the first exit. This only works when there everythin is exited 1st trade. 
+                            # Try again (again) tomorrow. Send in some SIM trades to model it.
+                            print(i, row[c.PL], row[c.shares])
+                            sharelist.append(row[c.shares])
+                            pricelist.append(row[c.price])
+                            if row[c.PL] > 0:
+                                originalPrice = row[c.price] + (row[c.PL] / row[c.shares])
+                                tdf.iloc[0][c.price] = originalPrice
+                                break;
                         print()
                 elif tdf.iloc[0][c.side].startswith('B') and tdf.iloc[-1][c.side].startswith('B'):
                     print(tdf.iloc[0][c.name])

@@ -101,26 +101,3 @@ if __name__ == '__main__':
     # pylint: disable = E1120
     t = TestStructjour()
     t.test_run()
-
-
-# :::::::::::::::: IN PROGRESS NOTES :::::::::::::::::::
-# I Just changed the HOLD insertion rows for holding overnight after the market closes.
-# HOLD rows are now all 0s and the name is correct for short or long
-
-# Next is to place a pseudo transaction row for trades that were held over previously.
-# Instead of the current HOLD row we are using. Figure the avg price from the first exit.
-# (Combined all previous entries)
-# I think this should probably go into a new sub method-- called when a 'Before' value is found.
-# in insertOvernightRow. Return the average entry price and process the rest where it is 
-# already being processed. Only do this if there is at least one exit transaction, otherwise, 
-# it doesn't matterand there would be no way to  figure out what the average price is at the 
-# beginning of the day
-# (No exit trades, I think, are already filtered before processing insert HOLD rows.
-# Check that.)
-
-# Then find any and all effects these two changes will have on the discipline.py code
-
-#The seventh input file is the first 'Before' hold long. The 9th File has a before hold short
-
-
-# SSTTAARRTT in tradeutil postProcessing()
