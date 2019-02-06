@@ -9,6 +9,7 @@ import pandas as pd
 # pylint: disable = C0103
 
 
+
 class Inspire(object):
     '''TODO use an optional db to keep track of these and allow the user to add and delete quotes. The quotes in the __init__ will be the
     initial quotes in an Inspire object'''
@@ -294,7 +295,7 @@ when the match is even.'''
 our emotions entirely, but the plan helps us control them so they aren't destructive'''
         ])
         quotes.append([
-           "Thoreau", "On Thankfulness", "Henry David Thoreau, essayist",
+            "Thoreau", "On Thankfulness", "Henry David Thoreau, essayist",
             '''I am grateful for what I am and have. My thanksgiving is perpetual.'''
         ])
         quotes.append([
@@ -344,6 +345,10 @@ certainty that you will make mistakes'''
         return ret
 
     def getQuote(self, name):
+        '''
+        Print quotes from a specific name.
+        :params name: The person to look up.
+        '''
         qs = self.df[self.df['name'] == name]
 
         for dummy_i, qt in qs.iterrows():
@@ -429,6 +434,11 @@ class TradingPlan(object):
         self.all = [self.preliminary, self.management, self.entry, self.exit]
 
     def getRules(self, whichRules, why=False):
+        '''
+        Print your rules as recorded in this method.
+        :params whichRules: Recognized values are a, for all, p for preliminary, m for management, en for entry, ex for ex
+        :params why: Is set to true, also print a rationale for each rule.
+        '''
         print()
         rules = []
         if whichRules[0].lower().startswith('a'):
@@ -461,6 +471,7 @@ class TradingPlan(object):
 
 
 def main():
+    '''A local run to print a ranom quote'''
     i = Inspire()
     q = i.getrandom()
     print(q)
