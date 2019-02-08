@@ -19,7 +19,7 @@ CREATE TABLE Inspire(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 i = Inspire()
 whos=list()
 count=0
-for i, row in i.df.iterrows() :
+for i, row in i.df.iterrows():
     lname    = row['name']
     subject = row['on']
     quote   = row['quote']

@@ -15,11 +15,13 @@ from journal.qtform import QtForm
 # pylint: disable=C0103
 
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
+
+
 def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True):
     '''Run structjour'''
-            #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
-    jf = JournalFiles(indir=indir, outdir=outdir, theDate=theDate, infile=infile, mydevel=mydevel)
-    jf.printValues()
+    #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
+    jf = JournalFiles(indir=indir, outdir=outdir,
+                      theDate=theDate, infile=infile, mydevel=mydevel)
 
     tkt = Ticket(jf)
     trades, jf = tkt.newDFSingleTxPerTicket()
@@ -56,8 +58,6 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     # qtf = QtForm()
     # qtf.fillForm(tradeSummaries[2])
     # app.exec_()
-    print("moving past")
-
 
     ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)
     ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
@@ -66,10 +66,11 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     print("done")
     return jf
 
+
 if __name__ == '__main__':
     inf = 'trades.csv'
     outd = None
-    theD = '2019-01-29'
+    theD = None
     ind = None
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)

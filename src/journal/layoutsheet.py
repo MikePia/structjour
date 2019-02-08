@@ -170,8 +170,8 @@ class LayoutSheet(object):
                 if isinstance(cell, list):
                     cell = cell[0]
                 tradeval = tto.TheTrade[key].unique()[0]
-            # print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval,
-            # tcell(cell, anchor=(1, loc[0]))))
+                # print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval,
+                # tcell(cell, anchor=(1, loc[0]))))
 
                 # Put some formulas in each trade Summary
                 if key in srf.tfformulas:
@@ -187,7 +187,7 @@ class LayoutSheet(object):
                     continue
                 ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
 
-        print("Done with interview")
+        # print("Done with interview")
         return tradeSummaries
 
     def createMistakeForm(self, tradeSummaries, mistake, ws, imageLocation):
@@ -253,7 +253,7 @@ class LayoutSheet(object):
                 targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0]))
                 formula = formula.format(targetcell)
 
-                print("ws[{0}]='{1}'".format(cell, formula))
+                # print("ws[{0}]='{1}'".format(cell, formula))
                 ws[cell] = formula
 
     def createDailySummaryForm(self, TheTradeList, mistake, ws, anchor):
@@ -369,7 +369,9 @@ class LayoutSheet(object):
             try:
                 wb.save(saveName)
             except PermissionError as ex:
+                print()
                 print(ex)
+                print()
                 print("Failed to create file {0}.{1}".format(saveName, ex))
                 print(
                     "Images from the clipboard were saved  in {0}".format(jf.outdir))
@@ -385,4 +387,3 @@ class LayoutSheet(object):
             except Exception as ex:
                 print(ex)
             break
-        print("Done!")

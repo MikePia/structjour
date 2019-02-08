@@ -355,13 +355,12 @@ class TradeUtil(object):
         c = self._frc  
         dframe = pd.DataFrame()
         for count, tdf in enumerate(ldf):
-            print()
-            print(tdf.iloc[0])
-            print(tdf.iloc[-1])
-            print(tdf.iloc[-1][c.bal])
-            print()
+            # print()
+            # print(tdf.iloc[0])
+            # print(tdf.iloc[-1])
+            # print(tdf.iloc[-1][c.bal])
+            # print()
             if tdf.iloc[-1][c.bal] == 0:
-                print(tdf.iloc[0][c.side])
                 if tdf.iloc[0][c.side].startswith('HOLD') or tdf.iloc[-1][c.side].startswith('HOLD'):
                     if  tdf.iloc[-1][c.side].startswith('HOLD'):
                         tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " OVERNIGHT"
@@ -376,40 +375,36 @@ class TradeUtil(object):
                             # The math gets complicated if there are more than 2 entrances before
                             # the first exit. This only works when there everythin is exited 1st trade. 
                             # Try again (again) tomorrow. Send in some SIM trades to model it.
-                            print(i, row[c.PL], row[c.shares])
+                            # print(i, row[c.PL], row[c.shares])
                             sharelist.append(row[c.shares])
                             pricelist.append(row[c.price])
                             if row[c.PL] > 0:
                                 originalPrice = row[c.price] + (row[c.PL] / row[c.shares])
                                 tdf.iloc[0][c.price] = originalPrice
                                 break;
-                        print()
+                        # print()
                 elif tdf.iloc[0][c.side].startswith('B') and tdf.iloc[-1][c.side].startswith('B'):
-                    print(tdf.iloc[0][c.name])
+                    # print(tdf.iloc[0][c.name])
                     tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
-                    print("found a flipper long to short")
-                    for i, row in tdf.iterrows():
-                        print(i, row)
-                        print()
+                    # print("found a flipper long to short")
+                    # for i, row in tdf.iterrows():
+                    #     print(i, row)
+                    #     print()
                 elif not tdf.iloc[0][c.side].startswith('B') and not tdf.iloc[-1][c.side].startswith('B'):
-                    print("found a flipper short to long")
+                    # print("found a flipper short to long")
                     tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
-                    for i, row in tdf.iterrows():
-                        print(i, row)
-                        print()
+                #     for i, row in tdf.iterrows():
+                #         print(i, row)
+                #         print()
 
-                print()
+                # print()
             else:
                 print('this should never run. What happned in postProcessing??????????????????????????')
             if count == 0:
                 dframe = tdf
             else:
                 dframe = dframe.append(tdf)
-            print(len(dframe[c.tix]))
         return ldf, dframe
-            # for i, row in tdf.iterrows():
-            #     print(i, row)
-            #     print()
 
     
     def addFinReqCol (self, dframe) :

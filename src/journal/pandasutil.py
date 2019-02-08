@@ -159,7 +159,6 @@ class InputDataFrame(object):
             tryAgain = True
             while tryAgain == True:
 
-                print(swingTrade[i])
                 question = '''There is an unbalanced amount of shares of {0} in the amount of {1}
                     in the account {2}. How many shares of {0} are you holding now? 
                     (Enter for {1}) '''.format(swingTrade[i]['ticker'],
@@ -208,18 +207,14 @@ class InputDataFrame(object):
                         trade['ticker'] == ldf[rc.ticker].unique()[0] and (
                         trade['acct'] == ldf[rc.acct].unique()[0])
                    ):
-                    msg = "Got {0} with the balance {1}, before {2} and after {3} in {4}"
-                    print(msg.format(trade['ticker'],
-                                     trade['shares'],
-                                     trade['before'],
-                                     trade['after'],
-                                     trade['acct']))
+                    # msg = "Got {0} with the balance {1}, before {2} and after {3} in {4}"
+                    # print(msg.format(trade['ticker'], trade['shares'], trade['before'],
+                    #       trade['after'], trade['acct']))
 
                     #insert a non transaction HOLD row before transactions of the same ticker
 
                     if trade['before'] != 0:
                         newldf = DataFrameUtil.createDf(dframe, 1)
-                        print("length:   ", len(newldf))
                         for j, dummy in newldf.iterrows():
 
                             if j == len(newldf) - 1:

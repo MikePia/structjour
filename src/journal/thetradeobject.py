@@ -357,7 +357,7 @@ class TheTradeObject(object):
         self.__blandSpaceInMstkNote()
         ret = self.__setEntries()
 
-        print("Side = ", self.df.loc[self.ix0][frc.side])
+        # print("Side = ", self.df.loc[self.ix0][frc.side])
         if self.interview == True:
             self.__setStrategy()
             self.__setTarget()
