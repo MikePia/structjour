@@ -14,6 +14,8 @@ import pandas as pd
 from journal.tradeutil import ReqCol, FinReqCol  # , TradeUtil
 from journalfiles import JournalFiles
 
+#  pylint: disable=C0103
+
 
 class Test_DfUtil(unittest.TestCase):
     '''
@@ -28,7 +30,7 @@ class Test_DfUtil(unittest.TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
-        def testCheckReqColumnsWithReqColSuccess(self):
+    def testCheckReqColumnsWithReqColSuccess(self):
         reqCol = ReqCol()
         finReqCol = FinReqCol()
 
@@ -101,3 +103,60 @@ class Test_DfUtil(unittest.TestCase):
             DataFrameUtil.checkRequiredInputFields(rc, finReqCol.columns)
         except ValueError as ex:
             self.assertTrue(True)
+
+    def test_dfUtil_createDf(self):
+        cols = pd.DataFrame(columns=['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it'])
+        cols2 =['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it']
+        numRow=9
+        fill = ''
+
+        x = DataFrameUtil.createDf(cols, numRow, fill)
+        y = DataFrameUtil.createDf(cols2, numRow, fill)
+
+        self.assertEqual (list(x.columns), list(y.columns))
+        self.assertEqual (len(x), len(y))
+
+        for xc, yc in zip(x.iloc[1], y.iloc[1]):
+            self.assertEqual(xc, yc)
+            self.assertEqual(xc, fill)
+
+        fill = None
+        y = DataFrameUtil.createDf(cols2, numRow, fill)
+        for xc, yc in zip(x.iloc[1], y.iloc[1]):
+            self.assertTrue(xc != yc)
+
+            self.assertEqual(yc, fill)
+
+    def test_dfUtil_addRow(self):
+        cols2 = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it']
+        numRow = 9
+        fill = 'something silly'
+        fill2 = 'sillier'
+
+        y = DataFrameUtil.createDf(cols2, numRow, fill=fill)
+        y = DataFrameUtil.addRows(y, numRow, fill=fill2)
+        self.assertEqual(len(y), numRow*2)
+
+        for i in range(numRow):
+            for ii in y.iloc[i]:
+                self.assertEqual(ii, fill)
+
+        for i in range(numRow, numRow*2):
+            for ii in y.iloc[i]:
+                self.assertEqual(ii, fill2)
+
+
+
+def main():
+    #import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()
+
+def notmain():
+    t = Test_DfUtil()
+    # t.test_dfUtil_createDf()
+    t.test_dfUtil_addRow()
+
+if __name__ == '__main__':
+    '''Run some local code'''
+    # notmain()
+    main()
