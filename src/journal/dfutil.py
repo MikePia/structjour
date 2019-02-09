@@ -22,15 +22,15 @@ class DataFrameUtil(object):
     @classmethod
     def checkRequiredInputFields(cls, dframe, requiredFields):
         '''
-        Checks that dframe has the fields in the array requiredFields. Also checks that there are no duplicate fields
-        Returns True on success. Raises a ValueError on failure.
-        :param:dframe:          The DataFrame that is being checked.
-        :param:requiredFields:  The fields that are required. 
+        Checks that dframe has the fields in the array requiredFields. Also checks that there are
+        no duplicate fields Returns True on success. Raises a ValueError on failure.
+        :params dframe: The DataFrame that is being checked.
+        :paras requiredFields: The fields that are required.
         '''
         actualFields = dframe.columns
         if len(actualFields) != len(set(actualFields)):
             err = 'Your DataFrame has duplicate columns'
-            raise(ValueError(err))
+            raise ValueError(err)
         if set(requiredFields) <= (set(actualFields)):
             return True
         else:

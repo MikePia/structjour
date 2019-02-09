@@ -6,13 +6,11 @@ Created on Jan 28, 2019
 '''
 import unittest
 import os
-import types
 
-from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-from journal.dfutil import DataFrameUtil
 import pandas as pd
+
+from journal.dfutil import DataFrameUtil
 from journal.tradeutil import ReqCol, FinReqCol  # , TradeUtil
-from journalfiles import JournalFiles
 
 #  pylint: disable=C0103
 
@@ -31,6 +29,7 @@ class Test_DfUtil(unittest.TestCase):
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def testCheckReqColumnsWithReqColSuccess(self):
+        '''Test return values of DataFrameUtil.checkRequiredInputFields'''
         reqCol = ReqCol()
         finReqCol = FinReqCol()
 
@@ -48,6 +47,7 @@ class Test_DfUtil(unittest.TestCase):
         self.assertTrue(t2)
 
     def testCheckRequiredColumnsThrow(self):
+        '''Test DataFrameUtil.checkRequredInputFields for raising exceptions'''
         vals = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']]
         apd = pd.DataFrame(vals)
@@ -77,7 +77,6 @@ class Test_DfUtil(unittest.TestCase):
         try:
             DataFrameUtil.checkRequiredInputFields(apd, columns)
         except ValueError:
-            pass
             self.assertTrue(True)
         except Exception as ex:
             msg = "Wrong exception was thrown" + ex
@@ -86,6 +85,7 @@ class Test_DfUtil(unittest.TestCase):
             self.fail("Failed to throw a Value Error Exception")
 
     def testCheckrequiredColumnsWithReqColFail(self):
+        '''Test method DataFrameUtil.checkRequiredInputFields'''
 
         reqCol = ReqCol()
         finReqCol = FinReqCol()
@@ -105,16 +105,18 @@ class Test_DfUtil(unittest.TestCase):
             self.assertTrue(True)
 
     def test_dfUtil_createDf(self):
-        cols = pd.DataFrame(columns=['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it'])
-        cols2 =['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it']
-        numRow=9
+        '''Test method DataFrameUtil.createDf'''
+        cols = pd.DataFrame(columns=['Its', 'the', 'end', 'of', 'the', 'world',
+                                     'as', 'we', 'know', 'it'])
+        cols2 = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it']
+        numRow = 9
         fill = ''
 
         x = DataFrameUtil.createDf(cols, numRow, fill)
         y = DataFrameUtil.createDf(cols2, numRow, fill)
 
-        self.assertEqual (list(x.columns), list(y.columns))
-        self.assertEqual (len(x), len(y))
+        self.assertEqual(list(x.columns), list(y.columns))
+        self.assertEqual(len(x), len(y))
 
         for xc, yc in zip(x.iloc[1], y.iloc[1]):
             self.assertEqual(xc, yc)
@@ -128,6 +130,8 @@ class Test_DfUtil(unittest.TestCase):
             self.assertEqual(yc, fill)
 
     def test_dfUtil_addRow(self):
+        '''Test method DataFrameUtil.addRows
+        '''
         cols2 = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', 'know', 'it']
         numRow = 9
         fill = 'something silly'
@@ -148,15 +152,16 @@ class Test_DfUtil(unittest.TestCase):
 
 
 def main():
+    '''Run unittests cl style'''
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
 
 def notmain():
+    '''Run some local code'''
     t = Test_DfUtil()
     # t.test_dfUtil_createDf()
     t.test_dfUtil_addRow()
 
 if __name__ == '__main__':
-    '''Run some local code'''
     # notmain()
     main()

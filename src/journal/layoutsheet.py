@@ -4,7 +4,6 @@ Created on Oct 18, 2018
 @author: Mike Petersen
 '''
 import os
-import sqlite3
 
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -22,6 +21,7 @@ from journal.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable=C0103
 
+
 def askUser(question):
     '''
     Ask the user a question. Placed in a function to facilitate automating it.
@@ -38,32 +38,41 @@ class LayoutSheet(object):
     the program progresses from pandas to openpyxl.
     '''
 
-    def __init__(self, summarySize, topMargin, inputlen):
+    def __init__(self, summarySize, topMargin, inputlen, spacing=3):
         '''
         Constructor
         :params summarySize: The number of rows for each trade summary
+        :params topMargin: The space at the top before the trade table. Includes the
+                           inspire quote and space notes.
+        :params inputlen: Don't enter a value here. Its the length of the dframe after processing.
+        :params spacing: The space between trade summaries.
         :params frq: The FinReqCol object
         '''
         self.summarySize = summarySize
         self.topMargin = topMargin
         self.inputlen = inputlen
+        self.spacing = spacing
 
     def createImageLocation(self, df, ldf, ft="jpeg"):
         '''
-        Create the shape of the excel document in a DataFrame by adding rows
-        to place the trade summaries and images. Additionally, create the
-        ImageLocation data structure to navigate the new space.
-        :params df: A df with all the required fields. Content doesn't matter.
+        Create the skeletal shape of the excel document in a DataFrame. It places a table near
+        the top,leaving space for intro stuff. Then it places small sub tables containing single
+        trades. Each trades leaves space to place the trade summary form and images. To navigate
+        this dataframe, we create the ImageLocation datastructure.
+        :params df: The DataFrame representing the input file plus some stuff added in
+                    processOutputFile
         :params ldf: A list of dataFrames. Each encapsulates a trade.
         :parmas ft: Image filetype extension.
         :return (Imagelocation, df): ImageLocation contains information about the excel document
-                    locations of trade summaries, and image locations. The dataFrame df will be
-                    used to create the workbook
+                    locations of trade summaries and image locations. The dataFrame df is the
+                    outline used to create the workbook, ImageLocation will be used to stye it
+                    and fill in the stuff.
         '''
         # Add rows and append each trade, leaving space for an image. Create a list of
         # names and row numbers to place images within the excel file (imageLocation
         # data structure).
 
+        # Number of rows between trade summaries
         frq = FinReqCol()
         newdf = DataFrameUtil.createDf(df, self.topMargin)
 
@@ -73,11 +82,12 @@ class LayoutSheet(object):
         count = 0
         for tdf in ldf:
             imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
-                                                     tdf[frq.name].unique(
-            )[-1].replace(' ', '-'),
-                tdf[frq.start].unique()[-1],
-                tdf[frq.dur].unique()[-1], ft)
-            imageLocation.append([len(tdf) + len(df) + 3,
+                                                     tdf[frq.name].unique()[-1].replace(' ', '-'),
+                                                     tdf[frq.start].unique()[-1],
+                                                     tdf[frq.dur].unique()[-1], ft)
+
+            # Holds location, deprected name, image name, trade start time, trade duration as delta
+            imageLocation.append([len(tdf) + len(df) + self.spacing,
                                   tdf.Tindex.unique()[0].replace(
                                       ' ', '') + '.' + ft,
                                   imageName,
@@ -86,6 +96,7 @@ class LayoutSheet(object):
             # print(count, imageName, len(imageLocation), len(tdf) + len(df) + 3)
             count = count + 1
 
+            # Append the mini trade table then add rows to fit the tradeSummary form
             df = df.append(tdf, ignore_index=True)
             df = DataFrameUtil.addRows(df, self.summarySize)
         return imageLocation, df
@@ -137,24 +148,25 @@ class LayoutSheet(object):
         style_range(ws, "A6:M24", border=tf.styles["explain"].border)
 
     def createSummaries(self, imageLocation, ldf, jf, ws, tf):
+        '''
+
+        '''
         tradeSummaries = list()
         XL = XLImage()
         srf = SumReqFields()
 
-        response = askUser("Would you like to enter strategy names, targets and stops?   ")
+        response = askUser(
+            "Would you like to enter strategy names, targets and stops?   ")
         interview = True if response.lower().startswith('y') else False
 
         for loc, tdf in zip(imageLocation, ldf):
-            # print('Copy an image into the clipboard for {0} beginning {1}, and lasting
-            # {2}'.format(loc[1], loc[2], loc[3]))
 
             img = XL.getAndResizeImage(loc[2], jf.outdir)
 
-            #This is the location to place the chart on the page. Its kind of hidden in the deep recesses here.
-            if img :
+            # Hidden here is the location to place the chart on the page.
+            if img:
                 cellname = 'M' + str(loc[0])
                 ws.add_image(img, cellname)
-                
 
             #Put together the trade summary info for each trade and interview the trader
             tto = TheTradeObject(tdf, interview)
@@ -192,13 +204,15 @@ class LayoutSheet(object):
 
     def createMistakeForm(self, tradeSummaries, mistake, ws, imageLocation):
         '''
-        Populate most of the mistake summaries form including the formulas retrieved from mistake. We
-        do the cel translations here. Also the names are hyperlinked to the Trade Summary Form and the links
-        are returned to the Mistake form, links are styled blue with double underline in both places.
-        :params:tradeSummaries: A dataframe containing the the trade summaries info, one line per trade.
-        :parmas:mistake: A dataframe containing the info to populate the mistake summary.
-        :params:ws: The openpyxl worksheet object.
-        :imageLocation: A list containing the locations in the worksheet for each of the trades in tradeSummaries.
+        Populate most of the mistake summaries form including the formulas retrieved from mistake.
+        We do the cell translations here. Also the names are hyperlinked to the Trade Summary Form
+        and the links are returned to the Mistake form.
+        :params tradeSummaries: A dataframe containing the the trade summaries info, one line per
+                                trade.
+        :parmas mistake: A dataframe containing the info to populate the mistake summary form.
+        :params ws: The openpyxl worksheet object.
+        :parmas imageLocation: A list containing the locations in the worksheet for each of the
+                               trades in tradeSummaries.
         '''
 
         # Populate the name fields as hyperlinks
@@ -222,20 +236,6 @@ class LayoutSheet(object):
             ws[targetcell].font = Font(
                 color=colors.WHITE, size=16, underline="double")
 
-#             ft1 = Font(color=colors.RED,
-#          size=11)
-# ft2 = Font(color=colors.RED,
-#          size=22,
-#           italic=True)
-#
-# a1.font=ft1
-# d4.font=ft2
-#
-# a1.font
-#
-# a1.value="Its the end of the wolrd as we know it ..."
-# d4.value="... And its about god damn time!"
-# wb.save('out/fontStyle.xlsx')
 
         # Populate the pl (loss) fields and the mistake fields. These are all simple formulas.
         tokens = ["tpl", "pl", "mistake"]
@@ -261,9 +261,9 @@ class LayoutSheet(object):
         Create the shape and populate the daily Summary Form
         :params listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one is a single row DataFrame
         containg all the data in the trade summaries.
-        :params mistke: 
+        :params mistke:
         :params ws: The openpyxl Worksheet object
-        :raise Value Error: When pl is misformatted and cannot be used. 
+        :raise Value Error: When pl is misformatted and cannot be used.
         '''
         srf = SumReqFields()
         liveWins = list()
@@ -286,8 +286,8 @@ class LayoutSheet(object):
                     try:
                         pl = float(pl)
                     except NameError:
-                        raise ValueError('Malformed float for variable pl in createDailySummary')
-
+                        raise ValueError(
+                            'Malformed float for variable pl in createDailySummary')
 
             # print(pl)
             if float(pl) > maxTrade[0]:
@@ -319,7 +319,8 @@ class LayoutSheet(object):
         else:
             note = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}"
             note = note.format(numt, "" if numt == 1 else "s", len(liveWins),
-                               "" if len(liveWins) == 1 else "s", len(liveLosses),
+                               "" if len(liveWins) == 1 else "s", len(
+                                   liveLosses),
                                "" if len(liveLosses) == 1 else "s")
             dailySumData['livetotnote'] = note
         dailySumData['simtot'] = sum([sum(simWins), sum(simLosses)])
@@ -386,4 +387,3 @@ class LayoutSheet(object):
                 continue
             except Exception as ex:
                 print(ex)
-            break
