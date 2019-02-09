@@ -10,7 +10,7 @@ import pandas as pd
 
 
 
-class Inspire(object):
+class Inspire:
     '''TODO use an optional db to keep track of these and allow the user to add and delete quotes. The quotes in the __init__ will be the
     initial quotes in an Inspire object'''
 

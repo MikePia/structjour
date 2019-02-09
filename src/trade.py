@@ -68,9 +68,9 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
 
 
 if __name__ == '__main__':
-    inf = 'trades.csv'
-    outd = None
-    theD = None
-    ind = None
+    inf = 'trades.8.csv'
+    outd = 'out/'
+    theD = '2019-02-07'
+    ind = 'data/'
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)
