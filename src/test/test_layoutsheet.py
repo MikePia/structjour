@@ -16,7 +16,7 @@ from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.tradeutil import TradeUtil
 from journal.layoutsheet import LayoutSheet
-# pylint: disable = C0103
+# pylint: disable = C0103, W0613, W0603
 
 
 D = deque()
@@ -97,10 +97,19 @@ class TestLayoutSheet(TestCase):
     @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
     def test_createImageLocation(self, unusedstub):
         '''Run structjour'''
+        #Assert the initial entry location in imageLocation is figured by these factors
+         # Assert all entries are figured by summarySize and len of the minittrade
+        # Assert the minitable locations are offset by length of the minitrade tables +
+                # ls.spacing, and the first entry in the Leftmost column starts with 'Trade'
+                 # Assert third entry of imageLocation begins with 'Trade' and contains
+                #       ['Long', 'Short']
+                # Assert the 4th entry is a timestamp
+                # Assert the 5th entry is a time delta
         global D
 
-        # :::::::::; Setup   ::::::::
+
         for tdata, infile in zip(self.dadata, self.infiles):
+            # :::::::::  Setup   ::::::::
             D = deque(tdata)
             # infile = 'trades.8.csv'
             indir = 'data/'
@@ -122,40 +131,26 @@ class TestLayoutSheet(TestCase):
             ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
             imageLocation, dframe = ls.createImageLocation(dframe, ldf)
 
-            #Where does the 2 come from ?
             import datetime as dt
 
             for count, t in enumerate(imageLocation):
                 if count == 0:
-
-                    #Assert the initial entry location in imageLocation is figured by these factors
-                    initialEntry = ls.inputlen + ls.topMargin + \
-                        ls.spacing + len(ldf[0]) + 2
+                    initialEntry = ls.inputlen + ls.topMargin + ls.spacing + len(ldf[0]) + 2
                     self.assertEqual(t[0], initialEntry)
 
                 else:
-                    # Assert all entries are figured by summarySize and len of the minittrade
-                    self.assertEqual(t[0], imageLocation[count-1]
-                                     [0] + len(ldf[count]) + ls.summarySize)
+                    nextloc = imageLocation[count-1][0] + len(ldf[count]) + ls.summarySize
+                    self.assertEqual(t[0], nextloc)
 
-                # Assert the minitable locations are offset by length of the minitrade tables +
-                # ls.spacing, and the first entry in the Leftmost column starts with 'Trade'
                 t_entry = t[0] - (spacing + len(ldf[count]))
                 self.assertTrue(dframe.iloc[t_entry][0].startswith('Trade'))
                 self.assertEqual(len(dframe.iloc[t_entry-1][0]), 0)
-
-                # Assert third entry of imageLocation begins with 'Trade' and contains 
-                #       ['Long', 'Short']
-                # Assert the 4th entry is a timestamp
-                # Assert the 5th entry is a time delta
                 self.assertTrue(t[2].startswith('Trade'))
-                self.assertTrue(t[2].find('Long') >
-                                0 or t[2].find('Short') > 0)
-                self.assertTrue(isinstance(pd.Timestamp(
-                    '2019-11-11 ' + t[3]), dt.datetime))
+                self.assertTrue(t[2].find('Long') > 0 or t[2].find('Short') > 0)
+                self.assertTrue(isinstance(pd.Timestamp('2019-11-11 ' + t[3]), dt.datetime))
                 self.assertTrue(isinstance(t[4], dt.timedelta))
 
-            print('Done', infile)
+            print('Done test_createImageLocation', infile)
 
 
 

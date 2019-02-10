@@ -19,7 +19,7 @@ from journal.tradestyle import c as tcell
 from journal.tradestyle import style_range
 from journal.thetradeobject import TheTradeObject, SumReqFields
 
-# pylint: disable=C0103
+# pylint: disable=C0103, C0201, W0703
 
 
 def askUser(question):
@@ -31,7 +31,7 @@ def askUser(question):
     return response
 
 
-class LayoutSheet(object):
+class LayoutSheet:
     '''
     Contains methods to layout the material on the excel page. Uses both
     pandas and openpyxl depending on how far in the program.  Generally
@@ -155,8 +155,7 @@ class LayoutSheet(object):
         XL = XLImage()
         srf = SumReqFields()
 
-        response = askUser(
-            "Would you like to enter strategy names, targets and stops?   ")
+        response = askUser( "Would you like to enter strategy names, targets and stops?   ")
         interview = True if response.lower().startswith('y') else False
 
         for loc, tdf in zip(imageLocation, ldf):
@@ -216,7 +215,7 @@ class LayoutSheet(object):
         '''
 
         # Populate the name fields as hyperlinks
-        for i in range(len(tradeSummaries)):
+        for i, dummy in enumerate(tradeSummaries):
             key = "name" + str(i+1)
             cell = mistake.mistakeFields[key][0][0]
             cell = tcell(cell, anchor=mistake.anchor)
@@ -259,8 +258,8 @@ class LayoutSheet(object):
     def createDailySummaryForm(self, TheTradeList, mistake, ws, anchor):
         '''
         Create the shape and populate the daily Summary Form
-        :params listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one is a single row DataFrame
-        containg all the data in the trade summaries.
+        :params listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one
+                             is a single row DataFrame containg all the data for trade summaries.
         :params mistke:
         :params ws: The openpyxl Worksheet object
         :raise Value Error: When pl is misformatted and cannot be used.
@@ -362,6 +361,9 @@ class LayoutSheet(object):
             ws[tcell(rng, anchor=anchor)] = dailySumData[key]
 
     def save(self, wb, jf):
+        '''
+        Save wb as an excel file. If Permission Denied error is thrown, try renaming it.
+        '''
         #Write the file
         jf.mkOutdir()
         saveName = jf.outpathfile
@@ -387,3 +389,4 @@ class LayoutSheet(object):
                 continue
             except Exception as ex:
                 print(ex)
+            break

@@ -116,20 +116,20 @@ class XLImage(object):
 
     def getResizeName(self, orig, outdir) :
         '''
-        Munge up a pathfile name by inserting _resize onto the name. Do minimal checking that it has some extension.
-        Using openpyxl and PIL, they may have more stringent requirements. PIL, for example, fails if you try to save with 
-        the extension .jpg. But its perfectly happy with .jpeg
-        :param:orig: The original pathfile name.
-        :outdir:outdir: The location to save to.
-        :return: A tuple(newFileName, extension)
+        Do minimal checking that it has some extension. Using openpyxl and PIL, they may have more
+        stringent requirements. PIL, for example, fails if you try to save with the extension .jpg.
+        But its perfectly happy with .jpeg
+        :param orig: The original pathfile name.
+        :outdir outdir: The location to save to.
+        :return: A tuple (newFileName, extension)
         '''
 
         orig = orig.replace(":", "-")
         x = os.path.splitext(orig)
-        if (len(x[1]) < 4 ):
-            print("please provide an image name with an image extension in its name. e.g 'png', jpg', etc")
-        newName = x[0] + '_resize'
-        if 'jpg' in x[1].lower() :
+        if len(x[1]) < 4:
+            print("please provide an image name with an image extension in its name. e.g 'png'")
+        newName = x[0]
+        if 'jpg' in x[1].lower():
             newName += '.jpeg'
         else :
             newName += x[1]
