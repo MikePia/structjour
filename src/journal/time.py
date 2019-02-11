@@ -2,7 +2,7 @@ import datetime as dt
 import os
 import pandas as pd
 
-
+ 
 # pylint: disable = C0103, C0301
 
 # strftime formats:
@@ -29,7 +29,15 @@ class TimeStuff:
 
 
 def createDirs(theDate, theDir, frmt="_%m%d_%A"):
+    '''
+    In the directory theDir, create 1 month of directories, one for each weekday. Use the date
+    theDate to and the format given to create the names.
+    :params theDate: A datetime object giving the starting date for the directories.
+    :params theDir: The directory in which to create the subdirectories.
+    :params frmt: The strftime format used to create the directories.
+    '''
     # theDate = dt.datetime(2019, 6, 3)
+    cwd = os.getcwd()
     month = theDate.month
     delt = dt.timedelta(1)
     if os.path.exists(theDir):
@@ -40,18 +48,21 @@ def createDirs(theDate, theDir, frmt="_%m%d_%A"):
 
     while True:
         if theDate.isoweekday() < 6:
-            print(theDate.strftime(frmt))
+            # print(theDate.strftime(frmt))
             folder = theDate.strftime(frmt)
             os.mkdir(folder)
         theDate = theDate + delt
         if theDate.month > month:
             break
 
+    os.chdir(cwd)
+
 
 def getFirstWeekday(theMonth=None, theDir=None):
     '''
     The interactive portion of this method is deprectaed and will be removed at a future time.
-    With no paramters, this is a conversation to determine the month and location.
+    With no paramters, this is a conversation to determine the month and location. This
+    conversation should go away.
     With parameterse given, theDir is verified to exist and theDay is returned as the
     first weekday of the given month.
     :params theMonth: A Time string or datetime object for which to create directories. If not

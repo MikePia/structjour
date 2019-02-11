@@ -156,9 +156,6 @@ class JournalFiles:
 def notmain():
     ''' Run some local code'''
     # jf = JournalFiles()
-    # for i in range(1, 13):
-    #     dd = pd.Timestamp(2019, i, 7)
-    #     whichWeek(dd)                # pylint: disable = W0212
 
 
 if __name__ == '__main__':
