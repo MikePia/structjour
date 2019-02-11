@@ -1,4 +1,9 @@
-import datetime, os
+import datetime as dt
+import os
+import pandas as pd
+
+
+# pylint: disable = C0103
 
 # strftime formats:
 #   %A  'Monday'
@@ -8,101 +13,108 @@ import datetime, os
 #   %d  day of the month
 #   %m  01 (for January)
 # def mkdir(name):
+
+def createDirs(theDate, theDir, format="_%m%d_%A"):
+    # theDate = dt.datetime(2019, 6, 3)
+    month = theDate.month
+    delt = dt.timedelta(1)
+    if os.path.exists(theDir):
+       raise ValueError('Directory Already exists:', theDir)
     
-def createWeeks (yr, month, day) :
-    week = 1
-    beginDate = datetime.date(yr, month, day)
-    idow = int(beginDate.strftime("%w"))
-    dow = beginDate.strftime("%A")
-    dom = beginDate.strftime("%B")
-    printDate = beginDate
-    newDate = datetime.date(1,1,1)
-    for i in range (1, 6) :
-        if i > 4 and int(printDate.strftime("%w")) > 4 :
-            return
-        wkfldr = "Week_" + str(i)
-        os.mkdir(wkfldr)
-        os.chdir(wkfldr)
-        
-        while True :
-#             input('')
-            fold = printDate.strftime("_%m%d_%A")
-            os.mkdir(fold)
-            idow = idow + 1 
-            day = day + 1
-            if idow == 6 :
-                day = day+ 2
-                idow = 1
-                os.chdir("..")
-                try :
-                    printDate = datetime.date(year, month,day)
-                except  Exception as ex :
-                    print(ex)
-                    break
-                break
-            try :
-                printDate = datetime.date(yr, month, day)
-            except :
-                break
-            
+    
+    os.mkdir(theDir)
+    os.chdir(theDir)
+
+    while True:
+        if theDate.isoweekday() < 6:
+            print(theDate.strftime(format))
+            folder = theDate.strftime(format)
+            os.mkdir(folder)
+        theDate = theDate + delt
+        if theDate.month > month:
+            break
 
 
-def beginQ() :
-    d = os.getcwd()
-    print(d)
-    ds = d.split('/')
-    print(ds)
-    if len(ds) < 1 :
-        print(" You do not appear to be in your journal directory")
-        quit()
-    dsw = ds[len(ds)-1]
-    print (dsw)
-    if "jour" not in dsw.lower() :
-        print()
-        print('''You don't appear to be in a journal folder. Would you like to continue any way?  (y/n) : ''')
-        r = input()
-        if r.lower().startswith('y') == False :
-            print('Bye!')
-            quit()
-    else :
-        print("in journal")
-         
-    return
- 
-beginQ()
- 
-# quit()
-print ("here we go")
-while True:
-    r = input ("What Month would you like to create?  (Enter a number from 1-12) ")
-    if r.lower().startswith('q') :
-        print("Bye!")
-        quit()
-    try :
-        month = int(r)
+def getMonthFromUser(theMonth=None, theDir=None):
+    '''
+    The interactive portion of this method is deprectaed and will be removed at a future time.
+    With no paramters, this is a conversation to determine the month and location. 
+    With parameterse given, theDir is verified to exist and theDay is returned as the  
+    first weekday of the given month.
+    :params theMonth: A Time string or datetime object for which to create directories. If not 
+                        given, ask the user.
+    :params theDir: The directory to start in. If not given, we use cwd. But if the current dir
+                    is not named *journal*, ask the user to continue or not.
+    :return (theDay, theDir): A tuple, theDay is the first weekday of the month to create.
+                    theDir is the directory to start in.
+    '''
 
-    except :
-        print ("I didn't understand that. (q to quit)")
-        continue
-    if month < 1 or month > 12 :
-        print("That is not between 1 and 12. (q to quit)") 
-        continue
-    break
-year = datetime.datetime.today().year
-print (month, year)
-d = datetime.date(year, month, 1)
-dayOfWeek = int(d.strftime("%w"))
-day = 1
-if dayOfWeek == 0 :
-    day = day + 1
-if dayOfWeek== 6 :
-    day = day + 2
-dd = datetime.date(year, month, day)
- 
-# Monday, January 1, 2018
-print(dd, dd.strftime("%A, %B %d, %Y"))
-curmonth = month
-os.mkdir(dd.strftime("_%m_%B")) 
-os.chdir(dd.strftime("_%m_%B")) 
- 
-createWeeks(year, month, day)
+    
+    if not theDir:
+        d = os.getcwd()
+        ds = d.split('/')
+        if len(ds) < 1:
+            print(" You do not appear to be in your journal directory")
+            return -1
+        dsw = ds[len(ds)-1]
+        if "journal" not in dsw.lower():
+            print()
+            print(f'''You don't appear to be in a journal folder.
+        {d} 
+        Would you like to continue any way?  (y/n) : ''')
+            r = input()
+            if r.lower().startswith('y') == False:
+                print('Bye!')
+                return -1
+        theDir = d
+    if not os.path.exists(theDir):
+        raise ValueError(f'Path not found {theDir}')
+
+    if not theMonth:
+        month=-1
+        while True:
+            r = input("Please enter the month and year. e.g: 2019-03:    ")
+            if r.lower().startswith('q'):
+                print("Bye!")
+                return -1
+            try:
+                if len(r) < 6 or len(r) > 7:
+                    raise ValueError('Please use yyyymm or yyyy-mm')
+                r = r + '-01' if r.find('-') > 0 else r + '01'
+                theDay = pd.Timestamp(r)
+            except  ValueError:
+                print("I didn't understand that. (q to quit)")
+                continue
+    #         r=input(f"{theDay.strftime('%B %Y')} Is this the month?")
+            break
+    else:
+        theMonth = pd.Timestamp(theMonth)
+        # print(theMonth)
+    advancedays = 8 - theMonth.isoweekday()  if theMonth.isoweekday() > 5 else 0
+
+    day = 1 + advancedays
+    theDay = dt.datetime(theMonth.year, theMonth.month, day)
+
+    return theDay, theDir
+
+
+
+
+
+def main():
+    outdir = os.getcwd()
+    outdir = r'C:\python\E\structjour\src\out'    
+    theDate = pd.Timestamp('2019-06-01')
+    theDate, outdir = getMonthFromUser(theDate, outdir)
+
+    newDir = os.path.join(outdir, theDate.strftime("_%Y%m_%B"))
+    createDirs(theDate, newDir)
+
+
+
+# os.chdir(theDir)
+# print(os.getcwd())
+# print(theDay.strftime("_%m_%B"))
+
+if __name__ == '__main__':
+    main()
