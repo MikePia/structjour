@@ -5,32 +5,10 @@ import datetime as dt
 import os
 import sys
 import pandas as pd
+from journal.time import TimeStuff
 # pylint: disable=C0103, R0913
 
 
-def whichWeek(d):
-    '''
-    Get the week number of the trade where week 1 begins in the first workweek and
-    increments every Monday
-    :params d: The datetime object or time string to use.
-    :return: An int week number
-    '''
-#     d = pd.Timestamp.today()
-
-    beginDate = dt.datetime(d.year, d.month, 1)
-    d = pd.Timestamp(d)
-    week = 1
-    while beginDate.isoweekday() != 1:
-        beginDate = beginDate + dt.timedelta(1)
-    if d < beginDate:
-        return d, week
-    if beginDate.day > 3:
-        week = 2
-    while beginDate.day < d.day:
-        beginDate = beginDate + dt.timedelta(1)
-        if beginDate.isoweekday() == 1:
-            week = week + 1
-    return week
 
 
 class JournalFiles:
@@ -69,6 +47,9 @@ class JournalFiles:
         else:
             self.theDate = dt.date.today()
 
+        ts = TimeStuff(theDate)
+        self.monthformat = ts.monthformat
+        self.dayformat = ts.dayformat
         self.root = os.getcwd()
         self.indir = indir if indir else os.path.join(self.root, 'data')
         self.outdir = outdir if outdir else os.path.join(self.root, 'out')
@@ -94,37 +75,13 @@ class JournalFiles:
         :params outdir: Location to write the output file. If None set to indir/out
         :params infile: The name of the input file.
         '''
-        weekNo = str(whichWeek(self.theDate))
-        self.indir = indir if indir else self.theDate.strftime(
-            r"C:\trader\journal\_%m_%B\Week_" + weekNo + r"\_%m%d_%A")
+        path="C:/trader/journal/" + self.monthformat + '/' + self.dayformat
+        path = self.theDate.strftime(path)
+        self.indir = indir if indir else os.path.realpath(path)
         self.inpathfile = os.path.join(self.indir, self.infile)
 
         self.outdir = outdir if outdir else os.path.join(self.indir, 'out')
         self.outpathfile = os.path.join(self.outdir, self.outfile)
-
-    # def _whichWeek(self, month, testday, year=2019):
-    #     '''
-    #     Calculates which number work week a day is in. Weeks end on Friday. This is
-    #     for the naming scheme directory structure.
-    #     '''
-
-    #     d = self.theDate
-
-    #     beginDate = dt.date(d.year, d.month, 1)
-    #     testDate = dt.date(d.year, d.month, d.day)
-    #     idow = int(beginDate.strftime("%w"))
-
-    #     #{ dayOfWeekOf1stDayOfMonth:DayOf1stMonday}
-    #     dayOfFirstMonday = {0: (2, 1), 1: (1, 1), 2: (
-    #         7, 2), 3: (6, 2), 4: (5, 2), 5: (4, 2), 6: (3, 1)}
-    #     # aka (9 - idow) % 7 (if 0 then 7)
-
-    #     fm = dt.date(year, month, dayOfFirstMonday[idow][0])
-    #     adjuster = 1 if fm.day < 4 else 2
-    #     day = testDate.day
-    #     week = ((day - fm.day)//7) + adjuster
-    #     week = 1 if week < 1 else week
-        # return week
 
 
 

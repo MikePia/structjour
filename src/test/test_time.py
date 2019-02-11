@@ -10,7 +10,7 @@ import datetime as dt
 
 import pandas as pd
 
-from journal.time import getMonthFromUser
+from journal.time import getFirstWeekday
 # pylint: disable = C0103
 
 
@@ -25,8 +25,8 @@ class Test_time(unittest.TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
-    def test_getMonthFromUser(self):
-        '''Test the function time.getMonthFromUser.'''
+    def test_getFirstWeekday(self):
+        '''Test the function time.getFirstWeekday.'''
         theDir = os.getcwd()
         theDate = pd.Timestamp('2019-06-15')
         test2019 = [[0, 0], [2, 1], [5, 1], [5, 1], [1, 1], [3, 1], [1, 3],
@@ -34,13 +34,13 @@ class Test_time(unittest.TestCase):
 
         for month in range(1, 13):
             theDate = dt.datetime(2019, month, 15)
-            dd, theDir = getMonthFromUser(theMonth=theDate, theDir=theDir)
+            dd, theDir = getFirstWeekday(theMonth=theDate, theDir=theDir)
             self.assertEqual(dd.isoweekday(), test2019[month][0])
             self.assertEqual(dd.day, test2019[month][1])
             self.assertTrue(os.path.exists(theDir))
         throw = False
         try:
-            getMonthFromUser("notadate", theDir)
+            getFirstWeekday("notadate", theDir)
         except ValueError:
             throw = True
         except Exception:
@@ -48,11 +48,11 @@ class Test_time(unittest.TestCase):
             # self.assertTrue(test2019[0][0] == 1, "Failed to throw a ValueError")
         finally:
             if not throw:
-               self.assertTrue(test2019[0][0] == 1, "Failed to throw a ValueError")
+                self.assertTrue(test2019[0][0] == 1, "Failed to throw a ValueError")
 def notmain():
     '''Run some local code'''
     t = Test_time()
-    t.test_getMonthFromUser()
+    t.test_getFirstWeekday()
 
 
 if __name__ == '__main__':

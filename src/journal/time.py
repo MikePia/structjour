@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 
-# pylint: disable = C0103
+# pylint: disable = C0103, C0301
 
 # strftime formats:
 #   %A  'Monday'
@@ -14,34 +14,47 @@ import pandas as pd
 #   %m  01 (for January)
 # def mkdir(name):
 
-def createDirs(theDate, theDir, format="_%m%d_%A"):
+# Implementing the following file structure names
+# theMonth.strftime("_%Y%m_%B")) // theDate.strftime(_%m%d_%A")
+
+class TimeStuff:
+    def __init__(self, theMonth, theDir=r'C:\trader\journa2', theYear=2019, monthformat="_%Y%m_%B", dayformat="_%m%d_%A"):
+        self.monthformat = monthformat
+        self.dayformat = dayformat
+        self.theYear = theYear
+        self.theDir = theDir
+        self.theMonth = theMonth
+        # self.theMonth, self.theDir = getFirstWeekday(self.theMonth, self.theDir)
+
+
+
+def createDirs(theDate, theDir, frmt="_%m%d_%A"):
     # theDate = dt.datetime(2019, 6, 3)
     month = theDate.month
     delt = dt.timedelta(1)
     if os.path.exists(theDir):
-       raise ValueError('Directory Already exists:', theDir)
-    
-    
+        raise ValueError('Directory Already exists:', theDir)
+
     os.mkdir(theDir)
     os.chdir(theDir)
 
     while True:
         if theDate.isoweekday() < 6:
-            print(theDate.strftime(format))
-            folder = theDate.strftime(format)
+            print(theDate.strftime(frmt))
+            folder = theDate.strftime(frmt)
             os.mkdir(folder)
         theDate = theDate + delt
         if theDate.month > month:
             break
 
 
-def getMonthFromUser(theMonth=None, theDir=None):
+def getFirstWeekday(theMonth=None, theDir=None):
     '''
     The interactive portion of this method is deprectaed and will be removed at a future time.
-    With no paramters, this is a conversation to determine the month and location. 
-    With parameterse given, theDir is verified to exist and theDay is returned as the  
+    With no paramters, this is a conversation to determine the month and location.
+    With parameterse given, theDir is verified to exist and theDay is returned as the
     first weekday of the given month.
-    :params theMonth: A Time string or datetime object for which to create directories. If not 
+    :params theMonth: A Time string or datetime object for which to create directories. If not
                         given, ask the user.
     :params theDir: The directory to start in. If not given, we use cwd. But if the current dir
                     is not named *journal*, ask the user to continue or not.
@@ -49,7 +62,6 @@ def getMonthFromUser(theMonth=None, theDir=None):
                     theDir is the directory to start in.
     '''
 
-    
     if not theDir:
         d = os.getcwd()
         ds = d.split('/')
@@ -63,7 +75,7 @@ def getMonthFromUser(theMonth=None, theDir=None):
         {d} 
         Would you like to continue any way?  (y/n) : ''')
             r = input()
-            if r.lower().startswith('y') == False:
+            if not r.lower().startswith('y'):
                 print('Bye!')
                 return -1
         theDir = d
@@ -71,7 +83,6 @@ def getMonthFromUser(theMonth=None, theDir=None):
         raise ValueError(f'Path not found {theDir}')
 
     if not theMonth:
-        month=-1
         while True:
             r = input("Please enter the month and year. e.g: 2019-03:    ")
             if r.lower().startswith('q'):
@@ -102,13 +113,13 @@ def getMonthFromUser(theMonth=None, theDir=None):
 
 
 def main():
-    outdir = os.getcwd()
-    outdir = r'C:\python\E\structjour\src\out'    
+    # outdir = os.getcwd()
+    journaldir = os.getcwd()
     theDate = pd.Timestamp('2019-06-01')
-    theDate, outdir = getMonthFromUser(theDate, outdir)
+    theDate, journaldir = getFirstWeekday(theDate, journaldir)
 
-    newDir = os.path.join(outdir, theDate.strftime("_%Y%m_%B"))
-    createDirs(theDate, newDir)
+    monthDir = os.path.join(journaldir, theDate.strftime("_%Y%m_%B"))
+    createDirs(theDate, monthDir)
 
 
 
