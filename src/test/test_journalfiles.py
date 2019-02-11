@@ -9,7 +9,6 @@ import os
 import types
 import pandas as pd
 from journalfiles import JournalFiles
-from journalfiles import whichWeek
 # pylint: disable = C0103, W0703, E1121
 
 
@@ -205,53 +204,6 @@ class TestJF(unittest.TestCase):
         else:
             self.fail("Failed to throw expected exception")
 
-    def test_whichWeek(self):
-        '''
-        Test the function whichWeek in the journalfiles module
-        '''
-
-        # jf = JournalFiles(indir="data/", mydevel=True)
-
-        # Thest the 7th of each month
-        m = [1, 2, 3, 5, 8, 10, 11, ]
-        for i in m:
-            test1 = pd.Timestamp(2019, i, 7)
-            w = whichWeek(test1)
-            self.assertEqual(w, 2)
-
-        m = [4, 6, 7, 9, 12]
-        for i in m:
-            test1 = pd.Timestamp(2019, i, 7)
-            w = whichWeek(test1)
-            self.assertEqual(w, 1)
-
-        # Test the 15th of each month
-        m = [1, 2, 3, 4, 5, 7, 8, 10, 11]
-        for i in m:
-            test1 = pd.Timestamp(2019, i, 15)
-            w = whichWeek(test1)
-            self.assertEqual(w, 3)
-
-        m = [6, 9, 12]
-        for i in m:
-            test1 = pd.Timestamp(2019, i, 15)
-            w = whichWeek(test1)
-            self.assertEqual(w, 2)
-
-        # Test the 28th of each month
-        m = [1, 2, 3, 5, 8, 10, 11]
-        for i in m:
-            test1 = pd.Timestamp(2019, i, 28)
-
-            w = whichWeek(test1)
-            self.assertEqual(w, 5)
-
-        m = [4, 6, 7, 9, 12]
-        for i in m:
-            test1 = pd.Timestamp(2019, i, 28)
-            w = whichWeek(test1)
-            self.assertEqual(w, 4)
-
 
 def main():
     '''
@@ -270,7 +222,6 @@ def main():
 def notmain():
     '''Run some local code'''
     t = TestJF()
-    t.test_whichWeek()
 
 
 if __name__ == "__main__":
