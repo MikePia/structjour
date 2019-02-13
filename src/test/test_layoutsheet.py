@@ -10,6 +10,7 @@ from unittest import TestCase
 from unittest.mock import patch
 from collections import deque
 
+import numpy as np
 import pandas as pd
 
 from journalfiles import JournalFiles
@@ -152,11 +153,47 @@ class TestLayoutSheet(TestCase):
 
             print('Done test_createImageLocation', infile)
 
+    def test_createWorkbook(self):
 
+        
+        df = pd.DataFrame(np.random.randint(0,100,size=(100, 7)), columns=list('ABCDEFG'))
+        # df
+        sumSize = 25
+        margin = 25
+        spacing = 3
+        inputlen = len(df)
+        ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
+                
+        wb, ws, df = ls.createWorkbook(df)
+
+
+        for row, (i, dfrow) in zip(ws, df.iterrows()):
+            # We inserted the column headers in this row (ws starts with 1, not 0)
+            if i + 1 == ls.topMargin:
+                for ms, x in zip(row, df.columns):
+                    print(x, ms.value)
+                    self.assertEqual(x, ms.value)
+            # everything else is verbatim
+            else:
+                for ms, x in zip(row, dfrow):
+                    # print(x, ms.value)
+                    self.assertEqual(x, ms.value)
+
+
+        wb.save("out/SCHNOrK.xlsx")
+
+    def test_styleTop(self):
+        sumSize = 25
+        margin = 25
+        spacing = 3
+        inputlen = 50   #len(df)
+        ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
+        ls.styleTop
 
 
 
 if __name__ == '__main__':
     # pylint: disable = E1120
     ttt = TestLayoutSheet()
-    ttt.test_createImageLocation()
+    # ttt.test_createImageLocation()
+    ttt.test_createWorkbook()
