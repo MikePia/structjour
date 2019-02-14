@@ -13,9 +13,21 @@ frc = FinReqCol()
 
 class SumReqFields(object):
     '''
-    Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject and TheTradeStyle.
-    These columns are used in a DataFrame (aka TheTrade) that summarizes each single trade with a single row. This
-    summary information includes information from the user, target, stop, strategy, notes etc.
+    Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject
+    and TheTradeStyle. These columns are used in a DataFrame (aka TheTrade) that summarizes each
+    single trade with a single row. This summary information includes information from the user,
+    target, stop, strategy, notes etc.
+    :
+    NOTES on self.tfcolumns:
+    tfcolumns, short for tradeFormatColumns, specifically defines the trade summary form.
+    Each named dict entry contains its location in relation to the anchor at the top left
+    and a named style for that cell or group of merged cells. Merged locations have a
+    list of two tuples (e.g. self.name) Single cells contain a single tuple (e.g.
+    self.targhead).  To add a style to the TradeSummary, define the NamedStyle in
+    journal.tradestyle.TradeFormat. Follow the pattern of the others. Then place the name
+    here with its cell location (anchor at (1,1)) and its associated data column in TheTrade
+    DataFrame # ex1="ex1". Excel cell formulas are treated created seperately to allow for
+    cell translation. See self.tfformulas
     '''
 
     def __init__(self):
@@ -159,15 +171,7 @@ class SumReqFields(object):
         self.rc = rc
         self.columns = rc.values()
 
-        # tfcolumns, short for tradeFormatColumns, specifically defines the trade summary form.
-        # Each named dict entry contains its location in relation to the anchor at the top left
-        # and a named style for that cell or group of merged cells. Merged locations have a 
-        # list of two tuples (e.g.self.name) Single cells contain a single # tuple (e.g. 
-        # self.targhead).  To add a style to the TradeSummary, define the NamedStyle in 
-        # journal.tradestyle.TradeFormat. Follow the pattern of the others. Then place the name
-        # here with its cell location (anchor at (1,1)) and its associated data column in TheTrade
-        # DataFrame # ex1="ex1". Excel cell formulas are treated created seperately to allow for
-        # cell translation. See self.tfformulas
+        
         self.tfcolumns = {
             self.name: [[(1, 1), (3, 2)], 'titleStyle'],
             self.acct: [[(4, 1), (6, 2)], 'titleStyle'],
@@ -298,11 +302,11 @@ class SumReqFields(object):
         df = pd.DataFrame(_styles, columns=['st'])
         return df['st'].unique()
 
-        # TODO get a list of namd styles and verify that all of these strings are on the list. Come up with a mechanism to make this configurable by the user
+        # TODO get a list of named styles and verify that all of these strings are on the list. Come up with a mechanism to make this configurable by the user
 
 
 # global variable for use in this module
-srf = SumReqFields()
+# srf = SumReqFields()
 
 
 class TheTradeObject(object):
@@ -314,7 +318,7 @@ class TheTradeObject(object):
         in which trades are represented in tickets and are seperated and labeled. 
     '''
 
-    def __init__(self, df, interview):
+    def __init__(self, df, interview, srf):
         '''
         Create a dataframe that includes all the summary material for review. Some 
         of this data comes from the program and some of it comes from the user. The 
@@ -327,6 +331,7 @@ class TheTradeObject(object):
         col = srf.tfcolumns.keys()
         TheTrade = pd.DataFrame(columns=col)
         TheTrade = DataFrameUtil.addRows(TheTrade, 1)
+        self.srf = srf
 
         ix = df.index[-1]
         ix0 = df.index[0]
@@ -374,23 +379,23 @@ class TheTradeObject(object):
         return ret
 
     def getName(self):
-        return self.TheTrade[srf.name]
+        return self.TheTrade[self.srf.name]
 
     def __setName(self):
-        self.TheTrade[srf.name] = self.df.loc[self.ix][frc.name]
+        self.TheTrade[self.srf.name] = self.df.loc[self.ix][frc.name]
         return self.TheTrade
 
     def __setAcct(self):
-        self.TheTrade[srf.acct] = 'Live' if self.df.loc[self.ix][frc.acct].startswith(
+        self.TheTrade[self.srf.acct] = 'Live' if self.df.loc[self.ix][frc.acct].startswith(
             'U') else 'SIM'
         return self.TheTrade
 
     def __setSum(self):
-        self.TheTrade[srf.pl] = self.df.loc[self.ix][frc.sum]
+        self.TheTrade[self.srf.pl] = self.df.loc[self.ix][frc.sum]
         return self.TheTrade
 
     def __setStart(self):
-        self.TheTrade[srf.start] = self.df.loc[self.ix][frc.start]
+        self.TheTrade[self.srf.start] = self.df.loc[self.ix][frc.start]
         return self.TheTrade
 
     # HACK ALERT The duration came out as an empty string on an older file so I added the babysitting for empty strings
@@ -406,7 +411,7 @@ class TheTradeObject(object):
         else:
             duration = "{0} hours {1}:{2}".format(
                 time.seconds // 3600, time.seconds // 60, time.seconds % 60)
-        self.TheTrade[srf.dur] = duration
+        self.TheTrade[self.srf.dur] = duration
         return self.TheTrade
 
     def __getStrategy(self):
@@ -436,11 +441,11 @@ class TheTradeObject(object):
 
         if reply == 9:
             response = input("What do you want to call the strategy?")
-            self.TheTrade[srf.strat] = response
+            self.TheTrade[self.srf.strat] = response
         elif reply == 10:
             pass
         elif reply > -1 and reply < len(self.strats):
-            self.TheTrade[srf.strat] = self.strats[reply]
+            self.TheTrade[self.srf.strat] = self.strats[reply]
         else:
             print("WTF?  reply out of bounds. 'reply' = {0}".format(reply))
             raise ValueError
@@ -465,18 +470,18 @@ class TheTradeObject(object):
         return self.TheTrade
 
     def __setHeaders(self):
-        self.TheTrade[srf.plhead] = "P/L"
-        self.TheTrade[srf.starthead] = "Start"
-        self.TheTrade[srf.durhead] = "Dur"
-        self.TheTrade[srf.sharehead] = "Pos"
-        self.TheTrade[srf.mkthead] = "Mkt"
-        self.TheTrade[srf.entryhead] = 'Entries and Exits'
-        self.TheTrade[srf.targhead] = 'Target'
-        self.TheTrade[srf.stophead] = 'Stop'
-        self.TheTrade[srf.rrhead] = 'R:R'
-        self.TheTrade[srf.maxhead] = 'Max Loss'
-        self.TheTrade[srf.mstkhead] = "Proceeds Lost"
-        return self.TheTrade[[srf.entryhead, srf.targhead, srf.stophead, srf.rrhead, srf.maxhead]]
+        self.TheTrade[self.srf.plhead] = "P/L"
+        self.TheTrade[self.srf.starthead] = "Start"
+        self.TheTrade[self.srf.durhead] = "Dur"
+        self.TheTrade[self.srf.sharehead] = "Pos"
+        self.TheTrade[self.srf.mkthead] = "Mkt"
+        self.TheTrade[self.srf.entryhead] = 'Entries and Exits'
+        self.TheTrade[self.srf.targhead] = 'Target'
+        self.TheTrade[self.srf.stophead] = 'Stop'
+        self.TheTrade[self.srf.rrhead] = 'R:R'
+        self.TheTrade[self.srf.maxhead] = 'Max Loss'
+        self.TheTrade[self.srf.mstkhead] = "Proceeds Lost"
+        return self.TheTrade[[self.srf.entryhead, self.srf.targhead, self.srf.stophead, self.srf.rrhead, self.srf.maxhead]]
 
     def __setEntries(self):
         '''
@@ -568,7 +573,7 @@ class TheTradeObject(object):
         # TODO This is broken because we display only 8 combined entries plus exits
         if len(entries) > 8:
             more = len(entries) - 8
-            self.TheTrade[srf.pl8] = "Plus {} more.".format(more)
+            self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
         for i, price in zip(range(len(entries)), entries):
 
             # Entry Price
@@ -598,9 +603,9 @@ class TheTradeObject(object):
     def __setTarget(self):
         '''Interview the user for the target. targdiff is handled as a formula elsewhere'''
         target = 0
-        shares = self.TheTrade[srf.shares].unique()[0]
+        shares = self.TheTrade[self.srf.shares].unique()[0]
         try:
-            p = float(self.TheTrade[srf.entry1])
+            p = float(self.TheTrade[self.srf.entry1])
             p = f'{p:.3f}'
         except:
             question = '''
@@ -608,7 +613,7 @@ class TheTradeObject(object):
             What was your target?
                  '''.format(shares)
         else:
-            side = self.TheTrade[srf.name].unique()[0].split()[1].lower()
+            side = self.TheTrade[self.srf.name].unique()[0].split()[1].lower()
 
             question = '''
                 Your entry was {0} at {1}.
@@ -632,8 +637,8 @@ class TheTradeObject(object):
                 continue
             break
 
-        pd.to_numeric(self.TheTrade[srf.targ], errors='coerce')
-        self.TheTrade[srf.targ] = target
+        pd.to_numeric(self.TheTrade[self.srf.targ], errors='coerce')
+        self.TheTrade[self.srf.targ] = target
 
         # TODO update--Unecessary? If this is a trade with a previous holding,
         # Planning to change the target diff to a formula-- add formulas to tfcolumns
@@ -641,8 +646,8 @@ class TheTradeObject(object):
             return
 
         # Although we will use an excel formula, place it in the df for our use.
-        diff = target - self.TheTrade[srf.entry1]
-        self.TheTrade[srf.targdiff] = diff
+        diff = target - self.TheTrade[self.srf.entry1]
+        self.TheTrade[self.srf.targdiff] = diff
 
         return self.TheTrade
 
@@ -650,9 +655,9 @@ class TheTradeObject(object):
         '''Interview the user and git the stoploss. sldiff is handled elsewhere as an excel formula.'''
         stop = 0
 
-        shares = self.TheTrade[srf.shares].unique()[0]
+        shares = self.TheTrade[self.srf.shares].unique()[0]
         try:
-            p = float(self.TheTrade[srf.entry1])
+            p = float(self.TheTrade[self.srf.entry1])
             p = f'{p:.3f}'
         except:
             question = '''
@@ -660,7 +665,7 @@ class TheTradeObject(object):
             What was your stop?
                  '''.format(shares)
         else:
-            side = self.TheTrade[srf.name].unique()[0].split()[1].lower()
+            side = self.TheTrade[self.srf.name].unique()[0].split()[1].lower()
             question = '''
                 Your entry was {0} at {1}.
                 your position was {2}.
@@ -681,14 +686,14 @@ class TheTradeObject(object):
                 continue
             break
 
-        self.TheTrade[srf.stoploss] = stop
+        self.TheTrade[self.srf.stoploss] = stop
 
         # If this is a trade with a privious holding, the diff in price of the stophas no meaning
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
             return
 
         # Although we will use an excel formula, place it in the df for our use.
-        self.TheTrade[srf.sldiff] = stop - self.TheTrade[srf.entry1]
+        self.TheTrade[self.srf.sldiff] = stop - self.TheTrade[self.srf.entry1]
         return self.TheTrade
 
     def __setMaxLoss(self):
@@ -708,18 +713,18 @@ class TheTradeObject(object):
         this is not done with a formula because the space can be used for any mistake and should be filled in by the 
         user if, for example, the its sold before a target and the trade never approached the stoploss.
         '''
-        if isinstance(self.TheTrade[srf.maxloss].unique()[0], str):
+        if isinstance(self.TheTrade[self.srf.maxloss].unique()[0], str):
             # There is no entry in entry1 so maxLoss has no meaning here.
             return
-        if self.TheTrade[srf.pl].unique()[0] < 0:
-            if abs(self.TheTrade[srf.pl].unique()[0]) > abs(self.TheTrade[srf.maxloss].unique()[0]):
-                self.TheTrade[srf.mstkval] = abs(self.TheTrade[srf.maxloss].unique()[
-                                                 0]) - abs(self.TheTrade[srf.pl].unique()[0])
-                self.TheTrade[srf.mstknote] = "Exceeded Stop Loss!"
+        if self.TheTrade[self.srf.pl].unique()[0] < 0:
+            if abs(self.TheTrade[self.srf.pl].unique()[0]) > abs(self.TheTrade[self.srf.maxloss].unique()[0]):
+                self.TheTrade[self.srf.mstkval] = abs(self.TheTrade[self.srf.maxloss].unique()[
+                                                 0]) - abs(self.TheTrade[self.srf.pl].unique()[0])
+                self.TheTrade[self.srf.mstknote] = "Exceeded Stop Loss!"
 
     def __blandSpaceInMstkNote(self):
-        self.TheTrade[srf.mstknote] = "Final note"
+        self.TheTrade[self.srf.mstknote] = "Final note"
 
     def __setExplainNotes(self):
-        self.TheTrade[srf.explain] = "Technical description of the trade"
-        self.TheTrade[srf.notes] = "Evaluation of the trade"
+        self.TheTrade[self.srf.explain] = "Technical description of the trade"
+        self.TheTrade[self.srf.notes] = "Evaluation of the trade"

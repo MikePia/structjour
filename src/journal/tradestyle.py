@@ -6,7 +6,7 @@ from openpyxl.styles import (PatternFill, Border, Side,
 from journal.thetradeobject import SumReqFields
 
 #global variable
-srf = SumReqFields()
+# srf = SumReqFields()
 
 
 def style_range(ws, cell_range, border=Border(), fill=None, font=None, alignment=None):
@@ -462,7 +462,14 @@ class TradeFormat (object):
 
         return (begin, end)
 
-    def formatTrade(self, ws, tstyle=None, anchor=None):
+    def formatTrade(self, ws, srf,  anchor=None):
+        '''
+        Implementing the Summary Trade Form as defined in SumReqFields.tfcolumns, which contains
+        the relative locations of each cell or merged cells and the style to use.
+        :params ws: The worksheet in which to create trade summary forms.
+        :parmas anchor: The translation as a tuple of ints. If it is None use self.anchor. The
+                result will be to place the top left cell of the form at anchor.
+        '''
         if anchor:
             self.tradeAnchor = anchor
         anc = self.tradeAnchor
@@ -479,25 +486,3 @@ class TradeFormat (object):
                 ws[c(val[0], anchor=anc)].style = self.styles[val[1]]
 
 
-#         ws[c((1,11), anchor=anc)] = "(Technical description of the trade.)"
-#         ws[c((1,17), anchor=anc)] = "(Evaluation of the trade)"
-
-
-#
-#     def c(self, icell,  add= None) :
-#         if add :
-#             icell = (icell[0] + add[0], icell[1] + add[1])
-#         return "{0}{1}".format(get_column_letter(icell[0]),icell[1])
-
-
-#
-# wb=Workbook()
-#
-# ws = wb.active
-# tf = TradeFormat(wb, a = ((1,45)))
-# tf.formatTrade(ws)
-# tf.formatTrade(ws, anchor=(7,96))
-#
-#
-# wb.save('out/justlookin.xlsx')
-# print("done!")

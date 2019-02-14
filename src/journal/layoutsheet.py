@@ -172,12 +172,12 @@ class LayoutSheet:
                 ws.add_image(img, cellname)
 
             #Put together the trade summary info for each trade and interview the trader
-            tto = TheTradeObject(tdf, interview)
+            tto = TheTradeObject(tdf, interview, srf)
             tto.runSummary()
             tradeSummaries.append(tto.TheTrade)
 
             #Place the format shapes/styles in the worksheet
-            tf.formatTrade(ws, anchor=(1, loc[0]))
+            tf.formatTrade(ws, srf, anchor=(1, loc[0]))
 
             #populate the trade information
             for key in srf.tfcolumns.keys():
