@@ -13,8 +13,8 @@ frc = FinReqCol()
 
 class SumReqFields(object):
     '''
-    Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject and TheTradeStyle. 
-    These columns are used in a DataFrame (aka TheTrade) that summarizes each single trade with a single row. This 
+    Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject and TheTradeStyle.
+    These columns are used in a DataFrame (aka TheTrade) that summarizes each single trade with a single row. This
     summary information includes information from the user, target, stop, strategy, notes etc.
     '''
 
@@ -54,9 +54,9 @@ class SumReqFields(object):
                   ]
         # rckeys2 = ['stratnote', 'link5', 'link6']
 
-        # This includes all the locations that are likely to have data associated with them.  
-        # Blank cells are added to tfcolumns  Each of these are added as attributes Unnecessarily 
-        # but it should reduce errors to use attributes instead of strings
+        # This includes all the locations that are likely to have data associated with them.
+        # Blank cells are added to tfcolumns  Each of these are added as attributes Unnecessarily
+        # but it should reduce errors to use attributes instead of strings.
         rc = dict(zip(rckeys, rcvals))
 
         # #Suggested way to address the columns for the TheTrade DataFrame.
@@ -159,9 +159,15 @@ class SumReqFields(object):
         self.rc = rc
         self.columns = rc.values()
 
-        # To add a style to the TradeSummary, define the NamedStyle in journal.tradestyle.TradeFormat. Follow the pattern of the
-        # others. Then place the name here with its cell location (anchor at (1,1)) and its associated data column in TheTrade DataFrame
-        # ex1="ex1"
+        # tfcolumns, short for tradeFormatColumns, specifically defines the trade summary form.
+        # Each named dict entry contains its location in relation to the anchor at the top left
+        # and a named style for that cell or group of merged cells. Merged locations have a 
+        # list of two tuples (e.g.self.name) Single cells contain a single # tuple (e.g. 
+        # self.targhead).  To add a style to the TradeSummary, define the NamedStyle in 
+        # journal.tradestyle.TradeFormat. Follow the pattern of the others. Then place the name
+        # here with its cell location (anchor at (1,1)) and its associated data column in TheTrade
+        # DataFrame # ex1="ex1". Excel cell formulas are treated created seperately to allow for
+        # cell translation. See self.tfformulas
         self.tfcolumns = {
             self.name: [[(1, 1), (3, 2)], 'titleStyle'],
             self.acct: [[(4, 1), (6, 2)], 'titleStyle'],

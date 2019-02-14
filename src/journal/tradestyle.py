@@ -13,7 +13,7 @@ def style_range(ws, cell_range, border=Border(), fill=None, font=None, alignment
     """
     Apply styles to a range of cells as if they were a single cell. This function is mostly
     unchanged from StackOverflow, where it was gotten from documentation to get around a
-    limitation in openpyxl. It works gud.
+    limitation in openpyxl. We use it to do the borders of merged cells. It works gud.
 
     :param ws:  Excel worksheet instance
     :param range: An excel range to style (e.g. A1:F20)
@@ -440,10 +440,15 @@ class TradeFormat (object):
     def mergeStuff(self, ws, begin, end, anchor=None):
         '''
         Perform a merge cell
-        :params ws: The Worksheet 
+        :params ws: The Worksheet to place the merged cells.
         :params begin: The top left cell as a tuple of ints (2,3)
         :params end: The bottom right cell as a tuple of ints
-        :parmas anchor: Translation
+        :parmas anchor: Translation. This will cause the creation of the merged cells to be offset
+                        the distance from A1. For example, anchor = (2,2) will move the beginning
+                        of and end of the merged cells one cell to the right and one cell down.
+        :return (begin, end): The beginning and end of the merged cells represented as a tuple of
+                        ints.
+
         '''
         if anchor:
             anchor = (anchor[0] - 1, anchor[1] - 1)
@@ -456,10 +461,6 @@ class TradeFormat (object):
                        end_column=end[0])
 
         return (begin, end)
-
-    def popTheTrade(self, ws, tf, row):
-        anchor = "A:" + row
-        srf.tfcolumns
 
     def formatTrade(self, ws, tstyle=None, anchor=None):
         if anchor:
