@@ -18,6 +18,7 @@ import pandas as pd
 # theMonth.strftime("_%Y%m_%B")) // theDate.strftime(_%m%d_%A")
 
 class TimeStuff:
+    #TODO wtf?
     def __init__(self, theMonth, theDir=r'C:\trader\journa2', theYear=2019, monthformat="_%Y%m_%B", dayformat="_%m%d_%A"):
         self.monthformat = monthformat
         self.dayformat = dayformat
