@@ -125,13 +125,25 @@ class LayoutSheet:
             cell.value = name
         return wb, ws, nt
 
-    def styleTop(self, ws, nt, tf):
+    def styleTop(self, ws, widthDF, tf):
         '''
-        Style the table, and the top paragraph.  Add and style the inspire quote. Create the
-        SummaryMistake form (populate it below in a loop)
+        Style the table, and the top bit. Here we style the table and the things above it. The
+        table data is already there. Above the table are two merged groups. At the top is the
+        inspire quote. Next is an introductory notes section. There is currently no external
+        control to set the sizes of these two things. Its hard coded here here. 
+        :params ws: The openpyxl Worksheet to use.
+        :params widthDF: The width of the dataFrame holding the trades.
+        :params tf: The TradeFormat object
+        :prerequisites: Depends that ws has the table data beginning A25 (1,25), beginning with
+                        column headers on row 25. The length of the table is defined in
+                        self.inputlen. If topMargin changes, this code will need change.
         '''
+        # Hard coded sizes here
+        quoteRange = [(1, 1), (13, 5)]
+        noteRange = [(1, 6), (13, 24)]
+    
         tblRng = "{0}:{1}".format(tcell((1, self.topMargin)), tcell(
-            (len(nt.columns), self.topMargin + self.inputlen)))
+            (widthDF, self.topMargin + self.inputlen)))
         tab = Table(displayName="Table1", ref=tblRng)
         style = TableStyleInfo(name="TableStyleMedium1", showFirstColumn=False,
                                showLastColumn=False, showRowStripes=True, showColumnStripes=False)
@@ -139,15 +151,15 @@ class LayoutSheet:
 
         ws.add_table(tab)
 
-        # A1:M5 inspire quote
-        tf.mergeStuff(ws, (1, 1), (13, 5))
+        # A1:M5 inspire quote. Style the quote and insert the quote
+        tf.mergeStuff(ws, quoteRange[0], quoteRange[1])
         ws["A1"].style = tf.styles["normStyle"]
         style_range(ws, "A1:M5", border=tf.styles["normStyle"].border)
         inspire = Inspire()
         ws["A1"] = inspire.getrandom().replace("\t", "        ")
 
-        # A6:M24 introductory notes
-        tf.mergeStuff(ws, (1, 6), (13, 24))
+        # A6:M24 introductory notes. Style the cells and enter minimal text.
+        tf.mergeStuff(ws, noteRange[0], noteRange[1])
         ws["A6"].style = tf.styles["explain"]
         style_range(ws, "A6:M24", border=tf.styles["explain"].border)
 

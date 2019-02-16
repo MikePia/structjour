@@ -6,6 +6,7 @@ Test the methods in the module layoutsheet
 @author: Mike Petersen
 '''
 import os
+from random import randint
 from unittest import TestCase
 from unittest.mock import patch
 from collections import deque
@@ -13,11 +14,15 @@ from collections import deque
 import numpy as np
 import pandas as pd
 
+from openpyxl import Workbook
+from openpyxl import load_workbook
+
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.tradeutil import TradeUtil
 from journal.layoutsheet import LayoutSheet
-# pylint: disable = C0103, W0613, W0603
+from journal.tradestyle import TradeFormat, c
+# pylint: disable = C0103, W0613, W0603, W0212
 
 
 D = deque()
@@ -154,16 +159,18 @@ class TestLayoutSheet(TestCase):
             print('Done test_createImageLocation', infile)
 
     def test_createWorkbook(self):
+        '''
+        Test the method journal.layoutsheet.LayoutSheet.createWorkbook
+        '''
 
-        
-        df = pd.DataFrame(np.random.randint(0,100,size=(100, 7)), columns=list('ABCDEFG'))
+        df = pd.DataFrame(np.random.randint(0, 100, size=(100, 7)), columns=list('ABCDEFG'))
         # df
         sumSize = 25
         margin = 25
         spacing = 3
         inputlen = len(df)
         ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
-                
+
         wb, ws, df = ls.createWorkbook(df)
 
 
@@ -183,17 +190,144 @@ class TestLayoutSheet(TestCase):
         wb.save("out/SCHNOrK.xlsx")
 
     def test_styleTop(self):
+        '''
+        Test the method layoutsheet.LayoutSheet.styleTop. We necessarily know too much about it.
+        For example we know the merge sizes and the styles that the method hard codes. Note that
+        we are using a protected member of Worksheet ws._tables
+        '''
+        quoteRange = [(1, 1), (13, 5)]
+        noteRange = [(1, 6), (13, 24)]
+        quoteStyle = 'normStyle'
+        noteStyle = 'explain'
         sumSize = 25
         margin = 25
-        spacing = 3
         inputlen = 50   #len(df)
-        ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
-        ls.styleTop
+
+        wb = Workbook()
+        ws = wb.active
+        tf = TradeFormat(wb)
+
+        # Make sure the out dir exists
+        if not os.path.exists("out/"):
+            os.mkdir("out/")
+
+        # Make sure the file we are about to create does not exist
+        dispath = "out/SCHNOrK.xlsx"
+        if os.path.exists(dispath):
+            os.remove(dispath)
+
+        # Create table header and data in the ws
+        headers = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we',
+                   'know', 'it.', 'Bout', 'Fn', 'Time!']
+        for i in range(1, 14):
+            ws[c((i, 25))] = headers[i-1]
+
+        ls = LayoutSheet(sumSize, margin, inputlen)
+        for x in range(ls.topMargin+1, ls.inputlen + ls.topMargin+1):
+            for xx in range(1, 14):
+                ws[c((xx, x))] = randint(-1000, 10000)
+
+
+        ls.styleTop(ws, 13, tf)
+
+        wb.save(dispath)
+
+        wb2 = load_workbook(dispath)
+        ws2 = wb2.active
+
+        x = ws2.merged_cells.ranges
+        listOfMerged = list()
+        listOfMerged.append(c((quoteRange[0])) + ':' +  c((quoteRange[1])))
+        listOfMerged.append(c((noteRange[0])) + ':' +  c((noteRange[1])))
+        for xx in x:
+            # print (str(xx) in listOfMerged)
+            self.assertTrue(str(xx) in listOfMerged)
+        self.assertEqual(ws[c(quoteRange[0])].style, quoteStyle)
+        self.assertEqual(ws[c(noteRange[0])].style, noteStyle)
+
+        self.assertEqual(len(ws._tables), 1)
+
+
+        begin = c((1, ls.topMargin))
+
+        end = c((13, ls.topMargin + ls.inputlen))
+        tabRange = f'{begin}:{end}'
+        self.assertEqual(tabRange, ws._tables[0].ref)
+
+        os.remove(dispath)
+
+    def test_styleTopwithnothin(self):
+        '''
+        Test the method layoutsheet.LayoutSheet.styleTop. Test that it still works without
+        table data. We still know too much about the method,. Note that we are using a protected
+        member of Worksheet ws._tables
+        '''
+        quoteRange = [(1, 1), (13, 5)]
+        noteRange = [(1, 6), (13, 24)]
+        quoteStyle = 'normStyle'
+        noteStyle = 'explain'
+        sumSize = 25
+        margin = 25
+        inputlen = 50   #len(df)
+
+        wb = Workbook()
+        ws = wb.active
+        tf = TradeFormat(wb)
+
+        # Make sure the out dir exists
+        if not os.path.exists("out/"):
+            os.mkdir("out/")
+
+        # Make sure the file we are about to create does not exist
+        dispath = "out/SCHNOrK.xlsx"
+        if os.path.exists(dispath):
+            os.remove(dispath)
+
+        # Create table header and data in the ws
+    #     headers = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', '
+#       know', 'it.', 'Bout', 'Fn', 'Time!']
+    #     for i in range (1, 14):
+    #         ws[c((i, 25))] = headers[i-1]
+
+        ls = LayoutSheet(sumSize, margin, inputlen)
+        ls.styleTop(ws, 13, tf)
+
+        wb.save(dispath)
+
+        wb2 = load_workbook(dispath)
+        ws2 = wb2.active
+
+        x = ws2.merged_cells.ranges
+        listOfMerged = list()
+        listOfMerged.append(c((quoteRange[0])) + ':' +  c((quoteRange[1])))
+        listOfMerged.append(c((noteRange[0])) + ':' +  c((noteRange[1])))
+        for xx in x:
+            # print (str(xx) in listOfMerged)
+            assert str(xx) in listOfMerged
+        assert ws[c(quoteRange[0])].style == quoteStyle
+        assert ws[c(noteRange[0])].style == noteStyle
+
+        assert len(ws._tables) == 1
+
+
+        begin = c((1, ls.topMargin))
+
+        end = c((13, ls.topMargin + ls.inputlen))
+        tabRange = f'{begin}:{end}'
+        assert tabRange == ws._tables[0].ref
+
+        os.remove(dispath)
+
+def notmain():
+    '''Run some local code'''
+        # pylint: disable = E1120
+    ttt = TestLayoutSheet()
+    # ttt.test_createImageLocation()
+    # ttt.test_createWorkbook()
+    ttt.test_styleTopwithnothin()
+
 
 
 
 if __name__ == '__main__':
-    # pylint: disable = E1120
-    ttt = TestLayoutSheet()
-    # ttt.test_createImageLocation()
-    ttt.test_createWorkbook()
+    notmain()

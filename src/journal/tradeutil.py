@@ -88,8 +88,8 @@ class ReqCol(object):
       
 class TradeUtil(object):
     '''
-    TradeUtil moves the data from DataFrame to a formatted excel format object. It will compose a Trade class that will 
-    encapsulate a trade including each transaction, and all the user input (target price, stop price, strategy, 
+    TradeUtil moves the data from DataFrame to a formatted excel format object. It will compose a Trade class that will
+    encapsulate a trade including each transaction, and all the user input (target price, stop price, strategy,
     explanation, extended notes and short notes. A data structure will be used to format this information in a way
     that makes review of the trade the prime concern using an openpyxl excel object.
     '''
@@ -99,7 +99,7 @@ class TradeUtil(object):
         Constructor
         '''
         self._frc = FinReqCol(source)
-        
+
     def processOutputDframe(self, trades):
         finalReqCol = FinReqCol()
 
@@ -344,11 +344,13 @@ class TradeUtil(object):
         A few items that need fixing up in names and initial HOLD entries. This method is called 
         after the creation of the DataFrameList (ldf). We locate flipped positions and overnight
         holds and change the name appropriately. Also update initial HOLD prices, and balance with
-        the calculated average price of pre owned shares and initail shares respectively.
-        :params ldf: A ist of DataFrames, each DataFrame represents a trade defined by the
-                     initial purchase or short of a stock and until the transaction which returns
-                     the share balance to 0. (Last entry may be a HOLD indicating shares were held
-                     overnight in the amount of the previous transaction share balance.)
+        the calculated average price of pre owned shares and initial shares respectively.
+        :params ldf: A ist of DataFrames, each DataFrame represents a trade defined by the initial
+                     purchase or short of a stock, and all transactions until the transaction which
+                     returns the share balance to 0. Last entry may be a HOLD indicating shares
+                     were held overnight in the amount of the previous transaction share balance.
+                     The HOLD entry is a nontransaction. shares are listed as 0 indicating the
+                     number of shares owned is in the previous transaction.
         :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single DataFrame.
 
         '''
@@ -372,9 +374,12 @@ class TradeUtil(object):
                         sharelist=list()
                         pricelist=list()
                         for i, row in tdf.iterrows():
+                            # Here we set initial entries average price of shares previously held
+                            # based on the P/L of the first exit
                             # The math gets complicated if there are more than 2 entrances before
-                            # the first exit. This only works when there everythin is exited 1st trade. 
-                            # Try again (again) tomorrow. Send in some SIM trades to model it.
+                            # the first exit. This currently only works without extra entries
+                            # before the first exit. 
+                            # TODO Send in some SIM trades to model it.
                             # print(i, row[c.PL], row[c.shares])
                             sharelist.append(row[c.shares])
                             pricelist.append(row[c.price])
@@ -399,7 +404,9 @@ class TradeUtil(object):
 
                 # print()
             else:
-                print('this should never run. What happned in postProcessing??????????????????????????')
+                print('This should never run. What happned in postProcessing?',
+                      'It means we have a non 0 balance at the end of a trade.(!?!)',
+                      tdf.iloc[-1][c.bal], tdf.iloc[-1][c.name])
             if count == 0:
                 dframe = tdf
             else:

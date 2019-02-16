@@ -45,7 +45,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     wb, ws, nt = ls.createWorkbook(dframe)
 
     tf = TradeFormat(wb)
-    ls.styleTop(ws, nt, tf)
+    ls.styleTop(ws, len(nt.columns), tf)
     assert len(ldf) == len(imageLocation)
 
     mstkAnchor = (len(dframe.columns) + 2, 1)
@@ -69,7 +69,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
 
 if __name__ == '__main__':
     inf = None
-    outd = None
+    outd = 'out/'
     # theD = '2019-02-08'
     theD = None
     ind = None
