@@ -12,7 +12,7 @@ import pandas as pd
 from journal.dfutil import DataFrameUtil
 from journal.tradeutil import ReqCol, FinReqCol  # , TradeUtil
 
-#  pylint: disable=C0103
+#  pylint: disable=C0103, W0703
 
 
 class Test_DfUtil(unittest.TestCase):
@@ -74,15 +74,16 @@ class Test_DfUtil(unittest.TestCase):
         apd = pd.DataFrame(
             vals, columns=['Its', 'the', 'end', 'of', 'world', 'as', 'we', 'know', 'it'])
 
+        gotve = False
         try:
             DataFrameUtil.checkRequiredInputFields(apd, columns)
         except ValueError:
-            self.assertTrue(True)
+            gotve = True
         except Exception as ex:
             msg = "Wrong exception was thrown" + ex
             self.fail(msg)
-        else:
-            self.fail("Failed to throw a Value Error Exception")
+        finally:
+            self.assertTrue(gotve, "Failed to throw a Value Error Exception")
 
     def testCheckrequiredColumnsWithReqColFail(self):
         '''Test method DataFrameUtil.checkRequiredInputFields'''
@@ -93,16 +94,22 @@ class Test_DfUtil(unittest.TestCase):
             columns=['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account'])
         rc = pd.DataFrame(columns=reqCol.columns)
 
+        gotve = False
         try:
             DataFrameUtil.checkRequiredInputFields(fail, reqCol.columns)
         except ValueError as ex:
             print(ex)
-            self.assertTrue(True, ex)
+            gotve = True
+        finally:
+            self.assertTrue(gotve, "Failed to throw value error")
 
+        gotve = False
         try:
             DataFrameUtil.checkRequiredInputFields(rc, finReqCol.columns)
         except ValueError as ex:
-            self.assertTrue(True)
+            gotve = True
+        finally:
+            self.assertTrue(gotve, "Failed to throw a ValueError")
 
     def test_dfUtil_createDf(self):
         '''Test method DataFrameUtil.createDf'''

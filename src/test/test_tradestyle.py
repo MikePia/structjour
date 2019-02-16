@@ -95,7 +95,7 @@ class TestTradeFormat(TestCase):
         self.assertEqual(e, (x[0].max_col, x[0].max_row))
         os.remove(dispath)
 
-    def test_formmatTrade(self):
+    def test_formatTrade(self):
         '''
         Test the method TradeFormat.formatTrade. Specifically test that each of the elements in
         srf.tfcolumns has a corresponding elementcorrectly styled in the re-opened workbook and
@@ -135,12 +135,23 @@ class TestTradeFormat(TestCase):
         for msmerge in wsmerged:
             self.assertTrue(str(msmerge) in listofmerge)
 
+
+    def test_c(self):
+        '''Test the function c in the module tradestyle'''
+        self.assertEqual(c((3, 4)), 'C4')
+        self.assertEqual(c((1, 1), anchor=(4, 5)), 'D5')
+
+        self.assertEqual(c((2, 3), (3, 7)), 'B3:C7')
+
+        self.assertEqual(c((2, 3), (3, 7), (2, 2)), 'C4:D8')
+
 def notmain():
     '''Run some local code'''
     t = TestTradeFormat()
     # t.test_TradeFormatAddNamedStyle()
     # t.test_mergeStuff()
-    t.test_formmatTrade()
+    # t.test_formatTrade()
+    t.test_c()
 
 
 if __name__ == '__main__':
