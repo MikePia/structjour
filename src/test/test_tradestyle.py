@@ -11,6 +11,7 @@ from openpyxl import load_workbook
 from openpyxl import Workbook
 
 from journal.tradestyle import TradeFormat, c
+from journal.thetradeobject import SumReqFields
 
 
 # pylint: disable = C0103, W0613, W0603
@@ -94,12 +95,52 @@ class TestTradeFormat(TestCase):
         self.assertEqual(e, (x[0].max_col, x[0].max_row))
         os.remove(dispath)
 
+    def test_formmatTrade(self):
+        '''
+        Test the method TradeFormat.formatTrade. Specifically test that each of the elements in
+        srf.tfcolumns has a corresponding elementcorrectly styled in the re-opened workbook and
+        that each merged element in srf.tfcolumns is found in the the worsheet.
+        '''
+        wb = Workbook()
+        ws = wb.active
+
+        t = TradeFormat(wb)
+        srf = SumReqFields()
+        ws = wb.active
+
+        t.formatTrade(ws, srf)
+
+        dispath = "out/SCHNOrK.xlsx"
+        if os.path.exists(dispath):
+            os.remove(dispath)
+        wb.save(dispath)
+
+        wb2 = load_workbook(dispath)
+        ws2 = wb2.active
+
+        # test that each listed item in srf.tfcolumns has a corresponding style set in the
+        # appropriate cell of the re-opened workbook
+        for x in srf.tfcolumns:
+            address = srf.tfcolumns[x][0]
+            st = srf.tfcolumns[x][1]
+            if isinstance(address, list):
+                assert ws2[c(address[0])].style == st
+            else:
+                assert ws2[c(address)].style == st
+
+        # test that each list element has a corresponding merged cell group in the worbook
+        listofmerge = [c(srf.tfcolumns[x][0][0], srf.tfcolumns[x][0][1])  for x in srf.tfcolumns if isinstance(srf.tfcolumns[x][0], list)]
+        wsmerged = ws.merged_cells.ranges
+        self.assertEqual(len(listofmerge), len(wsmerged))
+        for msmerge in wsmerged:
+            self.assertTrue(str(msmerge) in listofmerge)
 
 def notmain():
     '''Run some local code'''
     t = TestTradeFormat()
     # t.test_TradeFormatAddNamedStyle()
-    t.test_mergeStuff()
+    # t.test_mergeStuff()
+    t.test_formmatTrade()
 
 
 if __name__ == '__main__':

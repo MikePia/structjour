@@ -14,20 +14,30 @@ frc = FinReqCol()
 class SumReqFields(object):
     '''
     Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject
-    and TheTradeStyle. These columns are used in a DataFrame (aka TheTrade) that summarizes each
-    single trade with a single row. This summary information includes information from the user,
-    target, stop, strategy, notes etc.
+    and TheTradeStyle. There are three types of data represented here.
+    :attribute self.rc (The data): The data is held in the locations represented by self.rc and the
+        associatied dict keys. The keys can be 0f course accessed as strings or as attributes such
+        as self.name. The latter should be used to maintain portable input files. This data will be
+        placed in the workbooks in the trade summaries. The rc columns are used in a DataFrame (aka
+        TheTrade) that summarizes each single trade with a single row. This summary information
+        includes information from the user, target, stop, strategy, notes etc.
+    :attribute self.tfcolumns (The style): This the the tradeformat form. The form can be re-shaped
+        by changing this data structure. These will style workbook in the trade summaries
+    :attribute self.tfformulas (hybrid data): These entries will override the rc data. The entries
+        represent excel formulas. Most formulas require a mapping of cells done just after the cell
+        styling.
+    
     :
-    NOTES on self.tfcolumns:
+    NOTES on self.tfcolumns and tfformulas(Summary trade form):
     tfcolumns, short for tradeFormatColumns, specifically defines the trade summary form.
     Each named dict entry contains its location in relation to the anchor at the top left
     and a named style for that cell or group of merged cells. Merged locations have a
     list of two tuples (e.g. self.name) Single cells contain a single tuple (e.g.
     self.targhead).  To add a style to the TradeSummary, define the NamedStyle in
     journal.tradestyle.TradeFormat. Follow the pattern of the others. Then place the name
-    here with its cell location (anchor at (1,1)) and its associated data column in TheTrade
-    DataFrame # ex1="ex1". Excel cell formulas are treated created seperately to allow for
-    cell translation. See self.tfformulas
+    in tfcolumns with the others. Excel cell formulas (tfformulas) are created seperately and
+    usually require cell translation, done just after the style creation usually. If no cell 
+    translation is required, the workbook insertion can be handled as a regular rc entry.
     '''
 
     def __init__(self):
@@ -67,8 +77,8 @@ class SumReqFields(object):
         # rckeys2 = ['stratnote', 'link5', 'link6']
 
         # This includes all the locations that are likely to have data associated with them.
-        # Blank cells are added to tfcolumns  Each of these are added as attributes Unnecessarily
-        # but it should reduce errors to use attributes instead of strings.
+        # Blank cells are added to tfcolumns. Tese have style, but no data. Each of the data
+        # entries are added as attributes to maintain programming abstraction, minimize future change.
         rc = dict(zip(rckeys, rcvals))
 
         # #Suggested way to address the columns for the TheTrade DataFrame.
@@ -481,7 +491,8 @@ class TheTradeObject(object):
         self.TheTrade[self.srf.rrhead] = 'R:R'
         self.TheTrade[self.srf.maxhead] = 'Max Loss'
         self.TheTrade[self.srf.mstkhead] = "Proceeds Lost"
-        return self.TheTrade[[self.srf.entryhead, self.srf.targhead, self.srf.stophead, self.srf.rrhead, self.srf.maxhead]]
+        return self.TheTrade[[self.srf.entryhead, self.srf.targhead, self.srf.stophead,
+                              self.srf.rrhead, self.srf.maxhead]]
 
     def __setEntries(self):
         '''
@@ -570,10 +581,12 @@ class TheTradeObject(object):
                         "Entry"])
             count = count + 1
 
-        # TODO This is broken because we display only 8 combined entries plus exits
+        # TODO This is broken because we display only 8 combined entries plus exits, although I
+        # haven't had a trade with enough entries to break it/test it.
         if len(entries) > 8:
             more = len(entries) - 8
             self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
+            print ('Holy cow, save this input file as a test file and finalize setEntries code.')
         for i, price in zip(range(len(entries)), entries):
 
             # Entry Price

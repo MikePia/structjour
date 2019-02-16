@@ -462,10 +462,11 @@ class TradeFormat (object):
 
         return (begin, end)
 
-    def formatTrade(self, ws, srf,  anchor=None):
+    def formatTrade(self, ws, srf, anchor=None):
         '''
-        Implementing the Summary Trade Form as defined in SumReqFields.tfcolumns, which contains
-        the relative locations of each cell or merged cells and the style to use.
+        Implement the Summary Trade Form within the openpyxl worksheet object. The form is defined
+        in SumReqFields.tfcolumns, which contains the relative locations of each cell or merged
+        cells and the style to use for each.
         :params ws: The worksheet in which to create trade summary forms.
         :parmas anchor: The translation as a tuple of ints. If it is None use self.anchor. The
                 result will be to place the top left cell of the form at anchor.
