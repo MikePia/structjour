@@ -64,8 +64,8 @@ class TestTheTradeObject(unittest.TestCase):
 
         tu = TradeUtil()
         (dummy_len, dummy_df, ldf) = tu.processOutputDframe(trades)
-
-        tto = TheTradeObject(ldf[1], True)
+        srf = SumReqFields()
+        tto = TheTradeObject(ldf[1], True, srf)
         return tto
 
     def test_TheTradeObjectSetName(self):

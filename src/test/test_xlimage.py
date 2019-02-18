@@ -1,5 +1,5 @@
 '''
-Test the methods and functions in journal.xlimage
+Test the methods and functions in journal.xlimage. 
 Created on Feb 17, 2019
 
 @author: Mike Petersen
@@ -33,7 +33,7 @@ class TestXLImage(unittest.TestCase):
     def test_getDefault(self):
         '''
         Test the method journal.xlimage.XLImage.getDefaultPILImage. Specifically test that it opens
-        an image whether an image is specified.
+        an image whether an image is specified or not. If not, the default image may not exist- fix that.
         '''
         img = r'C:\python\E\structjour\src\data\defaultImage.png'
         os.path.exists(img)
@@ -44,10 +44,10 @@ class TestXLImage(unittest.TestCase):
         self.assertEqual(im.format.lower(), 'png')
         xli2 = XLImage()
         im2 = xli2.getDefaultPILImage()
-        self.assertGreater(im2.format, 1)
+        self.assertGreater(len(im2.format), 1)
 
 
-    def test_AdjustSizeByHeight(self):
+    def test_adjustSizeByHeight(self):
         '''
        Test the method XLImage.adjustSizeByHeight
         '''
@@ -78,6 +78,25 @@ class TestXLImage(unittest.TestCase):
             w, h = xl.adjustSizeByHeight(insz)
             self.assertAlmostEqual(insz[0]/insz[1], w/h, delta=pixDelta)
 
+    def test_getResizeName(self):
+        '''Test method journal.xlimage.XLImage.getResizeName'''
+
+        xli = XLImage()
+        origname = 'FredsEmporium.potter'
+        outdir = 'C:/python/E/structjour/src/out'
+        name, ext = xli.getResizeName(origname, outdir )
+        outdir, newname = os.path.split(name)
+        torig, ext = os.path.splitext(origname)
+        tnew, ext = os.path.splitext(newname)
+        self.assertEqual(torig, tnew)
+
+
+
+
+
+def main():
+    '''Run unittest locally'''
+    unittest.main()
 
 
 
@@ -85,7 +104,9 @@ def notmain():
     '''run some local code'''
     t = TestXLImage()
     # t.test_getDefault()
-    t.test_AdjustSizeByHeight()
+    # t.test_AdjustSizeByHeight()
+    t.test_getResizeName()
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    main()
