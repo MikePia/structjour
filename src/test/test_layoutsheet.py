@@ -131,10 +131,9 @@ class TestLayoutSheet(TestCase):
             inputlen, dframe, ldf = tu.processOutputDframe(trades)
             # ::::::::::: end setup :::::::::::::
 
-            sumSize = 25
             margin = 25
             spacing = 3
-            ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
+            ls = LayoutSheet(margin, inputlen, spacing=spacing)
             imageLocation, dframe = ls.createImageLocation(dframe, ldf)
 
             import datetime as dt
@@ -156,7 +155,7 @@ class TestLayoutSheet(TestCase):
                 self.assertTrue(isinstance(pd.Timestamp('2019-11-11 ' + t[3]), dt.datetime))
                 self.assertTrue(isinstance(t[4], dt.timedelta))
 
-            print('Done test_createImageLocation', infile)
+            # print('Done test_createImageLocation', infile)
 
     def test_createWorkbook(self):
         '''
@@ -165,11 +164,10 @@ class TestLayoutSheet(TestCase):
 
         df = pd.DataFrame(np.random.randint(0, 100, size=(100, 7)), columns=list('ABCDEFG'))
         # df
-        sumSize = 25
         margin = 25
         spacing = 3
         inputlen = len(df)
-        ls = LayoutSheet(sumSize, margin, inputlen, spacing=spacing)
+        ls = LayoutSheet(margin, inputlen, spacing=spacing)
 
         wb, ws, df = ls.createWorkbook(df)
 
@@ -178,7 +176,6 @@ class TestLayoutSheet(TestCase):
             # We inserted the column headers in this row (ws starts with 1, not 0)
             if i + 1 == ls.topMargin:
                 for ms, x in zip(row, df.columns):
-                    print(x, ms.value)
                     self.assertEqual(x, ms.value)
             # everything else is verbatim
             else:
@@ -191,15 +188,17 @@ class TestLayoutSheet(TestCase):
 
     def test_styleTop(self):
         '''
-        Test the method layoutsheet.LayoutSheet.styleTop. We necessarily know too much about it.
-        For example we know the merge sizes and the styles that the method hard codes. Note that
-        we are using a protected member of Worksheet ws._tables
+        Test the method layoutsheet.LayoutSheet.styleTop. This  will probably produce warnings from
+        openpyxl as there is empty data when it makes the headers. No worries.
+        Note that we are using a protected member of Worksheet ws._tables, so if it this fails, look
+        at that. openpyxl does not provide a public attribute for tables.
+        Note that knowing the quoteRange and noteRange is bad design. Eventually these two bits of
+        design data should be abstracted to somewhere accessible by the user. (and testing too)
         '''
         quoteRange = [(1, 1), (13, 5)]
         noteRange = [(1, 6), (13, 24)]
         quoteStyle = 'normStyle'
         noteStyle = 'explain'
-        sumSize = 25
         margin = 25
         inputlen = 50   #len(df)
 
@@ -222,7 +221,7 @@ class TestLayoutSheet(TestCase):
         for i in range(1, 14):
             ws[c((i, 25))] = headers[i-1]
 
-        ls = LayoutSheet(sumSize, margin, inputlen)
+        ls = LayoutSheet(margin, inputlen)
         for x in range(ls.topMargin+1, ls.inputlen + ls.topMargin+1):
             for xx in range(1, 14):
                 ws[c((xx, x))] = randint(-1000, 10000)
@@ -266,7 +265,6 @@ class TestLayoutSheet(TestCase):
         noteRange = [(1, 6), (13, 24)]
         quoteStyle = 'normStyle'
         noteStyle = 'explain'
-        sumSize = 25
         margin = 25
         inputlen = 50   #len(df)
 
@@ -283,7 +281,7 @@ class TestLayoutSheet(TestCase):
         if os.path.exists(dispath):
             os.remove(dispath)
 
-        ls = LayoutSheet(sumSize, margin, inputlen)
+        ls = LayoutSheet(margin, inputlen)
         ls.styleTop(ws, 13, tf)
 
         wb.save(dispath)
@@ -316,8 +314,8 @@ def notmain():
     '''Run some local code'''
         # pylint: disable = E1120
     ttt = TestLayoutSheet()
-    # ttt.test_createImageLocation()
-    # ttt.test_createWorkbook()
+    ttt.test_createImageLocation()
+    ttt.test_createWorkbook()
     ttt.test_styleTopwithnothin()
 
 
