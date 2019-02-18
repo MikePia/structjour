@@ -168,7 +168,7 @@ class LayoutSheet:
 
         '''
         tradeSummaries = list()
-        XL = XLImage(jf = jf)
+        XL = XLImage()
         srf = SumReqFields()
 
         response = askUser( "Would you like to enter strategy names, targets and stops?   ")

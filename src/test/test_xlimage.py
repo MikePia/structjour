@@ -1,5 +1,5 @@
 '''
-Test the methods and functions in journal.xlimage. 
+Test the methods and functions in journal.xlimage.
 Created on Feb 17, 2019
 
 @author: Mike Petersen
@@ -7,6 +7,7 @@ Created on Feb 17, 2019
 import datetime as dt
 import os
 import random
+from unittest import TestCase
 import unittest
 
 # from PIL import Image as PILImage
@@ -18,9 +19,11 @@ from journal.xlimage import XLImage
 
 
 
-class TestXLImage(unittest.TestCase):
+class TestXLImage(TestCase):
     '''
-    Test the functions in methods in thetradeobject module
+    Test the functions in methods in thetradeobject module. Created no tests for getAndResizeImage
+    and getPilImage. By the time I have automated responses mocked out, very little of value would
+    be tested.
     '''
 
     def __init__(self, *args, **kwargs):
@@ -33,7 +36,8 @@ class TestXLImage(unittest.TestCase):
     def test_getDefault(self):
         '''
         Test the method journal.xlimage.XLImage.getDefaultPILImage. Specifically test that it opens
-        an image whether an image is specified or not. If not, the default image may not exist- fix that.
+        an image whether an image is specified or not. If not, the default image may not exist- fix
+        that.
         '''
         img = r'C:\python\E\structjour\src\data\defaultImage.png'
         os.path.exists(img)
@@ -84,10 +88,10 @@ class TestXLImage(unittest.TestCase):
         xli = XLImage()
         origname = 'FredsEmporium.potter'
         outdir = 'C:/python/E/structjour/src/out'
-        name, ext = xli.getResizeName(origname, outdir )
+        name, dummy = xli.getResizeName(origname, outdir)
         outdir, newname = os.path.split(name)
-        torig, ext = os.path.splitext(origname)
-        tnew, ext = os.path.splitext(newname)
+        torig, dummy = os.path.splitext(origname)
+        tnew, dummy = os.path.splitext(newname)
         self.assertEqual(torig, tnew)
 
 
