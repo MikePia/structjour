@@ -20,7 +20,6 @@ from journal.tradestyle import style_range
 from journal.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable=C0103, C0201, W0703
- 
 
 def askUser(question):
     '''
@@ -104,10 +103,10 @@ class LayoutSheet:
 
     def createWorkbook(self, dframe):
         '''
-        Create the workbook obj and give it all the data in the DataFrame. This copies 
+        Create the workbook obj and give it all the data in the DataFrame. This copies
         almost verbatim each cell in the DataFrame to a cell in the workbook--except we add the
         column headers from the DataFrame to the correct location above the table in
-        row [self.topMargin]. 
+        row [self.topMargin].
         :params dframe: The trades and summaries already formatted in the correct shape for this
                          new document we are creating.
         :return (wb, ws, nt): The workbook, its worksheet and the original DataFrame
