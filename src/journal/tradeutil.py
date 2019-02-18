@@ -11,14 +11,14 @@ from journal.dfutil import DataFrameUtil
 
 # from tkinter.tix import Balloon
 
-class FinReqCol(object) :
+class FinReqCol(object):
     '''
-    Intended to serve as the adapter class for multiple input files. FinReqCol manages the column names fot 
-    the output file. It includes some of the input columns and additional columns  to identify seprate trades and sorting.
-    The columns we add are tix, start, bal, sum, dur, and name
+    Intended to serve as the adapter class for multiple input files. FinReqCol manages the column
+    names for the output file. It includes some of the input columns and additional columns  to
+    identify seprate trades and sorting. The columns we add are tix, start, bal, sum, dur, and name
     :SeeAlso: journal.thetradeobject.SumReqFields
     '''
-    def __init__(self, source = 'DAS') :
+    def __init__(self, source = 'DAS'):
         
         if source != 'DAS' :
             print("Only DAS is implemented")
@@ -256,7 +256,6 @@ class TradeUtil(object):
         Sum up the transactions in c.PL for Live and Sim Seperately.
         We rely on the account number starting with 'U' or 'TR' to determine
         live or SIM. These two columns should add to the same amount. '''
-        # TODO sum up the seperate accounts and make a new labeled entry for each account
         # Note that .sum() should work on this but it failed when I tried it.
         c = self._frc
         

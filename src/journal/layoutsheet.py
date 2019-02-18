@@ -38,17 +38,18 @@ class LayoutSheet:
     the program progresses from pandas to openpyxl.
     '''
 
-    def __init__(self, summarySize, topMargin, inputlen, spacing=3):
+    def __init__(self, topMargin, inputlen, spacing=3):
         '''
         Constructor
-        :params summarySize: The number of rows for each trade summary
         :params topMargin: The space at the top before the trade table. Includes the
                            inspire quote and space notes.
         :params inputlen: Don't enter a value here. Its the length of the dframe after processing.
         :params spacing: The space between trade summaries.
         :params frq: The FinReqCol object
         '''
-        self.summarySize = summarySize
+        srf = SumReqFields()
+        sumSize = srf.maxrow() + 5
+        self.summarySize = sumSize
         self.topMargin = topMargin
         self.inputlen = inputlen
         self.spacing = spacing
@@ -163,9 +164,20 @@ class LayoutSheet:
         ws["A6"].style = tf.styles["explain"]
         style_range(ws, "A6:M24", border=tf.styles["explain"].border)
 
-    def createSummaries(self, imageLocation, ldf, jf, ws, tf):
+    def runSummaries(self, imageLocation, ldf, jf, ws, tf):
         '''
-
+        This is a runner script. For each trade DataFrame in the list ldf we will get and place
+        the chart image, call TheTradeObject.runSummary to gather the summary data into the
+        TradeObject. Then we will create the trade summaries, by styling the form and placing the
+        summary data/forms next to the images we just placed.
+        :params imageLocation: Data structure containing the locations to place summaries
+        :params ldf: A list of DataFrames, each representing a single trade with one or more
+                     transactions
+        :params jf: The JournalFiles object containing needed path locations
+        :params ws: The openpyx Worksheet object to work on
+        :params tf: The TradeFormat object with data and methods for creating the Trade Summaries.
+        :return tradeSummaries: A list of 1 row DataFrames created by TheTradeObject. Each has 1
+                    row representing one trade and contains multiple columns for entries and exits.
         '''
         tradeSummaries = list()
         XL = XLImage()

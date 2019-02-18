@@ -278,9 +278,11 @@ class SumReqFields(object):
         # Set up the excel formulas for the trade summaries. The ones for Mistake Summary are in
         # their class
         # In this dict, the values are a list in which the first entry is the formula itsef
-        # with format specifiers {} for the referenced addresses. The rest of the list is the location
-        # of the cells within the trade summary form at A1. To fill this in translate the cell addresses
-        # and replace the specifiers.
+        # with format specifiers {} for the referenced addresses. For example, '={0}-{1}' will
+        # translate to something like '=D145-D143' The rest of the list is the location of the
+        # cells within the trade summary form (untranslated) at A1. Translate the
+        # cell addresses then use format to replace the specifiers from summary data in the
+        # openpyxl worksheet object for each trade.
         self.tfformulas = dict()
         self.tfformulas[self.targdiff] = ["={0}-{1}",
                                           self.tfcolumns[self.targ][0],
@@ -312,9 +314,12 @@ class SumReqFields(object):
         df = pd.DataFrame(_styles, columns=['st'])
         return df['st'].unique()
 
-        # TODO get a list of named styles and verify that all of these strings are on the list. Come up with a mechanism to make this configurable by the user
-
     def maxcol(self):
+        '''
+        Maxcol() method will get the maximum column for the current TradeSummaries form as it is 
+        translated from column A.
+        :return maxcol: As an int
+        '''
         locs = [self.tfcolumns[x][0] for x in self.tfcolumns]
         maxcol = 1
         for loc in locs:
@@ -324,6 +329,22 @@ class SumReqFields(object):
             elif loc[0] > maxcol:
                 maxcol = loc[0]
         return maxcol
+
+    def maxrow(self):
+        '''
+        Maxrow() method will get the maximum row for the current TradeSummaries form as it is 
+        translated from row 1.
+        :return maxrow: As an int
+        '''
+        locs = [self.tfcolumns[x][0] for x in self.tfcolumns]
+        maxrow = 1
+        for loc in locs:
+            if isinstance(loc, list):
+                if loc[1][1] > maxrow:
+                    maxrow = loc[1][1]
+            elif loc[1] > maxrow:
+                maxrow = loc[1]
+        return maxrow
 
 
 # global variable for use in this module
@@ -760,6 +781,7 @@ def notmain():
     srf = SumReqFields()
     
     print('\n', srf.maxcol(), '\n')
+    print('\n', srf.maxrow(), '\n')
 
 
 if __name__ == '__main__':

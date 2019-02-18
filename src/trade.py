@@ -35,12 +35,11 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
 
     # Process the openpyxl excel object using the output file DataFrame. Insert
     # images and Trade Summaries.
-    sumSize = 25
     margin = 25
 
     # Create the space in dframe to add the summary information for each trade.
     # Then create the Workbook.
-    ls = LayoutSheet(sumSize, margin, inputlen)
+    ls = LayoutSheet(margin, inputlen)
     imageLocation, dframe = ls.createImageLocation(dframe, ldf)
     wb, ws, nt = ls.createWorkbook(dframe)
 
@@ -53,7 +52,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     mistake.mstkSumStyle(ws, tf, mstkAnchor)
     mistake.dailySumStyle(ws, tf, ldf, mstkAnchor)
 
-    tradeSummaries = ls.createSummaries(imageLocation, ldf, jf, ws, tf)
+    tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
     # app = QApplication(sys.argv)
     # qtf = QtForm()
     # qtf.fillForm(tradeSummaries[2])
