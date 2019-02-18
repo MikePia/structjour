@@ -19,7 +19,7 @@ from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.definetrades import TradeUtil
+from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat, c
 # pylint: disable = C0103, W0613, W0603, W0212
@@ -127,7 +127,7 @@ class TestLayoutSheet(TestCase):
             idf = InputDataFrame()
             trades = idf.processInputFile(trades)
 
-            tu = TradeUtil()
+            tu = DefineTrades()
             inputlen, dframe, ldf = tu.processOutputDframe(trades)
             # ::::::::::: end setup :::::::::::::
 

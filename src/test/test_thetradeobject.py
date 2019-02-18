@@ -10,7 +10,7 @@ import types
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-from journal.definetrades import TradeUtil
+from journal.definetrades import DefineTrades
 from journal.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable = C0103, W0212, C0111
@@ -81,7 +81,7 @@ class TestTheTradeObject(unittest.TestCase):
         idf = InputDataFrame()
         trades = idf.processInputFile(trades)
 
-        tu = TradeUtil()
+        tu = DefineTrades()
         (dummy_len, dummy_df, ldf) = tu.processOutputDframe(trades)
         srf = SumReqFields()
         tto = TheTradeObject(ldf[1], True, srf)

@@ -83,9 +83,9 @@ class ReqCol(object):
         self.columns = list(rc.values())
 
 
-class TradeUtil(object):
+class DefineTrades(object):
     '''
-    TradeUtil moves the data from DataFrame representing the input file transactions to a dataframe
+    DefineTrades moves the data from DataFrame representing the input file transactions to a dataframe
     with added columns sorted into trades, showing trade start time, share balance for each trade, and
     the duration of each trade.
     to an openpyxl excel Workbook format object. It will

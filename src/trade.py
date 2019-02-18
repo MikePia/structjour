@@ -7,7 +7,7 @@ Top level module currently.
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-from journal.definetrades import TradeUtil
+from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
 from journal.mstksum import MistakeSummary
@@ -30,7 +30,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     idf = InputDataFrame()
     trades = idf.processInputFile(trades)
 
-    tu = TradeUtil()
+    tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
 
     # Process the openpyxl excel object using the output file DataFrame. Insert
