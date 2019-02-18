@@ -314,6 +314,17 @@ class SumReqFields(object):
 
         # TODO get a list of named styles and verify that all of these strings are on the list. Come up with a mechanism to make this configurable by the user
 
+    def maxcol(self):
+        locs = [self.tfcolumns[x][0] for x in self.tfcolumns]
+        maxcol = 1
+        for loc in locs:
+            if isinstance(loc, list):
+                if loc[1][0] > maxcol:
+                    maxcol = loc[1][0]
+            elif loc[0] > maxcol:
+                maxcol = loc[0]
+        return maxcol
+
 
 # global variable for use in this module
 # srf = SumReqFields()
@@ -741,3 +752,15 @@ class TheTradeObject(object):
     def __setExplainNotes(self):
         self.TheTrade[self.srf.explain] = "Technical description of the trade"
         self.TheTrade[self.srf.notes] = "Evaluation of the trade"
+
+
+
+def notmain():
+    '''Run some local code'''
+    srf = SumReqFields()
+    
+    print('\n', srf.maxcol(), '\n')
+
+
+if __name__ == '__main__':
+    notmain()

@@ -316,8 +316,8 @@ class TradeUtil(object):
         # Now  we are going to add each trade and insert space to put in pictures with circles and 
         #arrows and paragraph on the back of each one to be used as evidence against you in a court 
         # of law (or court of bb opionion)
-#         insertsize=25
-    #     dframe = nt
+        # insertsize=25
+        # dframe = nt
         c = self._frc   
         try :
             if not dframe[c.tix].unique()[0].startswith('Trade') :
@@ -336,7 +336,7 @@ class TradeUtil(object):
                 ldf.append(tdf)
             else :
                 break
-#         print("Got {0} trades".format(len(ldf)))
+        # print("Got {0} trades".format(len(ldf)))
         return ldf
 
     def postProcessing(self, ldf):

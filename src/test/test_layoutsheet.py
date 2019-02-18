@@ -283,12 +283,6 @@ class TestLayoutSheet(TestCase):
         if os.path.exists(dispath):
             os.remove(dispath)
 
-        # Create table header and data in the ws
-    #     headers = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we', '
-#       know', 'it.', 'Bout', 'Fn', 'Time!']
-    #     for i in range (1, 14):
-    #         ws[c((i, 25))] = headers[i-1]
-
         ls = LayoutSheet(sumSize, margin, inputlen)
         ls.styleTop(ws, 13, tf)
 

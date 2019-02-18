@@ -171,7 +171,7 @@ class LayoutSheet:
         XL = XLImage()
         srf = SumReqFields()
 
-        response = askUser( "Would you like to enter strategy names, targets and stops?   ")
+        response = askUser("Would you like to enter strategy names, targets and stops?   ")
         interview = True if response.lower().startswith('y') else False
 
         for loc, tdf in zip(imageLocation, ldf):
@@ -180,7 +180,9 @@ class LayoutSheet:
 
             # Hidden here is the location to place the chart on the page.
             if img:
-                cellname = 'M' + str(loc[0])
+                col = srf.maxcol() + 1
+                col = tcell((col, 1))[0]
+                cellname = col + str(loc[0])
                 ws.add_image(img, cellname)
 
             #Put together the trade summary info for each trade and interview the trader
