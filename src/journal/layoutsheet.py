@@ -13,7 +13,7 @@ from openpyxl.styles import Font, colors
 # from inspiration.inspire import Inspire
 from inspiration.inspire import Inspire
 from journal.dfutil import DataFrameUtil
-from journal.tradeutil import FinReqCol
+from journal.definetrades import FinReqCol
 from journal.xlimage import XLImage
 from journal.tradestyle import c as tcell
 from journal.tradestyle import style_range

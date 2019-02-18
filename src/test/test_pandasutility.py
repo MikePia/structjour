@@ -12,7 +12,7 @@ import types
 import pandas as pd
 
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-from journal.tradeutil import ReqCol
+from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
 
 # pylint: disable = C0103

@@ -10,7 +10,7 @@ import types
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-from journal.tradeutil import TradeUtil
+from journal.definetrades import TradeUtil
 from journal.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable = C0103, W0212, C0111

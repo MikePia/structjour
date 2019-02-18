@@ -6,7 +6,7 @@ Created on Sep 2, 2018
 import os
 import pandas as pd
 
-from journal.tradeutil import ReqCol
+from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
 
 # pylint: disable = C0103

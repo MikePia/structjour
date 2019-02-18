@@ -7,7 +7,7 @@ Top level module currently.
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
-from journal.tradeutil import TradeUtil
+from journal.definetrades import TradeUtil
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
 from journal.mstksum import MistakeSummary

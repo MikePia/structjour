@@ -1,7 +1,7 @@
 import pandas as pd
 
 from journal.dfutil import DataFrameUtil
-from journal.tradeutil import FinReqCol
+from journal.definetrades import FinReqCol
 # pylint: disable=C0103
 
 

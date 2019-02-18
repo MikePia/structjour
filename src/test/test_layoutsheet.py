@@ -19,7 +19,7 @@ from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.tradeutil import TradeUtil
+from journal.definetrades import TradeUtil
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat, c
 # pylint: disable = C0103, W0613, W0603, W0212
