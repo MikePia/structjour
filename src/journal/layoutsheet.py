@@ -53,7 +53,7 @@ class LayoutSheet:
         self.inputlen = inputlen
         self.spacing = spacing
 
-    def createImageLocation(self, df, ldf, ft="jpeg"):
+    def createImageLocation(self, df, ldf, ft="png"):
         '''
         Create the skeletal shape of the excel document in a DataFrame. It places a table near
         the top,leaving space for intro stuff. Then it places small sub tables containing single
@@ -168,7 +168,7 @@ class LayoutSheet:
 
         '''
         tradeSummaries = list()
-        XL = XLImage()
+        XL = XLImage(jf = jf)
         srf = SumReqFields()
 
         response = askUser( "Would you like to enter strategy names, targets and stops?   ")

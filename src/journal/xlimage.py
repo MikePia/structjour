@@ -37,6 +37,7 @@ class XLImage(object):
         self.defaultImage = default
         self.numCells = heightInCells
         self.pixPerCell = pixPerCell
+        self.jf = jf
 
 
     def adjustSizeByHeight(self, sz):
@@ -63,21 +64,41 @@ class XLImage(object):
         Retrieve the image from the clipboard. Ask the user if the image is ready and collect the response
         Use the PIL library to get an image from the clipboard. The ImageGrab.grabclibboard() works on
         Windows and MAC only. On failure to get an image, give the user 4 more tries or the user can opt out by
-        entering 'q'.
+        entering 'q'. 
+        :User responses: Check only the initial letter ...
+                            '' or 'y' -> get image in clipboard
+                            'q' or 'n' -> return None
+                            '?'  or 'h' -> get help
+                            'o' -> type in an image filename
+                            'd' -> get default image
         :param:msg: This is communication to the user of what to copy into the clipboard. It should be something
                     'Copy the chart for MU long at 9:35 for 2 minutes.
         :return:     The image in as a PIL object or None
         '''
 
         for i in range(5):
-            msg_go = "{0} {1}".format(msg, "Are you ready? (n to skip image) \n\t\t\t\t")
+            msg_go = "{0} {1}".format(msg, "Are you ready? ('?' to display options) \n\t\t\t\t")
             response = askUser(msg_go)
             im = None
+            if response.startswith('?') or response.lower().startswith('h') :
+                print('''Press enter or 'y' to accept an image in the clipboard.\n''',
+                      '''Press 'q' of 'n' to enter no image for this trade\n''',
+                      '''Press '?' or 'h' to dispay this message.\n''',
+                      '''Press 'o' to type in an image filename.\n'''
+                      '''Press 'd' to use the default image.\n''')
+                response = input()
             if response.lower().startswith('y') or response == '':
                 im = ImageGrab.grabclipboard()
+
+
             elif response.lower().startswith('q') or response.lower().startswith('n'):
                 # return self.getDefaultPILImage()
                 return None
+            elif response.lower().startswith('o'):
+                name = askUser('Enter the name of an image.')
+                if os.path.exists(name):
+                    im = PILImage.open(name)
+
             elif response.lower().startswith('d'):
                 return self.getDefaultPILImage()
 
@@ -97,7 +118,7 @@ class XLImage(object):
         :param outdir: The location to save the images.
         :return: The pathname of the image we save.
         '''
-
+        img = None
         try:
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
@@ -106,6 +127,7 @@ class XLImage(object):
             '''.format(name)
 
             pilImage = self.getPilImageFromClipboard(msg)
+            # ext = pilImage.format.lower()
             if not pilImage:
                 return None
             newSize = self.adjustSizeByHeight(pilImage.size)
@@ -118,30 +140,25 @@ class XLImage(object):
 
         except IOError as e :
             print("An exception occured '%s'" % e)
-            if img :
+            if img:
                 return img
             return None
 
         return img    
 
-    def getResizeName(self, orig, outdir) :
+    def getResizeName(self, orig, outdir):
         '''
-        Do minimal checking that it has some extension. Using openpyxl and PIL, they may have more
-        stringent requirements. PIL, for example, fails if you try to save with the extension .jpg.
-        But its perfectly happy with .jpeg
-        :param orig: The original pathfile name.
-        :outdir outdir: The location to save to.
+        Set the extension and format to png. (Be sure to save it with a png format). Create the 
+        pathfile name and return it.
+        :params orig: The original pathfile name.
+        :params outdir: The location to save to.
         :return: A tuple (newFileName, extension)
         '''
 
         orig = orig.replace(":", "-")
         x = os.path.splitext(orig)
-        if len(x[1]) < 4:
-            print("please provide an image name with an image extension in its name. e.g 'png'")
         newName = x[0]
-        if 'jpg' in x[1].lower():
-            newName += '.jpeg'
-        else :
-            newName += x[1]
+        newName += '.png'
+       
         newName = os.path.join(os.path.normpath(outdir), newName)
         return (newName, os.path.splitext(newName)[1][1:])
