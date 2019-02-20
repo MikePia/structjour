@@ -85,12 +85,9 @@ class ReqCol(object):
 
 class DefineTrades(object):
     '''
-    DefineTrades moves the data from DataFrame representing the input file transactions to a dataframe
-    with added columns sorted into trades, showing trade start time, share balance for each trade, and
-    the duration of each trade.
-    to an openpyxl excel Workbook format object. It will
-    encapsulate a trade including each transaction, and all the user input (target price, stop
-    price, strategy, explanation, extended notes and short notes.
+    DefineTrades moves the data from DataFrame representing the input file transactions to a
+    dataframe with added columns sorted into trades, showing trade start time, share balance for
+    each trade, and the duration of each trade.
     '''
 
     def __init__(self, source='DAS'):
@@ -142,11 +139,11 @@ class DefineTrades(object):
         prevBal = 0
         c = self._frc
 
-        for i, dummy_row in dframe.iterrows():
+        for i, row in dframe.iterrows():
             qty = (dframe.at[i, c.shares])
 
             # This sets the after holds to 0 and leaves the before holds to set the proper balance
-            if dummy_row[c.side] == "HOLD-" or dummy_row[c.side] == "HOLD+":
+            if row[c.side] == "HOLD-" or row[c.side] == "HOLD+":
                 dframe.at[i, c.bal] = 0
                 newBalance = 0
             else:
@@ -157,6 +154,12 @@ class DefineTrades(object):
         return dframe
 
     def addStartTime(self, dframe):
+        '''
+        Add the start time to the new column labeled Start or frc.start. Each transaction in each
+        trade will share a start time.
+        :params dframe: The output df to place the data
+        :return dframe: The same dframe but with the new start data.
+        '''
 
         c = self._frc
 
@@ -358,11 +361,9 @@ class DefineTrades(object):
                         tdf.iloc[-1][c.bal] = 0
                     if tdf.iloc[0][c.side].startswith('HOLD'):
                         # tdf.iloc[0][c.bal] = tdf.iloc[0][c.shares] # Already done durning writeShareBal
-                        share = 0
-                        pl = 0
                         sharelist = list()
                         pricelist = list()
-                        for i, row in tdf.iterrows():
+                        for dummy, row in tdf.iterrows():
                             # Here we set initial entries average price of shares previously held
                             # based on the P/L of the first exit
                             # The math gets complicated if there are more than 2 entrances before

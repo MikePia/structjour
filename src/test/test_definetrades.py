@@ -43,14 +43,17 @@ def getRandomFuture(earliest=pd.Timestamp('2019-01-01 09:30:00')):
     return nextt
 
 def getPL():
+    '''
+    Get a random dollar amount
+    '''
     amnt = random.random()
-    upordown=random.random()
+    upordown = random.random()
     upordown = 1 if upordown > .4 else -1
-    multiplier = random.randint(2,200)
+    multiplier = random.randint(2, 200)
     return amnt * upordown * multiplier
 
 
-def randomTradeGenerator(tnum,  earliest=pd.Timestamp('2019-01-01 09:30:00')):
+def randomTradeGenerator(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00')):
     '''
     Creates a list of transacations to make up a trade. Uses columns for tradenum, start, time,
     side, qty and balance.
@@ -67,6 +70,7 @@ def randomTradeGenerator(tnum,  earliest=pd.Timestamp('2019-01-01 09:30:00')):
     prevBal = 0
     long = True
     theSum = None
+    duration = ''
     sumtotal = 0
     for i in range(numTrades):
         nexttime = getRandomFuture(nowtime)
@@ -75,29 +79,29 @@ def randomTradeGenerator(tnum,  earliest=pd.Timestamp('2019-01-01 09:30:00')):
         if i == 0:
             if side == 'S' or side.find('-') >= 0:
                 long = False
-        if long and side ==  'S':
-                pl = getPL()
+        if long and side == 'S':
+            pl = getPL()
         elif not long and side == 'B':
-            pl = getPL() 
-                 
+            pl = getPL()
+
         if side.startswith('HOLD'):
             if i == 0:
                 qty = random.randint(1, 500)
                 if side == 'HOLD-':
                     qty = -qty
                 start = nexttime
-                trade.append([tradenum, start, nowtime, side+'B', qty, qty, pl, theSum])
+                trade.append([tradenum, start, nowtime, side+'B', qty, qty, pl, theSum, duration])
                 sumtotal = sumtotal + pl
                 prevBal = qty
             else:
                 qty = -qty if side == 'S' else qty
-                trade.append([tradenum, start, nowtime, side, 0, 0, pl, theSum])
+                trade.append([tradenum, start, nowtime, side, 0, 0, pl, theSum, duration])
                 sumtotal = sumtotal + pl
                 prevBal = 0
                 break
         elif i == numTrades -1:
             side = 'S' if prevBal >= 0 else 'B'
-            trade.append([tradenum, start, nowtime, side, -prevBal, 0, pl, theSum])
+            trade.append([tradenum, start, nowtime, side, -prevBal, 0, pl, theSum, duration])
             sumtotal = sumtotal + pl
             prevBal = 0
             break
@@ -105,13 +109,16 @@ def randomTradeGenerator(tnum,  earliest=pd.Timestamp('2019-01-01 09:30:00')):
 
             qty = random.randint(1, 500)
             qty = -qty if side == 'S' else qty
-            trade.append([tradenum, start, nowtime, side, qty, prevBal+qty, pl, theSum])
+            trade.append([tradenum, start, nowtime, side, qty, prevBal+qty, pl, theSum, duration])
             sumtotal = sumtotal + pl
             prevBal = prevBal+qty
+    
+        
         nowtime = nexttime
+    duration = nowtime - start
+    trade[-1][8] = duration
     trade[-1][7] = sumtotal
     return trade
-
 
 
 
@@ -156,7 +163,7 @@ class TestDefineTrades(TestCase):
 
         frc = FinReqCol()
         df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.side,
-                                                frc.shares, frc.bal, frc.PL, frc.sum])
+                                                frc.shares, frc.bal, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.bal] = None
         dt = DefineTrades()
@@ -182,16 +189,18 @@ class TestDefineTrades(TestCase):
             #     print(tt[0], tt[1],tt[2], tt[3])
 
         frc = FinReqCol()
-        df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.side, frc.shares, frc.bal, frc.PL, frc.sum])
+        df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.side,
+                                                frc.shares, frc.bal, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.start] = None
         dt = DefineTrades()
         df3 = dt.addStartTime(df2)
         for i in range(len(df3)):
             # if df3.iloc[i][frc.start] != df.iloc[i][frc.start]:
-            if df3.iloc[i][frc.start] != df.iloc[i][frc.start]:
-                print(':::::::::; HERE IS ONE ::::::"')
-            # print(df3.iloc[i][frc.tix], df3.iloc[i][frc.start], '-----   :   ----', df.iloc[i][frc.tix], df.iloc[i][frc.start])
+            # if df3.iloc[i][frc.start] != df.iloc[i][frc.start]:
+                # print(':::::::::; HERE IS ONE ::::::"')
+            # print(df3.iloc[i][frc.tix], df3.iloc[i][frc.start], '-----   :   ----',
+            # df.iloc[i][frc.tix], df.iloc[i][frc.start])
             self.assertEqual(df3.iloc[i][frc.start], df.iloc[i][frc.start])
             # print('{}                  {}'.format(df3.iloc[i][frc.start], df.iloc[i][frc.start]))
 
@@ -212,7 +221,7 @@ class TestDefineTrades(TestCase):
 
         frc = FinReqCol()
         df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.side,
-                                                frc.shares, frc.bal, frc.PL, frc.sum])
+                                                frc.shares, frc.bal, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.bal] = None
         dt = DefineTrades()
@@ -222,13 +231,91 @@ class TestDefineTrades(TestCase):
             # print((df3.iloc[i][frc.tix], df.iloc[i][frc.tix]))
 
 
+    def test_addTradePL(self):
+        '''
+        Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
+        the start field and then test the results for the start field.
+        '''
+        trades = list()
+        start = pd.Timestamp('2019-01-01 09:30:00')
+        for i in range(4):
+            t = randomTradeGenerator(i+1, earliest=start)
+            trades.extend(t)
+            start = getRandomFuture(start)
+            # print(len(trades))
+            # for tt in t:
+            #     print(tt[0], tt[3],tt[6], tt[7])
+
+        frc = FinReqCol()
+        df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.side,
+                                                frc.shares, frc.bal, frc.PL, frc.sum, frc.dur])
+        df2 = df.copy()
+        df2[frc.start] = None
+        dt = DefineTrades()
+        df3 = dt.addStartTime(df2)
+        for i in range(len(df3)):
+            # print(df3.iloc[i][frc.tix], df3.iloc[i][frc.sum], '-----   :   ----', df.iloc[i][frc.tix], df.iloc[i][frc.sum])
+
+            # if df3.iloc[i][frc.sum] !=  df.iloc[i][frc.sum]:
+            #     print('FAILURE COMIN UP')
+            #     print (type(df3.iloc[i][frc.sum]))
+            #     print (type(df.iloc[i][frc.sum]))
+            #     if pd.isnull(df.iloc[i][frc.dur]):
+            #         print('nix')
+            if pd.isnull(df.iloc[i][frc.sum]):
+                self.assertTrue(pd.isnull(df3.iloc[i][frc.sum]))
+                print('Got null?')
+            else:
+                self.assertEqual(df3.iloc[i][frc.sum], df.iloc[i][frc.sum])
+                print("i dont")
+
+
+    def test_addTradeDuration(self):
+        '''
+        Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
+        the start field and then test the results for the start field.
+        '''
+        trades = list()
+        start = pd.Timestamp('2019-01-01 09:30:00')
+        for i in range(4):
+            t = randomTradeGenerator(i+1, earliest=start)
+            trades.extend(t)
+            start = getRandomFuture(start)
+            # print(len(trades))
+            # for tt in t:
+            #     print(tt[0], tt[1],tt[2], tt[8])
+
+        frc = FinReqCol()
+        df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.side,
+                                                frc.shares, frc.bal, frc.PL, frc.sum, frc.dur])
+        df2 = df.copy()
+        df2[frc.start] = None
+        dt = DefineTrades()
+        df3 = dt.addStartTime(df2)
+        for i in range(len(df3)):
+            # print(df3.iloc[i][frc.tix], df3.iloc[i][frc.dur], '-----   :   ----', df.iloc[i][frc.tix], df.iloc[i][frc.dur])
+
+            # if df3.iloc[i][frc.dur] !=  df.iloc[i][frc.dur]:
+            #     print('FAILURE COMIN UP')
+            #     print (type(df3.iloc[i][frc.dur]))
+            #     print (type(df.iloc[i][frc.dur]))
+            #     if pd.isnull(df.iloc[i][frc.dur]):
+            #         print('nix')
+            if pd.isnull(df.iloc[i][frc.dur]):
+                self.assertTrue(pd.isnull(df3.iloc[i][frc.dur]))
+            else:
+                self.assertEqual(df3.iloc[i][frc.dur], df.iloc[i][frc.dur])
+
+
 
 
 def notmain():
     '''Run some local code'''
     t = TestDefineTrades()
-    t.test_addStartTime()
+    # t.test_addStartTime()
     # t.test_addTradeIndex()
+    # t.test_addTradeDuration()
+    t.test_addTradePL()
 
 
 
