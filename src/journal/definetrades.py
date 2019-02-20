@@ -133,11 +133,11 @@ class DefineTrades(object):
 
     def writeShareBalance(self, dframe):
         '''
-        Fill in the new column that enters the share balance for a ticker. Note that for 
-        overnight holds after, the amount entered here is incorrect. It is corrected in 
-        postProcessing(). (for before trades, the amount entered hereis correct) 
-        params dframe: The DataFrame representing the initial input file plus a bit.
-        return: The same dframe with updated balance entries.
+        Create the data for share balance for a ticker. Note that for overnight holds after, the
+        amount entered here is incorrect. It is corrected in postProcessing(). (for before trades,
+        the amount entered hereis correct)
+        :params dframe: The DataFrame representing the initial input file plus a bit.
+        :return: The same dframe with updated balance entries.
         '''
         prevBal = 0
         c = self._frc
@@ -293,23 +293,6 @@ class DefineTrades(object):
 
         return dframe
 
-    def getLongOrShort(self, dframe):
-        '''
-        DELETE ME
-        '''
-        # dframe contains the transactions of a single trade.  Single trade ends when the balance
-        # of shares is 0
-        # Return value is a string 'Long' or 'Short'
-        raise NotImplementedError(
-            "The method getLongOrShort will be deleted. Resistance is futile etc.")
-        tsx = dframe[dframe.Balance == 0]
-
-        if len(tsx) != 1:
-            return None
-        if str(tsx.Side) == 'B' or str(tsx.Side) == 'Hold-':
-            return 'Short'
-        else:
-            return 'Long'
 
     def getTradeList(self, dframe):
         '''
@@ -422,9 +405,12 @@ class DefineTrades(object):
 
     def addFinReqCol(self, dframe):
         '''
-        Add the columns from FinReqCol that are not in RecCol. These are columns to determine the 
-        trade a transaction belongs in and include, share balance, trade start time and trade
-        duration
+        Add the columns from FinReqCol that are not already in dframe. These are columns to determine the
+        trade in which a  transaction belongs. It will probably include the FinReqCol dict values for the 
+        keys: tix, start, bal, sum, dur, name
+        :params dframe: The original DataFrame with the columns of the input file and including at least
+                        all of the columns in ReqCol.columns
+        :return dframe: A DataFrame that includes at least all of the columns in FinReqCol.columns 
         '''
         c = self._frc
         for l in c.columns:
