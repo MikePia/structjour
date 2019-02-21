@@ -6,12 +6,14 @@ Created on Oct 10, 2018
 
 from journal.tradestyle import style_range, c as tcell
 from journal.thetradeobject import SumReqFields
+# pylint: disable = C0103
 
 
 class MistakeSummary(object):
     '''
-    This class will handle the named styles, location, headers and excel formulas. All of the data in the form
-    is either header or formula. The user class is responsible for the cell translation coordinates in the formulas.
+    This class will handle the named styles, location, headers and excel formulas. All of the data
+    in the form is either header or formula. The user class is responsible for the cell translation
+    coordinates in the formulas.
     '''
 
     def __init__(self, numTrades, anchor=(1, 1)):
@@ -22,11 +24,11 @@ class MistakeSummary(object):
         # Create the data structure to make a styled shape for the Mistake Summary Form
         # [key][rng,style]
         mistakeFields = {
-            'title': [[(1, 1), (12, 2)], 'titleStyle'],
-            'headname': [[(1, 3), (2, 3)], 'normStyle'],
-            'headpl': [(3, 3), 'normStyle'],
-            'headLossPL': [(4, 3), 'normStyle'],
-            'headmistake': [[(5, 3), (12, 3)], 'normStyle'],
+            'title': [[(1, 1), (12, 2)], 'titleStyle', 'Mistake Summary'],
+            'headname': [[(1, 3), (2, 3)], 'normStyle', 'Name'],
+            'headpl': [(3, 3), 'normStyle', "P / L"],
+            'headLossPL': [(4, 3), 'normStyle', "Lost P/L"],
+            'headmistake': [[(5, 3), (12, 3)], 'normStyle', "Mistake or pertinent feature of trade."],
 
         }
 
@@ -71,7 +73,7 @@ class MistakeSummary(object):
         mistakeFields['blank1'] = [
             [(1, 4 + numTrades), (2, 4 + numTrades)], 'normStyle']
         mistakeFields['blank3'] = [(3, 4 + numTrades), 'normalNumber']
-        mistakeFields['total'] = [(4, 4 + numTrades), 'normalNumber']
+        mistakeFields['total'] = [(4, 4 + numTrades), 'normalNumber', '=SUM({0})']
         mistakeFields['blank2'] = [
             [(5, 4 + numTrades), (12, 4 + numTrades)], 'normStyle']
 
@@ -92,6 +94,7 @@ class MistakeSummary(object):
         self.mistakeFields = mistakeFields
         self.dailySummaryFields = dailySummaryFields
 
+
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
         '''
         Create the shape and stye for the Mistake summary form, populate the static values. The
@@ -100,43 +103,39 @@ class MistakeSummary(object):
         :params:ws: The openpyx worksheet object
         :params:tf: The TradeFormat object which has the styles
         :anchor:anchor: The cell value at the Top left of the form in tuple form.
-        '''
+        ''' 
 
-        headers = dict()
-        headers['title'] = "Mistake Summary"
-        headers['headname'] = "Name"
-        headers['headpl'] = "P / L"
-        headers['headLossPL'] = "Lost P/L"
+        headers=['title', 'headname', 'headpl', 'headLossPL', 'headmistake']
+        a = anchor
 
-        headers['headmistake'] = "Mistake or pertinent feature of trade."
-
-        # Merge the cells, apply the styles, and populate the fields we can--the
+        # Merge the cells, apply the styles, and populate the fields we can--the 
         # fields that don't know any details todays trades (other than how many trades)
-        # That includes the non-formula fields and the sum formula below
+        # That includes the non-formula fields and the sum formula below 
         for key in self.mistakeFields.keys():
             rng = self.mistakeFields[key][0]
             style = self.mistakeFields[key][1]
-            anchor = anchor
+        
 
-            if isinstance(self.mistakeFields[key][0], list):
-                tf.mergeStuff(ws, rng[0], rng[1], anchor=anchor)
-                ws[tcell(rng[0], anchor=anchor)].style = tf.styles[style]
-                mrng = tcell(rng[0], rng[1], anchor=anchor)
+            if isinstance(self.mistakeFields[key][0], list) :
+                tf.mergeStuff(ws, rng[0], rng[1], anchor=a)
+                ws[tcell(rng[0], anchor=a)].style = tf.styles[style]
+                mrng = tcell(rng[0], rng[1], anchor=a)
                 style_range(ws, mrng, border=tf.styles[style].border)
-                if key in headers.keys():
-                    ws[tcell(rng[0], anchor=anchor)] = headers[key]
+                if key in headers:
+                    ws[tcell(rng[0], anchor=a)] = self.mistakeFields[key][2]
 
             else:
-                ws[tcell(rng, anchor=anchor)].style = tf.styles[style]
-                if key in headers.keys():
-                    ws[tcell(rng, anchor=anchor)] = headers[key]
+                ws[tcell(rng, anchor=a)].style = tf.styles[style]
+                if key in headers:
+                    # ws[tcell(rng, anchor=a)] = headers[key]
+                    ws[tcell(rng, anchor=a)] = self.mistakeFields[key][2]
 
         # The total sum formula is done here. It is self contained to references to the Mistake Summary form
         totcell = self.mistakeFields['total'][0]
-        begincell = (totcell[0], totcell[1] - self.numTrades)
-        endcell = (totcell[0], totcell[1] - 1)
-        rng = tcell(begincell, endcell, anchor=anchor)
-        totcell = tcell(totcell, anchor=anchor)
+        begincell=(totcell[0], totcell[1] - self.numTrades)
+        endcell=(totcell[0], totcell[1] - 1)
+        rng= tcell(begincell, endcell, anchor=a)
+        totcell = tcell(totcell, anchor=a)
         f = '=SUM({0})'.format(rng)
         ws[totcell] = f
 
