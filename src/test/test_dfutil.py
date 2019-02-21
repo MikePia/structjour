@@ -55,7 +55,7 @@ class Test_DfUtil(unittest.TestCase):
                         'the', 'world', 'as', 'we', 'know', 'it']]
         columns = ['Its', 'the', 'end', 'of', 'the',
                    'world', 'as', 'we', 'know', 'it', 'sofuckit']
-#         DataFrameUtil.checkRequiredInputFields(apd, columns)
+        # DataFrameUtil.checkRequiredInputFields(apd, columns)
 
         try:
             DataFrameUtil.checkRequiredInputFields(apd, columns)

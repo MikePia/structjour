@@ -269,7 +269,8 @@ class TestDefineTrades(TestCase):
 
         for i in range(len(df3)):
             print(df.iloc[i][frc.sum], '------>  <-------',  df3.iloc[i][frc.sum] )
-            assert df.iloc[i][frc.sum] ==  df3.iloc[i][frc.sum]
+            msg = '{} is not {}'.format(df.iloc[i][frc.sum], df3.iloc[i][frc.sum])
+            self.assertEqual(df.iloc[i][frc.sum],  df3.iloc[i][frc.sum], msg)
 
 
     def test_addTradeDuration(self):
@@ -339,7 +340,6 @@ def notmain():
     # t.test_addTradeDuration()
     t.test_addTradePL()
     # t.test_addSummaryPL()
-
 
 
 def main():
