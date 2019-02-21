@@ -169,7 +169,7 @@ class DefineTrades(object):
                 if row[c.side].startswith('HOLD') and i < len(dframe):
 
                     oldTime = dframe.at[i+1, c.time]
-    #                 print("     :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
+                    # print("     :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
                     dframe.at[i, c.start] = oldTime
 
                 else:
@@ -288,6 +288,7 @@ class DefineTrades(object):
                 #     lastCol = row[c.PL]
 
             elif count == len(dframe) - 1:
+                # print(dframe)
                 dframe.at[i, c.PL] = tot
                 dframe.at[i, c.sum] = totSim
             else:
@@ -332,7 +333,7 @@ class DefineTrades(object):
 
     def postProcessing(self, ldf):
         '''
-        A few items that need fixing up in names and initial HOLD entries. This method is called 
+        A few items that need fixing up in names and initial HOLD entries. This method is called
         after the creation of the DataFrameList (ldf). We locate flipped positions and overnight
         holds and change the name appropriately. Also update initial HOLD prices, and balance with
         the calculated average price of pre owned shares and initial shares respectively.
