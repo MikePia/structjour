@@ -28,19 +28,20 @@ class MistakeSummary(object):
             'headname': [[(1, 3), (2, 3)], 'normStyle', 'Name'],
             'headpl': [(3, 3), 'normStyle', "P / L"],
             'headLossPL': [(4, 3), 'normStyle', "Lost P/L"],
-            'headmistake': [[(5, 3), (12, 3)], 'normStyle', "Mistake or pertinent feature of trade."],
+            'headmistake': [[(5, 3), (12, 3)], 'normStyle',
+                            "Mistake or pertinent feature of trade."],
 
         }
 
         # Create the data structure to create a styled shape for the Daily Summary Form
         dailySummaryFields = {
-            'title': [[(1, 1), (12, 2)], 'titleStyle'],
-            'headlivetot': [[(1, 3), (2, 3)], 'normStyle'],
-            'headsimtot': [[(1, 4), (2, 4)], 'normStyle'],
-            'headhighest': [[(1, 5), (2, 5)], 'normStyle'],
-            'headlowest': [[(1, 6), (2, 6)], 'normStyle'],
-            'headavgwin': [[(1, 7), (2, 7)], 'normStyle'],
-            'headavgloss': [[(1, 8), (2, 8)], 'normStyle'],
+            'title': [[(1, 1), (12, 2)], 'titleStyle', "Daily P / L Summary"],
+            'headlivetot': [[(1, 3), (2, 3)], 'normStyle', "Live Total"],
+            'headsimtot': [[(1, 4), (2, 4)], 'normStyle', "Sim Total"],
+            'headhighest': [[(1, 5), (2, 5)], 'normStyle', "Highest Profit"],
+            'headlowest': [[(1, 6), (2, 6)], 'normStyle', "Largest Loss"],
+            'headavgwin': [[(1, 7), (2, 7)], 'normStyle', "Average Win"],
+            'headavgloss': [[(1, 8), (2, 8)], 'normStyle', "Average Loss"],
             'livetot': [(3, 3), 'normalNumber'],
             'simtot': [(3, 4), 'normalNumber'],
             'highest': [(3, 5), 'normalNumber'],
@@ -97,20 +98,20 @@ class MistakeSummary(object):
 
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
         '''
-        Create the shape and stye for the Mistake summary form, populate the static values. The
-        rest is done in layoutsheet including formulas (with cell translation) and the names, each with
-        a hyperinks to the Trade Summary form.
-        :params:ws: The openpyx worksheet object
-        :params:tf: The TradeFormat object which has the styles
-        :anchor:anchor: The cell value at the Top left of the form in tuple form.
-        ''' 
+        Create the shape and stye for the Mistake summary form, populate the static values.
+        The rest is done in layoutsheet including formulas (with cell translation) and the
+        names, each with a hyperinks to the Trade Summary form.
+        :params ws: The openpyx worksheet object
+        :params tf: The TradeFormat object which has the styles
+        :params anchor: The cell value at the Top left of the form in tuple form.
+        '''
 
         headers=['title', 'headname', 'headpl', 'headLossPL', 'headmistake']
         a = anchor
 
-        # Merge the cells, apply the styles, and populate the fields we can--the 
+        # Merge the cells, apply the styles, and populate the fields we can--the
         # fields that don't know any details todays trades (other than how many trades)
-        # That includes the non-formula fields and the sum formula below 
+        # That includes the non-formula fields and the sum formula below
         for key in self.mistakeFields.keys():
             rng = self.mistakeFields[key][0]
             style = self.mistakeFields[key][1]
@@ -132,14 +133,14 @@ class MistakeSummary(object):
 
         # The total sum formula is done here. It is self contained to references to the Mistake Summary form
         totcell = self.mistakeFields['total'][0]
-        begincell=(totcell[0], totcell[1] - self.numTrades)
-        endcell=(totcell[0], totcell[1] - 1)
-        rng= tcell(begincell, endcell, anchor=a)
+        begincell = (totcell[0], totcell[1] - self.numTrades)
+        endcell  =(totcell[0], totcell[1] - 1)
+        rng = tcell(begincell, endcell, anchor=a)
         totcell = tcell(totcell, anchor=a)
         f = '=SUM({0})'.format(rng)
         ws[totcell] = f
 
-    def dailySumStyle(self, ws, tf, listOfTrades, anchor=(1, 1)):
+    def dailySumStyle(self, ws, tf, anchor=(1, 1)):
         '''
         Create the shape and populate the daily Summary Form
         :params:ws: The openpyxl Worksheet object
@@ -151,14 +152,8 @@ class MistakeSummary(object):
         going to finish this version-- momentum and all.
         '''
 
-        headers = dict()
-        headers['title'] = "Daily P / L Summary"
-        headers['headlivetot'] = "Live Total"
-        headers['headsimtot'] = "Sim Total"
-        headers['headhighest'] = "Highest Profit"
-        headers['headlowest'] = "Largest Loss"
-        headers['headavgwin'] = "Average Win"
-        headers['headavgloss'] = "Average Loss"
+        headers = ['title', 'headlivetot', 'headsimtot', 'headhighest', 'headlowest',
+                 'headavgwin', 'headavgloss']
         anchor = (anchor[0], anchor[1] + self.numTrades + 5)
 
         for key in self.dailySummaryFields:
@@ -169,12 +164,12 @@ class MistakeSummary(object):
                 ws[tcell(rng[0], anchor=anchor)].style = tf.styles[style]
                 mrng = tcell(rng[0], rng[1], anchor=anchor)
                 style_range(ws, mrng, border=tf.styles[style].border)
-                if key in headers.keys():
-                    ws[tcell(rng[0], anchor=anchor)] = headers[key]
+                if key in headers:
+                    ws[tcell(rng[0], anchor=anchor)] = self.dailySummaryFields[key][2]
 
             else:
                 ws[tcell(rng, anchor=anchor)].style = tf.styles[style]
-                if key in headers.keys():
-                    ws[tcell(rng, anchor=anchor)] = headers[key]
+                if key in headers:
+                    ws[tcell(rng, anchor=anchor)] = self.dailySummaryFields[key][2]
             # if len(self.dailySummaryFields[key] > 2) :
                 # ws[tcell(rng, anchor=anchor)] = self.dailySummaryFields[key][2]

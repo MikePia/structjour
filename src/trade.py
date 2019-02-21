@@ -50,7 +50,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     mstkAnchor = (len(dframe.columns) + 2, 1)
     mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
     mistake.mstkSumStyle(ws, tf, mstkAnchor)
-    mistake.dailySumStyle(ws, tf, ldf, mstkAnchor)
+    mistake.dailySumStyle(ws, tf, mstkAnchor)
 
     tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
     # app = QApplication(sys.argv)
