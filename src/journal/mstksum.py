@@ -22,7 +22,7 @@ class MistakeSummary(object):
         self.numTrades = numTrades
 
         # Create the data structure to make a styled shape for the Mistake Summary Form
-        # [key][rng,style]
+        # 'key':[rng,style, value]
         mistakeFields = {
             'title': [[(1, 1), (12, 2)], 'titleStyle', 'Mistake Summary'],
             'headname': [[(1, 3), (2, 3)], 'normStyle', 'Name'],
@@ -34,6 +34,7 @@ class MistakeSummary(object):
         }
 
         # Create the data structure to create a styled shape for the Daily Summary Form
+        # 'key':[rng, style, value]
         dailySummaryFields = {
             'title': [[(1, 1), (12, 2)], 'titleStyle', "Daily P / L Summary"],
             'headlivetot': [[(1, 3), (2, 3)], 'normStyle', "Live Total"],
@@ -74,12 +75,13 @@ class MistakeSummary(object):
         mistakeFields['blank1'] = [
             [(1, 4 + numTrades), (2, 4 + numTrades)], 'normStyle']
         mistakeFields['blank3'] = [(3, 4 + numTrades), 'normalNumber']
-        mistakeFields['total'] = [(4, 4 + numTrades), 'normalNumber', '=SUM({0})']
+        mistakeFields['total'] = [(4, 4 + numTrades), 'normalNumber']
         mistakeFields['blank2'] = [
             [(5, 4 + numTrades), (12, 4 + numTrades)], 'normStyle']
 
-        # Excel formulas belong in the mstkval and mstknote columns. The cell translation
-        # takes place when we create and populate the Workbook
+        # Excel formulas belong in the mstkval and mstknote columns. The srf.tfcolumns bit
+        # are the target addresses for the Excel formula. The cell translation
+        # takes place when we create and populate the Workbook.
         formulas = dict()
         srf = SumReqFields()
         for i in range(numTrades):
@@ -106,7 +108,7 @@ class MistakeSummary(object):
         :params anchor: The cell value at the Top left of the form in tuple form.
         '''
 
-        headers=['title', 'headname', 'headpl', 'headLossPL', 'headmistake']
+        headers = ['title', 'headname', 'headpl', 'headLossPL', 'headmistake']
         a = anchor
 
         # Merge the cells, apply the styles, and populate the fields we can--the
@@ -115,9 +117,8 @@ class MistakeSummary(object):
         for key in self.mistakeFields.keys():
             rng = self.mistakeFields[key][0]
             style = self.mistakeFields[key][1]
-        
 
-            if isinstance(self.mistakeFields[key][0], list) :
+            if isinstance(self.mistakeFields[key][0], list):
                 tf.mergeStuff(ws, rng[0], rng[1], anchor=a)
                 ws[tcell(rng[0], anchor=a)].style = tf.styles[style]
                 mrng = tcell(rng[0], rng[1], anchor=a)
@@ -131,10 +132,11 @@ class MistakeSummary(object):
                     # ws[tcell(rng, anchor=a)] = headers[key]
                     ws[tcell(rng, anchor=a)] = self.mistakeFields[key][2]
 
-        # The total sum formula is done here. It is self contained to references to the Mistake Summary form
+        # The total sum formula is done here. It is self contained to references to the Mistake
+        # Summary form
         totcell = self.mistakeFields['total'][0]
         begincell = (totcell[0], totcell[1] - self.numTrades)
-        endcell  =(totcell[0], totcell[1] - 1)
+        endcell = (totcell[0], totcell[1] - 1)
         rng = tcell(begincell, endcell, anchor=a)
         totcell = tcell(totcell, anchor=a)
         f = '=SUM({0})'.format(rng)
@@ -147,13 +149,16 @@ class MistakeSummary(object):
         :parmas:tf: The TradeFormat object. It holds the styles used.
         :params:listOfTrade: A python list of DataFrames, each one a trade with multiple tickets
         :params:anchor: The location of the top left corner of the form
-        TODO: This is probably better placed in layoutSheet -- similar to LayoutSheet.createMistakeForm() and
-        using the Trade Summaries object instead of the trades object... may do that later, but now-- I'm
-        going to finish this version-- momentum and all.
+        TODO: This is probably better placed in layoutSheet -- similar to
+              LayoutSheet.createMistakeForm() and using the Trade Summaries object instead of the
+              trades object... may do that later, but now-- I'm going to finish this version --
+              momentum and all.
         '''
 
         headers = ['title', 'headlivetot', 'headsimtot', 'headhighest', 'headlowest',
-                 'headavgwin', 'headavgloss']
+                   'headavgwin', 'headavgloss']
+
+        # Alter the anchor to place this form below the (dynamically sized) Mistake form
         anchor = (anchor[0], anchor[1] + self.numTrades + 5)
 
         for key in self.dailySummaryFields:

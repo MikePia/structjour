@@ -55,6 +55,7 @@ class TestMistakeSummary(TestCase):
         # test that each listed item in ms.mistakeFields has a corresponding style set in the
         # appropriate cell in the re-opened workbook.
         for x in ms.mistakeFields:
+            cell = ''
             entry = ms.mistakeFields[x]
             if isinstance(entry[0], list):
                 cell = tcell(entry[0][0])
@@ -64,20 +65,57 @@ class TestMistakeSummary(TestCase):
             # print(cell, entry[1], ws[cell].style)
             self.assertEqual(entry[1], ws[cell].style)
 
-        headers = ['title', 'headname', 'headpl', 'headLossPL', 'headmistake']
-        for h in headers:
-            if isinstance(ms.mistakeFields[h][0], list):
-                cell = tcell(ms.mistakeFields[h][0][0])
+            if len(entry) == 3:
+                self.assertEqual(ws2[cell].value, ms.mistakeFields[x][2])
+        os.remove(dispath)
+
+    def test_dailySumStyle(self):
+        '''
+        Test the method MistakeSummary.mstkSumStyle.
+        '''
+        wb = Workbook()
+        ws = wb.active
+        tf = TradeFormat(wb)
+
+        numTrades = 5
+
+        ms = MistakeSummary(numTrades)
+
+        ms.dailySumStyle(ws, tf)
+
+        dispath = "out/SCHNOrK.xlsx"
+        if os.path.exists(dispath):
+            os.remove(dispath)
+
+        wb.save(dispath)
+
+        anchor = (1, ms.anchor[1] + ms.numTrades + 5)
+
+        wb2 = load_workbook(dispath)
+        ws2 = wb2.active
+
+        # test that each listed item in ms.mistakeFields has a corresponding style set in the
+        # appropriate cell in the re-opened workbook.
+        for x in ms.dailySummaryFields:
+            cell = ''
+            entry = ms.dailySummaryFields[x]
+            if isinstance(entry[0], list):
+                cell = tcell(entry[0][0], anchor=anchor)
             else:
-                cell = tcell(ms.mistakeFields[h][0])
-            self.assertEqual(ws2[cell].value, ms.mistakeFields[h][2])
-            # print(cell, ws2[cell].value, '----> <----', ms.mistakeFields[h][2])
+                cell = tcell(entry[0], anchor=anchor)
+            assert entry[1] == ws2[cell].style
+
+            # Get the entries with the static values-- the headers
+            if len(entry) == 3:
+                assert ws2[cell].value == ms.dailySummaryFields[x][2]
+        os.remove(dispath)
 
 
 def notmain():
     '''Run some local code'''
     t = TestMistakeSummary()
     t.test_mstkSumStyles()
+    # t.test_dailySumStyle()
 
 
 if __name__ == '__main__':
