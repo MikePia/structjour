@@ -24,10 +24,10 @@ from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
-from journal.mstksum import MistakeSummary
+from journal.dailysumforms import MistakeSummary
 from journal.tradestyle import TradeFormat, c as tcell
 ########: disable = C0103, W0613, W0603, W0212, R0914
-# pylint: disable = C0103, W0613
+# pylint: disable = C0103, W0613, W0603, W0212, R0914
 
 
 D = deque()
@@ -308,6 +308,7 @@ class TestLayoutSheet(TestCase):
         self.assertEqual(tabRange, ws._tables[0].ref)
 
         os.remove(dispath)
+        
 
     @patch('journal.xlimage.askUser', return_value='d')
     @patch('journal.layoutsheet.askUser', return_value='n')

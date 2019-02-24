@@ -10,7 +10,7 @@ from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
 from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
-from journal.mstksum import MistakeSummary
+from journal.dailysumforms import MistakeSummary
 from journal.qtform import QtForm
 # pylint: disable=C0103
 

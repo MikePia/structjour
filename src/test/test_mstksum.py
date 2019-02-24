@@ -1,6 +1,6 @@
 '''
 
-Test the methods in the module journal.mstksum
+Test the methods in the module journal.dailysumforms
 
 @created_on Feb 20, 2019
 
@@ -11,7 +11,7 @@ from unittest import TestCase
 
 from openpyxl import Workbook, load_workbook
 
-from journal.mstksum import MistakeSummary
+from journal.dailysumforms import MistakeSummary
 from journal.tradestyle import TradeFormat
 from journal.tradestyle import c as tcell
 
