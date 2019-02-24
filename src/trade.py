@@ -58,7 +58,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     # qtf.fillForm(tradeSummaries[2])
     # app.exec_()
 
-    ls.createMistakeForm(tradeSummaries, mistake, ws, imageLocation)
+    ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
     ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
 
     ls.save(wb, jf)
@@ -67,9 +67,10 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
 
 
 if __name__ == '__main__':
-    inf = None
-    outd = 'out/'
     theD = '2019-02-15'
+    outd = 'out/'
+    inf = None
+    # outd = None
     # theD = None
     ind = None
     mydev = True

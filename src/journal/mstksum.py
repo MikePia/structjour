@@ -9,7 +9,7 @@ from journal.thetradeobject import SumReqFields
 # pylint: disable = C0103
 
 
-class MistakeSummary(object):
+class MistakeSummary:
     '''
     This class will handle the named styles, location, headers and excel formulas. All of the data
     in the form is either header or formula. The user class is responsible for the cell translation
@@ -34,7 +34,7 @@ class MistakeSummary(object):
         }
 
         # Create the data structure to create a styled shape for the Daily Summary Form
-        # 'key':[rng, style, value]
+        # 'key':[rng, style, value] 
         dailySummaryFields = {
             'title': [[(1, 1), (12, 2)], 'titleStyle', "Daily P / L Summary"],
             'headlivetot': [[(1, 3), (2, 3)], 'normStyle', "Live Total"],
@@ -107,14 +107,12 @@ class MistakeSummary(object):
         :params tf: The TradeFormat object which has the styles
         :params anchor: The cell value at the Top left of the form in tuple form.
         '''
-
-        headers = ['title', 'headname', 'headpl', 'headLossPL', 'headmistake']
         a = anchor
 
         # Merge the cells, apply the styles, and populate the fields we can--the
         # fields that don't know any details todays trades (other than how many trades)
         # That includes the non-formula fields and the sum formula below
-        for key in self.mistakeFields.keys():
+        for key in self.mistakeFields:
             rng = self.mistakeFields[key][0]
             style = self.mistakeFields[key][1]
 
@@ -123,12 +121,12 @@ class MistakeSummary(object):
                 ws[tcell(rng[0], anchor=a)].style = tf.styles[style]
                 mrng = tcell(rng[0], rng[1], anchor=a)
                 style_range(ws, mrng, border=tf.styles[style].border)
-                if key in headers:
+                if len(self.mistakeFields[key]) == 3:
                     ws[tcell(rng[0], anchor=a)] = self.mistakeFields[key][2]
 
             else:
                 ws[tcell(rng, anchor=a)].style = tf.styles[style]
-                if key in headers:
+                if len(self.mistakeFields[key]) == 3:
                     # ws[tcell(rng, anchor=a)] = headers[key]
                     ws[tcell(rng, anchor=a)] = self.mistakeFields[key][2]
 
@@ -150,13 +148,10 @@ class MistakeSummary(object):
         :params:listOfTrade: A python list of DataFrames, each one a trade with multiple tickets
         :params:anchor: The location of the top left corner of the form
         TODO: This is probably better placed in layoutSheet -- similar to
-              LayoutSheet.createMistakeForm() and using the Trade Summaries object instead of the
+              LayoutSheet.populateMistakeForm() and using the Trade Summaries object instead of the
               trades object... may do that later, but now-- I'm going to finish this version --
               momentum and all.
         '''
-
-        headers = ['title', 'headlivetot', 'headsimtot', 'headhighest', 'headlowest',
-                   'headavgwin', 'headavgloss']
 
         # Alter the anchor to place this form below the (dynamically sized) Mistake form
         anchor = (anchor[0], anchor[1] + self.numTrades + 5)
@@ -169,12 +164,15 @@ class MistakeSummary(object):
                 ws[tcell(rng[0], anchor=anchor)].style = tf.styles[style]
                 mrng = tcell(rng[0], rng[1], anchor=anchor)
                 style_range(ws, mrng, border=tf.styles[style].border)
-                if key in headers:
+                # if key in headers:
+                if len(self.dailySummaryFields[key]) == 3:
+
                     ws[tcell(rng[0], anchor=anchor)] = self.dailySummaryFields[key][2]
 
             else:
                 ws[tcell(rng, anchor=anchor)].style = tf.styles[style]
-                if key in headers:
+                # if key in headers:
+                if len(self.dailySummaryFields[key]) == 3:
                     ws[tcell(rng, anchor=anchor)] = self.dailySummaryFields[key][2]
             # if len(self.dailySummaryFields[key] > 2) :
                 # ws[tcell(rng, anchor=anchor)] = self.dailySummaryFields[key][2]
