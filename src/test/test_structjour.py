@@ -94,14 +94,14 @@ class TestStructjour(TestCase):
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
         self.DD = DD
-        if not DD or len(D) < 10:
+        if not DD or len(D) < 11:
             DD.clear()
 
             # These are overnight hold shares. They are mocked user input here in mock_askUser.
             # Each list corresponds to each infile.
             DD = deque(
                 [[-4000], [3923, -750], [], [600, 241, 50], [-169],
-                 [], [0, -600], [], [0, 750, 50], [-600], ])
+                 [], [0, -600], [], [0, 750, 50], [-600], [0, -200]])
 
         # Input test files can be added here. And place the test data in testdata.xlsx. Should add
         # files with potential difficulties
@@ -109,7 +109,8 @@ class TestStructjour(TestCase):
                         'trades.8.csv', 'trades.907.WithChangingHolds.csv',
                         'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
                         'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
-                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv']
+                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
+                        'trades190221.BHoldPreExit.csv']
 
         self.getTestData(r'C:\python\E\structjour\src\data')
 
@@ -151,7 +152,7 @@ class TestStructjour(TestCase):
         self.tests = data
 
 
-    @patch('journal.xlimage.askUser', return_value='q')
+    @patch('journal.xlimage.askUser', return_value='d')
     @patch('journal.layoutsheet.askUser', return_value='n')
     @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
     def test_run(self, unusedstub, unused2, unused3):

@@ -7,6 +7,7 @@ Created on Sep 9, 2018
 from math import isclose
 import unittest
 import os
+import random
 import types
 
 import pandas as pd
@@ -16,6 +17,27 @@ from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
 
 # pylint: disable = C0103
+
+
+def getTestSet(length = 6):
+    '''Utility test set generator for MkShortNegative
+    '''
+    side =  []
+    mult = []
+    shares = []
+    for i in range(length):
+        s = random.random()
+        s2 = random.randint(1,20)
+        
+        if s < 0.5:
+            side.append('S')
+            mult.append(-1)
+        else:
+            side.append('B')
+            mult.append(1)
+        shares.append(s2*50)    
+            
+    return side, mult, shares
 
 
 class Test_SingleTicket(unittest.TestCase):
@@ -36,7 +58,8 @@ class Test_SingleTicket(unittest.TestCase):
                         'trades.8.csv', 'trades.907.WithChangingHolds.csv',
                         'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
                         'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
-                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv']
+                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
+                        'trades190221.BHoldPreExit.csv']
 
     def test_GetListOfTicketDF(self):
         '''
@@ -75,7 +98,7 @@ class Test_SingleTicket(unittest.TestCase):
             msg = "There is a discrepancy in number of transactions in the  tickets"
             self.assertEqual(len(trades), totalTX, msg)
 
-    def testCreateSingleTicket(self):
+    def test_CreateSingleTicket(self):
         '''
         Test the method ToCSV_Ticket.createSingleTicket.  Requires the list of dfs created by
         getListOfTicketDF. Explicitly test that each element is a 1 row DataFrame. That the new
@@ -122,7 +145,7 @@ class Test_SingleTicket(unittest.TestCase):
             self.assertEqual(dframe[rc.shares].sum(),
                              totalSharesForDay, "Failed to acount for all the shares transacted.")
 
-    def testNewSingleTxPerTicket(self):
+    def test_NewSingleTxPerTicket(self):
         '''
         Test the method ToCSV_Ticket.newSingleTxPerTicket. That method creates a new csv file
         reducing multi row transactions to a single row, averaging the prices, totaling the
@@ -134,12 +157,10 @@ class Test_SingleTicket(unittest.TestCase):
         '''
         rc = ReqCol()
         for infile in self.infiles:
-            # infile = "trades.910.tickets.csv"
             outdir = 'out/'
             indir = 'data/'
             indir = os.path.realpath(indir)
 
-            # inpathfile = os.path.join(indir, infile)
             jf = JournalFiles(indir=indir, infile=infile, outdir=outdir)
 
             origdframe = pd.read_csv(jf.inpathfile)
@@ -174,10 +195,7 @@ class Test_SingleTicket(unittest.TestCase):
 
     def testZeroPad(self):
         '''
-        Both this method and the tested method are extremely dependent on extra outside
-        circumstances. For example This method depends on the transactions to begin between 9 and
-        10 as recorded by DAS. (A purchase at 8 will cause this test to fail) Right now I have only
-        one case to test ('data/TradesExcelEdited.csv')so wtf, leave it till I have a test case.
+        Test the method pandasutil.InputDataFrame.zeroPadTimeStr.
         '''
 
         indir = 'data/'
@@ -207,25 +225,26 @@ class Test_SingleTicket(unittest.TestCase):
                 except NameError:
                     self.fail('Time has a wrong value')
 
-    def testMkShortNegative(self):
+    def test_MkShortNegative(self):
         '''
         Test the method ToCSV_Ticket.mkShortsNegative
         '''
         rc = ReqCol()
-        side = ['B', 'S', 'S', 'SS', 'B', 'B']
-        mult = [1, -1, -1, -1, 1, 1]
-        shares = [100, 200, 300, 400, 500, 600]
-        testSet = list(zip(side, shares))
+        for dummy in range(random.randint(2,10)):
+            side, mult, shares = getTestSet(random.randint(4,20))
+            testSet = list(zip(side, shares))
 
-        apd = pd.DataFrame(testSet, columns=[rc.side, rc.shares])
+            apd = pd.DataFrame(testSet, columns=[rc.side, rc.shares])
 
-        for i in range(6):
-            self.assertEqual(apd[rc.shares][i], shares[i])
+            for i in range(len(side)):
+                # self.assertEqual(apd[rc.shares][i], shares[i])
+                assert apd[rc.shares][i] == shares[i]
 
-        idf = InputDataFrame()
-        apd = idf.mkShortsNegative(apd)
-        for i in range(6):
-            self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
+            idf = InputDataFrame()
+            apd = idf.mkShortsNegative(apd)
+            for i in range(len(side)):
+                assert apd[rc.shares][i] == shares[i] * mult[i]
+            #     self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
 
     def testGetListTickerDF(self):
         '''
@@ -272,6 +291,10 @@ class Test_SingleTicket(unittest.TestCase):
             dframe = pd.read_csv(inpathfile)
 
             sl = list()
+
+            # Total up the shares found for each unique ticker/account to create our own
+            # list of overnight trades (unbalanced trades are overnight) Then verify its
+            # the same list as that from getOvernightTrades
             for symbol in dframe['Symb'].unique():
                 # print(symbol)
                 df = dframe[dframe['Symb'] == symbol]
@@ -295,7 +318,7 @@ class Test_SingleTicket(unittest.TestCase):
             st = idf.getOvernightTrades(dframe)
             self.assertEqual(len(sl), len(st))
             for trade in sl:
-                self.assertTrue(trade in sl)
+                self.assertTrue(trade in st)
 
 
     # @patch('journal.pandasutil.askUser')
@@ -373,7 +396,9 @@ def notmain():
     '''Run some local code'''
     t = Test_SingleTicket()
     # t.test_GetListOfTicketDF()
-    t.walkit()
+    # t.walkit()
+    # t.test_MkShortNegative()
+    t.testGetOvernightTrades()
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testCheckRequiredColumns']

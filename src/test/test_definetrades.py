@@ -154,8 +154,8 @@ class TestDefineTrades(TestCase):
 
         df = pd.DataFrame(np.random.randint(0, 1000, size=(10, len(rc.columns))),
                           columns=rc.columns)
-        dt = DefineTrades()
-        df = dt.addFinReqCol(df)
+        dtrades = DefineTrades()
+        df = dtrades.addFinReqCol(df)
         for x in frc.columns:
             self.assertIn(x, df.columns)
         self.assertGreaterEqual(len(df.columns), len(frc.columns))
@@ -178,8 +178,8 @@ class TestDefineTrades(TestCase):
                                                 frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.bal] = None
-        dt = DefineTrades()
-        df3 = dt.writeShareBalance(df2)
+        dtrades = DefineTrades()
+        df3 = dtrades.writeShareBalance(df2)
         for i in range(len(df3)):
             self.assertEqual(df3.iloc[i][frc.bal], df.iloc[i][frc.bal])
             # print('{:-20}     {}'.format(df3.iloc[i][frc.bal], df.iloc[i][frc.bal]))
@@ -205,11 +205,13 @@ class TestDefineTrades(TestCase):
                                                 frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.start] = None
-        dt = DefineTrades()
-        df3 = dt.addStartTime(df2)
+        dtrades = DefineTrades()
+        df3 = dtrades.addStartTime(df2)
         for i in range(len(df3)):
             # if df3.iloc[i][frc.start] != df.iloc[i][frc.start]:
-            # if df3.iloc[i][frc.start] != df.iloc[i][frc.start]:
+            if df3.iloc[i][frc.start] != df.iloc[i][frc.start]:
+                print(df3)
+                print(df)
                 # print(':::::::::; HERE IS ONE ::::::"')
             # print(df3.iloc[i][frc.tix], df3.iloc[i][frc.start], '-----   :   ----',
             # df.iloc[i][frc.tix], df.iloc[i][frc.start])
@@ -236,8 +238,8 @@ class TestDefineTrades(TestCase):
                                                 frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.tix] = ''
-        dt = DefineTrades()
-        df3 = dt.addTradeIndex(df2)
+        dtrades = DefineTrades()
+        df3 = dtrades.addTradeIndex(df2)
         for i in range(len(df3)):
             self.assertEqual(df3.iloc[i][frc.tix], df.iloc[i][frc.tix])
             # print((df3.iloc[i][frc.tix], df.iloc[i][frc.tix]))
@@ -254,9 +256,9 @@ class TestDefineTrades(TestCase):
             t = randomTradeGenerator(i+1, earliest=start)
             trades.extend(t)
             start = getRandomFuture(start)
-            print(len(trades))
-            for tt in t:
-                print(tt[0], tt[4],tt[8], tt[9])
+            # print(len(trades))
+            # for tt in t:
+            #     print(tt[0], tt[4],tt[8], tt[9])
 
         frc = FinReqCol()
         df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.ticker, frc.side, frc.shares,
@@ -264,13 +266,13 @@ class TestDefineTrades(TestCase):
         df.fillna(value=0.0, inplace=True)
         df2 = df.copy()
         df2[frc.sum] = 0.0
-        dt = DefineTrades()
-        df3 = dt.addTradePL(df2)
+        dtrades = DefineTrades()
+        df3 = dtrades.addTradePL(df2)
 
         for i in range(len(df3)):
-            print(df.iloc[i][frc.sum], '------>  <-------',  df3.iloc[i][frc.sum] )
+            # print(df.iloc[i][frc.sum], '------>  <-------',  df3.iloc[i][frc.sum] )
             msg = '{} is not {}'.format(df.iloc[i][frc.sum], df3.iloc[i][frc.sum])
-            self.assertEqual(df.iloc[i][frc.sum],  df3.iloc[i][frc.sum], msg)
+            self.assertAlmostEqual(df.iloc[i][frc.sum],  df3.iloc[i][frc.sum], msg)
 
 
     def test_addTradeDuration(self):
@@ -293,8 +295,8 @@ class TestDefineTrades(TestCase):
                                                 frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.start] = None
-        dt = DefineTrades()
-        df3 = dt.addStartTime(df2)
+        dtrades = DefineTrades()
+        df3 = dtrades.addStartTime(df2)
         for i in range(len(df3)):
             if pd.isnull(df.iloc[i][frc.dur]):
                 self.assertTrue(pd.isnull(df3.iloc[i][frc.dur]))
@@ -324,9 +326,9 @@ class TestDefineTrades(TestCase):
 
         df2 = df.copy()
         df2[frc.start] = None
-        dt = DefineTrades()
+        dtrades = DefineTrades()
         df2 = DataFrameUtil.addRows(df2, 2)
-        df3 = dt.addSummaryPL(df2)
+        df3 = dtrades.addSummaryPL(df2)
         print(summaryPL, df3.iloc[-1][frc.sum])
 
         self.assertAlmostEqual(summaryPL, df3.iloc[-1][frc.sum])

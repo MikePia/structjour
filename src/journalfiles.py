@@ -83,8 +83,6 @@ class JournalFiles:
         self.outdir = outdir if outdir else os.path.join(self.indir, 'out')
         self.outpathfile = os.path.join(self.outdir, self.outfile)
 
-
-
     def mkOutdir(self):
         '''
         Create the directory self.outdir. Allows a Permission exception to stop the program.
