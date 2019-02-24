@@ -5,9 +5,12 @@ Test the methods in the module layoutsheet
 
 @author: Mike Petersen
 '''
+
+import datetime as dt
 import os
 from random import randint
 from unittest import TestCase
+import unittest
 from unittest.mock import patch
 from collections import deque
 
@@ -19,16 +22,18 @@ from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.definetrades import DefineTrades
+from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
-from journal.tradestyle import TradeFormat, c
-# pylint: disable = C0103, W0613, W0603, W0212
+from journal.mstksum import MistakeSummary
+from journal.tradestyle import TradeFormat, c as tcell
+########: disable = C0103, W0613, W0603, W0212, R0914
+# pylint: disable = C0103, W0613
 
 
 D = deque()
 
 
-def mock_askUser(dummy, dummy2):
+def mock_askUser(shares_unused, question_unused):
     '''
     Mock the specific askUser function that asks how many shares are currently owned or owned
     before trading today.
@@ -52,7 +57,7 @@ class TestLayoutSheet(TestCase):
 
         self.dadata = deque(
             [[-4000], [3923, -750], [], [600, 241, 50], [-169],
-             [], [0, -600], [], [0, 750, 50], [-600], ])
+             [], [0, -600], [], [0, 750, 50], [-600], [0, -200]])
 
         # Input test files can be added here. And place the test data in testdata.xlsx. Should add
         # files with potential difficulties
@@ -60,7 +65,8 @@ class TestLayoutSheet(TestCase):
                         'trades.8.csv', 'trades.907.WithChangingHolds.csv',
                         'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
                         'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
-                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv']
+                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
+                        'trades190221.BHoldPreExit.csv']
 
         # self.tests = self.getTestData(r'C:\python\E\structjour\src\data')
 
@@ -124,11 +130,9 @@ class TestLayoutSheet(TestCase):
 
             trades = pd.read_csv(jf.inpathfile)
 
-            idf = InputDataFrame()
-            trades = idf.processInputFile(trades)
+            trades = InputDataFrame().processInputFile(trades)
 
-            tu = DefineTrades()
-            inputlen, dframe, ldf = tu.processOutputDframe(trades)
+            inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
             # ::::::::::: end setup :::::::::::::
 
             margin = 25
@@ -136,7 +140,6 @@ class TestLayoutSheet(TestCase):
             ls = LayoutSheet(margin, inputlen, spacing=spacing)
             imageLocation, dframe = ls.createImageLocation(dframe, ldf)
 
-            import datetime as dt
 
             for count, t in enumerate(imageLocation):
                 if count == 0:
@@ -204,7 +207,6 @@ class TestLayoutSheet(TestCase):
 
         wb = Workbook()
         ws = wb.active
-        tf = TradeFormat(wb)
 
         # Make sure the out dir exists
         if not os.path.exists("out/"):
@@ -219,37 +221,36 @@ class TestLayoutSheet(TestCase):
         headers = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we',
                    'know', 'it.', 'Bout', 'Fn', 'Time!']
         for i in range(1, 14):
-            ws[c((i, 25))] = headers[i-1]
+            ws[tcell((i, 25))] = headers[i-1]
 
         ls = LayoutSheet(margin, inputlen)
         for x in range(ls.topMargin+1, ls.inputlen + ls.topMargin+1):
             for xx in range(1, 14):
-                ws[c((xx, x))] = randint(-1000, 10000)
+                ws[tcell((xx, x))] = randint(-1000, 10000)
 
 
-        ls.styleTop(ws, 13, tf)
+        ls.styleTop(ws, 13, TradeFormat(wb))
 
         wb.save(dispath)
 
         wb2 = load_workbook(dispath)
         ws2 = wb2.active
 
-        x = ws2.merged_cells.ranges
         listOfMerged = list()
-        listOfMerged.append(c((quoteRange[0])) + ':' +  c((quoteRange[1])))
-        listOfMerged.append(c((noteRange[0])) + ':' +  c((noteRange[1])))
-        for xx in x:
+        listOfMerged.append(tcell((quoteRange[0])) + ':' +  tcell((quoteRange[1])))
+        listOfMerged.append(tcell((noteRange[0])) + ':' +  tcell((noteRange[1])))
+        for xx in ws2.merged_cells.ranges:
             # print (str(xx) in listOfMerged)
             self.assertTrue(str(xx) in listOfMerged)
-        self.assertEqual(ws[c(quoteRange[0])].style, quoteStyle)
-        self.assertEqual(ws[c(noteRange[0])].style, noteStyle)
+        self.assertEqual(ws[tcell(quoteRange[0])].style, quoteStyle)
+        self.assertEqual(ws[tcell(noteRange[0])].style, noteStyle)
 
         self.assertEqual(len(ws._tables), 1)
 
 
-        begin = c((1, ls.topMargin))
+        begin = tcell((1, ls.topMargin))
 
-        end = c((13, ls.topMargin + ls.inputlen))
+        end = tcell((13, ls.topMargin + ls.inputlen))
         tabRange = f'{begin}:{end}'
         self.assertEqual(tabRange, ws._tables[0].ref)
 
@@ -270,7 +271,6 @@ class TestLayoutSheet(TestCase):
 
         wb = Workbook()
         ws = wb.active
-        tf = TradeFormat(wb)
 
         # Make sure the out dir exists
         if not os.path.exists("out/"):
@@ -282,44 +282,166 @@ class TestLayoutSheet(TestCase):
             os.remove(dispath)
 
         ls = LayoutSheet(margin, inputlen)
-        ls.styleTop(ws, 13, tf)
+        ls.styleTop(ws, 13, TradeFormat(wb))
 
         wb.save(dispath)
 
         wb2 = load_workbook(dispath)
         ws2 = wb2.active
 
-        x = ws2.merged_cells.ranges
         listOfMerged = list()
-        listOfMerged.append(c((quoteRange[0])) + ':' +  c((quoteRange[1])))
-        listOfMerged.append(c((noteRange[0])) + ':' +  c((noteRange[1])))
-        for xx in x:
+        listOfMerged.append(tcell((quoteRange[0])) + ':' +  tcell((quoteRange[1])))
+        listOfMerged.append(tcell((noteRange[0])) + ':' +  tcell((noteRange[1])))
+        for xx in ws2.merged_cells.ranges:
             # print (str(xx) in listOfMerged)
-            assert str(xx) in listOfMerged
-        assert ws[c(quoteRange[0])].style == quoteStyle
-        assert ws[c(noteRange[0])].style == noteStyle
+            self.assertIn(str(xx), listOfMerged)
+        self.assertEqual(ws[tcell(quoteRange[0])].style, quoteStyle)
+        self.assertEqual(ws[tcell(noteRange[0])].style, noteStyle)
 
-        assert len(ws._tables) == 1
+        self.assertEqual(len(ws._tables), 1)
 
 
-        begin = c((1, ls.topMargin))
+        begin = tcell((1, ls.topMargin))
 
-        end = c((13, ls.topMargin + ls.inputlen))
+        end = tcell((13, ls.topMargin + ls.inputlen))
         tabRange = f'{begin}:{end}'
-        assert tabRange == ws._tables[0].ref
+        self.assertEqual(tabRange, ws._tables[0].ref)
 
         os.remove(dispath)
+
+    @patch('journal.xlimage.askUser', return_value='d')
+    @patch('journal.layoutsheet.askUser', return_value='n')
+    def test_populateMistakeForm(self, unusedstub1, unusedstub2):
+        '''
+        Test the method populateMistakeForm. The setup here is alost the entire module trade.py
+        '''
+
+        # :::::::::::::: SETUP ::::::::::::::
+        theDate = '2019-02-15'
+        outdir = 'out/'
+        mydevel = True
+        jf = JournalFiles(outdir=outdir, theDate=theDate, mydevel=mydevel)
+
+        # tkt = Ticket(jf)
+        # trades, jf = tkt.newDFSingleTxPerTicket()
+        trades = pd.read_csv(jf.inpathfile)
+
+        # idf = InputDataFrame()
+        trades = InputDataFrame().processInputFile(trades)
+
+        inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
+
+        # Process the openpyxl excel object using the output file DataFrame. Insert
+        # images and Trade Summaries.
+        margin = 25
+
+        # Create the space in dframe to add the summary information for each trade.
+        # Then create the Workbook.
+        ls = LayoutSheet(margin, inputlen)
+        imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+        wb, ws, dummy = ls.createWorkbook(dframe)
+
+        tf = TradeFormat(wb)
+
+        mstkAnchor = (len(dframe.columns) + 2, 1)
+        mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+        mistake.mstkSumStyle(ws, tf, mstkAnchor)
+
+        tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
+
+        # :::::::::::::: END SETUP ::::::::::::::
+        ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
+
+        # Make sure the out dir exists
+        if not os.path.exists("out/"):
+            os.mkdir("out/")
+
+        # Make sure the file we are about to create does not exist
+        dispath = "out/SCHNOrK.xlsx"
+        if os.path.exists(dispath):
+            os.remove(dispath)
+        wb.save(dispath)
+
+        wb2 = load_workbook(dispath)
+        ws2 = wb2.active
+
+        frc = FinReqCol()
+
+        # ragged iteration over mistakeFields and tradeSummaries.
+        count = 0   # ragged iterator for tradeSummaries
+        for key in mistake.mistakeFields:
+
+            entry = mistake.mistakeFields[key]
+            cell = entry[0][0] if isinstance(entry[0], list) else entry[0]
+            cell = tcell(cell, anchor=mistake.anchor)
+            if key.startswith('name'):
+                # Get the hyperlink target in mistakeform , parse the target and verify the
+                # hyperlinks point to each other
+                tsName = tradeSummaries[count][frc.name].unique()[0]
+                tsAcct = tradeSummaries[count][frc.acct].unique()[0]
+                targetcell = ws2[cell].hyperlink.target.split('!')[1]
+                originalcell = ws2[targetcell].hyperlink.target.split('!')[1]
+
+                # print(ws2[cell].value, '<--------', tsumName)
+                # print(ws2[cell].value, '<-------', tsumAccount)
+                # print(cell, '<------->', originalcell)
+                self.assertGreater(ws2[cell].value.find(tsName), -1)
+                self.assertGreater(ws2[cell].value.find(tsAcct), -1)
+                self.assertEqual(cell, originalcell)
+                count = count + 1
+
+
+        # ::::::: tpl fields :::::::
+        count = 0
+        for key in mistake.mistakeFields:
+
+            entry = mistake.mistakeFields[key]
+            cell = entry[0][0] if isinstance(entry[0], list) else entry[0]
+            cell = tcell(cell, anchor=mistake.anchor)
+            if key.startswith('tpl'):
+                targetcell = ws2[cell].value[1:]
+                origval = tradeSummaries[count][frc.PL].unique()[0]
+                # print(ws2[targetcell].value, '<------->', origval )
+                assert ws2[targetcell].value == origval
+                count = count + 1
+
+            # These next two tests (for plx and mistakex) have no unique entries (without user
+            # input or mock) Test for the static values and that plx entry is next to its header
+            if key.startswith('pl'):
+                headval = 'Proceeds Lost'
+                targetcell = ws2[cell].value[1:]
+                headercell = 'A' + targetcell[1:]
+                # print(ws2[targetcell].value, '<------->', None)
+                # print(headercell, '------->', ws2[headercell].value)
+                assert ws2[targetcell].value is None
+                assert ws2[headercell].value == headval
+
+            if key.startswith('mistake'):
+                noteval = 'Final note'
+                targetcell = ws2[cell].value[1:]
+                # print(ws2[targetcell].value, '<------->', noteval)
+                assert ws2[targetcell].value == noteval
+
+
+
 
 def notmain():
     '''Run some local code'''
         # pylint: disable = E1120
     ttt = TestLayoutSheet()
-    ttt.test_createImageLocation()
-    ttt.test_createWorkbook()
-    ttt.test_styleTopwithnothin()
+    # ttt.test_createImageLocation()
+    # ttt.test_createWorkbook()
+    # ttt.test_styleTopwithnothin()
+    ttt.test_populateMistakeForm()
+
+def main():
+    '''Run unittests cl style'''
+    #import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()
 
 
 
 
 if __name__ == '__main__':
     notmain()
+    # main()

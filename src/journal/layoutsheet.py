@@ -230,11 +230,19 @@ class LayoutSheet:
         # print("Done with interview")
         return tradeSummaries
 
-    def createMistakeForm(self, tradeSummaries, mistake, ws, imageLocation):
+    def populateMistakeForm(self, tradeSummaries, mistake, ws, imageLocation):
         '''
-        Populate most of the mistake summaries form including the formulas retrieved from mistake.
-        We do the cell translations here. Also the names are hyperlinked to the Trade Summary Form
-        and the links are returned to the Mistake form.
+        Populate the dynamic parts of mistake summaries. That includes fomulas with references to
+        tradeSummaries and hyperlinks to the same. The anchor info for the tradeSummaries cell translation is in
+        imageLocation and the specific location of the transaltions is in the mistakeFields. Th
+        return hyperlinks in the tradeSummaries forms are also translated here.
+        The form and the static content are already created presumably in the ws in the arguments.
+        Either way we create the info into the given ws.
+        :Programming note: MistakeSummaries form is not a one-place creation because of the hard-
+                           coded stuff in this method. With some careful work, it could be. It  
+                           would involve placing all the data we need for the hyperlinks (other
+                           than cell transation), in the mistakeFields or in the formula dict.
+                           blwnitffczmlz
         :params tradeSummaries: A dataframe containing the the trade summaries info, one line per
                                 trade.
         :parmas mistake: A dataframe containing the info to populate the mistake summary form.
@@ -243,16 +251,15 @@ class LayoutSheet:
                                trades in tradeSummaries.
         '''
 
-        # Populate the name fields as hyperlinks
-        for i, dummy in enumerate(tradeSummaries):
+        # Populate the name fields as hyperlinks to tradeSummaries title cell and back.
+        for i, (iloc, tsum) in enumerate(zip(imageLocation, tradeSummaries)):
             key = "name" + str(i+1)
             cell = mistake.mistakeFields[key][0][0]
             cell = tcell(cell, anchor=mistake.anchor)
-            targetcell = (1, imageLocation[i][0])
+            targetcell = (1, iloc[0])
             targetcell = tcell(targetcell)
-            ts = tradeSummaries[i]
             cellval = "{0} {1} {2}".format(
-                i+1, ts.Name.unique()[0], ts.Account.unique()[0])
+                i+1, tsum.Name.unique()[0], tsum.Account.unique()[0])
             link = "#{}!{}".format(ws.title, targetcell)
 
             ws[cell].hyperlink = (link)
@@ -263,9 +270,11 @@ class LayoutSheet:
             ws[targetcell].hyperlink = (link)
             ws[targetcell].font = Font(
                 color=colors.WHITE, size=16, underline="double")
+                        
 
 
-        # Populate the pl (loss) fields and the mistake fields. These are all simple formulas.
+        # Populate the pl (loss) fields and the mistake fields. These are all simple formulas
+        # like =B31
         tokens = ["tpl", "pl", "mistake"]
         for token in tokens:
             for i in range(len(tradeSummaries)):
