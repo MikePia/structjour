@@ -59,7 +59,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     # app.exec_()
 
     ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
-    ls.createDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
+    ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
 
     ls.save(wb, jf)
     print("done")

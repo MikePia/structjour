@@ -21,7 +21,7 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
-from journal.pandasutil import InputDataFrame
+from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
@@ -312,116 +312,253 @@ class TestLayoutSheet(TestCase):
 
     @patch('journal.xlimage.askUser', return_value='d')
     @patch('journal.layoutsheet.askUser', return_value='n')
-    def test_populateMistakeForm(self, unusedstub1, unusedstub2):
+    @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
+    def test_populateMistakeForm(self, unusedstub1, unusedstub2, unusedstub3):
         '''
         Test the method populateMistakeForm. The setup here is alost the entire module trade.py
         '''
 
-        # :::::::::::::: SETUP ::::::::::::::
-        theDate = '2019-02-15'
-        outdir = 'out/'
-        mydevel = True
-        jf = JournalFiles(outdir=outdir, theDate=theDate, mydevel=mydevel)
+        global D
+        for tdata, infile in zip(self.dadata, self.infiles):
+            # :::::::::  Setup   ::::::::
+            D = deque(tdata)
+            # :::::::::::::: SETUP ::::::::::::::
+            # theDate = '2018-11-05'
+            outdir = 'out/'
+            indir = 'data/'
+            mydevel = False
+            jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 
-        # tkt = Ticket(jf)
-        # trades, jf = tkt.newDFSingleTxPerTicket()
-        trades = pd.read_csv(jf.inpathfile)
+            tkt = Ticket(jf)
+            trades, jf = tkt.newDFSingleTxPerTicket()
+            # trades = pd.read_csv(jf.inpathfile)
 
-        # idf = InputDataFrame()
-        trades = InputDataFrame().processInputFile(trades)
+            # idf = InputDataFrame()
+            trades = InputDataFrame().processInputFile(trades)
 
-        inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
+            inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
-        # Process the openpyxl excel object using the output file DataFrame. Insert
-        # images and Trade Summaries.
-        margin = 25
+            # Process the openpyxl excel object using the output file DataFrame. Insert
+            # images and Trade Summaries.
+            margin = 25
 
-        # Create the space in dframe to add the summary information for each trade.
-        # Then create the Workbook.
-        ls = LayoutSheet(margin, inputlen)
-        imageLocation, dframe = ls.createImageLocation(dframe, ldf)
-        wb, ws, dummy = ls.createWorkbook(dframe)
+            # Create the space in dframe to add the summary information for each trade.
+            # Then create the Workbook.
+            ls = LayoutSheet(margin, inputlen)
+            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            wb, ws, dummy = ls.createWorkbook(dframe)
 
-        tf = TradeFormat(wb)
+            tf = TradeFormat(wb)
 
-        mstkAnchor = (len(dframe.columns) + 2, 1)
-        mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
-        mistake.mstkSumStyle(ws, tf, mstkAnchor)
+            mstkAnchor = (len(dframe.columns) + 2, 1)
+            mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+            mistake.mstkSumStyle(ws, tf, mstkAnchor)
 
-        tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
+            tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
 
-        # :::::::::::::: END SETUP ::::::::::::::
-        ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
+            # :::::::::::::: END SETUP ::::::::::::::
+            ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
 
-        # Make sure the out dir exists
-        if not os.path.exists("out/"):
-            os.mkdir("out/")
+            # Make sure the out dir exists
+            if not os.path.exists("out/"):
+                os.mkdir("out/")
 
-        # Make sure the file we are about to create does not exist
-        dispath = "out/SCHNOrK.xlsx"
-        if os.path.exists(dispath):
-            os.remove(dispath)
-        wb.save(dispath)
+            # Make sure the file we are about to create does not exist
+            dispath = "out/SCHNOrK.xlsx"
+            if os.path.exists(dispath):
+                os.remove(dispath)
+            wb.save(dispath)
 
-        wb2 = load_workbook(dispath)
-        ws2 = wb2.active
+            wb2 = load_workbook(dispath)
+            ws2 = wb2.active
 
-        frc = FinReqCol()
+            frc = FinReqCol()
 
-        # ragged iteration over mistakeFields and tradeSummaries.
-        count = 0   # ragged iterator for tradeSummaries
-        for key in mistake.mistakeFields:
+            # ragged iteration over mistakeFields and tradeSummaries.
+            count = 0   # ragged iterator for tradeSummaries
+            for key in mistake.mistakeFields:
 
-            entry = mistake.mistakeFields[key]
-            cell = entry[0][0] if isinstance(entry[0], list) else entry[0]
-            cell = tcell(cell, anchor=mistake.anchor)
-            if key.startswith('name'):
-                # Get the hyperlink target in mistakeform , parse the target and verify the
-                # hyperlinks point to each other
-                tsName = tradeSummaries[count][frc.name].unique()[0]
-                tsAcct = tradeSummaries[count][frc.acct].unique()[0]
-                targetcell = ws2[cell].hyperlink.target.split('!')[1]
-                originalcell = ws2[targetcell].hyperlink.target.split('!')[1]
+                entry = mistake.mistakeFields[key]
+                cell = entry[0][0] if isinstance(entry[0], list) else entry[0]
+                cell = tcell(cell, anchor=mistake.anchor)
+                if key.startswith('name'):
+                    # Get the hyperlink target in mistakeform , parse the target and verify the
+                    # hyperlinks point to each other
+                    tsName = tradeSummaries[count][frc.name].unique()[0]
+                    tsAcct = tradeSummaries[count][frc.acct].unique()[0]
+                    targetcell = ws2[cell].hyperlink.target.split('!')[1]
+                    originalcell = ws2[targetcell].hyperlink.target.split('!')[1]
 
-                # print(ws2[cell].value, '<--------', tsumName)
-                # print(ws2[cell].value, '<-------', tsumAccount)
-                # print(cell, '<------->', originalcell)
-                self.assertGreater(ws2[cell].value.find(tsName), -1)
-                self.assertGreater(ws2[cell].value.find(tsAcct), -1)
-                self.assertEqual(cell, originalcell)
-                count = count + 1
+                    # print(ws2[cell].value, '<--------', tsumName)
+                    # print(ws2[cell].value, '<-------', tsumAccount)
+                    # print(cell, '<------->', originalcell)
+                    self.assertGreater(ws2[cell].value.find(tsName), -1)
+                    self.assertGreater(ws2[cell].value.find(tsAcct), -1)
+                    self.assertEqual(cell, originalcell)
+                    count = count + 1
 
 
-        # ::::::: tpl fields :::::::
-        count = 0
-        for key in mistake.mistakeFields:
+            # ::::::: tpl fields :::::::
+            count = 0
+            for key in mistake.mistakeFields:
 
-            entry = mistake.mistakeFields[key]
-            cell = entry[0][0] if isinstance(entry[0], list) else entry[0]
-            cell = tcell(cell, anchor=mistake.anchor)
-            if key.startswith('tpl'):
-                targetcell = ws2[cell].value[1:]
-                origval = tradeSummaries[count][frc.PL].unique()[0]
-                # print(ws2[targetcell].value, '<------->', origval )
-                assert ws2[targetcell].value == origval
-                count = count + 1
+                entry = mistake.mistakeFields[key]
+                cell = entry[0][0] if isinstance(entry[0], list) else entry[0]
+                cell = tcell(cell, anchor=mistake.anchor)
+                if key.startswith('tpl'):
+                    targetcell = ws2[cell].value[1:]
+                    origval = tradeSummaries[count][frc.PL].unique()[0]
+                    print(ws2[targetcell].value, '<------->', origval )
+                    if origval == 0:
+                        self.assertIs(ws2[targetcell].value, None)
+                    else:
+                        self.assertAlmostEqual(ws2[targetcell].value, origval)
+                    count = count + 1
 
-            # These next two tests (for plx and mistakex) have no unique entries (without user
-            # input or mock) Test for the static values and that plx entry is next to its header
-            if key.startswith('pl'):
-                headval = 'Proceeds Lost'
-                targetcell = ws2[cell].value[1:]
-                headercell = 'A' + targetcell[1:]
-                # print(ws2[targetcell].value, '<------->', None)
-                # print(headercell, '------->', ws2[headercell].value)
-                assert ws2[targetcell].value is None
-                assert ws2[headercell].value == headval
+                # These next two tests (for plx and mistakex) have no unique entries (without user
+                # input or mock) Test for the static values and that plx entry is next to its header
+                if key.startswith('pl'):
+                    headval = 'Proceeds Lost'
+                    targetcell = ws2[cell].value[1:]
+                    headercell = 'A' + targetcell[1:]
+                    # print(ws2[targetcell].value, '<------->', None)
+                    # print(headercell, '------->', ws2[headercell].value)
+                    self.assertTrue(ws2[targetcell].value is None)
+                    self.assertEqual(ws2[headercell].value, headval)
 
-            if key.startswith('mistake'):
-                noteval = 'Final note'
-                targetcell = ws2[cell].value[1:]
-                # print(ws2[targetcell].value, '<------->', noteval)
-                assert ws2[targetcell].value == noteval
+                if key.startswith('mistake'):
+                    noteval = 'Final note'
+                    targetcell = ws2[cell].value[1:]
+                    # print(ws2[targetcell].value, '<------->', noteval)
+                    self.assertEqual(ws2[targetcell].value,  noteval)
+
+    @patch('journal.xlimage.askUser', return_value='d')
+    @patch('journal.layoutsheet.askUser', return_value='n')
+    @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
+    def test_populateDailySummaryForm(self, unusedstub1, unusedstub2, unusedstub3):
+        '''
+        Test the method populateMistakeForm. The setup here is alost the entire module trade.py
+        The tested method puts in the trade PL and notes
+        '''
+
+        global D
+
+
+        for tdata, infile in zip(self.dadata, self.infiles):
+            # :::::::::  Setup   ::::::::
+            D = deque(tdata)
+            # :::::::::::::: SETUP ::::::::::::::
+            # theDate = '2018-11-05'
+            outdir = 'out/'
+            indir = 'data/'
+            mydevel = False
+            jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
+
+            tkt = Ticket(jf)
+            trades, jf = tkt.newDFSingleTxPerTicket()
+            # trades = pd.read_csv(jf.inpathfile)
+
+
+            # idf = InputDataFrame()
+            trades = InputDataFrame().processInputFile(trades)
+
+            inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
+
+            # Process the openpyxl excel object using the output file DataFrame. Insert
+            # images and Trade Summaries.
+            margin = 25
+
+            # Create the space in dframe to add the summary information for each trade.
+            # Then create the Workbook.
+            ls = LayoutSheet(margin, inputlen)
+            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            wb, ws, dummy = ls.createWorkbook(dframe)
+
+            tf = TradeFormat(wb)
+
+            mstkAnchor = (len(dframe.columns) + 2, 1)
+            mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+            # mistake.mstkSumStyle(ws, tf, mstkAnchor)
+            mistake.dailySumStyle(ws, tf, mstkAnchor)
+
+            tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
+
+            # :::::::::::::: END SETUP ::::::::::::::
+            # ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
+            ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
+
+            # Make sure the out dir exists
+            if not os.path.exists("out/"):
+                os.mkdir("out/")
+
+            # Make sure the file we are about to create does not exist
+            dispath = "out/SCHNOrK.xlsx"
+            if os.path.exists(dispath):
+                os.remove(dispath)
+
+            wb.save(dispath)
+            print(jf.inpathfile, 'saved as', dispath)
+
+            wb2 = load_workbook(dispath)
+            ws2 = wb2.active
+
+            # Live Total
+            from math import isclose
+            frc = FinReqCol()
+            livetot = 0
+            simtot = 0
+            highest = 0
+            lowest = 0
+            numwins = 0
+            numlosses = 0
+            totwins = 0
+            totloss = 0
+
+            for trade in tradeSummaries:
+                acct = trade[frc.acct].unique()[0]
+                pl = trade[frc.PL].unique()[0]
+                highest = pl if pl > highest else highest
+                lowest = pl if pl < lowest else lowest
+                if pl > 0:
+                    numwins += 1
+                    totwins += pl
+                # Trades == 0 are figured in the loss column-- comissions and all
+                else:
+                    numlosses += 1
+                    totloss += pl
+
+
+                if acct == 'Live':
+                    livetot += pl
+                elif acct == 'SIM':
+                    simtot += pl
+
+            # print(livetot)
+            # livetotcell = tcell(mistake.dailySummaryFields['livetot'][0], anchor=ls.DSFAnchor)
+            # print(simtot)
+
+            avgwin = 0 if numwins == 0 else totwins/numwins
+            avgloss = 0 if numlosses == 0 else totloss/numlosses
+
+            data = [['livetot', livetot], ['simtot', simtot], ['highest', highest],
+                    ['lowest', lowest], ['avgwin', avgwin], ['avgloss', avgloss] ]
+
+            for s, d in data:
+                cell = tcell(mistake.dailySummaryFields[s][0], anchor=ls.DSFAnchor)
+                msg = '{} {} {}'.format(s, d, ws2[cell].value)
+                # print(msg)
+                assert isclose(d, ws2[cell].value, abs_tol=1e-7)
+
+
+            data = ['livetotnote', 'simtotnote', 'highestnote', 'lowestnote',
+                    'avgwinnote', 'avglossnote']
+            for s in data:
+                cell = tcell(mistake.dailySummaryFields[s][0][0], anchor=ls.DSFAnchor)
+                val = ws2[cell].value
+                assert isinstance(val, str)
+                assert len(val) > 1
+
+
 
 
 
@@ -434,6 +571,7 @@ def notmain():
     # ttt.test_createWorkbook()
     # ttt.test_styleTopwithnothin()
     ttt.test_populateMistakeForm()
+    # ttt.test_populateDailySummaryForm()
 
 def main():
     '''Run unittests cl style'''

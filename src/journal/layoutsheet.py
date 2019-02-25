@@ -52,6 +52,7 @@ class LayoutSheet:
         self.topMargin = topMargin
         self.inputlen = inputlen
         self.spacing = spacing
+        self.DSFAnchor = None
 
     def createImageLocation(self, df, ldf, ft="png"):
         '''
@@ -239,10 +240,10 @@ class LayoutSheet:
         The form and the static content are already created presumably in the ws in the arguments.
         Either way we create the info into the given ws.
         :Programming note: MistakeSummaries form is not a one-place creation because of the hard-
-                           coded stuff in this method. With some careful work, it could be. It  
+                           coded stuff in this method. With some careful work, it could be. It
                            would involve placing all the data we need for the hyperlinks (other
                            than cell transation), in the mistakeFields or in the formula dict.
-                           blwnitffczmlz
+                           blwntffczmlz
         :params tradeSummaries: A dataframe containing the the trade summaries info, one line per
                                 trade.
         :parmas mistake: A dataframe containing the info to populate the mistake summary form.
@@ -293,9 +294,11 @@ class LayoutSheet:
                 # print("ws[{0}]='{1}'".format(cell, formula))
                 ws[cell] = formula
 
-    def createDailySummaryForm(self, TheTradeList, mistake, ws, anchor):
+    def populateDailySummaryForm(self, TheTradeList, mistake, ws, anchor):
         '''
-        Create the shape and populate the daily Summary Form
+        Populate the daily Summary Form. The PL values are retrieved from TheTradeList. The static
+        labels are set earlier. This method sets some statistics and notes for things like
+        regarding average winners/losers etc.
         :params listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one
                              is a single row DataFrame containg all the data for trade summaries.
         :params mistke:
@@ -316,6 +319,8 @@ class LayoutSheet:
             pl = TheTrade[srf.pl].unique()[0]
             live = True if TheTrade[srf.acct].unique()[0] == "Live" else False
             count = count + 1
+
+            # A bug-ish inspired baby-sitter
             if isinstance(pl, str):
                 if pl == '':
                     pl = 0
@@ -346,6 +351,7 @@ class LayoutSheet:
                     simLosses.append(pl)
 
         anchor = (anchor[0], anchor[1] + mistake.numTrades + 5)
+        self.DSFAnchor = anchor
 
         dailySumData = dict()
         dailySumData['livetot'] = sum([sum(liveWins), sum(liveLosses)])
