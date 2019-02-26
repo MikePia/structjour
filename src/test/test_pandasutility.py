@@ -238,7 +238,7 @@ class Test_SingleTicket(unittest.TestCase):
 
             for i in range(len(side)):
                 # self.assertEqual(apd[rc.shares][i], shares[i])
-                assert apd[rc.shares][i] == shares[i]
+                self.assertEqual(apd[rc.shares][i], shares[i])
 
             idf = InputDataFrame()
             apd = idf.mkShortsNegative(apd)

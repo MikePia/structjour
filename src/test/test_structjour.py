@@ -200,7 +200,7 @@ class TestStructjour(TestCase):
                     finalNum = int(num)
                 elif begin:
                     break
-            assert finalNum == numTrades
+            self.assertEqual(finalNum, numTrades)
             columns = ['Tindex', 'start', 'time', 'symb', 'side', 'price',
                        'qty', 'bal', 'account', 'pl', 'sum', 'dur', 'name']
             fdf = pd.DataFrame(data=trades, columns=columns)

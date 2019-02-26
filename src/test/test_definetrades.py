@@ -54,6 +54,9 @@ def getPL():
     return amnt * upordown * multiplier
 
 def getTicker():
+    '''
+    Get a random ticker symbol
+    '''
     tickers = ['SQ', 'AAPL', 'TSLA', 'ROKU', 'NVDA', 'NUGT',
                'MSFT', 'CAG', 'ACRS', 'FRED']
     return tickers[random.randint(0,9)]
@@ -62,11 +65,12 @@ def getTicker():
 def randomTradeGenerator(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00')):
     '''
     Creates a list of transacations to make up a trade. Uses columns for tradenum, start, time,
-    side, qty and balance.
+    side, qty and balance. The PL is not worked out to coincide with shares or price. Used to 
+    test the mechanics of DefineTrades class.
     Each trade ends with a 0 balance. Side can be one of 'S', 'B', 'HOLD+', 'HOLD-','HOLD+B',
-    'HOLD-B', The before holds are no different than 'B' or 'S'. The HOLD afters have 0 qty
+    'HOLD-B', The before holds are no different than 'B' or 'S'. The HOLDx afters have 0 qty
     and bal.
-    :return list: Transactions as a single trade. [[start,time, side, qty, bal]]
+    :return list: Transactions making up a single trade as a list. [[start,time, side, qty, bal]]
     '''
     tradenum = 'Trade {}'.format(tnum)
     start = earliest
@@ -329,7 +333,7 @@ class TestDefineTrades(TestCase):
         dtrades = DefineTrades()
         df2 = DataFrameUtil.addRows(df2, 2)
         df3 = dtrades.addSummaryPL(df2)
-        print(summaryPL, df3.iloc[-1][frc.sum])
+        # print(summaryPL, df3.iloc[-1][frc.sum])
 
         self.assertAlmostEqual(summaryPL, df3.iloc[-1][frc.sum])
         self.assertAlmostEqual(summaryPL, df3.iloc[-2][frc.PL])

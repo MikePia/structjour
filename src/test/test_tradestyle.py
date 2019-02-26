@@ -124,9 +124,9 @@ class TestTradeFormat(TestCase):
             address = srf.tfcolumns[x][0]
             st = srf.tfcolumns[x][1]
             if isinstance(address, list):
-                assert ws2[c(address[0])].style == st
+                self.assertEqual(ws2[c(address[0])].style, st)
             else:
-                assert ws2[c(address)].style == st
+                self.assertEqual(ws2[c(address)].style, st)
 
         # test that each list element has a corresponding merged cell group in the worbook
         listofmerge = [c(srf.tfcolumns[x][0][0], srf.tfcolumns[x][0][1])  for x in srf.tfcolumns if isinstance(srf.tfcolumns[x][0], list)]

@@ -7,6 +7,7 @@ Test the methods in the module layoutsheet
 '''
 
 import datetime as dt
+from math import isclose
 import os
 from random import randint
 from unittest import TestCase
@@ -26,6 +27,7 @@ from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
 from journal.tradestyle import TradeFormat, c as tcell
+from journal.thetradeobject import SumReqFields
 ########: disable = C0103, W0613, W0603, W0212, R0914
 # pylint: disable = C0103, W0613, W0603, W0212, R0914
 
@@ -408,7 +410,7 @@ class TestLayoutSheet(TestCase):
                 if key.startswith('tpl'):
                     targetcell = ws2[cell].value[1:]
                     origval = tradeSummaries[count][frc.PL].unique()[0]
-                    print(ws2[targetcell].value, '<------->', origval )
+                    # print(ws2[targetcell].value, '<------->', origval )
                     if origval == 0:
                         self.assertIs(ws2[targetcell].value, None)
                     else:
@@ -497,7 +499,7 @@ class TestLayoutSheet(TestCase):
                 os.remove(dispath)
 
             wb.save(dispath)
-            print(jf.inpathfile, 'saved as', dispath)
+            # print(infile, 'saved as', dispath)
 
             wb2 = load_workbook(dispath)
             ws2 = wb2.active
@@ -545,9 +547,9 @@ class TestLayoutSheet(TestCase):
 
             for s, d in data:
                 cell = tcell(mistake.dailySummaryFields[s][0], anchor=ls.DSFAnchor)
-                msg = '{} {} {}'.format(s, d, ws2[cell].value)
+                # msg = '{} {} {}'.format(s, d, ws2[cell].value)
                 # print(msg)
-                assert isclose(d, ws2[cell].value, abs_tol=1e-7)
+                self.assertAlmostEqual(d, ws2[cell].value)  #, abs_tol=1e-7)
 
 
             data = ['livetotnote', 'simtotnote', 'highestnote', 'lowestnote',
@@ -555,9 +557,122 @@ class TestLayoutSheet(TestCase):
             for s in data:
                 cell = tcell(mistake.dailySummaryFields[s][0][0], anchor=ls.DSFAnchor)
                 val = ws2[cell].value
-                assert isinstance(val, str)
-                assert len(val) > 1
+                self.assertIsInstance(val, str)
 
+                self.assertGreater(len(val), 1)
+
+    @patch('journal.xlimage.askUser', return_value='d')
+    @patch('journal.layoutsheet.askUser', return_value='n')
+    @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
+    def test_runSummaries(self, unusedstub1, unusedstub2, unusedstub3):
+        '''
+        Test the method prunSummaries. The setup here is alost the entire module trade.py
+        We run the standard set of infiles
+        '''
+
+        # global D
+        # infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
+        #         'trades.8.csv', 'trades.907.WithChangingHolds.csv',
+        #         'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
+        #         'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
+        #         'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
+        #         'trades190221.BHoldPreExit.csv']
+
+        global D
+        for tdata, infile in zip(self.dadata, self.infiles):
+            # :::::::::  Setup   ::::::::
+
+            D = deque(tdata)
+            # :::::::::::::: SETUP ::::::::::::::
+            # theDate = '2018-11-05'
+            outdir = 'out/'
+            indir = 'C:/python/E/structjour/src/data/'
+            mydevel = False
+            jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
+
+
+            tkt = Ticket(jf)
+            trades, jf = tkt.newDFSingleTxPerTicket()
+            # trades = pd.read_csv(jf.inpathfile)
+
+            # idf = InputDataFrame()
+            trades = InputDataFrame().processInputFile(trades)
+
+            inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
+
+            # Process the openpyxl excel object using the output file DataFrame. Insert
+            # images and Trade Summaries.
+            margin = 25
+
+            # Create the space in dframe to add the summary information for each trade.
+            # Then create the Workbook.
+            ls = LayoutSheet(margin, inputlen)
+            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            wb, ws, dummy = ls.createWorkbook(dframe)
+
+            tf = TradeFormat(wb)
+
+            mstkAnchor = (len(dframe.columns) + 2, 1)
+            mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+            mistake.mstkSumStyle(ws, tf, mstkAnchor)
+            
+            # :::::::::::::: END SETUP ::::::::::::::
+            tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
+
+            # Make sure the out dir exists
+            if not os.path.exists("out/"):
+                os.mkdir("out/")
+
+            # Make sure the file we are about to create does not exist
+            dispath = "out/SCHNOrK.xlsx"
+            if os.path.exists(dispath):
+                os.remove(dispath)
+            wb.save(dispath)
+            
+
+            wb2 = load_workbook(dispath)
+            ws2 = wb2.active
+            
+
+            srf = SumReqFields()
+            for trade, loc in zip(tradeSummaries, imageLocation):
+                anchor = (1,loc[0])
+                # print(anchor)
+                for col in trade:
+
+                    # Get the cell
+                    if isinstance(srf.tfcolumns[col][0], list):
+                        cell = tcell(srf.tfcolumns[col][0][0], anchor=anchor)
+                    else:
+                        cell = tcell(srf.tfcolumns[col][0], anchor=anchor)
+
+                    # Nicer to read
+                    wsval = ws2[cell].value
+                    tval = trade[col].unique()[0]
+
+                    # Test Formulas (mostly skipping for now because its gnarly)
+                    # Formulas in srf.tfformulas including the translation stuff
+
+                    if col in srf.tfformulas.keys():
+                        self.assertTrue(wsval.startswith('='))
+
+                    # Test empty cells
+                    elif not tval:
+                        # print(wsval, '<------->', tval)
+                        self.assertIs(wsval, None)
+
+                    # Test floats
+                    elif isinstance(tval, float):
+                        # print(wsval, '<------->', tval)
+                        self.assertAlmostEqual(wsval, tval)
+
+                    # Test everything else
+                    else:
+                        # print(wsval, '<------->', tval)
+                        self.assertEqual(wsval,  tval)
+
+
+                
 
 
 
@@ -570,8 +685,9 @@ def notmain():
     # ttt.test_createImageLocation()
     # ttt.test_createWorkbook()
     # ttt.test_styleTopwithnothin()
-    ttt.test_populateMistakeForm()
+    # ttt.test_populateMistakeForm()
     # ttt.test_populateDailySummaryForm()
+    ttt.test_runSummaries()
 
 def main():
     '''Run unittests cl style'''

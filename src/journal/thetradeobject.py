@@ -618,6 +618,9 @@ class TheTradeObject(object):
         if len(entries) > 8:
             more = len(entries) - 8
             self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
+            # Before doing anything-- was the input file processed into tickets? 
+            # If not, there are probably fewer trades than it appears-- check for repeated
+            # time entries
             print ('Holy cow, save this input file as a test file and finalize setEntries code.')
         for i, price in zip(range(len(entries)), entries):
 

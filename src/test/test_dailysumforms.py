@@ -103,11 +103,11 @@ class TestMistakeSummary(TestCase):
                 cell = tcell(entry[0][0], anchor=anchor)
             else:
                 cell = tcell(entry[0], anchor=anchor)
-            assert entry[1] == ws2[cell].style
+            self.assertEqual(entry[1], ws2[cell].style)
 
             # Get the entries with the static values-- the headers
             if len(entry) == 3:
-                assert ws2[cell].value == ms.dailySummaryFields[x][2]
+                self.assertEqual(ws2[cell].value, ms.dailySummaryFields[x][2])
         os.remove(dispath)
 
 

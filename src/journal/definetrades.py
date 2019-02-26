@@ -254,6 +254,7 @@ class DefineTrades(object):
 
             longShort = " Long"
             if row[c.bal] == 0:
+                # this is the last tx of the trade today. B or HOLD- are shorts
                 if row[c.side] == 'B' or row[c.side].startswith('HOLD-'):
                     longShort = " Short"
                 dframe.at[i, c.name] = row[c.ticker] + longShort

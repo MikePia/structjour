@@ -62,7 +62,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
 
     ls.save(wb, jf)
-    print("done")
+    print("Processing complete. Saved {}".format(jf.outpathfile))
     return jf
 
 
