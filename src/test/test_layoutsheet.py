@@ -7,7 +7,6 @@ Test the methods in the module layoutsheet
 '''
 
 import datetime as dt
-from math import isclose
 import os
 from random import randint
 from unittest import TestCase
@@ -310,7 +309,7 @@ class TestLayoutSheet(TestCase):
         self.assertEqual(tabRange, ws._tables[0].ref)
 
         os.remove(dispath)
-        
+
 
     @patch('journal.xlimage.askUser', return_value='d')
     @patch('journal.layoutsheet.askUser', return_value='n')
@@ -432,7 +431,7 @@ class TestLayoutSheet(TestCase):
                     noteval = 'Final note'
                     targetcell = ws2[cell].value[1:]
                     # print(ws2[targetcell].value, '<------->', noteval)
-                    self.assertEqual(ws2[targetcell].value,  noteval)
+                    self.assertEqual(ws2[targetcell].value, noteval)
 
     @patch('journal.xlimage.askUser', return_value='d')
     @patch('journal.layoutsheet.askUser', return_value='n')
@@ -505,7 +504,6 @@ class TestLayoutSheet(TestCase):
             ws2 = wb2.active
 
             # Live Total
-            from math import isclose
             frc = FinReqCol()
             livetot = 0
             simtot = 0
@@ -543,7 +541,7 @@ class TestLayoutSheet(TestCase):
             avgloss = 0 if numlosses == 0 else totloss/numlosses
 
             data = [['livetot', livetot], ['simtot', simtot], ['highest', highest],
-                    ['lowest', lowest], ['avgwin', avgwin], ['avgloss', avgloss] ]
+                    ['lowest', lowest], ['avgwin', avgwin], ['avgloss', avgloss]]
 
             for s, d in data:
                 cell = tcell(mistake.dailySummaryFields[s][0], anchor=ls.DSFAnchor)
@@ -615,7 +613,7 @@ class TestLayoutSheet(TestCase):
             mstkAnchor = (len(dframe.columns) + 2, 1)
             mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
             mistake.mstkSumStyle(ws, tf, mstkAnchor)
-            
+
             # :::::::::::::: END SETUP ::::::::::::::
             tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
 
@@ -628,15 +626,14 @@ class TestLayoutSheet(TestCase):
             if os.path.exists(dispath):
                 os.remove(dispath)
             wb.save(dispath)
-            
 
             wb2 = load_workbook(dispath)
             ws2 = wb2.active
-            
+
 
             srf = SumReqFields()
             for trade, loc in zip(tradeSummaries, imageLocation):
-                anchor = (1,loc[0])
+                anchor = (1, loc[0])
                 # print(anchor)
                 for col in trade:
 
@@ -669,13 +666,7 @@ class TestLayoutSheet(TestCase):
                     # Test everything else
                     else:
                         # print(wsval, '<------->', tval)
-                        self.assertEqual(wsval,  tval)
-
-
-                
-
-
-
+                        self.assertEqual(wsval, tval)
 
 
 def notmain():

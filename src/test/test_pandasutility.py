@@ -243,7 +243,7 @@ class Test_SingleTicket(unittest.TestCase):
             idf = InputDataFrame()
             apd = idf.mkShortsNegative(apd)
             for i in range(len(side)):
-                assert apd[rc.shares][i] == shares[i] * mult[i]
+                self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
             #     self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
 
     def testGetListTickerDF(self):
