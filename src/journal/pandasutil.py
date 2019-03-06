@@ -21,11 +21,11 @@ def askUser(shares, question):
     while True:
         try:
             response = input(question)
-            if len(response) < 1:
+            if not response:
                 response = shares
             else:
                 response = int(response)
-        except Exception as ex:
+        except ValueError as ex:
             print(ex)
             print()
             print("please enter a number")

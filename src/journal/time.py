@@ -104,15 +104,14 @@ def getFirstWeekday(theMonth=None, theDir=None):
                 if len(r) < 6 or len(r) > 7:
                     raise ValueError('Please use yyyymm or yyyy-mm')
                 r = r + '-01' if r.find('-') > 0 else r + '01'
-                theDay = pd.Timestamp(r)
+                theMonth = pd.Timestamp(r)
             except  ValueError:
                 print("I didn't understand that. (q to quit)")
                 continue
     #         r=input(f"{theDay.strftime('%B %Y')} Is this the month?")
             break
-    else:
-        theMonth = pd.Timestamp(theMonth)
-        # print(theMonth)
+    theMonth = pd.Timestamp(theMonth)
+    print(theMonth)
     advancedays = 8 - theMonth.isoweekday()  if theMonth.isoweekday() > 5 else 0
 
     day = 1 + advancedays
@@ -127,8 +126,8 @@ def getFirstWeekday(theMonth=None, theDir=None):
 def main():
     # outdir = os.getcwd()
     journaldir = os.getcwd()
-    theDate = pd.Timestamp('2019-06-01')
-    theDate, journaldir = getFirstWeekday(theDate, journaldir)
+    # theDate = pd.Timestamp()
+    theDate, journaldir = getFirstWeekday()
 
     monthDir = os.path.join(journaldir, theDate.strftime("_%Y%m_%B"))
     createDirs(theDate, monthDir)
