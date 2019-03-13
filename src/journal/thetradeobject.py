@@ -1,4 +1,13 @@
+'''
+First try at trade summary using a grid Layout
+
+author: Mike Petersen
+
+created: September 1, 2018
+'''
+
 import pandas as pd
+import datetime as dt
 
 from journal.dfutil import DataFrameUtil
 from journal.definetrades import FinReqCol
@@ -26,7 +35,7 @@ class SumReqFields(object):
     :attribute self.tfformulas (hybrid data): These entries will override the rc data. The entries
         represent excel formulas. Most formulas require a mapping of cells done just after the cell
         styling.
-    
+
     :
     NOTES on self.tfcolumns and tfformulas(Summary trade form):
     tfcolumns, short for tradeFormatColumns, specifically defines the trade summary form.
@@ -119,7 +128,7 @@ class SumReqFields(object):
         self.mstkhead = rc['mstkhead']
         self.mstkval = rc['mstkval']
         self.mstknote = rc['mstknote']
-        
+
         self.entryhead = rc['entryhead']
         self.entry1 = rc['entry1']
         self.entry2 = rc['entry2']
@@ -181,7 +190,6 @@ class SumReqFields(object):
         self.rc = rc
         self.columns = rc.values()
 
-        
         self.tfcolumns = {
             self.name: [[(1, 1), (3, 2)], 'titleStyle'],
             self.acct: [[(4, 1), (6, 2)], 'titleStyle'],
@@ -353,11 +361,15 @@ class SumReqFields(object):
 
 class TheTradeObject(object):
     '''
-    Manages the creation of the Trade Summary objects from the the output DataFrame. 
-    Summarize one trade at a time on a single row of a DataFrame and include user input
-    like stop, target, and trade strategy 
-    :PreRequisite: The original DtaFrame must be transformed into the output DataFrame 
-        in which trades are represented in tickets and are seperated and labeled. 
+    Manages the creation of the Trade Summary objects from the the output DataFrame. These are
+    represented as the excel forms the user sees to review a trade showing entries and exits,
+    targets and stops, strategy and user analysis. This class holds the DataFrame representation
+    of that data. This class encapsulates the model data. The model is the summary of one trade in
+    a single row DataFrame.
+    :PreRequisite: The original DtaFrame should be transformed into the output DataFrame in which
+    trades are represented in tickets and are seperated and labeled. It will work
+        fine using the original input (still processed and labeled to the output DataFrame) but DAS
+        may provide 20 transactions for a single ticket purchase. No one likes to see that.
     '''
 
     def __init__(self, df, interview, srf):
@@ -442,18 +454,36 @@ class TheTradeObject(object):
 
     # HACK ALERT The duration came out as an empty string on an older file so I added the babysitting for empty strings
     def __setDur(self):
+        '''
+        Sets the duration delta to a nicely formatted string for humans. Return just the number of
+        days if its 1 or more. Otherwise return something like: 1 hour, 4:34 
+        :raise: A couple of assertions could raise AssertionError. (Temporary for development)
+        '''
 
         time = self.df.loc[self.ix][frc.dur]
         if isinstance(time, str):
-            if len(time) < 1:
-                return
-            else:
-                duration = time
+            dur = time
 
         else:
-            duration = "{0} hours {1}:{2}".format(
-                time.seconds // 3600, time.seconds // 60, time.seconds % 60)
-        self.TheTrade[self.srf.dur] = duration
+            # programmer babysitter, remove after several months of success (3/12/19) Its here
+            # because changes to this method exposed the possibility of untested error.
+
+            assert isinstance(time, dt.timedelta)
+            time = pd.Timedelta(time)
+            assert time.components.days >= 0
+            if time.components.days > 0:
+                d = time.components.days
+                dur = str(d) + ' days' if d > 1 else str(d) + \
+                    ' day' if d == 1 else ''
+                return dur
+            h = time.components.hours
+            m = time.components.minutes
+            s = time.components.seconds
+
+            dur = str(h) + ' hours, ' if h > 1 else str(h) + \
+                ' hour, ' if h == 1 else ''
+            dur += str(m) + ':' + str(s)
+        self.TheTrade[self.srf.dur] = dur
         return self.TheTrade
 
     def __getStrategy(self):
@@ -528,16 +558,14 @@ class TheTradeObject(object):
 
     def __setEntries(self):
         '''
-        This method places data into the trade summary from entries, exits, time of 
-        transaction, number of shares, and the difference between price of this 
-        transaction and the 1st entry (or over night hold entry).  The strategy I 
-        adopted for overnight hold is not ideal. Keep brainstorming for alternitives. 
+        This method places data into the trade summary from entries, exits, time of
+        transaction, number of shares, and the difference between price of this
+        transaction and the 1st entry (or over night hold entry).  The strategy I
+        adopted for overnight hold is not ideal. Keep brainstorming for alternitives.
         The logic tree to make entries/exits is convoluted.
         '''
         entries = list()
-        exits = list()
-        # TODO Fix the hold entry
-        # if self.df.loc[self.ix0][frc.side].lower().startswith('hold') :
+        # exits = list()
         long = False
         entry1 = 0
         count = 0
@@ -558,7 +586,7 @@ class TheTradeObject(object):
                     partEntryPrice = partEntryPrice + \
                         abs(row[frc.price] * row[frc.shares])
                 count = count + 1
-            if isinstance( self.df.loc[self.ix][frc.sum], str):
+            if isinstance(self.df.loc[self.ix][frc.sum], str):
                 entryPrice = exitPrice
                 # print('wtf')
             else:
@@ -618,10 +646,11 @@ class TheTradeObject(object):
         if len(entries) > 8:
             more = len(entries) - 8
             self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
-            # Before doing anything-- was the input file processed into tickets? 
+            # Before doing anything-- was the input file processed into tickets?
             # If not, there are probably fewer trades than it appears-- check for repeated
             # time entries
-            print ('Holy cow, save this input file as a test file and finalize setEntries code.')
+            print(
+                'Holy cow, save this input file as a test file and finalize setEntries code.')
         for i, price in zip(range(len(entries)), entries):
 
             # Entry Price
@@ -707,7 +736,7 @@ class TheTradeObject(object):
         try:
             p = float(self.TheTrade[self.srf.entry1])
             p = f'{p:.3f}'
-        except:
+        except ValueError:
             question = '''
             Your position was {0}.
             What was your stop?
@@ -767,7 +796,7 @@ class TheTradeObject(object):
         if self.TheTrade[self.srf.pl].unique()[0] < 0:
             if abs(self.TheTrade[self.srf.pl].unique()[0]) > abs(self.TheTrade[self.srf.maxloss].unique()[0]):
                 self.TheTrade[self.srf.mstkval] = abs(self.TheTrade[self.srf.maxloss].unique()[
-                                                 0]) - abs(self.TheTrade[self.srf.pl].unique()[0])
+                    0]) - abs(self.TheTrade[self.srf.pl].unique()[0])
                 self.TheTrade[self.srf.mstknote] = "Exceeded Stop Loss!"
 
     def __blandSpaceInMstkNote(self):
@@ -778,11 +807,10 @@ class TheTradeObject(object):
         self.TheTrade[self.srf.notes] = "Evaluation of the trade"
 
 
-
 def notmain():
     '''Run some local code'''
     srf = SumReqFields()
-    
+
     print('\n', srf.maxcol(), '\n')
     print('\n', srf.maxrow(), '\n')
 

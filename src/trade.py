@@ -53,10 +53,10 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     mistake.dailySumStyle(ws, tf, mstkAnchor)
 
     tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
-    app = QApplication(sys.argv)
-    qtf = QtForm()
-    qtf.fillForm(tradeSummaries[1])
-    app.exec_()
+    # app = QApplication(sys.argv)
+    # qtf = QtForm()
+    # qtf.fillForm(tradeSummaries[1])
+    # app.exec_()
 
     ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
     ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     theD = '2019-02-26'
     outd = 'out/'
     inf = None
-    outd = None
+    # outd = None
     theD = None
     ind = None
     mydev = True

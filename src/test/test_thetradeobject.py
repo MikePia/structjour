@@ -2,6 +2,10 @@
 Test the methods in the module thetradeobject. 
 Created on Nov 5, 2018
 
+TODO: Expand on the random trade generator to create a random TradeObject generator for all the
+relavent tests in this module. Should not have to run the program to test these methods and doing
+so severely limits the effectiveness of these tests to pre hand-checked data
+
 @author: Mike Petersen
 '''
 import os
@@ -115,7 +119,7 @@ class TestTheTradeObject(unittest.TestCase):
     def test_TheTradeObjectSetDur(self):
         self.tto._TheTradeObject__setDur()
         self.assertEqual(self.tto.TheTrade[grf.dur].unique()[
-            0], "0 hours 1:40", "Failed to set duration time correctly")
+            0], "1:40", "Failed to set duration time correctly")
 
     def test_TheTradeObjectSetStrategy(self):
         '''Skipping because I don't do mock...(yet) The mechanics are the 
@@ -191,8 +195,12 @@ def notmain():
 
             if isinstance(attr, types.MethodType):
                 attr()
+def reallylocal():
+    f = TestTheTradeObject()
+    f.test_TheTradeObjectSetDur()
 
 
 if __name__ == "__main__":
-    notmain()
+    # notmain()
     # main()
+    reallylocal()
