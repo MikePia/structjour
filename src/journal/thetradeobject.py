@@ -6,11 +6,13 @@ author: Mike Petersen
 created: September 1, 2018
 '''
 
-import pandas as pd
 import datetime as dt
 
-from journal.dfutil import DataFrameUtil
+import pandas as pd
+
 from journal.definetrades import FinReqCol
+from journal.dfutil import DataFrameUtil
+
 # pylint: disable=C0103
 
 
@@ -20,7 +22,7 @@ from journal.definetrades import FinReqCol
 frc = FinReqCol()
 
 
-class SumReqFields(object):
+class SumReqFields:
     '''
     Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject
     and TheTradeStyle. There are three types of data represented here.
@@ -45,17 +47,19 @@ class SumReqFields(object):
     self.targhead).  To add a style to the TradeSummary, define the NamedStyle in
     journal.tradestyle.TradeFormat. Follow the pattern of the others. Then place the name
     in tfcolumns with the others. Excel cell formulas (tfformulas) are created seperately and
-    usually require cell translation, done just after the style creation usually. If no cell 
+    usually require cell translation, done just after the style creation usually. If no cell
     translation is required, the workbook insertion can be handled as a regular rc entry.
     '''
 
     def __init__(self):
-        ''' rcvals are the actual column titles 
+        ''' rcvals are the actual column titles
         rckeys are the abstracted names for use with all file types
-        The abstraction provides code style consistency for this program (like ReqCol and FinReqCol)
+        The abstraction provides code style consistency (like ReqCol and FinReqCol)
             and a means to change the whole thing managed here alone'''
-        # TODO (maybe) make these things pluggable to alow the creation of any shape and style by plugging in a module. Might possibe by
-        #   plugging in tfcoumns and tfformulas alone, and leaving the rest
+        # TODO (maybe) make these things pluggable to alow the creation of any shape and style by
+        # plugging in a module. Might possibe by plugging in tfcoumns and tfformulas alone, and
+        # leaving the rest
+        # pylint: disable = C0301
         rcvals = ['Name', 'Account', 'Strategy', 'Link1',
                   'P/LHead', 'P / L', 'StartHead', 'Start', 'DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
                   'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff', 'RRHead', 'RR', 'MaxHead', 'MaxLoss',
@@ -72,7 +76,7 @@ class SumReqFields(object):
 
         rckeys = ['name', 'acct', 'strat', 'link1',
                   'plhead', 'pl', 'starthead', 'start', 'durhead', 'dur', 'sharehead', 'shares', 'mkthead', 'mktval',
-                  'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff',  'rrhead', 'rr', 'maxhead', 'maxloss',
+                  'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff', 'rrhead', 'rr', 'maxhead', 'maxloss',
                   'mstkhead', 'mstkval', 'mstknote',
 
                   'entryhead', 'entry1', 'entry2', 'entry3', 'entry4', 'entry5', 'entry6', 'entry7', 'entry8',
@@ -87,7 +91,8 @@ class SumReqFields(object):
 
         # This includes all the locations that are likely to have data associated with them.
         # Blank cells are added to tfcolumns. Tese have style, but no data. Each of the data
-        # entries are added as attributes to maintain programming abstraction, minimize future change.
+        # entries are added as attributes to maintain programming abstraction, minimize future
+        # change.
         rc = dict(zip(rckeys, rcvals))
 
         # #Suggested way to address the columns for the TheTrade DataFrame.
@@ -234,20 +239,20 @@ class SumReqFields(object):
             self.entry7: [(11, 3), 'normalNumberTop'],
             self.entry8: [(12, 3), 'normalNumberTopRight'],
 
-            self.exit1: [(5, 4),  'normalNumberLeft'],
-            self.exit2: [(6, 4),  'normalNumberInside'],
-            self.exit3: [(7, 4),  'normalNumberInside'],
-            self.exit4: [(8, 4),  'normalNumberInside'],
-            self.exit5: [(9, 4),  'normalNumberInside'],
-            self.exit6: [(10, 4),  'normalNumberInside'],
-            self.exit7: [(11, 4),  'normalNumberInside'],
-            self.exit8: [(12, 4),  'normalNumberRight'],
+            self.exit1: [(5, 4), 'normalNumberLeft'],
+            self.exit2: [(6, 4), 'normalNumberInside'],
+            self.exit3: [(7, 4), 'normalNumberInside'],
+            self.exit4: [(8, 4), 'normalNumberInside'],
+            self.exit5: [(9, 4), 'normalNumberInside'],
+            self.exit6: [(10, 4), 'normalNumberInside'],
+            self.exit7: [(11, 4), 'normalNumberInside'],
+            self.exit8: [(12, 4), 'normalNumberRight'],
 
-            self.time1: [(5, 5),  'normalSubLeft'],
-            self.time2: [(6, 5),  'normalSub'],
-            self.time3: [(7, 5),  'normalSub'],
-            self.time4: [(8, 5),  'normalSub'],
-            self.time5: [(9, 5),  'normalSub'],
+            self.time1: [(5, 5), 'normalSubLeft'],
+            self.time2: [(6, 5), 'normalSub'],
+            self.time3: [(7, 5), 'normalSub'],
+            self.time4: [(8, 5), 'normalSub'],
+            self.time5: [(9, 5), 'normalSub'],
             self.time6: [(10, 5), 'normalSub'],
             self.time7: [(11, 5), 'normalSub'],
             self.time8: [(12, 5), 'normalSubRight'],
@@ -261,23 +266,23 @@ class SumReqFields(object):
             self.eshare7:  [(11, 6), 'normalSub'],
             self.eshare8:  [(12, 6), 'normalSubRight'],
 
-            self.diff1:  [(5, 7),  'normalSubLeft'],
-            self.diff2:  [(6, 7),  'normalSub'],
-            self.diff3:  [(7, 7),  'normalSub'],
-            self.diff4:  [(8, 7),  'normalSub'],
-            self.diff5:  [(9, 7),  'normalSub'],
-            self.diff6:  [(10, 7),  'normalSub'],
-            self.diff7:  [(11, 7),  'normalSub'],
-            self.diff8:  [(12, 7),  'normalSubRight'],
+            self.diff1:  [(5, 7), 'normalSubLeft'],
+            self.diff2:  [(6, 7), 'normalSub'],
+            self.diff3:  [(7, 7), 'normalSub'],
+            self.diff4:  [(8, 7), 'normalSub'],
+            self.diff5:  [(9, 7), 'normalSub'],
+            self.diff6:  [(10, 7), 'normalSub'],
+            self.diff7:  [(11, 7), 'normalSub'],
+            self.diff8:  [(12, 7), 'normalSubRight'],
 
-            self.pl1:  [(5, 8),  'normalSubNumberBottomLeft'],
-            self.pl2:  [(6, 8),  'normalSubNumberBottom'],
-            self.pl3:  [(7, 8),  'normalSubNumberBottom'],
-            self.pl4:  [(8, 8),  'normalSubNumberBottom'],
-            self.pl5:  [(9, 8),  'normalSubNumberBottom'],
-            self.pl6:  [(10, 8),  'normalSubNumberBottom'],
-            self.pl7:  [(11, 8),  'normalSubNumberBottom'],
-            self.pl8:  [(12, 8),  'normalSubNumberBottomRight'],
+            self.pl1:  [(5, 8), 'normalSubNumberBottomLeft'],
+            self.pl2:  [(6, 8), 'normalSubNumberBottom'],
+            self.pl3:  [(7, 8), 'normalSubNumberBottom'],
+            self.pl4:  [(8, 8), 'normalSubNumberBottom'],
+            self.pl5:  [(9, 8), 'normalSubNumberBottom'],
+            self.pl6:  [(10, 8), 'normalSubNumberBottom'],
+            self.pl7:  [(11, 8), 'normalSubNumberBottom'],
+            self.pl8:  [(12, 8), 'normalSubNumberBottomRight'],
 
             self.explain: [[(4, 9), (12, 14)], 'explain'],
             self.notes: [[(4, 15), (12, 20)], 'noteStyle']
@@ -324,7 +329,7 @@ class SumReqFields(object):
 
     def maxcol(self):
         '''
-        Maxcol() method will get the maximum column for the current TradeSummaries form as it is 
+        Maxcol() method will get the maximum column for the current TradeSummaries form as it is
         translated from column A.
         :return maxcol: As an int
         '''
@@ -340,7 +345,7 @@ class SumReqFields(object):
 
     def maxrow(self):
         '''
-        Maxrow() method will get the maximum row for the current TradeSummaries form as it is 
+        Maxrow() method will get the maximum row for the current TradeSummaries form as it is
         translated from row 1.
         :return maxrow: As an int
         '''
@@ -359,7 +364,7 @@ class SumReqFields(object):
 # srf = SumReqFields()
 
 
-class TheTradeObject(object):
+class TheTradeObject:
     '''
     Manages the creation of the Trade Summary objects from the the output DataFrame. These are
     represented as the excel forms the user sees to review a trade showing entries and exits,
@@ -374,10 +379,10 @@ class TheTradeObject(object):
 
     def __init__(self, df, interview, srf):
         '''
-        Create a dataframe that includes all the summary material for review. Some 
-        of this data comes from the program and some of it comes from the user. The 
-        user will determine which parts to fill out from a couple of options. 
-        :params:df: A DataFrame that includes the transactions, or tickets, 
+        Create a dataframe that includes all the summary material for review. Some
+        of this data comes from the program and some of it comes from the user. The
+        user will determine which parts to fill out from a couple of options.
+        :params:df: A DataFrame that includes the transactions, or tickets,
             from a singel trade.
         '''
 
@@ -405,9 +410,9 @@ class TheTradeObject(object):
 
     def runSummary(self):
         '''
-        Populate a DataFrome (self.TheTrade) with all the trade summary information, one row per trade.
-        The information will then populate the the openpyxl / excel Trade Summary. The user interview for
-        target stoploss, and strategy happen in their respective methods.
+        Populate a DataFrome (self.TheTrade) with all the trade summary information, one row per
+        trade. The information will then populate the the openpyxl / excel Trade Summary. The user
+        interview for target stoploss, and strategy happen in their respective methods.
         '''
         self.__setName()
         self.__setAcct()
@@ -423,7 +428,7 @@ class TheTradeObject(object):
         ret = self.__setEntries()
 
         # print("Side = ", self.df.loc[self.ix0][frc.side])
-        if self.interview == True:
+        if self.interview:
             self.__setStrategy()
             self.__setTarget()
             self.__setStop()
@@ -433,6 +438,7 @@ class TheTradeObject(object):
         return ret
 
     def getName(self):
+        ''' Get df.Name column'''
         return self.TheTrade[self.srf.name]
 
     def __setName(self):
@@ -452,11 +458,12 @@ class TheTradeObject(object):
         self.TheTrade[self.srf.start] = self.df.loc[self.ix][frc.start]
         return self.TheTrade
 
-    # HACK ALERT The duration came out as an empty string on an older file so I added the babysitting for empty strings
+    # HACK ALERT The duration came out as an empty string on an older file so I added the
+    # babysitting for empty strings
     def __setDur(self):
         '''
         Sets the duration delta to a nicely formatted string for humans. Return just the number of
-        days if its 1 or more. Otherwise return something like: 1 hour, 4:34 
+        days if its 1 or more. Otherwise return something like: 1 hour, 4:34
         :raise: A couple of assertions could raise AssertionError. (Temporary for development)
         '''
 
@@ -524,7 +531,10 @@ class TheTradeObject(object):
         return self.TheTrade
 
     def getShares(self):
-        # TODO Rethink this for HOLDs
+        '''
+        Utility to get the number of shares in this Trade. (Each TradeObject object represents a
+        single trade, uusuall with at least 2 transactions
+        '''
         if self.shares == 0:
             if self.side.startswith("B") or self.side.startswith("HOLD+"):
                 self.shares = self.df[frc.bal].max()
@@ -573,7 +583,8 @@ class TheTradeObject(object):
         partEntryPrice = 0
 
         # If the first trade side is 'B' or HOLD+ we are long
-        if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+'):
+        sideat0 = self.df.loc[self.ix0][frc.side]
+        if sideat0.startswith('B') or sideat0.lower().startswith('hold+'):
             long = True
 
         # Set the first entry price aka entry1 and place it in df. This method needs a test!
@@ -596,9 +607,8 @@ class TheTradeObject(object):
             self.df.loc[self.ix0][frc.price] = entry1
 
         for i, row in self.df.iterrows():
-            # ix0 is the index of the first row in df -- a dataframe holding one trade in at least rows (1 row per ticket)
-            # if self.df.loc[self.ix0][frc.side].startswith('B') or self.df.loc[self.ix0][frc.side].lower().startswith('hold+') :
-            #     long = True
+            # ix0 is the index of the first row in df (df is a dataframe holding one trade in at
+            # least 1 row (1 row per ticket)
             diff = 0
             if count == 0:
                 entry1 = row[frc.price]
@@ -641,8 +651,6 @@ class TheTradeObject(object):
                         "Entry"])
             count = count + 1
 
-        # TODO This is broken because we display only 8 combined entries plus exits, although I
-        # haven't had a trade with enough entries to break it/test it.
         if len(entries) > 8:
             more = len(entries) - 8
             self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
@@ -684,7 +692,7 @@ class TheTradeObject(object):
         try:
             p = float(self.TheTrade[self.srf.entry1])
             p = f'{p:.3f}'
-        except:
+        except ValueError:
             question = '''
             Your position was {0}.
             What was your target?
@@ -717,10 +725,8 @@ class TheTradeObject(object):
         pd.to_numeric(self.TheTrade[self.srf.targ], errors='coerce')
         self.TheTrade[self.srf.targ] = target
 
-        # TODO update--Unecessary? If this is a trade with a previous holding,
-        # Planning to change the target diff to a formula-- add formulas to tfcolumns
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
-            return
+            return self.TheTrade
 
         # Although we will use an excel formula, place it in the df for our use.
         diff = target - self.TheTrade[self.srf.entry1]
@@ -729,7 +735,9 @@ class TheTradeObject(object):
         return self.TheTrade
 
     def __setStop(self):
-        '''Interview the user and git the stoploss. sldiff is handled elsewhere as an excel formula.'''
+        '''
+        Interview the user and git the stoploss. sldiff is handled elsewhere as an excel formula.
+        '''
         stop = 0
 
         shares = self.TheTrade[self.srf.shares].unique()[0]
@@ -767,7 +775,7 @@ class TheTradeObject(object):
 
         # If this is a trade with a privious holding, the diff in price of the stophas no meaning
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
-            return
+            return self.TheTrade
 
         # Although we will use an excel formula, place it in the df for our use.
         self.TheTrade[self.srf.sldiff] = stop - self.TheTrade[self.srf.entry1]
@@ -786,15 +794,18 @@ class TheTradeObject(object):
 
     def __setStopLossMistake(self):
         '''
-        If the amount lost from a trade exceeds the Max Loss, post the difference in mstkval and fill in mstknote. Note that
-        this is not done with a formula because the space can be used for any mistake and should be filled in by the 
-        user if, for example, the its sold before a target and the trade never approached the stoploss.
+        If the amount lost from a trade exceeds the Max Loss, post the difference in mstkval and
+        fill in mstknote. Note that this is not done with a formula because the space can be used
+        for any mistake and should be filled in by the user if, for example, the its sold before a
+        target and the trade never approached the stoploss.
         '''
         if isinstance(self.TheTrade[self.srf.maxloss].unique()[0], str):
             # There is no entry in entry1 so maxLoss has no meaning here.
             return
         if self.TheTrade[self.srf.pl].unique()[0] < 0:
-            if abs(self.TheTrade[self.srf.pl].unique()[0]) > abs(self.TheTrade[self.srf.maxloss].unique()[0]):
+            pl = self.TheTrade[self.srf.pl].unique()[0]
+            maxloss = self.TheTrade[self.srf.maxloss].unique()[0]
+            if abs(pl) > abs(maxloss):
                 self.TheTrade[self.srf.mstkval] = abs(self.TheTrade[self.srf.maxloss].unique()[
                     0]) - abs(self.TheTrade[self.srf.pl].unique()[0])
                 self.TheTrade[self.srf.mstknote] = "Exceeded Stop Loss!"
