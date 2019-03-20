@@ -31,7 +31,7 @@ def getCSVData(csvfile):
     maxcols=0
     row0=None
     inlist=[]
-    with open(inpathfile, 'r') as cf :
+    with open(csvfile, 'r') as cf :
         cread = csv.reader(cf)
         for row in cread:
             inlist.append(row)

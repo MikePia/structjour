@@ -28,7 +28,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     # trades = pd.read_csv(jf.inpathfile)
 
     idf = InputDataFrame()
-    trades = idf.processInputFile(trades)
+    trades = idf.processInputFile(trades, jf.theDate)
 
     tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
@@ -67,11 +67,11 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
 
 
 if __name__ == '__main__':
-    theD = '2019-02-26'
+    theD = '2019-03-18'
     outd = 'out/'
     inf = None
     # outd = None
-    theD = None
+    # theD = None
     ind = None
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)

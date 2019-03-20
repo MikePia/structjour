@@ -26,9 +26,9 @@ class FinReqCol(object):
         # frcvals are the actual column titles (to be abstracted when we add new input files)
         # frckeys are the abstracted names for use with all file types
         frcvals = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty', 'Balance', 'Account',
-                   "P / L", 'Sum', 'Duration', 'Name']
+                   "P / L", 'Sum', 'Duration', 'Name', 'Date', 'O/C']
         frckeys = ['tix', 'start', 'time', 'ticker', 'side', 'price', 'shares', 'bal', 'acct',
-                   'PL', 'sum', 'dur', 'name']
+                   'PL', 'sum', 'dur', 'name', 'date', 'oc']
         frc = dict(zip(frckeys, frcvals))
 
         # Address the columns with these attributes instead of strings in frc.
@@ -45,6 +45,8 @@ class FinReqCol(object):
         self.sum = frc['sum']
         self.dur = frc['dur']
         self.name = frc['name']
+        self.date = frc['date']
+        self.oc = frc['oc']
 
         # provided for methods that need a list of columns (using e.g. frc.values())
         self.frc = frc
@@ -107,11 +109,11 @@ class DefineTrades(object):
         trades = self.addFinReqCol(trades)
         newTrades = trades[c.columns]
         newTrades.copy()
-        nt = newTrades.sort_values([c.ticker, c.acct, c.time])
+        nt = newTrades.sort_values([c.ticker, c.acct, c.date, c.time])
         nt = self.writeShareBalance(nt)
         nt = self.addStartTime(nt)
         nt = nt.sort_values(
-            [c.start, c.acct, c.time])
+            [c.start, c.acct, c.date, c.time])
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)

@@ -376,6 +376,12 @@ class Test_SingleTicket(unittest.TestCase):
             if count == 31:
                 exit()
 
+    def test_addDateField(self):
+        '''
+        This is a test stub
+        '''
+        self.assertTrue(1 == 0, 'Write this test')
+
 
 def main():
     '''

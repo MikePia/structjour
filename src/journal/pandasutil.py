@@ -45,7 +45,7 @@ class InputDataFrame(object):
             print("Only DAS is currently supported")
             raise ValueError
 
-    def processInputFile(self, trades):
+    def processInputFile(self, trades, theDate=None):
         '''
         Run the methods for this object
         '''
@@ -56,9 +56,24 @@ class InputDataFrame(object):
         trades = self.zeroPadTimeStr(trades)
         trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.time])
         trades = self.mkShortsNegative(trades)
+        trades = self.addDateField(trades, theDate)
         swingTrade = self.getOvernightTrades(trades)
         swingTrade = self.figureOvernightTransactions(trades)
         trades = self.insertOvernightRow(trades, swingTrade)
+        return trades
+
+    def addDateField(self, trades, theDate):
+        '''
+        Add the date column if it does not already exist and fill it with the date given
+        as an argument or with today if theDate is None
+        :params trades:
+        '''
+        if not 'Date' in trades.columns:
+            if theDate:
+                theDate = pd.Timestamp(theDate)
+            else:
+                theDate = pd.Timestamp.today()
+            trades['Date'] = theDate.strftime("%Y-%m-%d")
         return trades
 
     def zeroPadTimeStr(self, dframe):
@@ -271,9 +286,12 @@ class ToCSV_Ticket(object):
     :params:jf: The JournalFile Object. It has the input files we need.
     '''
 
-    def __init__(self, jf):
+    def __init__(self, jf, df=None):
         self.jf = jf
-        self.df = pd.read_csv(self.jf.inpathfile)
+        if not isinstance(df, pd.DataFrame):
+            self.df = pd.read_csv(self.jf.inpathfile)
+        else:
+            self.df = df
         rc = ReqCol()
         DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
 
