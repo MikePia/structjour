@@ -35,10 +35,11 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
     
     idf = InputDataFrame()
     trades = idf.processInputFile(trades)
-    return df
+    
 
     tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
+    return df
 
     # Process the openpyxl excel object using the output file DataFrame. Insert
     # images and Trade Summaries.

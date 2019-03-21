@@ -56,10 +56,10 @@ class InputDataFrame(object):
         trades = self.zeroPadTimeStr(trades)
         trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.time])
         trades = self.mkShortsNegative(trades)
-        trades = self.addDateField(trades, theDate)
         swingTrade = self.getOvernightTrades(trades)
         swingTrade = self.figureOvernightTransactions(trades)
         trades = self.insertOvernightRow(trades, swingTrade)
+        trades = self.addDateField(trades, theDate)
         return trades
 
     def addDateField(self, trades, theDate):

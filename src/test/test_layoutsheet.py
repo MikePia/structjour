@@ -125,6 +125,7 @@ class TestLayoutSheet(TestCase):
             # :::::::::  Setup   ::::::::
             D = deque(tdata)
             # infile = 'trades.8.csv'
+            print(infile)
             indir = 'data/'
             mydevel = False
             jf = JournalFiles(indir=indir, infile=infile, mydevel=mydevel)
@@ -673,12 +674,12 @@ def notmain():
     '''Run some local code'''
         # pylint: disable = E1120
     ttt = TestLayoutSheet()
-    # ttt.test_createImageLocation()
+    ttt.test_createImageLocation()
     # ttt.test_createWorkbook()
     # ttt.test_styleTopwithnothin()
     # ttt.test_populateMistakeForm()
     # ttt.test_populateDailySummaryForm()
-    ttt.test_runSummaries()
+    # ttt.test_runSummaries()
 
 def main():
     '''Run unittests cl style'''

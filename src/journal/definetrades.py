@@ -169,7 +169,6 @@ class DefineTrades(object):
         for i, row in dframe.iterrows():
             if newTrade:
                 if row[c.side].startswith('HOLD') and i < len(dframe):
-
                     oldTime = dframe.at[i+1, c.time]
                     # print("     :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
                     dframe.at[i, c.start] = oldTime
