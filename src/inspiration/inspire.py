@@ -324,8 +324,12 @@ certainty that you will make mistakes'''
             '''The privilege of a lifetime is to become who you truly are.'''
         ])
         quotes.append([
-            "Grossman ", "On Risk", "Mindy Grossman, CEO of WW International",
+            "Grossman", "On Risk", "Mindy Grossman, CEO of WW International",
             '''Not taking a risk is riskier than taking a risk.'''
+        ])
+        quotes.append([
+            "Holiday", "On Persusasion", "Ryan Holiday, Author",
+            '''You can’t reason people out of positions they didn’t reason themselves into.'''
         ])
 
         df = pd.DataFrame(data=quotes, columns=['name', 'on', 'who', 'quote'])
@@ -474,10 +478,13 @@ def main():
     '''A local run to print a ranom quote'''
     i = Inspire()
     q = i.getrandom()
-    print(q)
+    print()
+    i.getQuote("Holiday")
+    
+    print('\n', q, '\n')
 
-    tp = TradingPlan()
-    tp.getRules(['a'])
+    # tp = TradingPlan()
+    # tp.getRules(['a'])
 
 if __name__ == '__main__':
     main()
