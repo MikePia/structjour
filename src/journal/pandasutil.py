@@ -52,6 +52,8 @@ class InputDataFrame(object):
         reqCol = ReqCol()
 
         #Process the input file DataFrame
+        reqnow = reqCol.columns
+        reqnow.remove('Date')
         DataFrameUtil.checkRequiredInputFields(trades, reqCol.columns)
         trades = self.zeroPadTimeStr(trades)
         trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.time])
@@ -64,16 +66,51 @@ class InputDataFrame(object):
 
     def addDateField(self, trades, theDate):
         '''
-        Add the date column if it does not already exist and fill it with the date given
-        as an argument or with today if theDate is None
+        Add the date column if it does not already exist and fill it with the date/time from the
+        given date or today and the time column
         :params trades:
         '''
+        c = ReqCol()
         if not 'Date' in trades.columns:
             if theDate:
                 theDate = pd.Timestamp(theDate)
             else:
                 theDate = pd.Timestamp.today()
-            trades['Date'] = theDate.strftime("%Y-%m-%d")
+            
+            trades['Date'] = theDate.strftime("%Y-%m-%d ") + trades['Time']
+        else:
+            # We need to make up a date for Hold rows. Before holds were assigned an early AM time
+            # and after holds a late PM time. The times were assigned for sorting. Before holds
+            # will be given a date before a second trade date identified because they have been
+            # sorted by [account, ticker, time]. Likewise an an after hold will be given the next
+            # day after the previous trade. There should not be any single hold entries without an
+            # actual trade from this input file but we will assert that fact in order to find 
+            # unaccountable weirdnesses.
+            
+            for i, row in trades.iterrows():
+                if row[c.side].lower().startswith('hold'):
+                    datime = row[c.time]
+                    d = pd.Timestamp(datime)
+                    early = pd.Timestamp(d.year, d.month, d.day, 3, 0, 0)
+                    late = pd.Timestamp(d.year, d.month, d.day, 10, 59, 0)
+                    delt = pd.Timedelta(days=1)
+                    if d < early:
+                        assert len(trades) > i + 1
+                        assert trades.at[i, c.ticker] == trades.at[i+1, c.ticker]
+                        ttime = trades.at[i+1, c.date]
+                        holdtime = early-delt
+
+                        # Need to change these to Timestamps and get rid of the time column-- but this is incremental change
+                        holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
+                        trades.at[i, c.date] = holdtime
+                    elif d > late:
+                        assert i > 0
+                        assert trades.at[i, c.ticker] == trades.at[i-1, c.ticker]
+                        ttime = trades.at[i-1, c.date]
+                        holdtime = d + delt
+                        holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
+                        trades.at[i, c.date] = holdtime
+
         return trades
 
     def zeroPadTimeStr(self, dframe):
@@ -293,7 +330,9 @@ class ToCSV_Ticket(object):
         else:
             self.df = df
         rc = ReqCol()
-        DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
+        reqnow = rc.columns
+        reqnow.remove('Date')
+        DataFrameUtil.checkRequiredInputFields(self.df, reqnow)
 
     def _checkUniqueSIMTX(self):
         '''
@@ -426,7 +465,8 @@ class ToCSV_Ticket(object):
         rc = ReqCol()
         if not listDf:
             listDf = self.getListOfTicketDF()
-
+        reqnow = rc.columns
+        reqnow.remove('Date')
         DataFrameUtil.checkRequiredInputFields(listDf[0], rc.columns)
 
         newDF = DataFrameUtil.createDf(listDf[0], 0)

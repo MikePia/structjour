@@ -70,8 +70,8 @@ if __name__ == '__main__':
     theD = '2019-03-01'
     outd = 'out/'
     inf = None
-    # outd = None
-    # theD = None
+    outd = None
+    theD = None
     ind = None
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)

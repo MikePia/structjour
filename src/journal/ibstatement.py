@@ -50,6 +50,35 @@ def getId_IbCvs(df):
                 break
     return account
 
+def dayPl(df):
+    daypl = 0.0
+    commission = 0.0
+    # df = fred[0].copy()
+    df['PL'] = 0.0
+    # df['Realized P/L'] = df['Realized P/L'].astype(float)
+    # df['Comm/Fee'] = df['Comm/Fee'].astype(float)
+    for i, row in df.iterrows():
+        if floatValue(row['Realized P/L'], includezero=True)[0]:
+            assert floatValue(row['Comm/Fee'], includezero=True)[0]
+            df.at[i, 'Realized P/L'] = float(df.at[i, 'Realized P/L'])
+            df.at[i, 'Comm/Fee'] = float(df.at[i, 'Comm/Fee'])
+            if not row['Symbol'].lower().startswith('total'):
+                daypl = daypl + df.at[i, 'Realized P/L']
+                commission = commission + df.at[i, 'Comm/Fee']
+                # if 'P' in row['Code']:
+                recordProfit = 'Sum P&L' if 'C' in row['Code'] else ''
+                if recordProfit:
+                    daypl = daypl - commission
+                    # print('{:3}   {:10}   {}   {} = {}'.format(i, row['Realized P/L'], row['Symbol'], recordProfit, daypl))
+                    df.at[i, 'PL'] = daypl
+                    daypl = 0.0
+                    commission = 0.0
+                    # pl = 0
+                # else:
+                    # print('{:3}   {:10}   {}'.format(i, row['Realized P/L'], row['Symbol']))
+
+    return df
+
 def getId_IBActivity(soup):
     tbldivs = soup.find("div", id=lambda x: x and x.startswith('tblAccountInformation'))
     tbldivs.get('id')
@@ -63,27 +92,18 @@ def getId_IBActivity(soup):
             account = row[1]
     return account
 
-### Using the html report as above might be the best approach. Using beautifulSoup, its easy to extract the needed table. The csv files don't have that metadata. Nevertheless, here is the csv version read into pandas.  Goig to havet tp use the csv tables as the metadata is variable depending on how you opened the document.
 
-# def filterTrades_IBActivity(df):
-#     newtrades = pd.DataFrame()
-#     for i, row in df.iterrows():
-#         print('testing', row['Quantity'], type(row['Quantity']))
-#         if not math.isnan(row['Quantity']):
-#             if not math.isnan(row['Basis']):
-#                 newtrades = newtrades.append(row)
-#     return newtrades
-
-def floatValue(test):
+def floatValue(test, includezero=False):
     try:
         addme = float(test)
     except ValueError:
         return False, 0
-    if math.isnan(addme) or addme == 0:
+    if math.isnan(addme):
+        return False, 0
+    if not includezero and addme == 0:
         return False, 0
     return True, addme
 
-### Using the html report as above might be the best approach. Using beautifulSoup, its easy to extract the needed table. The csv files don't have that metadata. Nevertheless, here is the csv version read into pandas.  Goig to havet tp use the csv tables as the metadata is variable depending on how you opened the document.
 
 def filterTrades_IBActivity(df):
     newtrades = pd.DataFrame()
@@ -95,28 +115,7 @@ def filterTrades_IBActivity(df):
 
     return newtrades
 
-# def filter_IBWebTradesTable(df):
 
-#     newtrades = pd.DataFrame()
-#     for i, row in df.iterrows():
-#         if not math.isnan(row['Quantity']):
-#             newtrades = newtrades.append(row)
-#     return newtrades
-
-def filter_IBWebTradesTable(df):
-
-    newtrades = pd.DataFrame()
-    for i, row in df.iterrows():
-        addme, tval = floatValue(row['Quantity'])
-        dblchk, bval = floatValue(row['Price'])
-        trplchk, bval = floatValue(row['Proceeds'])
-        
-        
-        if addme and dblchk and trplchk and not row[0].lower().startswith('total'):
-            newtrades = newtrades.append(row)
-    return newtrades
-
-# def normColumns_IbCsv(df):
 def normColumns_IBActivity(df):
     '''
     The so called norm will have to become the new norm. 
@@ -125,8 +124,8 @@ def normColumns_IBActivity(df):
     
     rc = ReqCol()
     
-    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'Code']].copy()
-    df['PL'] = 0
+    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PL', 'Code']].copy()
+    # df['PL'] = 0
     df['Date'] = df['Date/Time']
     df[rc.side] = ''
     df.Quantity = df.Quantity.astype(int)
@@ -136,7 +135,9 @@ def normColumns_IBActivity(df):
 
 
     for i, row in df.iterrows():
-        df.at[i, 'Date'] = df.at[i, 'Date'][:10]
+        # df.at[i, 'Date'] = df.at[i, 'Date'][:10]
+        cleandate = pd.Timestamp(df.at[i, 'Date'])
+        df.at[i, 'Date'] = cleandate.strftime('%Y-%m-%d %H:%M:%S')
         df.at[i, 'Date/Time'] = df.at[i, 'Date/Time'][12:]
         code = df.at[i, 'Code'].split(';')
 
@@ -166,8 +167,8 @@ def normColumns_IbCsv(df):
     
     rc = ReqCol()
     
-    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'Code']].copy()
-    df['PL'] = 0
+    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PL', 'Code']].copy()
+    # df['PL'] = 0
     df['Date'] = df['Date/Time']
     df[rc.side] = ''
     df.Quantity = df.Quantity.astype(int)
@@ -177,7 +178,7 @@ def normColumns_IbCsv(df):
 
 
     for i, row in df.iterrows():
-        df.at[i, 'Date'] = df.at[i, 'Date'][:10]
+        # df.at[i, 'Date'] = df.at[i, 'Date'][:10]
         df.at[i, 'Date/Time'] = df.at[i, 'Date/Time'][12:]
         code = df.at[i, 'Code'].split(';')
 
@@ -200,48 +201,6 @@ def normColumns_IbCsv(df):
     return df
 
 
-# For some reason, these tables do not include O/C in the displayed codes. The Activity statement does 
-# as does the CSV statement
-def normColumns_IBWeb(df):
-#     df = df[['Trade Date/Time', 'Symbol', 'Type', 'Price', 'Quantity', 'Acct ID', 'Proceeds']].copy()
-    rc = ReqCol()
-    
-    df = df[['Trade Date/Time', 'Symbol', 'Type', 'Price', 'Quantity', 'Acct ID', 'Proceeds', 'Code']].copy()
-    df['PL'] = 0
-    df['Date'] = df['Trade Date/Time']
-    df[rc.side] = ''
-    df['Proceeds'] = df['Proceeds'].astype(float)
-    df['Code'] = df['Code'].astype(str)
-    df['Price'] = df['Price'].astype(float)
-    df['Quantity'] = df['Quantity'].astype(int)
-    
-    for i, row in df.iterrows():
-        df.at[i, 'Date'] = df.at[i, 'Date'][:10]
-        df.at[i, 'Trade Date/Time'] = df.at[i, 'Trade Date/Time'][12:]
-        code = df.at[i, 'Code'].split(';')
-        
-        if df.at[i, 'Quantity'] < 0:
-            df.at[i, rc.side] = 'S'
-        else:
-            df.at[i, rc.side] = 'B'
-
-        setc=False
-        for c in code:
-            
-            if c in ['O', 'C']:
-                df.at[i, 'Code'] = c
-                setc=True
-                continue
-        if not setc:
-            df.at[i, 'Code'] = ''
-        
-    
-    df = df.rename(columns={'Trade Date/Time': rc.time, 'Symbol': rc.ticker, 'Type': rc.side,
-                            'Quantity': rc.shares, 'Acct ID': rc.acct, 'Code': 'O/C', 'PL': rc.PL})
-    return df
-
-
-
 def getTrades_IBActivity(url):
     '''
     Get trades from an IB statement that has a Transactions table and an Account Information table
@@ -251,20 +210,17 @@ def getTrades_IBActivity(url):
     account = getId_IBActivity(soup)
 
     assert len(tbldivs) == 1
-    # print(tbldivs[0].get('id'))
-
-    tbldivs[0]
 
     tableTag = tbldivs[0].find("table")
     df = pd.read_html(str(tableTag))
     assert len(df) == 1
     
-    df = filterTrades_IBActivity(df[0])
+    df = dayPl(df[0])
+
+    df = filterTrades_IBActivity(df)
     df['Account'] = account
     df = normColumns_IBActivity(df)
-    
-    
-    
+
     return df
 
 def getTrades_csv(infile):
@@ -285,6 +241,7 @@ def getTrades_csv(infile):
     startnow = False
     data = []
     cols=[]
+
     for i, row in df.iterrows():
         # This identifies the header row for the our table, save them to cols, and start accumulating table data
         if df.iloc[i][0] == 'Trades' and 'Asset Category' in list(row):
@@ -300,31 +257,11 @@ def getTrades_csv(infile):
 
     # newtrades
     newtrades = pd.DataFrame(data=data, columns=cols)
+    newtrades = dayPl(newtrades)
     newtrades['Account'] = id
     newtrades = normColumns_IbCsv(newtrades)
     return newtrades
 
-def getTrades_IBDaily(url, rcols):
-    # print(url)
-    
-    soup = BeautifulSoup(readit(url), 'html.parser')
-    divTag = soup.find("div", {"id" : "tblTradesBody"})
-    if not divTag:
-        return pd.DataFrame()
-    tableTag = divTag.find("table")
-    df = pd.read_html(str(tableTag))
-    if len(df) != 1:
-        print('Failed to get 1 unique table ... try a different approach')
-        return pd.DataFrame()
-    # print(df[0].columns)
-    for col in rcols:
-        if not col in df[0].columns:
-            print('Looks like the wrong table')
-            return pd.DataFrame()
-    df = filter_IBWebTradesTable(df[0])
-    df = normColumns_IBWeb(df)
-    
-    return df
 
 def runActivity():
     # url = 'http://localhost/DailyTradeReport.20180914.html'
@@ -351,25 +288,16 @@ def runCSV():
     df = getTrades_csv(inpathfile)
     return df
 
-def runDaily():
-    indir = 'C:/trader/journal/_201903_March/_0301_Friday/'
-    infile = 'DailyTradeReport.20190301.html'
-
-    inpathfile = os.path.join(indir, infile)
-    assert os.path.exists(inpathfile)
-
-    # These are the columns expected in the Daily Trades table from the web statement. There 
-    # are differences from the Activity Web and CSV Statement.
-    rcols = ['Acct ID', 'Symbol', 'Trade Date/Time', 'Settle Date', 'Exchange',
-            'Type', 'Quantity', 'Price', 'Proceeds', 'Comm', 'Fee', 'Code']
-    df = getTrades_IBDaily(inpathfile, rcols)
-    return df
 
 
 def main():
-    df = runDaily()
-    # df = filter_IBWebTradesTable(df[0])
+    df = runCSV()
     print(df)
+    df = runActivity()
+    print(df)
+
+    # df = filter_IBWebTradesTable(df[0])
+    # print(df)
 
 if __name__ == '__main__':
     main()

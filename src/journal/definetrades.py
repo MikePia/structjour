@@ -68,8 +68,8 @@ class ReqCol(object):
 
         # rcvals are the actual column titles (to be abstracted when we add new input files)
         # rckeys are the abstracted names for use with all file types
-        rckeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL']
-        rcvals = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L']
+        rckeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL', 'date']
+        rcvals = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L', 'Date']
         rc = dict(zip(rckeys, rcvals))
 
         # Suggested way to address the columns for the main input DataFrame.
@@ -80,6 +80,7 @@ class ReqCol(object):
         self.shares = rc['shares']
         self.acct = rc['acct']
         self.PL = rc['PL']
+        self.date = rc['date']
 
         self.rc = rc
         self.columns = list(rc.values())
@@ -96,6 +97,10 @@ class DefineTrades(object):
         '''
         Constructor
         '''
+        self.sources = {'das': 'DAS', 'iba': 'IBActivity'}
+        self.source = source
+        assert self.source in self.sources.values()
+
         self._frc = FinReqCol(source)
 
     def processOutputDframe(self, trades):
@@ -112,14 +117,15 @@ class DefineTrades(object):
         nt = newTrades.sort_values([c.ticker, c.acct, c.date, c.time])
         nt = self.writeShareBalance(nt)
         nt = self.addStartTime(nt)
-        nt = nt.sort_values(
-            [c.start, c.acct, c.date, c.time])
+        nt = nt.sort_values([c.start, c.acct, c.date, c.time])
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
         nt = self.addTradeName(nt)
         # ldf is a list of DataFrames, one per trade
         ldf = self.getTradeList(nt)
+        if self.source == self.sources['iba']:
+            ldf, nt = self.processPL(ldf)
         ldf, nt = self.postProcessing(ldf)
         nt = DataFrameUtil.addRows(nt, 2)
         nt = self.addSummaryPL(nt)
@@ -298,6 +304,43 @@ class DefineTrades(object):
                 dframe.at[i, c.sum] = totLive
 
         return dframe
+
+    def processPL(self, ldf):
+        '''
+        Rethinking this. I think it will be better to process on the original import- assuming its possible
+        then save it as a csv file modeled after DAS. No branches necessary (almost)
+        '''
+        c = self._frc
+
+        newTrade = True
+        
+        for tdf in ldf:
+            curprice = tdf.iloc[0][c.price]
+            avgprice = tdf.iloc[0][c.price]
+            slong = True if tdf.iloc[0]  == 'B' else False
+            openers = []
+            
+            firstrow = True
+            for i, row in tdf.iterrows():
+                if firstrow:
+                    openers.append[i]
+
+
+            curTrade = row[c.tix]
+            if newTrade:
+                oldTrade = curTrade
+                opencount = 1
+                newTrade = False
+            # els:
+
+            
+
+            longShort = " Long"
+            if row[c.bal] == 0:
+                # this is the last tx of the trade today. B or HOLD- are shorts
+                if row[c.side] == 'B' or row[c.side].startswith('HOLD-'):
+                    longShort = " Short"
+                dframe.at[i, c.name] = row[c.ticker] + longShort
 
 
     def getTradeList(self, dframe):

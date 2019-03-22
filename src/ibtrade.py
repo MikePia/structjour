@@ -25,21 +25,18 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
                       theDate=theDate, infile=infile, mydevel=mydevel)
 
     df = getTrades_IBActivity(jf.inpathfile)
-    
 
     tkt = Ticket(jf, df)
-    
+
     # trades, jf = tkt.newDFSingleTxPerTicket()
     # trades = pd.read_csv(jf.inpathfile)
     trades = df
-    
+
     idf = InputDataFrame()
     trades = idf.processInputFile(trades)
-    
 
     tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
-    return df
 
     # Process the openpyxl excel object using the output file DataFrame. Insert
     # images and Trade Summaries.
@@ -78,7 +75,7 @@ if __name__ == '__main__':
     theD = '2019-03-01'
     outd = 'out/'
     inf = 'ActivityStatement.20190301.html'
-    outd = None
+    # outd = None
     # theD = None
     ind = None
     mydev = True

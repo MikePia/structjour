@@ -33,6 +33,7 @@ class DataFrameUtil(object):
             raise ValueError(err)
         if set(requiredFields) <= (set(actualFields)):
             return True
+        
         else:
             err = 'Your DataFrame is missing some required fields ... Including:\n     '
             err += str((set(requiredFields) - set(actualFields)))
