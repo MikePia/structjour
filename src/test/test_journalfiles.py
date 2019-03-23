@@ -76,12 +76,21 @@ class TestJF(unittest.TestCase):
     def testDevelDefaultCreate(self):
         '''
         Tests the default creation if its Monday to Friday.  Tests the previus Friday's date
-        using param theDate otherwise'''
+        using param theDate otherwise. This will fail if you neglected to export the trades file
+        on the given date
+        '''
         if dt.date.today() == itsTheWeekend():
             #             jf=JournalFiles(mydevel=True)
             jf = JournalFiles(theDate=dt.date(2018, 8, 31), mydevel=True)
         else:
-            jf = JournalFiles(theDate=itsTheWeekend(), mydevel=True)
+            try:
+                FAIL = False
+                theDate = itsTheWeekend()
+                jf = JournalFiles(theDate=theDate, mydevel=True)
+            except NameError:
+
+                self.assertTrue(FAIL, 'Did you not export your DAS file on ' + theDate.strftime("%A, %B %d?"))
+
 
         self.assertTrue(os.path.exists(jf.indir),
                         "Have you reset the code the tnormal non-holiday code?")
@@ -204,10 +213,13 @@ class TestJF(unittest.TestCase):
         else:
             self.fail("Failed to throw expected exception")
 
+    # def test_infile2Create(self):
+
+
 
 def main():
     '''
-    Test discovery is not working in vscode. Use this for debugging.
+    Run code outside of unittest framework
     Then run cl python -m unittest discovery
     '''
     f = TestJF()
@@ -222,8 +234,14 @@ def main():
 def notmain():
     '''Run some local code'''
     t = TestJF()
+    t.test_DefaultCreate()
 
+def clstyle():
+    '''Run unittests cl style. Can debug'''
+    #import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()
 
 if __name__ == "__main__":
     # notmain()
-    main()
+    # main()
+    clstyle()

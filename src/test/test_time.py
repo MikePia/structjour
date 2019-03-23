@@ -11,7 +11,7 @@ from shutil import rmtree
 
 import pandas as pd
 
-from journal.time import getFirstWeekday, createDirs, TimeStuff
+from journal.time import getFirstWeekday, createDirs
 # pylint: disable = C0103
 
 
@@ -63,11 +63,6 @@ class Test_time(unittest.TestCase):
             theDate = theDate + dt.timedelta(days=1)
         self.assertTrue(os.path.exists(sandbox))
         
-
-        ts = TimeStuff(1)
-        firstsub = os.path.join(sandbox, theDate.strftime(ts.dayformat))
-        self.assertTrue(os.path.exists(firstsub))
-
         cwd2 = os.getcwd()
         self.assertEqual(cwd, cwd2)
         if os.path.exists(sandbox):

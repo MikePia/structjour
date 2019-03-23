@@ -5,7 +5,6 @@ import datetime as dt
 import os
 import sys
 import pandas as pd
-from journal.time import TimeStuff
 # pylint: disable=C0103, R0913
 
 
@@ -18,21 +17,20 @@ class JournalFiles:
     '''
 
     # As the console version has no plan for release, not to worry too much about configuration
-    def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False):
+    def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', infile2=None,  mydevel=False):
         '''
         Creates the required path and field names to run the program. Raises value error
-        the inputfile cannot be located
+        the inputfile cannot be located. If mydevel is True, the default locations change.
 
-        :params indir:      The location of the input file (DAS Trades export). If MyDevel is not
-                            set, it defaults to (cwd)/data
-        :params outdir      The name of the output directory. By default, this will be
-                            cwd/'out'. MyDevel places it at (indir)/out Structjour will also place
-                            charts in this directory.
-        :params theDate:    A Datetime object or timestamp representing the date of the
-                            transactions in the input file. Defaults to today if not set.
-        :params infile:     The name of the input file. ('trades.csv' by default)
+        :params indir:      The location of the input file. Defaut is (cwd)/data. 
+        :params outdir      The name of the output directory. Default is (indir)/out. 
+        :params theDate:    A Datetime object or timestamp of the date of the transactions in the
+                            input file. Defaults to today.
+        :params infile:     The name of the input file. Defaults to 'trades.csv'.
+        :params infile2:    This is the positions file. Required for DAS Trader Pro if positions
+                            are held. Defaults to 'positions.csv'     
         :raise ValueError:  If theDate is not a valid time.
-        :raise NameError:   If the input file is not located.
+        :raise NameError:   If the infile is not located.
         '''
         if theDate:
             try:
@@ -43,18 +41,19 @@ class JournalFiles:
                 print(
                     "TheDate must be type datetime.date. Leave it blank to accept today's date", ex)
                 sys.exit(-1)
-            self.theDate = theDate
+            theDate = theDate
         else:
-            self.theDate = dt.date.today()
+            theDate = dt.date.today()
 
         self.theDate = theDate
-        ts = TimeStuff(theDate)
-        self.monthformat = ts.monthformat
-        self.dayformat = ts.dayformat
+        self.monthformat = "_%Y%m_%B"
+        self.dayformat = "_%m%d_%A"
         self.root = os.getcwd()
         self.indir = indir if indir else os.path.join(self.root, 'data')
         self.outdir = outdir if outdir else os.path.join(self.root, 'out')
         self.infile = infile if infile else 'trades.csv'
+        self.infile2 = infile2
+        self.inpathfile2 = None
         self.outfile = os.path.splitext(self.infile)[0] +  self.theDate.strftime("%A_%m%d.xlsx")
 
         if mydevel:
@@ -62,6 +61,10 @@ class JournalFiles:
         else:
             self.inpathfile = os.path.join(self.indir, self.infile)
             self.outpathfile = os.path.join(self.outdir, self.outfile)
+            if self.infile2:
+                self.inpathfile2 = os.path.join(self.indir, self.infile2)
+
+
 
         self._checkPaths()
 
@@ -80,6 +83,8 @@ class JournalFiles:
         path = self.theDate.strftime(path)
         self.indir = indir if indir else os.path.realpath(path)
         self.inpathfile = os.path.join(self.indir, self.infile)
+        if self.inpathfile2:
+            self.inpathfile2 = os.path.join(self.indir, self.infile2)
 
         self.outdir = outdir if outdir else os.path.join(self.indir, 'out')
         self.outpathfile = os.path.join(self.outdir, self.outfile)
@@ -113,6 +118,13 @@ class JournalFiles:
                     "JournalFiles._checkPaths", self.inpathfile)
                 self.printValues()
                 raise NameError(err)
+
+        if self.inpathfile2 and not os.path.exists(self.inpathfile2):
+            err = "Fatal error:{0}: input can't be located: {1}".format(
+                    "JournalFiles._checkPaths", self.inpathfile2)
+            self.printValues()
+            raise NameError(err)
+        
         if not os.path.exists(self.outdir):
 
             checkUpOne = os.path.split(self.outdir)[0]
@@ -145,6 +157,8 @@ class JournalFiles:
         print("indir:              " + self.indir)
         print("infile:             " + self.infile)
         print("inpathfile:         " + self.inpathfile)
+        if self.inpathfile2:
+            print("inpathfile2:        " + self.inpathfile2)
         print()
         print("outdir:             " + self.outdir)
         print("outfile:            " + self.outfile)

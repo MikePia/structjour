@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import ToCSV_Ticket as Ticket
+from journal.statement import Statement as Ticket
 from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
@@ -18,11 +18,11 @@ from journal.qtform import QtForm
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
 
 
-def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True):
+def run(infile='trades.csv', infile2=None, outdir=None, theDate=None, indir=None, mydevel=True):
     '''Run structjour'''
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
-                      theDate=theDate, infile=infile, mydevel=mydevel)
+                      theDate=theDate, infile=infile, infile2=infile2, mydevel=mydevel)
 
     tkt = Ticket(jf)
     trades, jf = tkt.newDFSingleTxPerTicket()
@@ -74,8 +74,9 @@ if __name__ == '__main__':
     inf2='trades.643495.20190321.html'
     inf2='CSVTrades.644223.20190321.csv'
     inf = None
+    positions = None
     # outd = None
-    # theD = None
+    theD = None
     ind = None
-    mydev = True
-    run(infile=inf, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)
+    mydev = None
+    run(infile=inf, infile2=positions, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)
