@@ -86,26 +86,35 @@ class InputDataFrame(object):
             
             for i, row in trades.iterrows():
                 if row[c.side].lower().startswith('hold'):
+
+                    # Currently c.time a time string with no date. Compare early and late times
                     datime = row[c.time]
                     d = pd.Timestamp(datime)
+
                     early = pd.Timestamp(d.year, d.month, d.day, 3, 0, 0)
                     late = pd.Timestamp(d.year, d.month, d.day, 10, 59, 0)
                     delt = pd.Timedelta(days=1)
                     if d < early:
+                        assert row[c.side] in ['HOLD+B', 'HOLD-B']
                         assert len(trades) > i + 1
                         assert trades.at[i, c.ticker] == trades.at[i+1, c.ticker]
-                        ttime = trades.at[i+1, c.date]
-                        holdtime = early-delt
 
-                        # Need to change these to Timestamps and get rid of the time column-- but this is incremental change
-                        holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
-                        trades.at[i, c.date] = holdtime
+                        #Create the made up date- the day before the first tx from this input for this trade.
+                        tradeday = trades.at[i+1, c.date]
+                        holdday = tradeday-delt
+                        holdtime = pd.Timestamp(holdday.year, holdday.month, holdday.day, 16, 0, 0)
+                        trades.at[i, 'Date'] = holdtime
+
                     elif d > late:
+                        assert row[c.side] in ['HOLD+', 'HOLD-']
                         assert i > 0
                         assert trades.at[i, c.ticker] == trades.at[i-1, c.ticker]
-                        ttime = trades.at[i-1, c.date]
-                        holdtime = d + delt
-                        holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
+
+                        tradeday = trades.at[i-1, c.date]
+
+                        holdtime = tradeday + delt
+                        holdtime = pd.Timestamp(holdtime.year, holdtime.month, holdtime.day, 9, 30, 0)
+                        # holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
                         trades.at[i, c.date] = holdtime
 
         return trades
