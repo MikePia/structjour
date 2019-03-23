@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import ToCSV_Ticket as Ticket
+from journal.statement import Statement as Ticket
 from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat

@@ -14,7 +14,7 @@ import types
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import ToCSV_Ticket as Ticket
+from journal.statement import Statement as Ticket
 from journal.definetrades import DefineTrades
 from journal.thetradeobject import TheTradeObject, SumReqFields
 

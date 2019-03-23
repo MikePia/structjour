@@ -19,7 +19,7 @@ print('Pandas version ' + pd.__version__)
 print('Beautiful Soup ' + bs4v)
 
 
-class ToCSV_Ticket(object):
+class Statement(object):
     '''
     Take an input CSV file of all trade transactions and reduce the transactions to tickets. Use the
     JournalFiles class as the single point of contact with  input and output.  When the new file is
