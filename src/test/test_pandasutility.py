@@ -12,7 +12,8 @@ import types
 
 import pandas as pd
 
-from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
+from journal.pandasutil import InputDataFrame
+from journal.statement import ToCSV_Ticket as Ticket
 from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
 

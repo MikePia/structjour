@@ -12,10 +12,180 @@ import urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup, __version__ as bs4v
 
 from journal.definetrades import ReqCol
+from journal.dfutil import DataFrameUtil
 
 print ('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 print('Beautiful Soup ' + bs4v)
+
+
+class ToCSV_Ticket(object):
+    '''
+    Take an input CSV file of all trade transactions and reduce the transactions to tickets. Use the
+    JournalFiles class as the single point of contact with  input and output.  When the new file is
+    created, alter the Journalfiles indir/infile to the new file
+    :params:jf: The JournalFile Object. It has the input files we need.
+    '''
+
+    def __init__(self, jf, df=None):
+        self.jf = jf
+        if not isinstance(df, pd.DataFrame):
+            self.df = pd.read_csv(self.jf.inpathfile)
+        else:
+            self.df = df
+        if 'Date' not in self.df.columns:
+            self.df['Date'] = jf.theDate
+        rc = ReqCol()
+        DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
+
+    def _checkUniqueSIMTX(self):
+        '''
+        Check the SIM transactions for uniqueness within (ticker, time, account). I believe these
+        are always necessarily unique. I need to know if they are not.  If found,the program
+        should fail or alert the user and work around
+        '''
+        rc = ReqCol()
+        dframe = self.df
+
+        #HACK ALERT
+        #This is guaranteed to cause some future problem
+        # If Cloid has some Sim ids ('AUTO') the column must have some str elements. Without this
+        # it throws a TypeError and a Future Warning about changing code. For DataFrame columns
+        # without any sim trades there are only floats. This is not guaranteed behavior, just
+        # observed from my runs. And there there is some weirdness between numpy types and python
+        # regarding what type to return for this comparison--and it may change in the future.
+        # if len(dframe.Cloid.apply(lambda x: isinstance(x, str))) < 1 :
+
+        doSomething = False
+        for t in dframe['Cloid']:
+            if isinstance(t, str):
+                doSomething = True
+                break
+        if not doSomething:
+            return
+
+        df = dframe[dframe['Cloid'] == "AUTO"]
+
+        tickerlist = list()
+        for dummy, row in df.iterrows():
+            tickerlist.append((row[rc.time], row[rc.ticker], row[rc.acct]))
+
+            tickerset = set(tickerlist)
+            if len(tickerset) != len(tickerlist):
+                # print("\nFound a Sim ticket that is not unique.
+                # This should not be possible (but it happens).{}".format(tickerlist[-1]))
+                return
+
+    def createSingleTicket(self, tickTx):
+        '''
+        Create a single row ticket from a Dataframe with a list (1 or more) of Transactions.
+        :prerequisites: tickTx needs to have 'len(unique()) == 1' for side, symb, account, and
+                        cloid. That uniqueness is created in getListOfTicketDF() so use that to
+                         create a list of ticktTX.
+        :params tickTx: A DataFrame with transactions from a single ticket
+        :return: A single row data frame with total shares and average price.
+        '''
+
+        rc = ReqCol()
+
+        total = 0
+        totalPL = 0
+        for dummy, row in tickTx.iterrows():
+            total = total + (row[rc.price] * row[rc.shares])
+            totalPL = totalPL + row[rc.PL]
+
+        totalShares = tickTx[rc.shares].sum()
+        avgPrice = total / totalShares
+
+        newDf = DataFrameUtil.createDf(tickTx, 0)
+
+        oneRow = tickTx.sort_values([rc.time, rc.price]).head(1)
+        newDf = newDf.append(oneRow)
+        newDf.copy()
+
+        newDf[rc.price] = avgPrice
+        newDf[rc.shares] = totalShares
+        newDf[rc.PL] = totalPL
+        return newDf
+
+    def getListOfTicketDF(self):
+        '''
+        Take the standard trades.csv DataFrame a list in which each list member is a DataFrame that
+        contains the transactions that create a single ticket.
+        This is made more interesting by the SIM transactions. They have no ticket ID (Cloid). They
+        are identified in DAS by 'AUTO.' We will give them an ID unique for this run. There is only,
+        presumably one ticket per SIM transaction, but check for uniqueness and report. (Found one
+        on 10/22/28 -- a SIM trade on SQ. Changed the code not to fail in the event of an identical
+        transx.)
+        :return: A list of DataFrames, each list member is one ticket with 1 or more transactions.
+
+        PROGRAMMING NOTE: This SIM ticket will most definitely not be found unique between different
+        days Use the 10/22/28 input file in a test and fix it.
+        '''
+
+        dframe = self.df
+        self._checkUniqueSIMTX()
+
+        doSomething = False
+        for t in dframe['Cloid']:
+            if isinstance(t, str):
+                doSomething = True
+                break
+
+        # Get the SIM transactions from the origainal DataFtame.
+        # Change the Cloid from Auto to SIMTick__XX
+        if doSomething:
+            SIMdf = dframe[dframe['Cloid'] == "AUTO"]
+            for i, dummy in SIMdf.iterrows():
+                tickName = "SIMTick_{0}".format(i)
+                SIMdf.at[i, "Cloid"] = tickName
+
+        #For each unique ticket ID (akaCloid), create a DataFrame and add it to a list of DataFrames
+        listOfTickets = list()
+        for ticketID in dframe.Cloid.unique():
+            if ticketID == "AUTO":
+                continue
+            # Retrieves all rows that match the ticketID
+            t = dframe[dframe['Cloid'] == ticketID]
+            listOfTickets.append(t)
+        # Combine the two above into a python list of DataFrames
+
+        if doSomething:
+            for simTkt in SIMdf.Cloid.unique():
+                t = SIMdf[SIMdf['Cloid'] == simTkt]
+                listOfTickets.append(t)
+
+        return listOfTickets
+
+    def newDFSingleTxPerTicket(self, listDf=None):
+        '''
+        Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
+        fewer transactions. 
+        :params listDf: Normally leave blank. If used, listDf should be the be a list of DFs.
+        :params jf: A JournalFiles object as this new CSV file needs to be written into the outdir.
+        :return: The DataFrame created version of the data.
+        :side effects: Saves a csv file of all transactions as single ticket transactions to
+                        jf.inpathfile
+        '''
+        # TODO: Add the date to the saved file name after we get the date sorted out.
+        rc = ReqCol()
+        if not listDf:
+            listDf = self.getListOfTicketDF()
+        DataFrameUtil.checkRequiredInputFields(listDf[0], rc.columns)
+
+        newDF = DataFrameUtil.createDf(listDf[0], 0)
+
+        for tick in listDf:
+            t = self.createSingleTicket(tick)
+            newDF = newDF.append(t)
+
+        outfile = "tradesByTicket.csv"
+        opf = os.path.join(self.jf.indir, outfile)
+        newDF.to_csv(opf)
+        self.jf.resetInfile(outfile)
+
+        return newDF, self.jf
+
 
 def readit(url):
     data = ''

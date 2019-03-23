@@ -21,7 +21,8 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
-from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
+from journal.pandasutil import InputDataFrame
+from journal.statement import ToCSV_Ticket as Ticket
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary

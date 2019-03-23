@@ -17,7 +17,7 @@ from journal.definetrades import ReqCol, FinReqCol  # , DefineTrades
 
 class Test_DfUtil(unittest.TestCase):
     '''
-    Test the methods in ToCSV_Ticket
+    Test something
     '''
 
     def __init__(self, *args, **kwargs):

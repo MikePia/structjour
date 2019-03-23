@@ -47,6 +47,7 @@ class JournalFiles:
         else:
             self.theDate = dt.date.today()
 
+        self.theDate = theDate
         ts = TimeStuff(theDate)
         self.monthformat = ts.monthformat
         self.dayformat = ts.dayformat

@@ -6,13 +6,14 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from journalfiles import JournalFiles
-from journal.pandasutil import InputDataFrame, ToCSV_Ticket as Ticket
+from journal.pandasutil import InputDataFrame
+from journal.statement import ToCSV_Ticket as Ticket
 from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
 from journal.dailysumforms import MistakeSummary
 from journal.qtform import QtForm
-from journal.ibstatement import getTrades_IBActivity
+from journal.statement import getTrades_IBActivity
 # pylint: disable=C0103
 
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
@@ -72,9 +73,12 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True
 
 
 if __name__ == '__main__':
-    theD = '2019-03-01'
+    theD = '2019-03-21'
     outd = 'out/'
-    inf = 'ActivityStatement.20190301.html'
+    inf1 ='ActivityStatement.20190321.html'
+    inf2 ='trades.643495.20190321.html'
+    inf2 ='CSVTrades.644223.20190321.csv'
+    inf = inf1
     # outd = None
     # theD = None
     ind = None
