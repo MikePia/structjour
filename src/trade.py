@@ -2,8 +2,7 @@
 @author: Mike Petersen
 Top level module currently.
 '''
-import sys
-from PyQt5.QtWidgets import QApplication
+# from PyQt5.QtWidgets import QApplication
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
@@ -12,13 +11,13 @@ from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
 from journal.dailysumforms import MistakeSummary
-from journal.qtform import QtForm
+# from journal.qtform import QtForm
 # pylint: disable=C0103
 
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
 
 
-def run(infile='trades.csv', outdir=None, theDate=None, indir=None,  infile2=None,  mydevel=True):
+def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None, mydevel=True):
     '''Run structjour'''
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
@@ -75,4 +74,4 @@ if __name__ == '__main__':
     # positions = None
     ind = None
     mydev = True
-    run(infile=inf, outdir=outd, theDate=theD, indir=ind,  infile2=positions, mydevel=mydev)
+    run(infile=inf, outdir=outd, theDate=theD, indir=ind, infile2=positions, mydevel=mydev)

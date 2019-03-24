@@ -20,24 +20,24 @@ from journalfiles import JournalFiles
 # pylint: disable = C0103
 
 
-def getTestSet(length = 6):
+def getTestSet(length=6):
     '''Utility test set generator for MkShortNegative
     '''
-    side =  []
+    side = []
     mult = []
     shares = []
-    for i in range(length):
+    for dummy in range(length):
         s = random.random()
-        s2 = random.randint(1,20)
-        
+        s2 = random.randint(1, 20)
+
         if s < 0.5:
             side.append('S')
             mult.append(-1)
         else:
             side.append('B')
             mult.append(1)
-        shares.append(s2*50)    
-            
+        shares.append(s2*50)
+
     return side, mult, shares
 
 
@@ -231,8 +231,8 @@ class Test_SingleTicket(unittest.TestCase):
         Test the method Statement.mkShortsNegative
         '''
         rc = ReqCol()
-        for dummy in range(random.randint(2,10)):
-            side, mult, shares = getTestSet(random.randint(4,20))
+        for dummy in range(random.randint(2, 10)):
+            side, mult, shares = getTestSet(random.randint(4, 20))
             testSet = list(zip(side, shares))
 
             apd = pd.DataFrame(testSet, columns=[rc.side, rc.shares])
@@ -364,7 +364,8 @@ class Test_SingleTicket(unittest.TestCase):
             # num, stat = f2()
             # self.assertEqual((num, stat), (40, False))
 
-            run(infile=infile, outdir=outdir, theDate=theDate, indir=indir, infile2=None, mydevel=mydevel)
+            run(infile=infile, outdir=outdir, theDate=theDate,
+                indir=indir, infile2=None, mydevel=mydevel)
 
             # for i in tests:
             #     print (i[0], i[1])
@@ -373,7 +374,6 @@ class Test_SingleTicket(unittest.TestCase):
                     print(infile, tests[count][1])
                     print('     ', j)
 
-            
             if count == 31:
                 exit()
 

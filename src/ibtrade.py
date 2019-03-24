@@ -2,18 +2,19 @@
 @author: Mike Petersen
 Top level module currently.
 '''
-import sys
-from PyQt5.QtWidgets import QApplication
 
-from journalfiles import JournalFiles
-from journal.pandasutil import InputDataFrame
-from journal.statement import Statement as Ticket
+# from PyQt5.QtWidgets import QApplication
+
+from journal.dailysumforms import MistakeSummary
 from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
-from journal.tradestyle import TradeFormat
-from journal.dailysumforms import MistakeSummary
-from journal.qtform import QtForm
+from journal.pandasutil import InputDataFrame
+# from journal.qtform import QtForm
+# from journal.statement import Statement as Ticket
 from journal.statement import getTrades_IBActivity
+from journal.tradestyle import TradeFormat
+from journalfiles import JournalFiles
+
 # pylint: disable=C0103
 
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
@@ -23,11 +24,11 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
     '''Run structjour'''
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
-                      theDate=theDate, infile=infile, mydevel=mydevel)
+                      theDate=theDate, infile=infile, infile2=infile2, mydevel=mydevel)
 
     df = getTrades_IBActivity(jf.inpathfile)
 
-    tkt = Ticket(jf, df)
+    # tkt = Ticket(jf, df)
 
     # trades, jf = tkt.newDFSingleTxPerTicket()
     # trades = pd.read_csv(jf.inpathfile)
@@ -75,12 +76,13 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 if __name__ == '__main__':
     theD = '2019-03-21'
     outd = 'out/'
-    inf1 ='ActivityStatement.20190321.html'
-    inf2 ='trades.643495.20190321.html'
-    inf2 ='CSVTrades.644223.20190321.csv'
+    inf1 = 'ActivityStatement.20190321.html'
+    inf2 = 'trades.643495.20190321.html'
+    inf2 = 'CSVTrades.644223.20190321.csv'
     inf = inf1
     # outd = None
     # theD = None
     ind = None
     mydev = True
-    run(infile=inf1, outdir=outd, theDate=theD, indir=ind, infile2=None, mydevel=mydev)
+    run(infile=inf1, outdir=outd, theDate=theD,
+        indir=ind, infile2=None, mydevel=mydev)

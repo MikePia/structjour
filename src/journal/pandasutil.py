@@ -3,7 +3,6 @@ Created on Sep 2, 2018
 
 @author: Mike Petersen
 '''
-import os
 import pandas as pd
 
 from journal.definetrades import ReqCol
@@ -11,6 +10,7 @@ from journal.dfutil import DataFrameUtil
 from journalfiles import JournalFiles
 
 # pylint: disable = C0103
+
 
 def askUser(shares, question):
     '''
@@ -54,7 +54,8 @@ class InputDataFrame(object):
 
         DataFrameUtil.checkRequiredInputFields(trades, reqCol.columns)
         trades = self.zeroPadTimeStr(trades)
-        trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.date, reqCol.time])
+        trades = trades.sort_values(
+            [reqCol.acct, reqCol.ticker, reqCol.date, reqCol.time])
         trades = self.mkShortsNegative(trades)
         swingTrade = self.getOvernightTrades(trades)
         swingTrade = self.figureOvernightTransactions(trades, jf)
@@ -74,7 +75,7 @@ class InputDataFrame(object):
                 theDate = pd.Timestamp(theDate)
             else:
                 theDate = pd.Timestamp.today()
-            
+
             trades['Date'] = theDate.strftime("%Y-%m-%d ") + trades['Time']
         else:
             # We need to make up a date for Hold rows. Before holds were assigned an early AM time
@@ -82,9 +83,9 @@ class InputDataFrame(object):
             # will be given a date before a second trade date identified because they have been
             # sorted by [account, ticker, time]. Likewise an an after hold will be given the next
             # day after the previous trade. There should not be any single hold entries without an
-            # actual trade from this input file but we will assert that fact in order to find 
+            # actual trade from this input file but we will assert that fact in order to find
             # unaccountable weirdnesses.
-            
+
             for i, row in trades.iterrows():
                 if row[c.side].lower().startswith('hold'):
 
@@ -98,23 +99,28 @@ class InputDataFrame(object):
                     if d < early:
                         assert row[c.side] in ['HOLD+B', 'HOLD-B']
                         assert len(trades) > i + 1
-                        assert trades.at[i, c.ticker] == trades.at[i+1, c.ticker]
+                        assert trades.at[i,
+                                         c.ticker] == trades.at[i+1, c.ticker]
 
-                        #Create the made up date- the day before the first tx from this input for this trade.
+                        # Create the made up date- the day before the first tx from this input for
+                        # this trade.
                         tradeday = trades.at[i+1, c.date]
                         holdday = tradeday-delt
-                        holdtime = pd.Timestamp(holdday.year, holdday.month, holdday.day, 16, 0, 0)
+                        holdtime = pd.Timestamp(
+                            holdday.year, holdday.month, holdday.day, 16, 0, 0)
                         trades.at[i, 'Date'] = holdtime
 
                     elif d > late:
                         assert row[c.side] in ['HOLD+', 'HOLD-']
                         assert i > 0
-                        assert trades.at[i, c.ticker] == trades.at[i-1, c.ticker]
+                        assert trades.at[i,
+                                         c.ticker] == trades.at[i-1, c.ticker]
 
                         tradeday = trades.at[i-1, c.date]
 
                         holdtime = tradeday + delt
-                        holdtime = pd.Timestamp(holdtime.year, holdtime.month, holdtime.day, 9, 30, 0)
+                        holdtime = pd.Timestamp(
+                            holdtime.year, holdtime.month, holdtime.day, 9, 30, 0)
                         # holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
                         trades.at[i, c.date] = holdtime
 
@@ -131,7 +137,7 @@ class InputDataFrame(object):
             tm = row[rc.time]
             tms = tm.split(":")
             if int(len(tms[0]) < 2):
-                if tms[0].startswith("0") == False:
+                if not tms[0].startswith("0"):
                     tm = "0" + tm
                     dframe.at[i, rc.time] = tm
         return dframe
@@ -202,21 +208,24 @@ class InputDataFrame(object):
                 i = i + 1
         return overnightTrade
 
-    def getOvernightTrades_DAS(self, swingTrade,  dframe, pos_df):
+    def getOvernightTrades_DAS(self, swingTrade, pos_df):
         '''
         Programmers notes for doc string till this gets settled
         Need to create some positions tables from IB files or by hand using the standatd test
         input collection of files-- the problem is
         IBs lack of average cost in their statements- or rather the convoluted version
-        of average cost for stocks with a weird cost basis accountant fantasy values. 
+        of average cost for stocks with a weird cost basis accountant fantasy values.
         This is pretty close to right-sure it has errors.  Try to get some positions.csv
         Not sure about the '-' for trades held w/different amoumts line 226 right now
+        :params swingTrade: The data structure holding information on unbalanced shares for tickers
+        :params pos_df: The DataFrame with the positions file DAS export file.
         '''
         for i in range(len(swingTrade)):
             ticker = swingTrade[i]['ticker']
             acct = swingTrade[i]['acct']
-            if ticker in list(pos_df.Symb) and acct == pos_df[pos_df.Symb == ticker].Account.unique()[0]:
-                #Some shares were held after close
+            if ticker in list(pos_df.Symb) and (
+                    acct == pos_df[pos_df.Symb == ticker].Account.unique()[0]):
+                # Some shares were held after close
                 unbalancedshares = swingTrade[i]['shares']
                 sharesheld = pos_df[pos_df.Symb == ticker]['Shares'].values[0]
                 swingTrade[i]['after'] = unbalancedshares
@@ -236,6 +245,13 @@ class InputDataFrame(object):
         return swingTrade
 
     def getPositions(self, jf):
+        '''
+        Open the positions csv. It is either a DAS export or a file created to the same specs.
+        Currently, this file is only used when using a DAS export from the trades window and is
+        only necessary if any trades in the input file have balance trades before or after.
+        :params jf: The JournalFiles object. It may be None and the variable for the location at
+                    jf.inpathfile2 may also be None.
+        '''
         if jf and jf.inputType == JournalFiles.InputType['das'] and jf.inpathfile2:
             df = pd.read_csv(jf.inpathfile2)
             reqcol = ['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized']
@@ -257,14 +273,14 @@ class InputDataFrame(object):
         reqcol = set(['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized'])
         if isinstance(pos, pd.DataFrame):
             if len(set(reqcol) & set(pos.columns)) == len(set(reqcol)):
-                return self.getOvernightTrades_DAS(swingTrade, dframe, pos)
+                return self.getOvernightTrades_DAS(swingTrade, pos)
             else:
                 msg = '\nthe positions file lacks the correct headings. Required headings are:\n'
                 msg += f'{reqcol}\n'
                 raise ValueError(msg)
         for i in range(len(swingTrade)):
             tryAgain = True
-            while tryAgain == True:
+            while tryAgain:
 
                 question = '''There is an unbalanced amount of shares of {0} in the amount of {1}
                     in the account {2}. How many shares of {0} are you holding now? 
@@ -272,8 +288,10 @@ class InputDataFrame(object):
                                                swingTrade[i]['shares'],
                                                swingTrade[i]['acct'])
 
-                swingTrade[i]['after'] = askUser(swingTrade[i]['shares'], question)
-                swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['after']
+                swingTrade[i]['after'] = askUser(
+                    swingTrade[i]['shares'], question)
+                swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
+                    swingTrade[i]['after']
 
                 if swingTrade[i]['shares'] != 0:
 
@@ -283,8 +301,10 @@ class InputDataFrame(object):
                                                -swingTrade[i]['shares'],
                                                swingTrade[i]['acct'])
 
-                    swingTrade[i]['before'] = askUser( swingTrade[i]['shares'], question)
-                    swingTrade[i]['shares'] = swingTrade[i]['shares'] - swingTrade[i]['before']
+                    swingTrade[i]['before'] = askUser(
+                        swingTrade[i]['shares'], question)
+                    swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
+                        swingTrade[i]['before']
 
                 if swingTrade[i]['shares'] == 0:
                     # print("That works.")
@@ -302,9 +322,13 @@ class InputDataFrame(object):
         print(swingTrade)
         return swingTrade
 
-    
-
     def insertOvernightRow(self, dframe, swTrade):
+        '''
+        Insert non-transaction rows that show overnight transactions. Set Side to one of:
+        HOLD+, HOLD-, HOLD+B, HOLD_B
+        :params dframe: The trades dataframe.
+        :params swTrade: A data structure holding information about tickers with unbalanced shares.
+        '''
 
         rc = ReqCol()
 
@@ -313,15 +337,13 @@ class InputDataFrame(object):
         for ldf in self.getListTickerDF(dframe):
             # print(ldf[rc.ticker].unique()[0], ldf[rc.acct].unique()[0])
             for trade in swTrade:
-                if (
-                        trade['ticker'] == ldf[rc.ticker].unique()[0] and (
-                        trade['acct'] == ldf[rc.acct].unique()[0])
-                   ):
+                if (trade['ticker'] == ldf[rc.ticker].unique()[0] and (
+                        trade['acct'] == ldf[rc.acct].unique()[0])):
                     # msg = "Got {0} with the balance {1}, before {2} and after {3} in {4}"
                     # print(msg.format(trade['ticker'], trade['shares'], trade['before'],
                     #       trade['after'], trade['acct']))
 
-                    #insert a non transaction HOLD row before transactions of the same ticker
+                    # insert a non transaction HOLD row before transactions of the same ticker
 
                     if trade['before'] != 0:
                         newldf = DataFrameUtil.createDf(dframe, 1)
@@ -362,13 +384,12 @@ class InputDataFrame(object):
                                     ldf.at[j, rc.side] = "HOLD-"
                                 ldf.at[j, rc.price] = float(0.0)
 
-                                # -trade makes the share balance work in excel 
+                                # -trade makes the share balance work in excel
                                 # for shares held after close
-                                ldf.at[j, rc.shares] = 0   #-trade['after']  
+                                ldf.at[j, rc.shares] = 0  # -trade['after']
                                 # 'ZeroSubstance'
                                 ldf.at[j, rc.acct] = trade['acct']
                                 ldf.at[j, rc.PL] = 0
 
             newdf = newdf.append(ldf, ignore_index=True, sort=False)
         return newdf
-

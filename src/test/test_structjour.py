@@ -166,7 +166,8 @@ class TestStructjour(TestCase):
             # print(theDate, infile)
             indir = 'data/'
             mydevel = True
-            jf = run(infile=infile, outdir=outdir, theDate=theDate, indir=indir, infile2=None, mydevel=mydevel)
+            jf = run(infile=infile, outdir=outdir, theDate=theDate, indir=indir,
+                     infile2=None, mydevel=mydevel)
             # print(jf.outpathfile)
             # print()
 

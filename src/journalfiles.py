@@ -19,7 +19,8 @@ class JournalFiles:
     InputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS'}
 
     # As the console version has no plan for release, not to worry too much about configuration
-    def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS', infile2=None, mydevel=False):
+    def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS',
+                 infile2=None, mydevel=False):
         '''
         Creates the required path and field names to run the program. Raises value error if the
         input file cannot be located. If mydevel is True, the default locations change.
