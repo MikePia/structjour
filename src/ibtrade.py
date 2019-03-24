@@ -19,7 +19,7 @@ from journal.statement import getTrades_IBActivity
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
 
 
-def run(infile='trades.csv', outdir=None, theDate=None, indir=None, mydevel=True):
+def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None, mydevel=True):
     '''Run structjour'''
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
@@ -83,4 +83,4 @@ if __name__ == '__main__':
     # theD = None
     ind = None
     mydev = True
-    run(infile=inf, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)
+    run(infile=inf1, outdir=outd, theDate=theD, indir=ind, infile2=None, mydevel=mydev)

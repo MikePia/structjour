@@ -8,6 +8,7 @@ import pandas as pd
 
 from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
+from journalfiles import JournalFiles
 
 # pylint: disable = C0103
 
@@ -45,7 +46,7 @@ class InputDataFrame(object):
             print("Only DAS is currently supported")
             raise ValueError
 
-    def processInputFile(self, trades, theDate=None):
+    def processInputFile(self, trades, theDate=None, jf=None):
         '''
         Run the methods for this object
         '''
@@ -56,7 +57,7 @@ class InputDataFrame(object):
         trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.date, reqCol.time])
         trades = self.mkShortsNegative(trades)
         swingTrade = self.getOvernightTrades(trades)
-        swingTrade = self.figureOvernightTransactions(trades)
+        swingTrade = self.figureOvernightTransactions(trades, jf)
         trades = self.insertOvernightRow(trades, swingTrade)
         trades = self.addDateField(trades, theDate)
         return trades
@@ -201,9 +202,48 @@ class InputDataFrame(object):
                 i = i + 1
         return overnightTrade
 
+    def getOvernightTrades_DAS(self, swingTrade,  dframe, pos_df):
+        '''
+        Programmers notes for doc string till this gets settled
+        Need to create some positions tables from IB files or by hand using the standatd test
+        input collection of files-- the problem is
+        IBs lack of average cost in their statements- or rather the convoluted version
+        of average cost for stocks with a weird cost basis accountant fantasy values. 
+        This is pretty close to right-sure it has errors.  Try to get some positions.csv
+        Not sure about the '-' for trades held w/different amoumts line 226 right now
+        '''
+        for i in range(len(swingTrade)):
+            ticker = swingTrade[i]['ticker']
+            acct = swingTrade[i]['acct']
+            if ticker in list(pos_df.Symb) and acct == pos_df[pos_df.Symb == ticker].Account.unique()[0]:
+                #Some shares were held after close
+                unbalancedshares = swingTrade[i]['shares']
+                sharesheld = pos_df[pos_df.Symb == ticker]['Shares'].values[0]
+                swingTrade[i]['after'] = unbalancedshares
+                swingTrade[i]['shares'] = int(unbalancedshares - sharesheld)
 
+                if swingTrade[i]['shares'] != 0:
+                    swingTrade[i]['before'] = -swingTrade[i]['shares']
+                    swingTrade[i]['shares'] = 0
 
-    def figureOvernightTransactions(self, dframe):
+            # df[(df.Symb == 'MU') & (df.Account == 'U2429974')].Account
+            else:
+                # If the ticker/account is not in pos, all shares were traded away today
+                swingTrade[i]['before'] = swingTrade[i]['shares']
+                swingTrade[i]['shares'] = 0
+                print("reset version ", i, swingTrade)
+        print(swingTrade)
+        return swingTrade
+
+    def getPositions(self, jf):
+        if jf and jf.inputType == JournalFiles.InputType['das'] and jf.inpathfile2:
+            df = pd.read_csv(jf.inpathfile2)
+            reqcol = ['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized']
+            df = df[reqcol]
+            return df
+        return None
+
+    def figureOvernightTransactions(self, dframe, jf):
         '''
         Determine how of the unbalanced shares were held:  before, after or both. We have to ask.
         FIX THIS (Won't be so bad in the Windowed version) (Could get it from exporting position
@@ -213,6 +253,15 @@ class InputDataFrame(object):
         # rc = ReqCol()
 
         swingTrade = self.getOvernightTrades(dframe)
+        pos = self.getPositions(jf)
+        reqcol = set(['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized'])
+        if isinstance(pos, pd.DataFrame):
+            if len(set(reqcol) & set(pos.columns)) == len(set(reqcol)):
+                return self.getOvernightTrades_DAS(swingTrade, dframe, pos)
+            else:
+                msg = '\nthe positions file lacks the correct headings. Required headings are:\n'
+                msg += f'{reqcol}\n'
+                raise ValueError(msg)
         for i in range(len(swingTrade)):
             tryAgain = True
             while tryAgain == True:
@@ -250,7 +299,10 @@ class InputDataFrame(object):
                     print("Prior to reset version ", i, swingTrade)
                     swingTrade[i] = self.getOvernightTrades(dframe)[i]
                     print("reset version ", i, swingTrade)
+        print(swingTrade)
         return swingTrade
+
+    
 
     def insertOvernightRow(self, dframe, swTrade):
 

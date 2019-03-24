@@ -364,7 +364,7 @@ class Test_SingleTicket(unittest.TestCase):
             # num, stat = f2()
             # self.assertEqual((num, stat), (40, False))
 
-            run(infile=infile, outdir=outdir, theDate=theDate, indir=indir, mydevel=mydevel)
+            run(infile=infile, outdir=outdir, theDate=theDate, indir=indir, infile2=None, mydevel=mydevel)
 
             # for i in tests:
             #     print (i[0], i[1])

@@ -16,19 +16,27 @@ class JournalFiles:
     files to read and write.
     '''
 
+    InputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS'}
+
     # As the console version has no plan for release, not to worry too much about configuration
-    def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', infile2=None,  mydevel=False):
+    def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS', infile2=None, mydevel=False):
         '''
-        Creates the required path and field names to run the program. Raises value error
-        the inputfile cannot be located. If mydevel is True, the default locations change.
+        Creates the required path and field names to run the program. Raises value error if the
+        input file cannot be located. If mydevel is True, the default locations change.
 
         :params indir:      The location of the input file. Defaut is (cwd)/data. 
         :params outdir      The name of the output directory. Default is (indir)/out. 
         :params theDate:    A Datetime object or timestamp of the date of the transactions in the
-                            input file. Defaults to today.
+                            input file. Will be used if the input file lacks dates. Defaults to 
+                            today.
         :params infile:     The name of the input file. Defaults to 'trades.csv'.
-        :params infile2:    This is the positions file. Required for DAS Trader Pro if positions
-                            are held. Defaults to 'positions.csv'     
+        :params inputType:  One of  DAS, IB_HTML, or IB_CVS. Either IB input file should be an
+                            activity statement with the tables: Trades, Open Positions and Account
+                            Information.
+        :params infile2:    This is the positions file. Required for DAS Trader Pro only and only
+                            if positions are held before or after this input file's trades. If
+                            missing, the program will ask for the information. Defaults to
+                            'positions.csv'     
         :raise ValueError:  If theDate is not a valid time.
         :raise NameError:   If the infile is not located.
         '''
@@ -37,14 +45,20 @@ class JournalFiles:
                 theDate = pd.Timestamp(theDate)
                 assert isinstance(theDate, type(dt.date.today()))
 
-            except AssertionError as ex:
-                print(
-                    "TheDate must be type datetime.date. Leave it blank to accept today's date", ex)
+            except ValueError as ex:
+                msg = f"\n\nTheDate ({theDate}) must be a valid timestamp or string.\n"
+                msg += "Leave it blank to accept today's date\n" 
+                msg += ex.__str__() + "\n" 
+                print(msg)
+                raise ValueError(msg)
+                    
                 sys.exit(-1)
             theDate = theDate
         else:
             theDate = dt.date.today()
 
+        assert inputType in JournalFiles.InputType.values()
+        self.inputType = inputType
         self.theDate = theDate
         self.monthformat = "_%Y%m_%B"
         self.dayformat = "_%m%d_%A"
@@ -56,13 +70,15 @@ class JournalFiles:
         self.inpathfile2 = None
         self.outfile = os.path.splitext(self.infile)[0] +  self.theDate.strftime("%A_%m%d.xlsx")
 
-        if mydevel:
-            self.setMyParams(indir, outdir)
-        else:
+        if not mydevel:
             self.inpathfile = os.path.join(self.indir, self.infile)
             self.outpathfile = os.path.join(self.outdir, self.outfile)
             if self.infile2:
                 self.inpathfile2 = os.path.join(self.indir, self.infile2)
+
+        else:
+            self.setMyParams(indir, outdir)
+            
 
 
 
@@ -83,7 +99,7 @@ class JournalFiles:
         path = self.theDate.strftime(path)
         self.indir = indir if indir else os.path.realpath(path)
         self.inpathfile = os.path.join(self.indir, self.infile)
-        if self.inpathfile2:
+        if self.infile2:
             self.inpathfile2 = os.path.join(self.indir, self.infile2)
 
         self.outdir = outdir if outdir else os.path.join(self.indir, 'out')
@@ -104,9 +120,9 @@ class JournalFiles:
 
     def _checkPaths(self):
         '''
-        Check the value of self.inpathfile and self.outdir for existance. Note that this is
-        called by __init__
-        :raise ValueError: If inpathfile or outdir do not exist.
+        Check the value of self.inpathfile, self.inpathfile2 (if the entry exists), and self.outdir 
+        for existance. Note that this is called by __init__
+        :raise NameError: If inpathfile, inpathfile2 (if given) or outdir do not exist.
         '''
         if not os.path.exists(self.inpathfile):
             print(os.path.realpath(self.inpathfile))

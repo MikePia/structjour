@@ -18,7 +18,7 @@ from journal.qtform import QtForm
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)
 
 
-def run(infile='trades.csv', infile2=None, outdir=None, theDate=None, indir=None, mydevel=True):
+def run(infile='trades.csv', outdir=None, theDate=None, indir=None,  infile2=None,  mydevel=True):
     '''Run structjour'''
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
@@ -29,7 +29,7 @@ def run(infile='trades.csv', infile2=None, outdir=None, theDate=None, indir=None
     # trades = pd.read_csv(jf.inpathfile)
 
     idf = InputDataFrame()
-    trades = idf.processInputFile(trades, jf.theDate)
+    trades = idf.processInputFile(trades, jf.theDate, jf)
 
     tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
@@ -70,13 +70,9 @@ def run(infile='trades.csv', infile2=None, outdir=None, theDate=None, indir=None
 if __name__ == '__main__':
     theD = '2019-03-21'
     outd = 'out/'
-    inf1='ActivityStatement.20190321.html'
-    inf2='trades.643495.20190321.html'
-    inf2='CSVTrades.644223.20190321.csv'
     inf = None
-    positions = None
-    # outd = None
-    theD = None
+    positions = 'positions.csv'
+    # positions = None
     ind = None
-    mydev = None
-    run(infile=inf, infile2=positions, outdir=outd, theDate=theD, indir=ind, mydevel=mydev)
+    mydev = True
+    run(infile=inf, outdir=outd, theDate=theD, indir=ind,  infile2=positions, mydevel=mydev)
