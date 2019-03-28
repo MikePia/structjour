@@ -19,7 +19,7 @@ print('Pandas version ' + pd.__version__)
 print('Beautiful Soup ' + bs4v)
 
 
-class Statement(object):
+class Statement_DAS(object):
     '''
     Take an input CSV file of all trade transactions and reduce the transactions to tickets. Use the
     JournalFiles class as the single point of contact with  input and output.  When the new file is
@@ -157,7 +157,7 @@ class Statement(object):
 
         return listOfTickets
 
-    def newDFSingleTxPerTicket(self, listDf=None):
+    def getTrades(self, listDf=None):
         '''
         Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
         fewer transactions. 
@@ -185,6 +185,252 @@ class Statement(object):
         self.jf.resetInfile(outfile)
 
         return newDF, self.jf
+
+class Statement_IBActivity:
+    
+    def getUnbal_IBActivity(self, url=None, soup=None):
+        '''
+        Get unbalanced positions IB Activity statement. The statement must have a Trades table 
+        and an Open Positions table. The return value is a list of stocks that were bought or sold
+        in this statement and their current position. Other positions, not traded today, are left out.
+        :params url: File location of the Activity Statement as an html doc
+        :return: List of [symbol, bal] indicating the number of shares that are held as of the 
+        time of the statement
+        '''
+        if url:
+            soup = BeautifulSoup(readit(url), 'html.parser')
+        positions = self.getOpenPositions_IBActivity(None, soup)
+        tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblTransactions'))
+        account = getId_IBActivity(soup)
+        assert len(tbldivs) == 1
+        tableTag = tbldivs[0].find("table")
+        df = pd.read_html(str(tableTag))
+        assert len(df) == 1
+        df = filterTrades_IBActivity(df[0])
+        curPositions = list()
+        for s in df.Symbol.unique():
+            if s in positions.Symbol.unique():
+                daybal = float(positions[positions.Symbol == s].Quantity)
+            else:
+                daybal = 0
+            if daybal != 0:
+                curPositions.append([s, daybal])
+        
+        return curPositions
+
+    
+    def getDate_IBActivity(self, url, soup=None):
+        '''
+        Get the date from tblNAV aka 'Net Asset Value table'    '''
+        soup = BeautifulSoup(readit(url), 'html.parser')
+        navdivs = soup.find_all("div", id=lambda x: x and x.startswith('tblNAV'))
+        assert len(navdivs) == 1
+        navTag = navdivs[0].find('table')
+        ndf = pd.read_html(str(navTag))
+        assert len(ndf) == 1
+        d = ndf[0].iloc[0][2]
+        try:
+            d = pd.Timestamp(d)
+            'Activity Statements come after after hours'
+            d = pd.Timestamp(d.year, d.month, d.day, 18, 0, 0)
+        except ValueError:
+            
+            raise ValueError(
+                '''Failed to retrieve date from IB Activity Statement.
+                Statement must include the tables 
+                    Trades, 
+                    Open Positions
+                    Account Information
+                    Net Asset Value (for the date)
+                ''')
+            
+        return d
+
+
+
+    def getId_IBActivity(self, soup = None, url=None):
+        if url:
+            soup = BeautifulSoup(readit(url), 'html.parser')
+        tbldivs = soup.find("div", id=lambda x: x and x.startswith('tblAccountInformation'))
+        tbldivs.get('id')
+        tableTag = tbldivs.find("table")
+        tableTag
+
+        df = pd.read_html(str(tableTag))
+        account = ''
+        for i, row in df[0].iterrows():
+            if (row[0] == 'Account'):
+                account = row[1]
+        return account
+
+    def getOpenPositions_IBActivity(self, url=None, soup=None):
+        '''
+        Get trades from an IB statement that has a Transactions table and an Account Information table
+        '''
+        if soup == None:
+            soup = BeautifulSoup(readit(url), 'html.parser')
+        tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblOpenPositions'))
+        account = getId_IBActivity(soup)
+
+        assert len(tbldivs) == 1
+
+        tableTag = tbldivs[0].find("table")
+        df = pd.read_html(str(tableTag))
+        assert len(df) == 1
+        newtrades = pd.DataFrame()
+        for i, row in df[0].iterrows():
+            addme, tval = floatValue(row['Quantity'])
+            if addme: 
+                newtrades = newtrades.append(row)
+
+        return newtrades
+
+
+
+    def filterTrades_IBActivity(self, df):
+        newtrades = pd.DataFrame()
+        for i, row in df.iterrows():
+            addme, tval = floatValue(row['T. Price'])
+            dblchk, bval = floatValue(row['Basis'])
+            if addme and dblchk and not row['Symbol'].lower().startswith('total'):
+                newtrades = newtrades.append(row)
+
+        return newtrades
+
+
+    def normColumns_IBActivity(self, df):
+        '''
+        The so called norm will have to become the new norm. 
+        This particular method is similar enough between CSV, Daily, and Activity to combine the 3 into one
+        '''
+
+        rc = ReqCol()
+        if 'PL' not in df.columns:
+            df['PL'] = 0
+        df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PL', 'Code']].copy()
+
+        df['Date'] = df['Date/Time']
+        df[rc.side] = ''
+        df.Quantity = df.Quantity.astype(int)
+        df['T. Price'] = df['T. Price'].astype(float)
+        df['Proceeds'] = df['Proceeds'].astype(float)
+        df['Code'] = df['Code'].astype(str)
+
+
+        for i, row in df.iterrows():
+            # df.at[i, 'Date'] = df.at[i, 'Date'][:10]
+            cleandate = pd.Timestamp(df.at[i, 'Date'])
+            df.at[i, 'Date'] = cleandate.strftime('%Y-%m-%d %H:%M:%S')
+            df.at[i, 'Date/Time'] = df.at[i, 'Date/Time'][12:]
+            code = df.at[i, 'Code'].split(';')
+
+
+
+            if df.at[i, 'Quantity'] < 0:
+                df.at[i, rc.side] = 'S'
+            else:
+                df.at[i, rc.side] = 'B'
+
+            for c in code:
+                if c in ['O', 'C']:
+                    df.at[i, 'Code'] = c
+                    continue
+
+
+
+        df = df.rename(columns={'Date/Time': rc.time, 'Symbol': rc.ticker, 'T. Price': rc.price,
+                                        'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PL': rc.PL})
+        return df
+
+
+    def figurePL_IBActivity(self, df, soup=None, url=None):
+        df = df.copy()
+        df['bal'] = 0
+        df['PL'] = 0.0
+        df['avg'] = 0.0
+        df['mkt'] = 0.0
+        # df = df[['Symbol', 'Date/Time', 'Quantity', 'bal', 'T. Price', 'Comm/Fee', 'Realized P/L', 'PL', 'avg', 'Code', 'Proceeds', 'mkt' ]].copy()
+
+        newtrade = pd.DataFrame(columns = df.columns)
+        # unbal = self.getUnbal_IBActivity(soup=soup, url=url)
+        for s in df['Symbol'].unique():
+            tdf = df[(df.Symbol == s)].copy()
+            bal = costSum = comSum = total = 0.0
+
+            firsttrade = True
+            avg = 0
+            for count, (i, row) in enumerate(tdf.iterrows()):
+                PL = 0.0
+                symb, qty, price, comm,  rpl, code = list(row[['Symbol',  'Quantity', 'T. Price', 'Comm/Fee', 'Realized P/L', 'Code',]])
+                
+                try:
+                    qty = int(qty) if qty else 0
+                    price = float(price) if price else 0.0
+                    rpl = float(rpl) if rpl else 0.0
+                    comm = float(comm) if comm else 0.0
+
+                except ValueError:
+                    msg = f'Bad Value in {row} found in {__file__}'
+                    raise ValueError(msg)
+                    
+                comSum = comSum + comm
+
+                if tdf.iloc[0].Code == 'C':
+                    if row['Code'] == 'C':
+                        mkt = qty * price
+                        PL = rpl - comSum
+
+                if tdf.iloc[0].Code == 'O':
+
+
+                    bal = bal + qty
+                    mkt = qty * price
+                    costSum = costSum + mkt
+                    if firsttrade:
+                        avg = price
+                    if code == 'O':
+                        if bal != 0:
+                            avg = costSum/bal
+                    elif code == 'C':
+                        PL = (avg - price) * qty
+                        total = total + PL
+
+
+                tdf.at[i, 'bal'] = bal
+                tdf.at[i, 'PL'] = PL
+                tdf.at[i, 'avg'] = avg
+                tdf.at[i, 'mkt'] = mkt
+
+                newtrade = newtrade.append(tdf.loc[i])
+
+                firsttrade = False
+
+
+        return newtrade
+
+
+    def getTrades_IBActivity(self, url):
+        '''
+        Get trades from an IB statement that has a Transactions table and an Account Information table
+        '''
+        soup = BeautifulSoup(readit(url), 'html.parser')
+        tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblTransactions'))
+        account = self.getId_IBActivity(soup)
+
+        assert len(tbldivs) == 1
+
+        tableTag = tbldivs[0].find("table")
+        df = pd.read_html(str(tableTag))
+        assert len(df) == 1
+
+
+        df = self.filterTrades_IBActivity(df[0])
+        df['Account'] = account
+        print('fkna')
+        df = self.figurePL_IBActivity(df, soup=soup)
+        df = self.normColumns_IBActivity(df)
+
+        return df
 
 
 def readit(url):
@@ -249,18 +495,6 @@ def dayPl(df):
 
     return df
 
-def getId_IBActivity(soup):
-    tbldivs = soup.find("div", id=lambda x: x and x.startswith('tblAccountInformation'))
-    tbldivs.get('id')
-    tableTag = tbldivs.find("table")
-    tableTag
-    
-    df = pd.read_html(str(tableTag))
-    account = ''
-    for i, row in df[0].iterrows():
-        if (row[0] == 'Account'):
-            account = row[1]
-    return account
 
 
 def floatValue(test, includezero=False):
@@ -275,59 +509,6 @@ def floatValue(test, includezero=False):
     return True, addme
 
 
-def filterTrades_IBActivity(df):
-    newtrades = pd.DataFrame()
-    for i, row in df.iterrows():
-        addme, tval = floatValue(row['T. Price'])
-        dblchk, bval = floatValue(row['Basis'])
-        if addme and dblchk and not row['Symbol'].lower().startswith('total'):
-            newtrades = newtrades.append(row)
-
-    return newtrades
-
-
-def normColumns_IBActivity(df):
-    '''
-    The so called norm will have to become the new norm. 
-    This particular method is similar enough between CSV, Daily, and Activity to combine the 3 into one
-    '''
-    
-    rc = ReqCol()
-    
-    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PL', 'Code']].copy()
-    # df['PL'] = 0
-    df['Date'] = df['Date/Time']
-    df[rc.side] = ''
-    df.Quantity = df.Quantity.astype(int)
-    df['T. Price'] = df['T. Price'].astype(float)
-    df['Proceeds'] = df['Proceeds'].astype(float)
-    df['Code'] = df['Code'].astype(str)
-
-
-    for i, row in df.iterrows():
-        # df.at[i, 'Date'] = df.at[i, 'Date'][:10]
-        cleandate = pd.Timestamp(df.at[i, 'Date'])
-        df.at[i, 'Date'] = cleandate.strftime('%Y-%m-%d %H:%M:%S')
-        df.at[i, 'Date/Time'] = df.at[i, 'Date/Time'][12:]
-        code = df.at[i, 'Code'].split(';')
-
-
-        
-        if df.at[i, 'Quantity'] < 0:
-            df.at[i, rc.side] = 'S'
-        else:
-            df.at[i, rc.side] = 'B'
-
-        for c in code:
-            if c in ['O', 'C']:
-                df.at[i, 'Code'] = c
-                continue
-
-    
-
-    df = df.rename(columns={'Date/Time': rc.time, 'Symbol': rc.ticker, 'T. Price': rc.price,
-                                    'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PL': rc.PL})
-    return df
 
 def normColumns_IbCsv(df):
     '''
@@ -370,28 +551,6 @@ def normColumns_IbCsv(df):
                                     'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PL': rc.PL})
     return df
 
-
-def getTrades_IBActivity(url):
-    '''
-    Get trades from an IB statement that has a Transactions table and an Account Information table
-    '''
-    soup = BeautifulSoup(readit(url), 'html.parser')
-    tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblTransactions'))
-    account = getId_IBActivity(soup)
-
-    assert len(tbldivs) == 1
-
-    tableTag = tbldivs[0].find("table")
-    df = pd.read_html(str(tableTag))
-    assert len(df) == 1
-    
-    df = dayPl(df[0])
-
-    df = filterTrades_IBActivity(df)
-    df['Account'] = account
-    df = normColumns_IBActivity(df)
-
-    return df
 
 def getTrades_csv(infile):
     '''

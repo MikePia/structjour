@@ -22,7 +22,7 @@ from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement as Ticket
+from journal.statement import Statement_DAS as Ticket
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
@@ -333,7 +333,7 @@ class TestLayoutSheet(TestCase):
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 
             tkt = Ticket(jf)
-            trades, jf = tkt.newDFSingleTxPerTicket()
+            trades, jf = tkt.getTrades()
             # trades = pd.read_csv(jf.inpathfile)
 
             # idf = InputDataFrame()
@@ -458,7 +458,7 @@ class TestLayoutSheet(TestCase):
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 
             tkt = Ticket(jf)
-            trades, jf = tkt.newDFSingleTxPerTicket()
+            trades, jf = tkt.getTrades()
             # trades = pd.read_csv(jf.inpathfile)
 
 
@@ -592,7 +592,7 @@ class TestLayoutSheet(TestCase):
 
 
             tkt = Ticket(jf)
-            trades, jf = tkt.newDFSingleTxPerTicket()
+            trades, jf = tkt.getTrades()
             # trades = pd.read_csv(jf.inpathfile)
 
             # idf = InputDataFrame()

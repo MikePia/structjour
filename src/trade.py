@@ -6,7 +6,8 @@ Top level module currently.
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement as Ticket
+from journal.statement import Statement_DAS as Ticket
+from journal.statement import Statement_IBActivity
 from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
@@ -23,12 +24,14 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
     jf = JournalFiles(indir=indir, outdir=outdir,
                       theDate=theDate, infile=infile, infile2=infile2, mydevel=mydevel)
 
-    tkt = Ticket(jf)
-    trades, jf = tkt.newDFSingleTxPerTicket()
+    # tkt = Ticket(jf)
+    # trades, jf = tkt.getTrades()
     # trades = pd.read_csv(jf.inpathfile)
+    statement = Statement_IBActivity()
+    df = statement.getTrades_IBActivity(jf.inpathfile)
 
     idf = InputDataFrame()
-    trades = idf.processInputFile(trades, jf.theDate, jf)
+    trades = idf.processInputFile(df, jf.theDate, jf)
 
     tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
@@ -69,9 +72,12 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 if __name__ == '__main__':
     theD = '2019-03-21'
     outd = 'out/'
+    # theD = None
     inf = None
-    positions = 'positions.csv'
-    # positions = None
+    inf = 'ActivityStatement.20190321.html'
+    # outd = None
+    # positions = 'positions.csv'
+    positions = None
     ind = None
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, infile2=positions, mydevel=mydev)

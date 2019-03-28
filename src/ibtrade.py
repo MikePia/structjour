@@ -10,8 +10,8 @@ from journal.definetrades import DefineTrades
 from journal.layoutsheet import LayoutSheet
 from journal.pandasutil import InputDataFrame
 # from journal.qtform import QtForm
-# from journal.statement import Statement as Ticket
-from journal.statement import getTrades_IBActivity
+# from journal.statement import Statement_DAS as Ticket
+from journal.statement import Statement_IBActivity
 from journal.tradestyle import TradeFormat
 from journalfiles import JournalFiles
 
@@ -26,11 +26,15 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
     jf = JournalFiles(indir=indir, outdir=outdir,
                       theDate=theDate, infile=infile, infile2=infile2, mydevel=mydevel)
 
-    df = getTrades_IBActivity(jf.inpathfile)
+    
+    statement = Statement_IBActivity()
+    df = statement.getTrades_IBActivity(jf.inpathfile)
+
+
 
     # tkt = Ticket(jf, df)
 
-    # trades, jf = tkt.newDFSingleTxPerTicket()
+    # trades, jf = tkt.getTrades()
     # trades = pd.read_csv(jf.inpathfile)
     trades = df
 
@@ -75,12 +79,12 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
 if __name__ == '__main__':
     theD = '2019-03-21'
-    outd = 'out/'
+    # outd = 'out/'
     inf1 = 'ActivityStatement.20190321.html'
     inf2 = 'trades.643495.20190321.html'
     inf2 = 'CSVTrades.644223.20190321.csv'
-    inf = inf1
-    # outd = None
+    # inf = inf1
+    outd = None
     # theD = None
     ind = None
     mydev = True
