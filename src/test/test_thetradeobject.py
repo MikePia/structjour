@@ -14,7 +14,7 @@ import types
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement as Ticket
+from journal.statement import Statement_DAS as Ticket
 from journal.definetrades import DefineTrades
 from journal.thetradeobject import TheTradeObject, SumReqFields
 
@@ -81,7 +81,7 @@ class TestTheTradeObject(unittest.TestCase):
                           indir="data/", outdir="out/")
 
         tkt = Ticket(jf)
-        trades, jf = tkt.newDFSingleTxPerTicket()
+        trades, jf = tkt.getTrades()
 
         idf = InputDataFrame()
         trades = idf.processInputFile(trades)

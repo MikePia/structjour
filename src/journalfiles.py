@@ -53,7 +53,6 @@ class JournalFiles:
                 print(msg)
                 raise ValueError(msg)
                     
-                sys.exit(-1)
             theDate = theDate
         else:
             theDate = dt.date.today()

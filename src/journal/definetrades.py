@@ -114,10 +114,11 @@ class DefineTrades(object):
         trades = self.addFinReqCol(trades)
         newTrades = trades[c.columns]
         newTrades.copy()
-        nt = newTrades.sort_values([c.ticker, c.acct, c.date, c.time])
+        nt = newTrades.sort_values([c.ticker, c.acct, c.time])
         nt = self.writeShareBalance(nt)
         nt = self.addStartTime(nt)
-        nt = nt.sort_values([c.start, c.acct, c.date, c.time])
+        nt.Date = pd.to_datetime(nt.Date)
+        nt = nt.sort_values([c.start, c.date, c.time], ascending=True)
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)

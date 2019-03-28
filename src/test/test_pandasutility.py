@@ -13,7 +13,7 @@ import types
 import pandas as pd
 
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement as Ticket
+from journal.statement import Statement_DAS as Ticket
 from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
 
@@ -43,7 +43,7 @@ def getTestSet(length=6):
 
 class Test_SingleTicket(unittest.TestCase):
     '''
-    Test the methods in Statement
+    Test the methods in Statement_DAS
     '''
 
     def __init__(self, *args, **kwargs):
@@ -64,7 +64,7 @@ class Test_SingleTicket(unittest.TestCase):
 
     def test_GetListOfTicketDF(self):
         '''
-        Test the method Statement.getListOfTicketDF.
+        Test the method Statement_DAS.getListOfTicketDF.
         Explicitly tests: Each ticket has only long or short only
                           Each ticket has a single ticker symbol, cloid, and account
         '''
@@ -101,7 +101,7 @@ class Test_SingleTicket(unittest.TestCase):
 
     def test_CreateSingleTicket(self):
         '''
-        Test the method Statement.createSingleTicket.  Requires the list of dfs created by
+        Test the method Statement_DAS.createSingleTicket.  Requires the list of dfs created by
         getListOfTicketDF. Explicitly test that each element is a 1 row DataFrame. That the new
         price, (the average price of its transactions) is always greater than the min and less
         than the max. And finally check that the total number of shares (total) is the same as
@@ -148,7 +148,7 @@ class Test_SingleTicket(unittest.TestCase):
 
     def test_NewSingleTxPerTicket(self):
         '''
-        Test the method Statement.newSingleTxPerTicket. That method creates a new csv file
+        Test the method Statement_DAS.newSingleTxPerTicket. That method creates a new csv file
         reducing multi row transactions to a single row, averaging the prices, totaling the
         amounts.
         Explicitly tests: A newFile has been created and made the infile of JournalFiles.
@@ -168,7 +168,7 @@ class Test_SingleTicket(unittest.TestCase):
             originfile = jf.infile
 
             tkt = Ticket(jf)
-            newDF, jf = tkt.newDFSingleTxPerTicket()
+            newDF, jf = tkt.getTrades()
 
             self.assertNotEqual(originfile, jf.infile)
             newdframe = pd.read_csv(jf.inpathfile)
@@ -228,7 +228,7 @@ class Test_SingleTicket(unittest.TestCase):
 
     def test_MkShortNegative(self):
         '''
-        Test the method Statement.mkShortsNegative
+        Test the method Statement_DAS.mkShortsNegative
         '''
         rc = ReqCol()
         for dummy in range(random.randint(2, 10)):
@@ -249,7 +249,7 @@ class Test_SingleTicket(unittest.TestCase):
 
     def testGetListTickerDF(self):
         '''
-        Testing Statement.getListTickerDF
+        Testing Statement_DAS.getListTickerDF
         '''
 
         rc = ReqCol()

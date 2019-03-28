@@ -54,8 +54,7 @@ class InputDataFrame(object):
 
         DataFrameUtil.checkRequiredInputFields(trades, reqCol.columns)
         trades = self.zeroPadTimeStr(trades)
-        trades = trades.sort_values(
-            [reqCol.acct, reqCol.ticker, reqCol.date, reqCol.time])
+        trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.date, reqCol.time])
         trades = self.mkShortsNegative(trades)
         swingTrade = self.getOvernightTrades(trades)
         swingTrade = self.figureOvernightTransactions(trades, jf)
@@ -105,9 +104,10 @@ class InputDataFrame(object):
                         # Create the made up date- the day before the first tx from this input for
                         # this trade.
                         tradeday = trades.at[i+1, c.date]
+                        tradeday = pd.Timestamp(tradeday)
                         holdday = tradeday-delt
                         holdtime = pd.Timestamp(
-                            holdday.year, holdday.month, holdday.day, 16, 0, 0)
+                            holdday.year, holdday.month, holdday.day,  d.hour, d.minute, d.second)
                         trades.at[i, 'Date'] = holdtime
 
                     elif d > late:
@@ -117,10 +117,11 @@ class InputDataFrame(object):
                                          c.ticker] == trades.at[i-1, c.ticker]
 
                         tradeday = trades.at[i-1, c.date]
+                        tradeday = pd.Timestamp(tradeday)
 
                         holdtime = tradeday + delt
                         holdtime = pd.Timestamp(
-                            holdtime.year, holdtime.month, holdtime.day, 9, 30, 0)
+                            holdtime.year, holdtime.month, holdtime.day, d.hour, d.minute, d.second)
                         # holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
                         trades.at[i, c.date] = holdtime
 
@@ -241,7 +242,7 @@ class InputDataFrame(object):
                 swingTrade[i]['before'] = swingTrade[i]['shares']
                 swingTrade[i]['shares'] = 0
                 print("reset version ", i, swingTrade)
-        print(swingTrade)
+        # print(swingTrade)
         return swingTrade
 
     def getPositions(self, jf):
@@ -255,7 +256,7 @@ class InputDataFrame(object):
         if jf and jf.inputType == JournalFiles.InputType['das'] and jf.inpathfile2:
             df = pd.read_csv(jf.inpathfile2)
             reqcol = ['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized']
-            df = df[reqcol]
+            df = df[reqcol].copy()
             return df
         return None
 
@@ -319,7 +320,7 @@ class InputDataFrame(object):
                     print("Prior to reset version ", i, swingTrade)
                     swingTrade[i] = self.getOvernightTrades(dframe)[i]
                     print("reset version ", i, swingTrade)
-        print(swingTrade)
+        # print(swingTrade)
         return swingTrade
 
     def insertOvernightRow(self, dframe, swTrade):
