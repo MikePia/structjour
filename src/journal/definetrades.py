@@ -387,55 +387,67 @@ class DefineTrades(object):
                      purchase or short of a stock, and all transactions until the transaction which
                      returns the share balance to 0. Last entry may be a HOLD indicating shares
                      were held overnight in the amount of the previous transaction share balance.
-                     The HOLD entry is a nontransaction. shares are listed as 0 indicating the
-                     number of shares owned is in the previous transaction.
+                     After HOLDs are nontransactions. shares are listed as 0 indicating the
+                     number of shares owned is in the previous transaction. Before HOLDs attempt to
+                     show the current status of previous transctions not given explicity.
         :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single DataFrame.
 
         '''
         c = self._frc
         dframe = pd.DataFrame()
         for count, tdf in enumerate(ldf):
-            # print()
-            # print(tdf.iloc[0])
-            # print(tdf.iloc[-1])
-            # print(tdf.iloc[-1][c.bal])
-            # print()
             if tdf.iloc[-1][c.bal] == 0:
-                if tdf.iloc[0][c.side].startswith('HOLD') or tdf.iloc[-1][c.side].startswith('HOLD'):
-                    if tdf.iloc[-1][c.side].startswith('HOLD'):
-                        tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + \
-                            " OVERNIGHT"
-                        tdf.iloc[-1][c.bal] = 0
-                    if tdf.iloc[0][c.side].startswith('HOLD'):
-                        # tdf.iloc[0][c.bal] = tdf.iloc[0][c.shares] # Already done durning writeShareBal
+                x0 = tdf.index[0]
+                xl = tdf.index[-1]
+                if tdf.at[x0, c.side].startswith('HOLD') or tdf.at[xl, c.side].startswith('HOLD'):
+                    # Apparent double testing to cover trades with holds both before and after
+                    if tdf.at[xl, c.side].startswith('HOLD'):
+                        tdf.at[xl, c.name] = tdf.at[xl, c.name] + " OVERNIGHT"
+                        tdf.at[xl, c.bal] = 0
+                    if tdf.at[x0, c.side].startswith('HOLD'):
                         sharelist = list()
                         pricelist = list()
                         for dummy, row in tdf.iterrows():
-                            # Here we set initial entries average price of shares previously held
-                            # based on the P/L of the first exit
-                            # The math gets complicated if there are more than 2 entrances before
-                            # the first exit. This currently only works without extra entries
-                            # before the first exit.
+                            # Here we set initial entries' average price of shares previously held
+                            # based on the P/L of the first exit. The math gets complicated if
+                            # there are more than 2 entrances before # the first exit. This
+                            # currently only works without extra opens before the first close.
                             # TODO Send in some SIM trades to model it.
-                            # print(i, row[c.PL], row[c.shares])
                             sharelist.append(row[c.shares])
                             pricelist.append(row[c.price])
-                            if row[c.PL] > 0:
-                                originalPrice = row[c.price] + \
-                                    (row[c.PL] / row[c.shares])
-                                tdf.iloc[0][c.price] = originalPrice
+                            if row[c.PL] != 0:
+                                # TODO This does not cover the possibilities-- still have no models
+                                originalPrice = row[c.price] + (row[c.PL] / row[c.shares])
+                                tdf.at[x0, c.price] = originalPrice
                                 break
                         # print()
-                elif tdf.iloc[0][c.side].startswith('B') and tdf.iloc[-1][c.side].startswith('B'):
-                    # print(tdf.iloc[0][c.name])
-                    tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
-                    # print("found a flipper long to short")
-                    # for i, row in tdf.iterrows():
-                    #     print(i, row)
-                    #     print()
-                elif not tdf.iloc[0][c.side].startswith('B') and not tdf.iloc[-1][c.side].startswith('B'):
+                elif tdf.at[x0, c.side].startswith('B') and tdf.at[xl, c.side].startswith('B'):
+                    # Still not sure how IB deals with flipped trades. I think they break down the
+                    # shares to figure, for ex, PL from shares sold closed to 0 balance, and avg
+                    # price change from Shares sold Open to bal
+                    # TODO: Get a an IB Statement with a flipped position 
+                    tdf.at[xl, c.name] = tdf.at[xl, c.name] + " FLIPPED"
+
+                    msg = '\nFound a flipper long to short.\n'
+                    msg = msg + "Use this file for devel and testing if this is an IB statement\n"
+                    print(msg)
+                    for i, row in tdf.iterrows():
+                        print(i, row)
+                        print()
+                elif not tdf.at[x0, c.side].startswith('B') and not tdf.at[xl, c.side].startswith('B'):
                     # print("found a flipper short to long")
                     tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
+                    msg = '\nFound a flipper short to long.\n'
+                    msg = msg + "Use this file for devel and testing if this is an IB statement\n"
+                    print(msg)
+                    for i, row in tdf.iterrows():
+                        print(i, row)
+                        print()
+
+
+
+
+
                 #     for i, row in tdf.iterrows():
                 #         print(i, row)
                 #         print()

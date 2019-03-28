@@ -602,9 +602,12 @@ class TheTradeObject:
                 # print('wtf')
             else:
                 entryPrice = exitPrice - self.df.loc[self.ix][frc.sum]
-            entry1 = (entryPrice - partEntryPrice) / \
-                self.df.loc[self.ix0][frc.shares]
-            self.df.loc[self.ix0][frc.price] = entry1
+            tmpentry = (entryPrice - partEntryPrice)
+            tmpshares = self.df.loc[self.ix0][frc.shares]
+            entry1 = tmpentry / tmpshares
+            # entry1 = (entryPrice - partEntryPrice) / \
+            #     self.df.loc[self.ix0][frc.shares]
+            self.df.at[self.ix0, frc.price] = entry1
 
         for i, row in self.df.iterrows():
             # ix0 is the index of the first row in df (df is a dataframe holding one trade in at
