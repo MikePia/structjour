@@ -3,7 +3,7 @@
 Top level module currently.
 '''
 # from PyQt5.QtWidgets import QApplication
-
+import os
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS as Ticket
@@ -19,16 +19,40 @@ from journal.dailysumforms import MistakeSummary
 
 
 def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None, mydevel=True):
-    '''Run structjour'''
+    '''
+    Run structjour. Temporary picker for input type based on filename. If infile has 'activity' in
+    it and ends in .html, then its IB Activity Statement web page (as a file on this system)
+    :params infile: Name of the input file. Default trades.csv--a DAS export from the trades window.
+                    If infile contains the string 'trades', input type is set to DAS.
+                    If infile contains the string 'activity', input type is set to IB Activity.
+                    Default will try DAS
+    :params outdir: Location to write the output file.
+    :params theDate: The date of this input file. If trades lack a Date, this date be the trade date.
+    :params indir: Location of the input file.
+    :parmas infile2: Name of the DAS positions file. Will default to indir/positions.csv  
+    :params mydevel: If True, use a specific file structure and let structjour create it. All can 
+                     be overriden by using the specific parameters above.
+    '''
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
                       theDate=theDate, infile=infile, infile2=infile2, mydevel=mydevel)
 
-    # tkt = Ticket(jf)
-    # trades, jf = tkt.getTrades()
+    name, ext = os.path.splitext(jf.infile.lower())
+    if name.find('activity') > -1 and ext == '.html':
+        jf.inputtype = 'IB_HTML'
+        statement = Statement_IBActivity()
+        df = statement.getTrades_IBActivity(jf.inpathfile)
+    elif  name.find('trades') > -1 and ext == '.csv':
+        # This could be an IB CSV--so this is temporary-- when I enable some sort of IB CSV, will
+        # probably do some kind of class heirarchy here for statements. 
+        tkt = Ticket(jf)
+        df, jf = tkt.getTrades()
     # trades = pd.read_csv(jf.inpathfile)
-    statement = Statement_IBActivity()
-    df = statement.getTrades_IBActivity(jf.inpathfile)
+    else:
+        #Temporary
+        print('Opening a non standard file name in DAS')
+        tkt = Ticket(jf)
+        df, jf = tkt.getTrades()
 
     idf = InputDataFrame()
     trades = idf.processInputFile(df, jf.theDate, jf)
