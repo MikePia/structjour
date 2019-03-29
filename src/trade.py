@@ -39,8 +39,8 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
     name, ext = os.path.splitext(jf.infile.lower())
     if name.find('activity') > -1 and ext == '.html':
-        jf.inputtype = 'IB_HTML'
-        statement = Statement_IBActivity()
+        jf.inputType = 'IB_HTML'
+        statement = Statement_IBActivity(jf)
         df = statement.getTrades_IBActivity(jf.inpathfile)
     elif  name.find('trades') > -1 and ext == '.csv':
         # This could be an IB CSV--so this is temporary-- when I enable some sort of IB CSV, will
@@ -94,14 +94,13 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
 
 if __name__ == '__main__':
-    theD = '2019-03-21'
+    # theD = '2019-03-21'
     outd = 'out/'
-    # theD = None
+    theD = None
     inf = None
-    inf = 'ActivityStatement.20190321.html'
+    # inf = 'ActivityStatement.20190321.html'
     # outd = None
-    # positions = 'positions.csv'
-    positions = None
+    positions = 'positions.csv'
     ind = None
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, infile2=positions, mydevel=mydev)

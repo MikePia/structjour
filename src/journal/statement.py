@@ -157,6 +157,23 @@ class Statement_DAS(object):
 
         return listOfTickets
 
+
+    def getPositions(self):
+        if not self.jf.infile2:
+            return ''
+        df = pd.read_csv(self.jf.inpathfile2)
+        reqcol = ['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized']
+        df = df[reqcol].copy()
+        newtrades = pd.DataFrame()
+        for i, row in df.iterrows():
+            addme, tval = floatValue(row['Avgcost'])
+            dblchk, tval = floatValue(row['Shares'])
+            if addme and dblchk: 
+                newtrades = newtrades.append(row)
+
+        return newtrades
+
+
     def getTrades(self, listDf=None):
         '''
         Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
@@ -187,6 +204,9 @@ class Statement_DAS(object):
         return newDF, self.jf
 
 class Statement_IBActivity:
+
+    def __init__(self, jf):
+        self.jf = jf
     
     def getUnbal_IBActivity(self, url=None, soup=None):
         '''
@@ -199,7 +219,7 @@ class Statement_IBActivity:
         '''
         if url:
             soup = BeautifulSoup(readit(url), 'html.parser')
-        positions = self.getOpenPositions_IBActivity(None, soup)
+        positions = self.getPositions(None, soup)
         tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblTransactions'))
         account = getId_IBActivity(soup)
         assert len(tbldivs) == 1
@@ -263,14 +283,15 @@ class Statement_IBActivity:
                 account = row[1]
         return account
 
-    def getOpenPositions_IBActivity(self, url=None, soup=None):
+    def getPositions(self, soup=None):
         '''
-        Get trades from an IB statement that has a Transactions table and an Account Information table
+        Get open positions from the IB statement. Will retrieve a tabel with three columns:
+        Symb, Shares and Account
         '''
         if soup == None:
-            soup = BeautifulSoup(readit(url), 'html.parser')
+            soup = BeautifulSoup(readit(self.jf.inpathfile), 'html.parser')
         tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblOpenPositions'))
-        account = getId_IBActivity(soup)
+        account = self.getId_IBActivity(soup)
 
         assert len(tbldivs) == 1
 
@@ -283,6 +304,10 @@ class Statement_IBActivity:
             if addme: 
                 newtrades = newtrades.append(row)
 
+        if not newtrades.empty:
+            newtrades = newtrades[['Symbol', 'Quantity']].copy()
+            newtrades['Account'] = account
+            newtrades = newtrades.rename(columns={'Symbol': 'Symb', 'Quantity': 'Shares'})
         return newtrades
 
 

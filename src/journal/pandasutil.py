@@ -7,6 +7,7 @@ import pandas as pd
 
 from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
+from journal.statement import Statement_IBActivity, Statement_DAS
 from journalfiles import JournalFiles
 
 # pylint: disable = C0103
@@ -211,38 +212,21 @@ class InputDataFrame(object):
 
     def getOvernightTrades_DAS(self, swingTrade, pos_df):
         '''
-        Programmers notes for doc string till this gets settled
-        Need to create some positions tables from IB files or by hand using the standatd test
-        input collection of files-- the problem is
-        IBs lack of average cost in their statements- or rather the convoluted version
-        of average cost for stocks with a weird cost basis accountant fantasy values.
-        This is pretty close to right-sure it has errors.  Try to get some positions.csv
-        Not sure about the '-' for trades held w/different amoumts line 226 right now
+        Get overnight trades sorted from a statement or DAS positions export-now a DataFrame
         :params swingTrade: The data structure holding information on unbalanced shares for tickers
-        :params pos_df: The DataFrame with the positions file DAS export file.
+        :params pos_df: The DataFrame with the positions information.
         '''
-        for i in range(len(swingTrade)):
-            ticker = swingTrade[i]['ticker']
-            acct = swingTrade[i]['acct']
-            if ticker in list(pos_df.Symb) and (
-                    acct == pos_df[pos_df.Symb == ticker].Account.unique()[0]):
+        # for i in range(len(swingTrade)):
+        for t in swingTrade:
+            if t['ticker'] in list(pos_df.Symb) and (t['acct'] == pos_df[pos_df.Symb == t['ticker']].Account.unique()[0]):
                 # Some shares were held after close
-                unbalancedshares = swingTrade[i]['shares']
-                sharesheld = pos_df[pos_df.Symb == ticker]['Shares'].values[0]
-                swingTrade[i]['after'] = unbalancedshares
-                swingTrade[i]['shares'] = int(unbalancedshares - sharesheld)
+                t['after'] = t['shares']
 
-                if swingTrade[i]['shares'] != 0:
-                    swingTrade[i]['before'] = -swingTrade[i]['shares']
-                    swingTrade[i]['shares'] = 0
-
-            # df[(df.Symb == 'MU') & (df.Account == 'U2429974')].Account
+                t['before'] = t['shares'] - int(pos_df[pos_df.Symb == t['ticker']].Shares.unique()[0])
+                t['shares'] = 0
             else:
-                # If the ticker/account is not in pos, all shares were traded away today
-                swingTrade[i]['before'] = swingTrade[i]['shares']
-                swingTrade[i]['shares'] = 0
-                print("reset version ", i, swingTrade)
-        # print(swingTrade)
+                t['after'] = -t['shares']
+                t['shares'] = 0
         return swingTrade
 
     def getPositions(self, jf):
@@ -252,13 +236,19 @@ class InputDataFrame(object):
         only necessary if any trades in the input file have balance trades before or after.
         :params jf: The JournalFiles object. It may be None and the variable for the location at
                     jf.inpathfile2 may also be None.
+        :return: A DataFrame. If no results were retrieved, return an empty DataFrame.
+        :TODO: getPositions should be a virtual method--not sure how to implement it best
+        This aint java. For now just kludge solidly.
         '''
         if jf and jf.inputType == JournalFiles.InputType['das'] and jf.inpathfile2:
-            df = pd.read_csv(jf.inpathfile2)
-            reqcol = ['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized']
-            df = df[reqcol].copy()
+            st = Statement_DAS(jf)
+            df = st.getPositions()
             return df
-        return None
+        elif jf and jf.inputType == JournalFiles.InputType['ib']:
+            st = Statement_IBActivity(jf)
+            df = st.getPositions()
+            return df
+        return pd.DataFrame()
 
     def figureOvernightTransactions(self, dframe, jf):
         '''
@@ -271,8 +261,8 @@ class InputDataFrame(object):
 
         swingTrade = self.getOvernightTrades(dframe)
         pos = self.getPositions(jf)
-        reqcol = set(['Symb', 'Account', 'Shares', 'Avgcost', 'Unrealized'])
-        if isinstance(pos, pd.DataFrame):
+        reqcol = set(['Symb', 'Account', 'Shares'])
+        if not pos.empty:
             if len(set(reqcol) & set(pos.columns)) == len(set(reqcol)):
                 return self.getOvernightTrades_DAS(swingTrade, pos)
             else:

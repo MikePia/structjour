@@ -20,7 +20,7 @@ class JournalFiles:
 
     # As the console version has no plan for release, not to worry too much about configuration
     def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS',
-                 infile2=None, mydevel=False):
+                 infile2='positions.csv', mydevel=False):
         '''
         Creates the required path and field names to run the program. Raises value error if the
         input file cannot be located. If mydevel is True, the default locations change.
@@ -78,9 +78,11 @@ class JournalFiles:
 
         else:
             self.setMyParams(indir, outdir)
-            
-
-
+        if self.inpathfile2 and not os.path.exists(self.inpathfile2):
+            # Fail or succeed quietly here
+            self.infile2 = None
+            self.inpathfile2 = None
+        
 
         self._checkPaths()
 
