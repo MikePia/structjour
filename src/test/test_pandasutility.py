@@ -20,28 +20,9 @@ from journalfiles import JournalFiles
 # pylint: disable = C0103
 
 
-def getTestSet(length=6):
-    '''Utility test set generator for MkShortNegative
-    '''
-    side = []
-    mult = []
-    shares = []
-    for dummy in range(length):
-        s = random.random()
-        s2 = random.randint(1, 20)
-
-        if s < 0.5:
-            side.append('S')
-            mult.append(-1)
-        else:
-            side.append('B')
-            mult.append(1)
-        shares.append(s2*50)
-
-    return side, mult, shares
 
 
-class Test_SingleTicket(unittest.TestCase):
+class Test_Pandasutility(unittest.TestCase):
     '''
     Test the methods in Statement_DAS
     '''
@@ -50,7 +31,7 @@ class Test_SingleTicket(unittest.TestCase):
         '''
         When we initialze the object, ensure that we always run from src as the cwd
         '''
-        super(Test_SingleTicket, self).__init__(*args, **kwargs)
+        super(Test_Pandasutility, self).__init__(*args, **kwargs)
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -62,137 +43,7 @@ class Test_SingleTicket(unittest.TestCase):
                         'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
                         'trades190221.BHoldPreExit.csv']
 
-    def test_GetListOfTicketDF(self):
-        '''
-        Test the method Statement_DAS.getListOfTicketDF.
-        Explicitly tests: Each ticket has only long or short only
-                          Each ticket has a single ticker symbol, cloid, and account
-        '''
-        rc = ReqCol()
-
-        outdir = 'data/'
-        # A list of files that were problematic
-        infiles = self.infiles
-
-        # otherinfiles = ['trades.911.noPL.csv', 'trades.csv']
-        for f in infiles:
-            # trade = os.path.join(outdir, f)
-            jf = JournalFiles(indir=outdir, infile=f, outdir='out/', mydevel=True)
-
-            tkt = Ticket(jf)
-            tktList = tkt.getListOfTicketDF()
-
-            totalTX = 0
-            for ticket in tktList:
-                self.assertEqual(len(ticket[rc.side].unique(
-                )), 1, "There can only be one side, long or short, in a ticket")
-                self.assertEqual(len(ticket[rc.ticker].unique(
-                )), 1, "There can only be one ticker in a ticket")
-                self.assertEqual(
-                    len(ticket['Cloid'].unique()), 1, "There can be only one Cloid in a ticket")
-                self.assertEqual(
-                    len(ticket[rc.acct].unique()), 1, "There can be only one account in a ticket")
-
-                totalTX = totalTX + len(ticket)
-
-            trades = pd.read_csv(jf.inpathfile)
-            msg = "There is a discrepancy in number of transactions in the  tickets"
-            self.assertEqual(len(trades), totalTX, msg)
-
-    def test_CreateSingleTicket(self):
-        '''
-        Test the method Statement_DAS.createSingleTicket.  Requires the list of dfs created by
-        getListOfTicketDF. Explicitly test that each element is a 1 row DataFrame. That the new
-        price, (the average price of its transactions) is always greater than the min and less
-        than the max. And finally check that the total number of shares (total) is the same as
-        the sum of shares in constituent transactions.
-        '''
-        rc = ReqCol()
-        indir = 'data/'
-        outdir = 'out/'
-        infiles = self.infiles
-
-        for infile in infiles:
-            jf = JournalFiles(indir=indir,
-                              infile=infile, outdir=outdir)
-            tkt = Ticket(jf)
-
-            listTick = tkt.getListOfTicketDF()
-            totalSharesForDay = 0
-            for tick in listTick:
-
-                singleTicket = tkt.createSingleTicket(tick)
-                self.assertIsInstance(singleTicket, type(
-                    pd.DataFrame()), "Failed to create a DataFrame")
-                self.assertEqual(len(singleTicket), 1,
-                                 "Failed to create a single item ticket")
-                # print(tick[rc.price].min())
-                # print(singleTicket[rc.price].unique()[0])
-                # print(tick[rc.price].max())
-                # print()
-                try:
-                    isclose(singleTicket[rc.price].unique()[0], tick[rc.price].max(), abs_tol=1e-8)
-                except AssertionError:
-                    self.assertLessEqual(singleTicket[rc.price].unique()[0], tick[rc.price].max())
-                try:
-                    isclose(singleTicket[rc.price].unique()[0], tick[rc.price].min(), abs_tol=1e-8)
-                except AssertionError:
-                    self.assertGreaterEqual(singleTicket[rc.price].unique()[0],
-                                            tick[rc.price].min())
-
-                totalSharesForDay = totalSharesForDay + tick[rc.shares].sum()
-
-            dframe = pd.read_csv(jf.inpathfile)
-            self.assertEqual(dframe[rc.shares].sum(),
-                             totalSharesForDay, "Failed to acount for all the shares transacted.")
-
-    def test_NewSingleTxPerTicket(self):
-        '''
-        Test the method Statement_DAS.newSingleTxPerTicket. That method creates a new csv file
-        reducing multi row transactions to a single row, averaging the prices, totaling the
-        amounts.
-        Explicitly tests: A newFile has been created and made the infile of JournalFiles.
-                          The PL summary is the same between the two files .
-                          The shares total for each symbol/account/buy/sell is the same
-
-        '''
-        rc = ReqCol()
-        for infile in self.infiles:
-            outdir = 'out/'
-            indir = 'data/'
-            indir = os.path.realpath(indir)
-
-            jf = JournalFiles(indir=indir, infile=infile, outdir=outdir)
-
-            origdframe = pd.read_csv(jf.inpathfile)
-            originfile = jf.infile
-
-            tkt = Ticket(jf)
-            newDF, jf = tkt.getTrades()
-
-            self.assertNotEqual(originfile, jf.infile)
-            newdframe = pd.read_csv(jf.inpathfile)
-
-            self.assertAlmostEqual(origdframe[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
-            self.assertAlmostEqual(newDF[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
-
-            for symbol in origdframe[rc.ticker].unique():
-                for accnt in origdframe[rc.acct].unique():
-                    d = origdframe
-                    n = newDF
-
-                    d = d[d[rc.ticker] == symbol]
-                    d = d[d[rc.acct] == accnt]
-                    dbuy = d[d[rc.side].str.startswith('B')]
-                    dsell = d[d[rc.side].str.startswith('S')]
-
-                    n = n[n[rc.ticker] == symbol]
-                    n = n[n[rc.acct] == accnt]
-                    nbuy = n[n[rc.side].str.startswith('B')]
-                    nsell = n[n[rc.side].str.startswith('S')]
-
-                    self.assertEqual(dbuy[rc.shares].sum(), nbuy[rc.shares].sum())
-                    self.assertEqual(dsell[rc.shares].sum(), nsell[rc.shares].sum())
+    
 
     def testZeroPad(self):
         '''
@@ -226,57 +77,7 @@ class Test_SingleTicket(unittest.TestCase):
                 except NameError:
                     self.fail('Time has a wrong value')
 
-    def test_MkShortNegative(self):
-        '''
-        Test the method Statement_DAS.mkShortsNegative
-        '''
-        rc = ReqCol()
-        for dummy in range(random.randint(2, 10)):
-            side, mult, shares = getTestSet(random.randint(4, 20))
-            testSet = list(zip(side, shares))
-
-            apd = pd.DataFrame(testSet, columns=[rc.side, rc.shares])
-
-            for i in range(len(side)):
-                # self.assertEqual(apd[rc.shares][i], shares[i])
-                self.assertEqual(apd[rc.shares][i], shares[i])
-
-            idf = InputDataFrame()
-            apd = idf.mkShortsNegative(apd)
-            for i in range(len(side)):
-                self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
-            #     self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
-
-    def testGetListTickerDF(self):
-        '''
-        Testing Statement_DAS.getListTickerDF
-        '''
-
-        rc = ReqCol()
-
-        tickers = ['MU', 'MU', 'MU',
-                   'TWTR', 'TWTR', 'TWTR', 'TWTR', 'TWTR', 'TWTR',
-                   'AAPL', 'AAPL', 'AAPL', 'AAPL', 'AAPL', 'AAPL', 'AAPL',
-                   'MU', 'MU', 'MU']
-        U1 = "U12345"
-        U2 = "TR12345"
-        accounts = [U1, U1, U1,
-                    U1, U1, U1, U2, U2, U2,
-                    U2, U1, U2, U2, U1, U1, U1,
-                    U2, U2, U2]
-
-        testSet = list(zip(tickers, accounts))
-
-        apd = pd.DataFrame(testSet, columns=[rc.ticker, rc.acct])
-
-        ipd = InputDataFrame()
-        listDf = ipd.getListTickerDF(apd)
-
-        #A dataframe for each ticker in both accounts
-        self.assertEqual(len(listDf), 6)
-        for df in listDf:
-            self.assertEqual(len(df[rc.ticker].unique()), 1)
-            self.assertEqual(len(df[rc.acct].unique()), 1)
+    
 
     def testGetOvernightTrades(self):
         '''
@@ -325,7 +126,10 @@ class Test_SingleTicket(unittest.TestCase):
     # @patch('journal.pandasutil.askUser')
     # def walkit(self, mock_askUser):
     def walkit(self):
-        '''Run Structjour multiple times with test files'''
+        '''
+        Run Structjour multiple times with test files
+        I think this methods usefulness is done. Leave for now (3/30/19)
+        '''
         from trade import run
 
         tests = [[1, 'trades.1116_messedUpTradeSummary10.csv',
@@ -389,7 +193,7 @@ def main():
     Test discovery is not working in vscode. Use this for debugging.
     Then run cl python -m unittest discovery
     '''
-    f = Test_SingleTicket()
+    f = Test_Pandasutility()
     for name in dir(f):
         if name.startswith('test'):
             attr = getattr(f, name)
@@ -401,11 +205,11 @@ def main():
 
 def notmain():
     '''Run some local code'''
-    t = Test_SingleTicket()
+    t = Test_Pandasutility()
     # t.test_GetListOfTicketDF()
     # t.walkit()
     # t.test_MkShortNegative()
-    t.testGetOvernightTrades()
+    # t.testGetOvernightTrades()
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testCheckRequiredColumns']
