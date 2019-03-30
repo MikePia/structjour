@@ -225,7 +225,7 @@ class InputDataFrame(object):
                 t['before'] = t['shares'] - int(pos_df[pos_df.Symb == t['ticker']].Shares.unique()[0])
                 t['shares'] = 0
             else:
-                t['after'] = -t['shares']
+                t['before'] = t['shares']
                 t['shares'] = 0
         return swingTrade
 

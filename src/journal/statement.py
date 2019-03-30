@@ -1,3 +1,19 @@
+'''
+Encapsulate the various kinds of account statements. To date that includes DAS export files and IB
+Activity statements. So far we are interested in trade information for specific accounts. It looks
+like IB Activity statements can report on multiple accounts by using (in HTML file) <div ids like
+id = tbl{table_name}_{account}_Body  
+For examples tblAccountInformation_UXXXXX74Body. So far, this code is written for a single account.
+
+Created on Mar 15, 2019
+
+@author: Mike Petersen
+'''
+# TODO: Revise code to differ multiple accounts (a bit later 03/29/19). For now get this rock solid
+# and maintainably clear for one account. See if I can get IB written specs to find more potential
+# landmines.
+
+
 import csv
 import math
 import sys
@@ -283,32 +299,78 @@ class Statement_IBActivity:
                 account = row[1]
         return account
 
+    # TODO: See doc string below. Don't know if its fixable or an actual problem even.
     def getPositions(self, soup=None):
         '''
-        Get open positions from the IB statement. Will retrieve a tabel with three columns:
-        Symb, Shares and Account
+        Get open positions from the IB statement. Will retrieve a table with three columns:
+        Symb, Shares and Account. Two possible tables I have found with the info:
+        Ids are startswith('tblOpenPositions') and  startswith('tblLongOpenPositions'). Results and
+        Implementation will change a bit when we incorporate multiple accounts per statement
+        :My Programming Concerns follow:
+        IB's Cost Basis accounting still makes no sense to me. It comes up with fantasy numbers
+        for Cost_Price/Cost_Basis that never existed. The numbers relate to Loss Disallowed (LD) by
+        Wash Sale rules. Because of this fu convolution, we cannot rely on Cost_Price Cost_Basis or
+        Unrealized_P/L. This is a possible major problem in figuring the average cost of an equity
+        that was initailly Opened before the current statement. So far, I am successfully using
+        Unrealized P/L (from other tables, but info is the same) for this purpose,  but I haven't
+        any examples of legitimate test cases for stocks Closed in this statement. Maybe it works
+        differently for equities that close positions (doesn't seem likely). Tests, tests, tests...
+        I think I will look for errors by comparing results from DAS exports  to IB Statements.
+        Which brings me to a huge peeve. Why does IB not provide an average cost from a given
+        day?!?!?!?. It is such basic information and its not there!!!!!!!! (! = anger)
         '''
         if soup == None:
             soup = BeautifulSoup(readit(self.jf.inpathfile), 'html.parser')
         tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblOpenPositions'))
         account = self.getId_IBActivity(soup)
 
-        assert len(tbldivs) == 1
+        if tbldivs:
+            # found table tblOpenPositions
 
-        tableTag = tbldivs[0].find("table")
-        df = pd.read_html(str(tableTag))
-        assert len(df) == 1
-        newtrades = pd.DataFrame()
-        for i, row in df[0].iterrows():
-            addme, tval = floatValue(row['Quantity'])
-            if addme: 
-                newtrades = newtrades.append(row)
+            assert len(tbldivs) == 1
 
-        if not newtrades.empty:
-            newtrades = newtrades[['Symbol', 'Quantity']].copy()
-            newtrades['Account'] = account
-            newtrades = newtrades.rename(columns={'Symbol': 'Symb', 'Quantity': 'Shares'})
-        return newtrades
+            tableTag = tbldivs[0].find("table")
+            df = pd.read_html(str(tableTag))
+            assert len(df) == 1
+            df = df[0][df[0].Mult == 1.0].copy()
+            print('Retrieved open positions from tblOpenPositions')
+        else:
+            # The Long Open Positions table heirarchical and  pd cannot correctly parse it.
+            # Instead we'll get the headers and rows with our favorite soup
+            tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblLongOpenPositions'))
+            if not tbldivs:
+                return pd.DataFrame()
+            # tbldivs = st.getPositions()
+            assert len(tbldivs) == 1
+            type(tbldivs[0]), len (tbldivs)
+            headers = [h.text for h in tbldivs[0].find_all('th')]
+            trdivs = tbldivs[0].find_all('tr')
+
+            tdlist = list()
+            for trs in trdivs:
+                if trs:
+                    tddivs = trs.find_all('td')
+                    if tddivs:
+                        # print(tddivs[0].text)
+                        row = [r.text for r in tddivs]
+                        tdlist.append(row)
+            print('Retrieved open positions from From tblLongOpenPositions')
+            df = pd.DataFrame(data=tdlist, columns=headers)
+
+            # Seems dangerous -- using bs4 in LongOpenPosition we get string columns Mult == '1'
+            # Reading directly pd.read_html in OpenPositions we get float Mult == 1.0
+
+            df = df[df.Mult == '1'].copy()
+        
+        if not df.empty:
+            df = df[['Symbol', 'Quantity']].copy()
+            df['Account'] = account
+            df = df.rename(columns={'Symbol': 'Symb', 'Quantity': 'Shares'})
+        
+        return df
+        
+
+        
 
 
 
