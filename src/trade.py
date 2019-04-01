@@ -97,10 +97,10 @@ if __name__ == '__main__':
     # theD = '2019-03-21'
     outd = 'out/'
     theD = None
-    inf = None
+    inf = 'trades.1116_messedUpTradeSummary10.csv'
     # inf = 'ActivityStatement.20190321.html'
     # outd = None
     positions = 'positions.csv'
-    ind = None
+    ind = 'data/'
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, infile2=positions, mydevel=mydev)

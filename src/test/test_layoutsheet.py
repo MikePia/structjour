@@ -22,7 +22,7 @@ from openpyxl import load_workbook
 
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS as Ticket
+from journal.statement import Statement_DAS
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
@@ -131,10 +131,8 @@ class TestLayoutSheet(TestCase):
             mydevel = False
             jf = JournalFiles(indir=indir, infile=infile, mydevel=mydevel)
 
-            trades = pd.read_csv(jf.inpathfile)
-
+            trades, jf = Statement_DAS(jf).getTrades()
             trades = InputDataFrame().processInputFile(trades)
-
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
             # ::::::::::: end setup :::::::::::::
 
@@ -332,13 +330,8 @@ class TestLayoutSheet(TestCase):
             mydevel = False
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 
-            tkt = Ticket(jf)
-            trades, jf = tkt.getTrades()
-            # trades = pd.read_csv(jf.inpathfile)
-
-            # idf = InputDataFrame()
+            trades, jf = Statement_DAS(jf).getTrades()
             trades = InputDataFrame().processInputFile(trades)
-
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -456,15 +449,10 @@ class TestLayoutSheet(TestCase):
             indir = 'data/'
             mydevel = False
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
+            print(jf.inpathfile)
 
-            tkt = Ticket(jf)
-            trades, jf = tkt.getTrades()
-            # trades = pd.read_csv(jf.inpathfile)
-
-
-            # idf = InputDataFrame()
+            trades, jf = Statement_DAS(jf).getTrades()
             trades = InputDataFrame().processInputFile(trades)
-
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -483,7 +471,6 @@ class TestLayoutSheet(TestCase):
             mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
             # mistake.mstkSumStyle(ws, tf, mstkAnchor)
             mistake.dailySumStyle(ws, tf, mstkAnchor)
-
             tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
 
             # :::::::::::::: END SETUP ::::::::::::::
@@ -591,13 +578,8 @@ class TestLayoutSheet(TestCase):
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 
 
-            tkt = Ticket(jf)
-            trades, jf = tkt.getTrades()
-            # trades = pd.read_csv(jf.inpathfile)
-
-            # idf = InputDataFrame()
+            trades, jf = Statement_DAS(jf).getTrades()
             trades = InputDataFrame().processInputFile(trades)
-
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -675,11 +657,11 @@ def notmain():
     '''Run some local code'''
         # pylint: disable = E1120
     ttt = TestLayoutSheet()
-    ttt.test_createImageLocation()
+    # ttt.test_createImageLocation()
     # ttt.test_createWorkbook()
     # ttt.test_styleTopwithnothin()
     # ttt.test_populateMistakeForm()
-    # ttt.test_populateDailySummaryForm()
+    ttt.test_populateDailySummaryForm()
     # ttt.test_runSummaries()
 
 def main():

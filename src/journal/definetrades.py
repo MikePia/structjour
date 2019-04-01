@@ -118,15 +118,13 @@ class DefineTrades(object):
         nt = self.writeShareBalance(nt)
         nt = self.addStartTime(nt)
         nt.Date = pd.to_datetime(nt.Date)
-        nt = nt.sort_values([c.start, c.date, c.time], ascending=True)
+        nt = nt.sort_values([c.ticker, c.acct, c.start, c.date, c.time], ascending=True)
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
         nt = self.addTradeName(nt)
         # ldf is a list of DataFrames, one per trade
         ldf = self.getTradeList(nt)
-        if self.source == self.sources['iba']:
-            ldf, nt = self.processPL(ldf)
         ldf, nt = self.postProcessing(ldf)
         nt = DataFrameUtil.addRows(nt, 2)
         nt = self.addSummaryPL(nt)
@@ -306,42 +304,6 @@ class DefineTrades(object):
 
         return dframe
 
-    def processPL(self, ldf):
-        '''
-        Rethinking this. I think it will be better to process on the original import- assuming its possible
-        then save it as a csv file modeled after DAS. No branches necessary (almost)
-        '''
-        c = self._frc
-
-        newTrade = True
-        
-        for tdf in ldf:
-            curprice = tdf.iloc[0][c.price]
-            avgprice = tdf.iloc[0][c.price]
-            slong = True if tdf.iloc[0]  == 'B' else False
-            openers = []
-            
-            firstrow = True
-            for i, row in tdf.iterrows():
-                if firstrow:
-                    openers.append[i]
-
-
-            curTrade = row[c.tix]
-            if newTrade:
-                oldTrade = curTrade
-                opencount = 1
-                newTrade = False
-            # els:
-
-            
-
-            longShort = " Long"
-            if row[c.bal] == 0:
-                # this is the last tx of the trade today. B or HOLD- are shorts
-                if row[c.side] == 'B' or row[c.side].startswith('HOLD-'):
-                    longShort = " Short"
-                dframe.at[i, c.name] = row[c.ticker] + longShort
 
 
     def getTradeList(self, dframe):

@@ -14,7 +14,7 @@ import types
 import pandas as pd
 
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS as Ticket
+from journal.statement import Statement_DAS
 from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
 
@@ -77,7 +77,7 @@ class Test_Statements(unittest.TestCase):
             # trade = os.path.join(outdir, f)
             jf = JournalFiles(indir=outdir, infile=f, outdir='out/', mydevel=True)
 
-            tkt = Ticket(jf)
+            tkt = Statement_DAS(jf)
             tktList = tkt.getListOfTicketDF()
 
             totalTX = 0
@@ -113,7 +113,7 @@ class Test_Statements(unittest.TestCase):
         for infile in infiles:
             jf = JournalFiles(indir=indir,
                               infile=infile, outdir=outdir)
-            tkt = Ticket(jf)
+            tkt = Statement_DAS(jf)
 
             listTick = tkt.getListOfTicketDF()
             totalSharesForDay = 0
@@ -165,7 +165,7 @@ class Test_Statements(unittest.TestCase):
             origdframe = pd.read_csv(jf.inpathfile)
             originfile = jf.infile
 
-            tkt = Ticket(jf)
+            tkt = Statement_DAS(jf)
             newDF, jf = tkt.getTrades()
 
             self.assertNotEqual(originfile, jf.infile)

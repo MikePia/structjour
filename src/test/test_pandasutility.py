@@ -13,7 +13,7 @@ import types
 import pandas as pd
 
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS as Ticket
+from journal.statement import Statement_DAS
 from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
 
