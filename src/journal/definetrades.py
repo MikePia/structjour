@@ -237,12 +237,15 @@ class DefineTrades(object):
 
         for i, row in dframe.iterrows():
             if row[c.bal] == 0:
-                timeEnd = row[c.time]
-                timeStart = row[c.start]
-                end = timeEnd.split(":")
-                start = timeStart.split(":")
-                diff = datetime.datetime(1, 1, 1, int(end[0]), int(end[1]), int(
-                    end[2])) - datetime.datetime(1, 1, 1, int(start[0]), int(start[1]), int(start[2]))
+                timeEnd = pd.Timestamp(row[c.time])
+                timeStart = pd.Timestamp(row[c.start])
+                assert timeEnd.date() == timeStart.date()
+                diff = timeEnd - timeStart
+
+                # end = timeEnd.split(":")
+                # start = timeStart.split(":")
+                # diff = datetime.datetime(1, 1, 1, int(end[0]), int(end[1]), int(
+                #     end[2])) - datetime.datetime(1, 1, 1, int(start[0]), int(start[1]), int(start[2]))
                 dframe.at[i, c.dur] = diff
         return dframe
 
