@@ -7,6 +7,7 @@ out/
 .project
 .settings
 *.png
+*.jpg
 *.pyc
 .pydev*
 *.sqlite
@@ -16,3 +17,5 @@ doodles
 *.db
 src/run.py
 src/DisciplinedCopy1.xlsx
+src/images
+.coverage
