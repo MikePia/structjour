@@ -410,7 +410,7 @@ class TheTradeObject:
 
     def runSummary(self):
         '''
-        Populate a DataFrome (self.TheTrade) with all the trade summary information, one row per
+        Populate a DataFrame (self.TheTrade) with all the trade summary information, one row per
         trade. The information will then populate the the openpyxl / excel Trade Summary. The user
         interview for target stoploss, and strategy happen in their respective methods.
         '''

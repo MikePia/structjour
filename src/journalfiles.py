@@ -4,6 +4,7 @@
 import datetime as dt
 import os
 import sys
+import numpy as np
 import pandas as pd
 # pylint: disable=C0103, R0913
 

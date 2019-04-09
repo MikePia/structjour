@@ -36,7 +36,7 @@ class TestDefineTrades(TestCase):
 
     def test_addFinReqCol(self):
         '''
-        Test the method journal.definetrades.DefineTrades.addFinReqCol
+        Test the method journal.definetrades.TestDefineTrades.addFinReqCol
         '''
         rc = ReqCol()
         frc = FinReqCol()
@@ -51,7 +51,8 @@ class TestDefineTrades(TestCase):
 
     def test_writeShareBalance(self):
         '''
-        Test the method writeShareBalance. Send some randomly generated trades side and qty and
+        Test the method writeShareBalance. Send some randomly generated trades. Remove a bunch of
+        columns and call writeShareBalance. Test that the share balance was recreated correctly
         test the share balance that returns. Sort both and compare the results using the place
         index iloc
         '''
@@ -65,27 +66,24 @@ class TestDefineTrades(TestCase):
                                                 pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
-            
+
         df.reset_index(drop=True, inplace=True)
 
         frc = FinReqCol()
         df2 = df.copy()
-        
+
         df2[frc.sum] = None
-        
         df2[frc.start] = None
         df2[frc.tix] = None
         df2[frc.PL] = None
         df2[frc.dur] = None
         df2[frc.bal] = 0
-        
+
         df3 = df2.copy()
         df3 = df3.sort_values(['Symb', 'Account', 'Time'])
         df3.reset_index(drop=True, inplace=True)
         df = df.sort_values(['Symb', 'Account', 'Time'])
-        
-        
-        
+
         dtrades = DefineTrades()
         df3 = dtrades.writeShareBalance(df3)
         for i in range(len(df3)):
@@ -173,12 +171,12 @@ class TestDefineTrades(TestCase):
                         if tdf.at[j, 'Balance'] == 0:
                             print('Found an error at index', j, 'The Balance should not be 0')
                             print(tdf[['Symb', 'Tindex', 'Account', 'Time', 'Side', 'Qty', 'Balance']])
-                            self.assertNotEqual(tdf.at[j, 'Balance'], 0)
+                        self.assertNotEqual(tdf.at[j, 'Balance'], 0)
                     else:
                         if tdf.at[j, 'Balance'] != 0:
                             print('Found an error at index', xl, 'The balance should be 0')
                             print(df[['Symb','Tindex',  'Account', 'Time', 'Side', 'Qty', 'Balance']])
-                            self.assertEqual(tdf.at[j, 'Balance'], 0)
+                        self.assertEqual(tdf.at[j, 'Balance'], 0)
                     if lastd:
                         if lastd > thisd:
                             print('Found an error in the Time sequencing of', tnum)
@@ -382,14 +380,15 @@ class TestDefineTrades(TestCase):
 
 def notmain():
     '''Run some local code'''
-    t = TestDefineTrades()
-    t.test_addStartTime()
-    t.test_addTradeIndex()
+    for i in range(100):
+        t = TestDefineTrades()
+        # t.test_addStartTime()
+        t.test_addTradeIndex()
     
-    t.test_addTradeDuration()
-    t.test_addSummaryPL()
-    t.test_addTradePL()
-    t.test_writeShareBalance()
+        # t.test_addTradeDuration()
+        # t.test_addSummaryPL()
+        # t.test_addTradePL()
+        # t.test_writeShareBalance()
     
     # t.test_addSummaryPL()
 

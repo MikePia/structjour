@@ -94,13 +94,12 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
 
 if __name__ == '__main__':
-    # theD = '2019-03-21'
-    outd = 'out/'
-    theD = None
-    inf = 'trades.1116_messedUpTradeSummary10.csv'
+    theD = '2019-01-25'
+    # inf = 'trades.1116_messedUpTradeSummary10.csv'
     # inf = 'ActivityStatement.20190321.html'
-    # outd = None
+    outd = 'out/'
+    inf = None
     positions = 'positions.csv'
-    ind = 'data/'
+    ind = None
     mydev = True
     run(infile=inf, outdir=outd, theDate=theD, indir=ind, infile2=positions, mydevel=mydev)
