@@ -16,6 +16,7 @@ from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS
 from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
+from test.rtg import randomTradeGenerator2
 
 # pylint: disable = C0103
 
@@ -181,11 +182,46 @@ class Test_Pandasutility(unittest.TestCase):
             if count == 31:
                 exit()
 
-    def test_addDateField(self):
+    def test_addDateFieldx(self):
         '''
-        This is a test stub
+        Test the method writeShareBalance. Send some randomly generated trades side and qty and
+        test the share balance that returns. Sort both and compare the results using the place
+        index iloc
         '''
-        self.assertTrue(1 == 0, 'Write this test')
+        NUMTRADES = 4
+        start = pd.Timestamp('2018-06-06 09:30:00')
+        df = pd.DataFrame()
+        exclude = []
+        for i in range(NUMTRADES):
+            tdf, start = randomTradeGenerator2(i+1, earliest=start,
+                                               pdbool=True, exclude=exclude)
+            df = df.append(tdf)
+            exclude.append(tdf.Symb.unique()[0])
+
+        df.reset_index(drop=True, inplace=True)
+        rc=ReqCol()
+
+        df2 = df [['Time', 'Symb', 'Side', 'Qty', 'Account', 'P / L']].copy()
+        idf = InputDataFrame()
+        df2 = idf.addDateField(df2, start)
+
+        for i in range(len(df2)):
+            rprev=rnext=''
+            row = df2.iloc[i]
+            rprev = df2.iloc[i-1] if i != 0 else ''
+            rnext = df2.iloc[i+1] if i < (len(df2)-1) else ''
+            daydelt = pd.Timedelta(days=1)
+            # print(row.Side, type(rprev), type(rnext))
+            rt = pd.Timestamp(row.Time)
+            rd = pd.Timestamp(row.Date)
+            assert rt.time() == rd.time()
+
+            if row.Side == 'HOLD-B' or row.Side == 'HOLD+B':
+                assert row.Date.date() == rnext.Date.date() - daydelt
+            if row.Side == 'HOLD-' or row.Side == 'HOLD+':
+                assert row.Date.date() == rprev.Date.date() + daydelt
+
+        return df2
 
 
 def main():
@@ -210,6 +246,7 @@ def notmain():
     # t.walkit()
     # t.test_MkShortNegative()
     # t.testGetOvernightTrades()
+    t.test_addDateFieldx()
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testCheckRequiredColumns']

@@ -75,9 +75,13 @@ class InputDataFrame(object):
                 theDate = pd.Timestamp(theDate)
             else:
                 theDate = pd.Timestamp.today()
+            trades['Date'] = theDate
 
-            trades['Date'] = theDate.strftime("%Y-%m-%d ") + trades['Time']
-        else:
+            for i, row in trades.iterrows():
+                dd = row.Date
+                tt = row.Time
+                dadate = pd.Timestamp(dd.year, dd.month, dd.day, tt.hour, tt.minute, tt.second)
+                trades.at[i, 'Date'] = dadate
             # We need to make up a date for Hold rows. Before holds were assigned an early AM time
             # and after holds a late PM time. The times were assigned for sorting. Before holds
             # will be given a date before a second trade date identified because they have been
@@ -86,45 +90,45 @@ class InputDataFrame(object):
             # actual trade from this input file but we will assert that fact in order to find
             # unaccountable weirdnesses.
 
-            for i, row in trades.iterrows():
-                if row[c.side].lower().startswith('hold'):
+        for i, row in trades.iterrows():
+            if row[c.side].lower().startswith('hold'):
 
-                    # Currently c.time a time string with no date. Compare early and late times
-                    datime = row[c.time]
-                    d = pd.Timestamp(datime)
+                # Currently c.time a time string with no date. Compare early and late times
+                datime = row[c.time]
+                d = pd.Timestamp(datime)
 
-                    early = pd.Timestamp(d.year, d.month, d.day, 3, 0, 0)
-                    late = pd.Timestamp(d.year, d.month, d.day, 10, 59, 0)
-                    delt = pd.Timedelta(days=1)
-                    if d < early:
-                        assert row[c.side] in ['HOLD+B', 'HOLD-B']
-                        assert len(trades) > i + 1
-                        assert trades.at[i,
-                                         c.ticker] == trades.at[i+1, c.ticker]
+                early = pd.Timestamp(d.year, d.month, d.day, 3, 0, 0)
+                late = pd.Timestamp(d.year, d.month, d.day, 10, 59, 0)
+                delt = pd.Timedelta(days=1)
+                if d < early:
+                    assert row[c.side] in ['HOLD+B', 'HOLD-B']
+                    assert len(trades) > i + 1
+                    assert trades.at[i,
+                                        c.ticker] == trades.at[i+1, c.ticker]
 
-                        # Create the made up date- the day before the first tx from this input for
-                        # this trade.
-                        tradeday = trades.at[i+1, c.date]
-                        tradeday = pd.Timestamp(tradeday)
-                        holdday = tradeday-delt
-                        holdtime = pd.Timestamp(
-                            holdday.year, holdday.month, holdday.day,  d.hour, d.minute, d.second)
-                        trades.at[i, 'Date'] = holdtime
+                    # Create the made up date- the day before the first tx from this input for
+                    # this trade.
+                    tradeday = trades.at[i+1, c.date]
+                    tradeday = pd.Timestamp(tradeday)
+                    holdday = tradeday-delt
+                    holdtime = pd.Timestamp(
+                        holdday.year, holdday.month, holdday.day,  d.hour, d.minute, d.second)
+                    trades.at[i, 'Date'] = holdtime
 
-                    elif d > late:
-                        assert row[c.side] in ['HOLD+', 'HOLD-']
-                        assert i > 0
-                        assert trades.at[i,
-                                         c.ticker] == trades.at[i-1, c.ticker]
+                elif d > late:
+                    assert row[c.side] in ['HOLD+', 'HOLD-']
+                    assert i > 0
+                    assert trades.at[i,
+                                        c.ticker] == trades.at[i-1, c.ticker]
 
-                        tradeday = trades.at[i-1, c.date]
-                        tradeday = pd.Timestamp(tradeday)
+                    tradeday = trades.at[i-1, c.date]
+                    tradeday = pd.Timestamp(tradeday)
 
-                        holdtime = tradeday + delt
-                        holdtime = pd.Timestamp(
-                            holdtime.year, holdtime.month, holdtime.day, d.hour, d.minute, d.second)
-                        # holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
-                        trades.at[i, c.date] = holdtime
+                    holdtime = tradeday + delt
+                    holdtime = pd.Timestamp(
+                        holdtime.year, holdtime.month, holdtime.day, d.hour, d.minute, d.second)
+                    # holdtime = holdtime.strftime('%Y-%m-%d %H:%M:%S')
+                    trades.at[i, c.date] = holdtime
 
         return trades
 
