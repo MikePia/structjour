@@ -38,6 +38,21 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <item>
+        <property name="text">
+         <string>1 SQ Long</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2 AAPL Long Overnight</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3 BPTH Short Flipped</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item row="3" column="2">
@@ -2006,8 +2021,26 @@ p, li { white-space: pre-wrap; }
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionFileSettings"/>
+    <addaction name="actionChart_Settings"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionFileSettings">
+   <property name="text">
+    <string>File Settings</string>
+   </property>
+  </action>
+  <action name="actionChart_Settings">
+   <property name="text">
+    <string>Chart Settings</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
