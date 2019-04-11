@@ -6,12 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>853</width>
-    <height>386</height>
+    <width>863</width>
+    <height>427</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>File Settings</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../images/ZSLogo.png</normaloff>../../images/ZSLogo.png</iconset>
   </property>
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
@@ -23,14 +27,14 @@
     </rect>
    </property>
    <property name="text">
-    <string>Commit All</string>
+    <string>OK</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="theDateCbox">
    <property name="geometry">
     <rect>
      <x>630</x>
-     <y>320</y>
+     <y>360</y>
      <width>201</width>
      <height>20</height>
     </rect>
@@ -42,13 +46,13 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>31</x>
      <y>41</y>
      <width>574</width>
-     <height>315</height>
+     <height>346</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -70,7 +74,7 @@
          </size>
         </property>
         <property name="text">
-         <string>C:/traders/journal</string>
+         <string>C:/traders/journal/</string>
         </property>
        </widget>
       </item>
@@ -174,14 +178,17 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
-       <widget class="QLabel" name="ibInfileLbl">
+       <widget class="QPushButton" name="ibInfileBtn">
         <property name="text">
-         <string>Default IB Activity Statement</string>
+         <string>IB Activity Statement</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLineEdit" name="ibInfile">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h3 style=&quot; margin-top:14px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:large; font-weight:600;&quot;&gt;Using the (simplified) globular {*}&lt;/span&gt;&lt;/h3&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Use the &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;{*}&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; to replace any characters.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Activity{*}.html&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; will match &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;ActivityStatementU1234567.html&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Activity{*}0904{*}.html&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; would match &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;ActivityStatement.20190904.html&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;{*}.html&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; will show all files ending in html&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Press enter to see the results. Press again to return to your glob.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Activity{*}.html</string>
         </property>
@@ -192,9 +199,9 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
-       <widget class="QLabel" name="outdirLbl">
+       <widget class="QPushButton" name="outdirBtn">
         <property name="text">
-         <string>Default out directory</string>
+         <string>Default outdir</string>
         </property>
        </widget>
       </item>
@@ -206,12 +213,22 @@
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Leave blank if you would like the outdir to be the same as the indir. Othersiwe this will be a subdirectory of the indir. Press enter to see the results below. If its red, it does not yet exist. It will be created when there is a file to save to it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>out/</string>
         </property>
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="outdirLbl">
+      <property name="text">
+       <string>out/</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QLabel" name="explainDateLbl">

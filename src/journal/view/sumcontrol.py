@@ -9,8 +9,9 @@ Created on April 8, 2019
 
 from fractions import Fraction
 import os
+import re
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
 from PyQt5.QtCore import QSettings, QDate
 from PyQt5.QtGui import QFont
 
@@ -21,12 +22,13 @@ from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 
 # pylint: disable = C0103
 
-class SumControl:
+class FilesettingsControl:
     '''
     A control class for summaryform which is created  maintained by Qt designer
-    :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile]
+    :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir]
     ''' 
     def __init__(self, ui):
+        
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
         now = None
@@ -46,8 +48,6 @@ class SumControl:
 
 
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
 
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
@@ -66,6 +66,8 @@ class SumControl:
         ui.scheme.setText(self.settings.value('scheme'))
         ui.dasInfile.setText(self.settings.value('dasInfile'))
         ui.dasInfile2.setText(self.settings.value('dasInfile2'))
+        ui.ibInfile.setText(self.settings.value('ibInfile'))
+        ui.outdir.setText(self.settings.value('outdir'))
         print(self.settings.value('theDate'))
         state = self.settings.value('setToday')
         state = True if state == "true" else False
@@ -89,6 +91,11 @@ class SumControl:
         ui.dasInfile2.returnPressed.connect(self.setDASInfile2)
         ui.dasInfile2Btn.pressed.connect(self.setDASInfile2Name)
 
+        ui.ibInfile.returnPressed.connect(self.setIBInfile)
+        ui.ibInfileBtn.pressed.connect(self.setIBInfileName)
+
+        ui.outdir.returnPressed.connect(self.setOutdir)
+
         ui.theDateCbox.clicked.connect(self.setTodayBool)
         ui.theDateBtn.pressed.connect(self.setToday)
         ui.theDate.dateChanged.connect(self.setDate)
@@ -96,11 +103,16 @@ class SumControl:
         w.exec()
 
     def setDate(self, daDate):
-        print(daDate)
+        '''
+        Stores the setting daDate to settings. This is called when
+        the date widget changes its date
+        '''
         self.settings.setValue('theDate', daDate)
-        print(self.settings.value('theDate'))
 
     def setToday(self):
+        '''
+        Sets the date to today and stores the value in settings
+        '''
         now = pd.Timestamp.today().date()
         if now.weekday() > 4:
             now = now - pd.Timedelta(days=now.weekday()-4)
@@ -110,10 +122,26 @@ class SumControl:
 
 
     def setTodayBool(self, val):
+        '''
+        Stores the radio checkbox setting to set the date to today on opening the program
+        '''
         print(val)
         assert isinstance(val, bool)
         # val = True if val =="true" else False
         self.settings.setValue('setToday', val)
+
+    def setOutdir(self):
+        outdir = self.openDirDlg.outdir.text()
+        outdir = '' if not outdir else outdir
+        self.settings.setValue('outdir', outdir)
+        outdir = os.path.join(self.getDirectory(), self.openDirDlg.outdir.text())
+        # tip = f"<html><head/><body><p><b>{outdir}</b></p></body></html>"
+        # self.openDirDlg.outdir.setToolTip(tip)
+        self.openDirDlg.outdirLbl.setText(outdir)
+        if os.path.exists(outdir):
+            self.openDirDlg.outdirLbl.setStyleSheet("color: green;")
+        else:
+            self.openDirDlg.outdirLbl.setStyleSheet("color: red;")
 
 
     def getDirectory(self):
@@ -136,6 +164,58 @@ class SumControl:
         inpath = os.path.join(journal, schemeFmt)
         return inpath
 
+    def setIBInfileName(self):
+        '''Set the default value for ibInfile'''
+        defValue = 'Activity{*}.html'
+        self.settings.setValue('ibInfile', defValue)
+        self.openDirDlg.ibInfile.setText(defValue)
+        self.openDirDlg.ibInfile.setStyleSheet("color: black;")
+
+
+    def setIBInfile(self):
+        sedit = self.openDirDlg.ibInfile.text()
+        sglob = os.path.split(sedit)[1]
+        if sglob and sedit and sedit == sglob:
+            self.settings.setValue('ibInfile', sglob)
+        elif sglob and sedit and len(sedit) > len(sglob):
+            sset = self.settings.value('ibInfile')
+            if sset:
+                self.openDirDlg.ibInfile.setText(sset)
+                return
+        rgx = re.sub('{\*}', '.*', sglob)
+        d = self.getDirectory()
+    
+        fs = list()
+        for f in os.listdir(d):
+            x = re.search((rgx), f)
+            if x:
+                fs.append(x.string)
+        fname = ''
+        if len(fs) > 1:
+            msg = '<h3>You have matched multiple files:</h3><ul> '
+            for name in fs:
+                msg = msg + '<li>' + name + '</li>'
+            msg = msg + '</ul><p>Displaying the first</p>'
+            msgbx = QMessageBox()
+            msgbx.setText(msg)
+            msgbx.exec()
+            fname = fs[0]
+
+        elif len(fs) == 1:
+            fname = fs[0]
+        else:
+            fname = sglob
+        fname = os.path.join(d, fname)
+        if not os.path.exists(fname):
+            self.openDirDlg.ibInfile.setStyleSheet("color: red;")
+        else:
+            self.openDirDlg.ibInfile.setStyleSheet("color: green;")
+        self.openDirDlg.ibInfile.setText(fname)
+        self.settings.setValue('ibInfile', sglob)
+
+        
+
+
     def setDASInfile2Name(self):
         fname = self.settings.value('dasInfile2')
         self.openDirDlg.dasInfile2.setText(fname)
@@ -156,7 +236,6 @@ class SumControl:
         else:
             self.openDirDlg.dasInfile2.setStyleSheet("color: green;")
         self.openDirDlg.dasInfile2.setText(inpathfile)
-
 
 
     def setDASInfileName(self):
@@ -212,6 +291,7 @@ class SumControl:
             self.openDirDlg.scheme.setStyleSheet("color: black;")
         except KeyError:
             self.openDirDlg.scheme.setStyleSheet("color: red;")
+            schemeFmt = scheme
             
         self.openDirDlg.schemeLbl.setText(schemeFmt)
         self.openDirDlg.scheme.setText(scheme)
@@ -330,11 +410,13 @@ class SumControl:
 
 
 if __name__ == '__main__':
+    ddiirr = os.path.dirname(__file__)
+    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     w = QMainWindow()
     formUi = Ui_MainWindow()
     formUi.setupUi(w)
-    sc = SumControl(formUi)
+    sc = FilesettingsControl(formUi)
     w.show()
     sys.exit(app.exec_())
     
