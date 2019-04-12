@@ -17,7 +17,7 @@
    <iconset>
     <normaloff>../../images/ZSLogo.png</normaloff>../../images/ZSLogo.png</iconset>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="okBtn">
    <property name="geometry">
     <rect>
      <x>670</x>
@@ -25,6 +25,9 @@
      <width>93</width>
      <height>28</height>
     </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
    </property>
    <property name="text">
     <string>OK</string>
@@ -38,6 +41,9 @@
      <width>201</width>
      <height>20</height>
     </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="text">
     <string>Set today when program opens.</string>
@@ -60,6 +66,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QPushButton" name="journalBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>Journal Directory</string>
         </property>
@@ -91,6 +100,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QPushButton" name="schemeBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>Set Default</string>
         </property>
@@ -125,6 +137,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QPushButton" name="dasInfileBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click this button to return the edit box to just the file name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -155,6 +170,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
        <widget class="QPushButton" name="dasInfile2Btn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>DAS positions export</string>
         </property>
@@ -179,6 +197,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
        <widget class="QPushButton" name="ibInfileBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>IB Activity Statement</string>
         </property>
@@ -200,6 +221,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
        <widget class="QPushButton" name="outdirBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>Default outdir</string>
         </property>
@@ -241,6 +265,9 @@
      <layout class="QHBoxLayout" name="horizontalLayout_7">
       <item>
        <widget class="QPushButton" name="theDateBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
          <string>Set to Today</string>
         </property>

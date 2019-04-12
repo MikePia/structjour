@@ -28,7 +28,7 @@
       <enum>QLayout::SetMaximumSize</enum>
      </property>
      <item row="1" column="1" colspan="2">
-      <widget class="QLineEdit" name="inFileEdit"/>
+      <widget class="QLineEdit" name="infileEdit"/>
      </item>
      <item row="3" column="0" colspan="2">
       <widget class="QComboBox" name="comboBox">
@@ -96,26 +96,14 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QRadioButton" name="chart1Min">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QCheckBox" name="chart1Min">
        <property name="text">
         <string>1 Minute</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="chart5Min">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QCheckBox" name="chart5Min">
        <property name="text">
         <string>5 Minute</string>
        </property>
@@ -134,26 +122,14 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QRadioButton" name="chart15Min">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QCheckBox" name="chart15Min">
        <property name="text">
         <string>15 Minute</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="chart60Min">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+      <widget class="QCheckBox" name="chart60Min">
        <property name="text">
         <string>60 Minute</string>
        </property>
@@ -2011,6 +1987,44 @@ p, li { white-space: pre-wrap; }
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
+   <widget class="QWidget" name="layoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>930</x>
+      <y>10</y>
+      <width>97</width>
+      <height>49</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QRadioButton" name="dasImport">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>DAS import</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="ibImport">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>IB import</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -2034,6 +2048,9 @@ p, li { white-space: pre-wrap; }
   <action name="actionFileSettings">
    <property name="text">
     <string>File Settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionChart_Settings">
