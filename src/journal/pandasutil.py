@@ -244,11 +244,11 @@ class InputDataFrame(object):
         :TODO: getPositions should be a virtual method--not sure how to implement it best
         This aint java. For now just kludge solidly.
         '''
-        if jf and jf.inputType == JournalFiles.InputType['das'] and jf.inpathfile2:
+        if jf and jf.inputType == JournalFiles.inputType['das'] and jf.inpathfile2:
             st = Statement_DAS(jf)
             df = st.getPositions()
             return df
-        elif jf and jf.inputType == JournalFiles.InputType['ib']:
+        elif jf and jf.inputType == JournalFiles.inputType['ib']:
             st = Statement_IBActivity(jf)
             df = st.getPositions()
             return df

@@ -17,7 +17,7 @@ class JournalFiles:
     files to read and write.
     '''
 
-    InputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS'}
+    inputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS'}
 
     # As the console version has no plan for release, not to worry too much about configuration
     def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS',
@@ -58,7 +58,7 @@ class JournalFiles:
         else:
             theDate = dt.date.today()
 
-        assert inputType in JournalFiles.InputType.values()
+        assert inputType in JournalFiles.inputType.values()
         self.inputType = inputType
         self.theDate = theDate
         self.monthformat = "_%Y%m_%B"
