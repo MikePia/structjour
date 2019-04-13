@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>863</width>
-    <height>427</height>
+    <width>745</width>
+    <height>419</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
   <widget class="QPushButton" name="okBtn">
    <property name="geometry">
     <rect>
-     <x>670</x>
+     <x>520</x>
      <y>40</y>
      <width>93</width>
      <height>28</height>
@@ -36,7 +36,7 @@
   <widget class="QCheckBox" name="theDateCbox">
    <property name="geometry">
     <rect>
-     <x>630</x>
+     <x>520</x>
      <y>360</y>
      <width>201</width>
      <height>20</height>
@@ -52,16 +52,16 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>31</x>
-     <y>41</y>
-     <width>574</width>
-     <height>346</height>
+     <x>30</x>
+     <y>42</y>
+     <width>458</width>
+     <height>344</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
@@ -220,14 +220,22 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
-       <widget class="QPushButton" name="outdirBtn">
-        <property name="focusPolicy">
-         <enum>Qt::NoFocus</enum>
-        </property>
-        <property name="text">
-         <string>Default outdir</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QRadioButton" name="outdirDefault">
+          <property name="text">
+           <string>Default</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="outdirStatic">
+          <property name="text">
+           <string>Static</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QLineEdit" name="outdir">
@@ -246,13 +254,6 @@
        </widget>
       </item>
      </layout>
-    </item>
-    <item>
-     <widget class="QLabel" name="outdirLbl">
-      <property name="text">
-       <string>out/</string>
-      </property>
-     </widget>
     </item>
     <item>
      <widget class="QLabel" name="explainDateLbl">

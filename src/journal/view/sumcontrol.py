@@ -12,7 +12,7 @@ import os
 import re
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
-from PyQt5.QtCore import QSettings, QDate
+from PyQt5.QtCore import QSettings, QDate, Qt
 from PyQt5.QtGui import QFont
 
 import pandas as pd
@@ -27,8 +27,8 @@ class SumControl:
     A control class for summaryform and its dialogs which are created  maintained by Qt designer.
     The front end object is the ui (self.ui) parameter for SumControl. The file settings dialog
     (fui) is set up in FileSetDlg.
-    :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir, 
-                     'interval']
+    :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile', 'dasInfile2',
+                     'ibInfile', outdir, 'interval', inputType]
     ''' 
     def __init__(self, ui):
         '''
@@ -63,20 +63,20 @@ class SumControl:
         #Create connections for widgets on this form
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
-        self.ui.dateEdit.editingFinished.connect(self.setDate)
+        self.ui.dateEdit.editingFinished.connect(self.setFormDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
+        self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.chart1Min.clicked.connect(self.setCharts1)
         self.ui.chart5Min.clicked.connect(self.setCharts5)
         self.ui.chart15Min.clicked.connect(self.setCharts15)
         self.ui.chart60Min.clicked.connect(self.setCharts60)
 
-        self.ui.ibImport.clicked.connect(self.ibDefault)
         
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
 
         # Set the file related widgets
         self.ui.dateEdit.setDate(self.settings.value('theDate'))
-        self.setDate()
+        self.setFormDate()
         # self.ui.infileEdit.setText(self.getInfile())
 
         # These are trade related widgets and won't remain here. These are callback handlers from
@@ -102,9 +102,6 @@ class SumControl:
 
     def setCharts60(self, b):
         self.setCharts((self.ui.chart60Min, b))
-
-
-
 
     def setCharts(self, val):
         print('This is val', val)
@@ -135,10 +132,6 @@ class SumControl:
             interval.append(w.text().split()[0])
         self.settings.setValue('interval', interval)
 
-
-
-
-
     def dasDefault(self, b):
         print('DAS', b)
         self.settings.setValue('inputType', 'DAS')
@@ -150,7 +143,7 @@ class SumControl:
         self.settings.setValue('inputType', 'IB_HTML')
         self.setDate()
 
-    def setDate(self):
+    def setFormDate(self):
         '''
         Callback when dataEdit is changed. Gather the settings and locate whate input files exist.
         Enable/disable radio buttons to choose IB or DAS. Load up the filename in the lineEdit.
@@ -215,10 +208,6 @@ class SumControl:
             self.ui.dasImport.setEnabled(True)
         else:
             self.ui.dasImport.setEnabled(False)
-
-        
-
-
 
     def getInfile(self):
         #TODO Need a choosing mechanism for DAS or IB
@@ -332,9 +321,6 @@ class SumControl:
         inpath = os.path.join(journal, schemeFmt)
         return inpath
 
-
-
-
     #=================================================================
     #==================== File setting dialog  methods ===============
     #=================================================================
@@ -356,8 +342,12 @@ class SumControl:
         fui.dasInfile.setText(self.settings.value('dasInfile'))
         fui.dasInfile2.setText(self.settings.value('dasInfile2'))
         fui.ibInfile.setText(self.settings.value('ibInfile'))
+
+        if self.settings.value('outdirPolicy') == 'static':
+            self.fui.outdirStatic.setChecked(True)
+        else:
+            self.fui.outdirDefault.setChecked(True)
         fui.outdir.setText(self.settings.value('outdir'))
-        print(self.settings.value('theDate'))
         state = self.settings.value('setToday')
         state = True if state == "true" else False
         fui.theDateCbox.setChecked(state)
@@ -382,11 +372,13 @@ class SumControl:
         fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
         fui.ibInfile.returnPressed.connect(self.setIBInfile)
 
+        fui.outdirDefault.clicked.connect(self.setOutdir) 
+        fui.outdirStatic.clicked.connect(self.setOutdir)
         fui.outdir.returnPressed.connect(self.setOutdir)
 
         fui.theDateCbox.clicked.connect(self.setTodayBool)
         fui.theDateBtn.pressed.connect(self.setToday)
-        fui.theDate.dateChanged.connect(self.setDate)
+        fui.theDate.dateChanged.connect(self.setDialogDate)
 
         fui.okBtn.pressed.connect(self.closeit)
 
@@ -395,6 +387,16 @@ class SumControl:
 
     def closeit(self):
         self.w.close()
+
+    def setDialogDate(self, val):
+        print(val)
+        self.settings.setValue('theDate', val)
+        self.setJournalDir()
+        self.setTheScheme(self.settings.value('scheme'))
+        self.setDASInfile()
+        self.setDASInfile2()
+        self.setIBInfile()
+        self.setOutdir()
 
 
     def setToday(self):
@@ -409,7 +411,6 @@ class SumControl:
         self.settings.setValue('theDate', now)
         self.fui.theDate.setDate(now)
 
-
     def setTodayBool(self, val):
         '''
         Stores the radio checkbox setting to set the date to today on opening the program
@@ -419,24 +420,36 @@ class SumControl:
         # val = True if val =="true" else False
         self.settings.setValue('setToday', val)
 
+    def setOutdirDefault(self):
+        indir = self.getDirectory()
+        odd = os.path.join(indir, 'out/')
+        self.fui.outdir.setText(odd)
+        self.settings.setValue('outdir', odd)
+        self.fui.outdir.setFocusPolicy(Qt.NoFocus)
+
     def setOutdir(self):
         '''
         Call only when file settings dialog (self.fui) is active.
         '''
-        outdir = self.fui.outdir.text()
-        outdir = '' if not outdir else outdir
-        self.settings.setValue('outdir', outdir)
-        outdir = os.path.join(self.getDirectory(), self.fui.outdir.text())
-        # tip = f"<html><head/><body><p><b>{outdir}</b></p></body></html>"
-        # self.fui.outdir.setToolTip(tip)
-        self.fui.outdirLbl.setText(outdir)
-        if os.path.exists(outdir):
-            self.fui.outdirLbl.setStyleSheet("color: green;")
+        outdir = self.fui.outdir.text() 
+        outpathfile = ''
+        if self.fui.outdirStatic.isChecked():
+            self.settings.setValue('outdirPolicy', 'static')
+            outpathfile = self.fui.outdir.text()
+            self.settings.setValue('outdir', outpathfile)
+            self.fui.outdir.setFocusPolicy(Qt.TabFocus)
         else:
-            self.fui.outdirLbl.setStyleSheet("color: red;")
+            self.settings.setValue('outdirPolicy', 'default')
 
+            outpathfile = os.path.join(self.getDirectory(), 'out')
+            self.settings.setValue('outdir', outpathfile)
+            self.fui.outdir.setText(outpathfile)
+            self.fui.outdir.setFocusPolicy(Qt.NoFocus)
 
-    
+        if os.path.exists(outpathfile):
+            self.fui.outdir.setStyleSheet("color: green;")
+        else:
+            self.fui.outdir.setStyleSheet("color: red;")
 
     def setIBInfileName(self):
         '''
@@ -447,7 +460,6 @@ class SumControl:
         self.settings.setValue('ibInfile', defValue)
         self.fui.ibInfile.setText(defValue)
         self.fui.ibInfile.setStyleSheet("color: black;")
-
 
     def setIBInfile(self):
         '''
@@ -465,6 +477,9 @@ class SumControl:
         rgx = re.sub('{\*}', '.*', sglob)
         d = self.getDirectory()
     
+        # What should turn red here????
+        if not os.path.exists(d):
+            return
         fs = list()
         for f in os.listdir(d):
             x = re.search((rgx), f)
@@ -493,9 +508,6 @@ class SumControl:
         self.fui.ibInfile.setText(fname)
         self.settings.setValue('ibInfile', sglob)
 
-        
-
-
     def setDASInfile2Name(self):
         '''
         Call only when file settings dialog (self.fui) is active.
@@ -523,7 +535,6 @@ class SumControl:
             self.fui.dasInfile2.setStyleSheet("color: green;")
         self.fui.dasInfile2.setText(inpathfile)
 
-
     def setDASInfileName(self):
         '''
         Call only when file settings dialog (self.fui) is active.
@@ -532,8 +543,6 @@ class SumControl:
         self.fui.dasInfile.setText(fname)
         self.fui.dasInfile.setStyleSheet("color: black;")
         
-
-
     def setDASInfile(self):
         '''
         Call only when file settings dialog (self.fui) is active.
@@ -566,14 +575,13 @@ class SumControl:
             self.fui.dasInfile.setStyleSheet("color: green;")
         self.fui.dasInfile.setText(inpathfile)
         
-
-
     def setTheScheme(self, scheme):
         '''
         Button, LineEdit and Label used to set and display a directory naming scheme.
         Call only when file settings dialog (self.fui) is active.
         '''
-        ddate = pd.Timestamp('2019-01-15')
+        d = self.settings.value('theDate')
+        ddate = pd.Timestamp(d.year(), d.month(), d.day())
         Year = ddate.year
         month = ddate.strftime('%m')
         MONTH = ddate.strftime('%B')
@@ -621,7 +629,7 @@ class SumControl:
         if not os.path.exists(path):
             self.fui.journal.setStyleSheet("color: red;")
         else:
-            self.fui.journal.setStyleSheet("color: black;")
+            self.fui.journal.setStyleSheet("color: green;")
             self.settings.setValue('journal', path)
 
     #=================================================================
