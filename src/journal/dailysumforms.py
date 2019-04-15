@@ -11,6 +11,7 @@ from journal.thetradeobject import SumReqFields
 
 class MistakeSummary:
     '''
+    An Excel Form. Coordinates are excel coordinates with a translation anchor.
     This class will handle the named styles, location, headers and excel formulas. All of the data
     in the form is either header or formula. The user class is responsible for the cell translation
     coordinates in the formulas.

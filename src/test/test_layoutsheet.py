@@ -139,7 +139,7 @@ class TestLayoutSheet(TestCase):
             margin = 25
             spacing = 3
             ls = LayoutSheet(margin, inputlen, spacing=spacing)
-            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            imageLocation, dframe = ls.imageData(dframe, ldf)
 
 
             for count, t in enumerate(imageLocation):
@@ -341,7 +341,7 @@ class TestLayoutSheet(TestCase):
             # Create the space in dframe to add the summary information for each trade.
             # Then create the Workbook.
             ls = LayoutSheet(margin, inputlen)
-            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            imageLocation, dframe = ls.imageData(dframe, ldf)
             wb, ws, dummy = ls.createWorkbook(dframe)
 
             tf = TradeFormat(wb)
@@ -462,7 +462,7 @@ class TestLayoutSheet(TestCase):
             # Create the space in dframe to add the summary information for each trade.
             # Then create the Workbook.
             ls = LayoutSheet(margin, inputlen)
-            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            imageLocation, dframe = ls.imageData(dframe, ldf)
             wb, ws, dummy = ls.createWorkbook(dframe)
 
             tf = TradeFormat(wb)
@@ -589,7 +589,7 @@ class TestLayoutSheet(TestCase):
             # Create the space in dframe to add the summary information for each trade.
             # Then create the Workbook.
             ls = LayoutSheet(margin, inputlen)
-            imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+            imageLocation, dframe = ls.imageData(dframe, ldf)
             wb, ws, dummy = ls.createWorkbook(dframe)
 
             tf = TradeFormat(wb)

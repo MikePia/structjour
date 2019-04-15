@@ -67,7 +67,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
     # Create the space in dframe to add the summary information for each trade.
     # Then create the Workbook.
     ls = LayoutSheet(margin, inputlen)
-    imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+    imageLocation, dframe = ls.imageData(dframe, ldf)
     wb, ws, nt = ls.createWorkbook(dframe)
 
     tf = TradeFormat(wb)
@@ -94,7 +94,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
 
 if __name__ == '__main__':
-    theD = '2019-01-25'
+    theD = '2019-04-12'
     # inf = 'trades.1116_messedUpTradeSummary10.csv'
     # inf = 'ActivityStatement.20190321.html'
     outd = 'out/'

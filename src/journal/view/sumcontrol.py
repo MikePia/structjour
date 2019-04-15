@@ -11,7 +11,7 @@ from fractions import Fraction
 import os
 import re
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import QSettings, QDate, Qt
 from PyQt5.QtGui import QFont
 
@@ -22,19 +22,24 @@ from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 
 # pylint: disable = C0103
 
-class SumControl:
+class SumControl(QMainWindow):
     '''
     A control class for summaryform and its dialogs which are created  maintained by Qt designer.
     The front end object is the ui (self.ui) parameter for SumControl. The file settings dialog
     (fui) is set up in FileSetDlg.
     :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile', 'dasInfile2',
-                     'ibInfile', outdir, 'interval', inputType]
+                     'ibInfile', ibInfileName', outdir, 'interval', inputType]
     ''' 
-    def __init__(self, ui):
+    def __init__(self):
         '''
         Retrieve and load settings, and  create action signals for the SumControl Form.
         :params ui: The QT designer object created from summaryform.ui
         '''
+        super().__init__()
+
+
+        ui = Ui_MainWindow()
+        ui.setupUi(self)
         
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
@@ -63,7 +68,7 @@ class SumControl:
         #Create connections for widgets on this form
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
-        self.ui.dateEdit.editingFinished.connect(self.setFormDate)
+        self.ui.dateEdit.dateChanged.connect(self.setFormDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.chart1Min.clicked.connect(self.setCharts1)
@@ -135,13 +140,13 @@ class SumControl:
     def dasDefault(self, b):
         print('DAS', b)
         self.settings.setValue('inputType', 'DAS')
-        self.setDate()
+        self.setFormDate()
 
 
     def ibDefault(self, b):
         print('ib', b)
         self.settings.setValue('inputType', 'IB_HTML')
-        self.setDate()
+        self.setFormDate()
 
     def setFormDate(self):
         '''
@@ -176,6 +181,8 @@ class SumControl:
             if fs:
                 ibinfile = fs[0]
 
+        self.settings.setValue('ibInfileName', ibinfile)
+
         dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
         ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
 
@@ -187,11 +194,11 @@ class SumControl:
             elif inputtype == 'IB_HTML':
                 infile = ibinfile
 
-        if not infile:
-            if ibinfile and not dasinfile:
-                infile = ibinfile
-            else:
-                infile = dasinfile
+        # if not infile:
+        #     if ibinfile and not dasinfile:
+        #         infile = ibinfile
+        #     else:
+        #         infile = dasinfile
                 
         self.ui.infileEdit.setText(infile)
         if os.path.exists(infile):
@@ -200,14 +207,14 @@ class SumControl:
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
 
-        if ibinfile and os.path.exists(ibinfile):
-            self.ui.ibImport.setEnabled(True)
-        else:
-            self.ui.ibImport.setEnabled(False)
-        if dasinfile and os.path.exists(dasinfile):
-            self.ui.dasImport.setEnabled(True)
-        else:
-            self.ui.dasImport.setEnabled(False)
+        # if ibinfile and os.path.exists(ibinfile):
+        #     self.ui.ibImport.setEnabled(True)
+        # else:
+        #     self.ui.ibImport.setEnabled(False)
+        # if dasinfile and os.path.exists(dasinfile):
+        #     self.ui.dasImport.setEnabled(True)
+        # else:
+        #     self.ui.dasImport.setEnabled(False)
 
     def getInfile(self):
         #TODO Need a choosing mechanism for DAS or IB
@@ -382,8 +389,21 @@ class SumControl:
 
         fui.okBtn.pressed.connect(self.closeit)
 
+        # self.contextMenus()
 
         w.exec()
+
+    def contextMenuEvent(self, event):
+        img = self.ui.image1
+        cmenu = QMenu(img)
+
+        newAct = cmenu.addAction("New")
+        opnAct = cmenu.addAction("Open")
+        quitAct = cmenu.addAction("Quit")
+        action = cmenu.exec_(self.mapToGlobal(event.pos()))
+
+        if action == quitAct:
+            print('just kidding')
 
     def closeit(self):
         self.w.close()
@@ -645,10 +665,7 @@ if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    w = QMainWindow()
-    formUi = Ui_MainWindow()
-    formUi.setupUi(w)
-    sc = SumControl(formUi)
+    w = SumControl()
     w.show()
     sys.exit(app.exec_())
     

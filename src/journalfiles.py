@@ -45,7 +45,7 @@ class JournalFiles:
         if theDate:
             try:
                 theDate = pd.Timestamp(theDate)
-                assert isinstance(theDate, type(dt.date.today()))
+                assert isinstance(theDate, dt.datetime)
 
             except ValueError as ex:
                 msg = f"\n\nTheDate ({theDate}) must be a valid timestamp or string.\n"

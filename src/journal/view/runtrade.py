@@ -39,7 +39,7 @@ class runController:
         if self.inputtype == 'DAS':
             inkey = 'dasInfile'
         elif self.inputtype == 'IB_HTML':
-            inkey = 'ibInfile'
+            inkey = 'ibInfileName'
         self.outdir = self.settings.value('outdir')
         qd = self.settings.value('theDate')
         self.theDate = pd.Timestamp(qd.year(), qd.month(), qd.day())
@@ -76,7 +76,7 @@ class runController:
         idf = InputDataFrame()
         trades = idf.processInputFile(df, jf.theDate, jf)
 
-        tu = DefineTrades()
+        tu = DefineTrades(self.inputtype)
         inputlen, dframe, ldf = tu.processOutputDframe(trades)
 
         # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -86,7 +86,7 @@ class runController:
         # Create the space in dframe to add the summary information for each trade.
         # Then create the Workbook.
         ls = LayoutSheet(margin, inputlen)
-        imageLocation, dframe = ls.createImageLocation(dframe, ldf)
+        imageLocation, dframe = ls.imageData(dframe, ldf)
         wb, ws, nt = ls.createWorkbook(dframe)
 
 
@@ -94,23 +94,19 @@ class runController:
         ls.styleTop(ws, len(nt.columns), tf)
         assert len(ldf) == len(imageLocation)
 
-        mstkAnchor = (len(dframe.columns) + 2, 1)
-        mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
-        mistake.mstkSumStyle(ws, tf, mstkAnchor)
-        mistake.dailySumStyle(ws, tf, mstkAnchor)
+        # mstkAnchor = (len(dframe.columns) + 2, 1)
+        # mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+        # mistake.mstkSumStyle(ws, tf, mstkAnchor)
+        # mistake.dailySumStyle(ws, tf, mstkAnchor)
 
         tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
-        # app = QApplication(sys.argv)
-        # qtf = QtForm()
-        # qtf.fillForm(tradeSummaries[1])
-        # app.exec_()
 
-        ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
-        ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
+        # ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
+        # ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
 
-        ls.save(wb, jf)
-        print("Processing complete. Saved {}".format(jf.outpathfile))
-        return jf
+        # ls.save(wb, jf)
+        # print("Processing complete. Saved {}".format(jf.outpathfile))
+        # return jf
 
 
     # wb, ws, nt = ls.createWorkbook(dframe)
@@ -124,10 +120,10 @@ if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    w = QMainWindow()
-    formUi = Ui_MainWindow()
-    formUi.setupUi(w)
-    sc = SumControl(formUi)
-    rc = runController(sc)
+    w = SumControl()
+    # formUi = Ui_MainWindow()
+    # formUi.setupUi(w)
+    # sc = SumControl(formUi)
+    rc = runController(w)
     w.show()
     sys.exit(app.exec_())

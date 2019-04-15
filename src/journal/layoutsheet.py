@@ -54,16 +54,16 @@ class LayoutSheet:
         self.spacing = spacing
         self.DSFAnchor = None
 
-    def createImageLocation(self, df, ldf, ft="png"):
+    def imageData(self, df, ldf, ft="png"):
         '''
-        Create the skeletal shape of the excel document in a DataFrame. It places a table near
-        the top,leaving space for intro stuff. Then it places small sub tables containing single
-        trades. Each trades leaves space to place the trade summary form and images. To navigate
-        this dataframe, we create the ImageLocation datastructure.
+        Gateher the image names and determine the locations in the Excel doc to place them. Excel
+        has a few things at top followed by trade summariew, charts and tables for each trade.
+        Return with the image name/location data structure. The structure can be used for the Excel
+        DataFrame-- to navigate summary form locations and just for the names
         :params df: The DataFrame representing the input file plus some stuff added in
                     processOutputFile
         :params ldf: A list of dataFrames. Each encapsulates a trade.
-        :parmas ft: Image filetype extension.
+        :parmas ft: Image filetype extension. (NOT USED)
         :return (Imagelocation, df): ImageLocation contains information about the excel document
                     locations of trade summaries and image locations. The dataFrame df is the
                     outline used to create the workbook, ImageLocation will be used to stye it
