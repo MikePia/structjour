@@ -19,6 +19,7 @@ import pandas as pd
 
 from journal.view.summaryform import Ui_MainWindow
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
+from journal.view.layoutforms import LayoutForms
 
 # pylint: disable = C0103
 
@@ -40,7 +41,8 @@ class SumControl(QMainWindow):
 
         ui = Ui_MainWindow()
         ui.setupUi(self)
-        
+
+        self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
         now = None
@@ -75,6 +77,7 @@ class SumControl(QMainWindow):
         self.ui.chart5Min.clicked.connect(self.setCharts5)
         self.ui.chart15Min.clicked.connect(self.setCharts15)
         self.ui.chart60Min.clicked.connect(self.setCharts60)
+        self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
 
         
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
@@ -95,6 +98,22 @@ class SumControl(QMainWindow):
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+    def loadLayoutForms(self, lf):
+        self.lf = lf
+
+    def loadTrade(self, val):
+        '''
+        CallBack for tradeList -- the combo box
+        Loads up the trade values when tradeList changes
+        :params val: The trade name and key for the widget collection in Layout Forms
+        :Prerequisites: loadLayoutForm must be called before the box is used
+        '''
+        if not val:
+            print('No Val')
+            return
+        print(val)
+        self.lf.populateTradeSumForms(val)
+
 
     def setCharts1(self, b):
         self.setCharts((self.ui.chart1Min, b))

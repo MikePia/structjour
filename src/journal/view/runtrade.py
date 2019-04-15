@@ -10,9 +10,9 @@ from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS as Ticket
 from journal.statement import Statement_IBActivity
 from journal.definetrades import DefineTrades
-from journal.layoutsheet import LayoutSheet
 from journal.tradestyle import TradeFormat
 from journal.dailysumforms import MistakeSummary
+from journal.view.layoutforms import LayoutForms
 
 
 
@@ -83,33 +83,10 @@ class runController:
         # images and Trade Summaries.
         margin = 25
 
-        # Create the space in dframe to add the summary information for each trade.
-        # Then create the Workbook.
-        ls = LayoutSheet(margin, inputlen)
-        imageLocation, dframe = ls.imageData(dframe, ldf)
-        wb, ws, nt = ls.createWorkbook(dframe)
+        lf = LayoutForms(self.sc)
+        imageNames = lf.imageData(ldf)
+        tradeSummaries = lf.runSummaries(imageNames, ldf)
 
-
-        tf = TradeFormat(wb)
-        ls.styleTop(ws, len(nt.columns), tf)
-        assert len(ldf) == len(imageLocation)
-
-        # mstkAnchor = (len(dframe.columns) + 2, 1)
-        # mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
-        # mistake.mstkSumStyle(ws, tf, mstkAnchor)
-        # mistake.dailySumStyle(ws, tf, mstkAnchor)
-
-        tradeSummaries = ls.runSummaries(imageLocation, ldf, jf, ws, tf)
-
-        # ls.populateMistakeForm(tradeSummaries, mistake, ws, imageLocation)
-        # ls.populateDailySummaryForm(tradeSummaries, mistake, ws, mstkAnchor)
-
-        # ls.save(wb, jf)
-        # print("Processing complete. Saved {}".format(jf.outpathfile))
-        # return jf
-
-
-    # wb, ws, nt = ls.createWorkbook(dframe)
 
 
 

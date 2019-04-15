@@ -78,7 +78,7 @@ class LayoutSheet:
         newdf = DataFrameUtil.createDf(df, self.topMargin)
 
         df = newdf.append(df, ignore_index=True)
-
+ 
         imageLocation = list()
         count = 0
         for tdf in ldf:

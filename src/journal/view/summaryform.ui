@@ -1749,7 +1749,7 @@ p, li { white-space: pre-wrap; }
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>71</x>
@@ -1783,28 +1783,13 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item row="3" column="0" colspan="2">
-          <widget class="QComboBox" name="comboBox">
+          <widget class="QComboBox" name="tradeList">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <item>
-            <property name="text">
-             <string>1 SQ Long</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>2 AAPL Long Overnight</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>3 BPTH Short Flipped</string>
-            </property>
-           </item>
           </widget>
          </item>
          <item row="3" column="2">
@@ -1947,7 +1932,7 @@ p, li { white-space: pre-wrap; }
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>74</x>
