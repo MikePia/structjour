@@ -13,7 +13,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import QSettings, QDate, Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QDoubleValidator
 
 import pandas as pd
 
@@ -45,6 +45,7 @@ class SumControl(QMainWindow):
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
+        self.settings.setValue('runType', 'QT')
         now = None
         self.fui = None
         if self.settings.value('setToday') == "true":
@@ -78,6 +79,17 @@ class SumControl(QMainWindow):
         self.ui.chart15Min.clicked.connect(self.setCharts15)
         self.ui.chart60Min.clicked.connect(self.setCharts60)
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
+        self.ui.lost.textEdited.connect(self.setMstkVal)
+        self.ui.sumNote.textChanged.connect(self.setMstkNote)
+        self.ui.explain.textChanged.connect(self.setExplain)
+        self.ui.notes.textChanged.connect(self.setNotes)
+
+        v = QDoubleValidator()
+        self.ui.lost.setValidator(v)
+        self.ui.targ.setValidator(v)
+        self.ui.stop.setValidator(v)
+
+        
 
         
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
@@ -98,6 +110,45 @@ class SumControl(QMainWindow):
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+
+    def setExplain(self):
+       key = self.ui.tradeList.currentText()
+       text = self.ui.explain.toPlainText()
+       print(text)
+       self.lf.setExplain(key, text)
+
+    def setNotes(self):
+        key = self.ui.tradeList.currentText()
+        text = self.ui.notes.toPlainText()
+        print(text)
+        self.lf.setNotes(key, text)
+
+    def setMstkVal(self, val):
+        note = self.ui.sumNote.toPlainText()
+        key = self.ui.tradeList.currentText()
+        if not val:
+            if not note:
+                self.lf.setClean(key, True)
+                self.stopLoss(self.ui.stop.text())
+            val = 0.0
+        else:
+            self.lf.setClean(key, False)
+        fval = float(val)
+        self.lf.setMstkVals(key, fval, note)
+
+
+    def setMstkNote(self):
+        val = self.ui.lost.text()
+        note = self.ui.sumNote.toPlainText()
+        key = self.ui.tradeList.currentText()
+        if not val:
+            if not note:
+                self.lf.setClean(key, True)
+                self.stopLoss(val)
+            val = '0.0'
+        fval = float(val)
+        self.lf.setMstkVals(key, fval, note)
+            
     def loadLayoutForms(self, lf):
         self.lf = lf
 
@@ -113,7 +164,6 @@ class SumControl(QMainWindow):
             return
         print(val)
         self.lf.populateTradeSumForms(val)
-
 
     def setCharts1(self, b):
         self.setCharts((self.ui.chart1Min, b))
@@ -248,19 +298,27 @@ class SumControl(QMainWindow):
 
     def diffTarget(self, val):
         '''
-        Set the targDiff to the difference between the target and the actual PL, then 
-        call rrCalc
+        Triggered when the targ value changes, set targ, tarDiff and rr. Then store vals in tto
         '''
+        # Set the targ, targDiff and rr widgets
         diff = 0
         try:
             fval = float(val)
             fpl = float(self.ui.entry1.text())
-            diff = fval-fpl
-            diff = '{:.02}'.format(diff)
+            
+            fdiff = fval-fpl
+            diff = '{:.02f}'.format(fdiff)
         except ValueError:
             diff = '0'
+            fdiff = 0.0
+            fval = 0.0
         self.ui.targDiff.setText(diff)
-        self.rrCalc(diff, self.ui.stopDiff.text())
+        rr = self.rrCalc(fdiff, self.ui.stopDiff.text())
+
+        # Store the values in the trade object
+        if self.lf:
+            key = self.ui.tradeList.currentText()
+            self.lf.setTargVals(key, fval, fdiff, rr)
 
     def stopLoss(self, val):
         '''
@@ -271,14 +329,26 @@ class SumControl(QMainWindow):
         try:
             fval = float(val)
             fpl = float(self.ui.entry1.text())
-            diff = fval-fpl
-            diff = '{:.02}'.format(diff)
-            # diff = str(fval - fpl)
+            fdiff = fval-fpl
+            diff = '{:.02f}'.format(fdiff)
         except ValueError:
             diff = '0'
+            fdiff = 0.0
+            fval = 0.0
         self.ui.stopDiff.setText(diff)
-        self.rrCalc(self.ui.targDiff.text(), diff)
-        self.setMaxLoss()
+        rr = self.rrCalc(self.ui.targDiff.text(), fdiff)
+        mxloss = self.setMaxLoss()
+
+        if self.lf:
+            key = self.ui.tradeList.currentText()
+            (lost, note, clean) = self.lf.setStopVals(key, fval, fdiff, rr, mxloss)
+            if lost or clean:
+                # Note these widgets are only set if the user has not edited either widget. This is
+                # the only place they are 'auto set'
+                lost = '{:.02f}'.format(lost)
+                self.ui.lost.setText(str(lost))
+                self.ui.sumNote.setText(note)
+
     
     def rrCalc(self, targDiff = None, slDiff = None):
         '''
@@ -305,11 +375,19 @@ class SumControl(QMainWindow):
         f = Fraction(dval).limit_denominator(max_denominator=10)
         srr = f'{f.numerator} : {f.denominator}'
         self.ui.rr.setText(srr)
+        return srr
 
     def setMaxLoss(self):
+        '''
+        Called (manually) when the stop loss is edited, calculate the max loss from the sldiff and
+        the number of shares. Not exact--the shares is the max number in the trade, not necessarily
+        the initial value. Second opens may or may not increase risk.
+        '''
+
         slDiff = self.ui.stopDiff.text()
         shares = self.ui.pos.text()
         shares = shares.split(' ')[0]
+            
 
 
         try:
@@ -317,10 +395,22 @@ class SumControl(QMainWindow):
             shares = int(shares)
         except ValueError:
             return
-        
-        val = shares * slDiff
-        val = '{:.02f}'.format(val)
+        if 'long' in self.ui.tradeList.currentText().lower():
+            assert shares > 0
+            if slDiff >= 0:
+                self.ui.maxLoss.setText('')
+                return 0.0
+        elif 'short' in self.ui.tradeList.currentText().lower():
+            assert shares < 0
+            if slDiff <= 0:
+                self.ui.maxLoss.setText('')
+                return 0.0
+
+        sval = shares * slDiff
+        val = '{:.02f}'.format(sval)
         self.ui.maxLoss.setText(val)
+
+        return sval
 
     #=================================================================
     #==================== End Main Form methods =====================

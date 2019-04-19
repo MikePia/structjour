@@ -387,6 +387,9 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.sumNote.sizePolicy().hasHeightForWidth())
         self.sumNote.setSizePolicy(sizePolicy)
         self.sumNote.setMaximumSize(QtCore.QSize(430, 16777215))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.sumNote.setFont(font)
         self.sumNote.setObjectName("sumNote")
         self.gridLayout_2.addWidget(self.sumNote, 11, 0, 1, 3)
         self.horizontalLayout_2.addLayout(self.gridLayout_2)
@@ -1209,8 +1212,8 @@ class Ui_MainWindow(object):
         self.sumNote.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">summary note</p></body></html>"))
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:12pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:7.8pt;\">summary note</span></p></body></html>"))
         self.account.setText(_translate("MainWindow", "Account"))
         self.diffHead.setText(_translate("MainWindow", "Diff"))
         self.shareHead.setText(_translate("MainWindow", "Share"))

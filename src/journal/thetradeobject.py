@@ -435,6 +435,8 @@ class TheTradeObject:
             self.__setMaxLoss()
             ret = self.__setRiskReward()
             self.__setStopLossMistake()
+        # Add a column to manage the Qt mistake stuff
+        self.TheTrade['clean'] = True
         return ret
 
     def getName(self):

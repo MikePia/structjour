@@ -449,7 +449,9 @@ class Statement_IBActivity:
             for count, (i, row) in enumerate(tdf.iterrows()):
                 PL = 0.0
                 symb, qty, price, comm,  rpl, code = list(row[['Symbol',  'Quantity', 'T. Price', 'Comm/Fee', 'Realized P/L', 'Code',]])
-                
+                code = 'O' if 'O' in code else 'C' if 'C' in code else ''
+                # this is bound to tringger-- I want to see it when it does
+                assert code
                 try:
                     qty = int(qty) if qty else 0
                     price = float(price) if price else 0.0
@@ -462,13 +464,12 @@ class Statement_IBActivity:
                     
                 comSum = comSum + comm
 
-                if tdf.iloc[0].Code == 'C':
-                    if row['Code'] == 'C':
+                if 'C' in tdf.iloc[0].Code:
+                    if 'C' in row['Code']:
                         mkt = qty * price
                         PL = rpl - comSum
 
-                if tdf.iloc[0].Code == 'O':
-
+                if 'O' in tdf.iloc[0].Code:
 
                     bal = bal + qty
                     mkt = qty * price
@@ -481,6 +482,8 @@ class Statement_IBActivity:
                     elif code == 'C':
                         PL = (avg - price) * qty
                         total = total + PL
+                else:
+                    print('hmmm what have we here?')
 
 
                 tdf.at[i, 'bal'] = bal
