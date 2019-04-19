@@ -13,7 +13,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import QSettings, QDate, Qt
-from PyQt5.QtGui import QFont, QDoubleValidator
+from PyQt5.QtGui import QFont, QDoubleValidator, QPixmap
 
 import pandas as pd
 
@@ -110,6 +110,27 @@ class SumControl(QMainWindow):
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+
+    def contextMenuEvent(self, event):
+        img = self.ui.image1
+        cmenu = QMenu(img)
+
+        pi1 = cmenu.addAction("Paste Image 1")
+        pi2 = cmenu.addAction("Past Image 2")
+        pi3 = cmenu.addAction("Paste Image 3")
+        action = cmenu.exec_(self.mapToGlobal(event.pos()))
+
+        if action == pi1:
+            fn = 'C:/python/E/structjour/src/images/psych.jpg'
+            self.ui.image1.setPixmap(QPixmap(fn))
+        
+        if action == pi2:
+            fn = 'C:/python/E/structjour/src/images/fractal-art-fractals.jpg'
+            self.ui.image2.setPixmap(QPixmap(fn))
+
+        if action == pi3:
+            fn = 'C:/python/E/structjour/src/images/van_gogh-starry-night.jpg'
+            self.ui.image3.setPixmap(QPixmap(fn))
 
     def setExplain(self):
        key = self.ui.tradeList.currentText()
@@ -502,17 +523,7 @@ class SumControl(QMainWindow):
 
         w.exec()
 
-    def contextMenuEvent(self, event):
-        img = self.ui.image1
-        cmenu = QMenu(img)
-
-        newAct = cmenu.addAction("New")
-        opnAct = cmenu.addAction("Open")
-        quitAct = cmenu.addAction("Quit")
-        action = cmenu.exec_(self.mapToGlobal(event.pos()))
-
-        if action == quitAct:
-            print('just kidding')
+    
 
     def closeit(self):
         self.w.close()

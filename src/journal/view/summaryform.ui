@@ -6,9 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1527</width>
-    <height>1138</height>
+    <width>1888</width>
+    <height>1567</height>
    </rect>
+  </property>
+  <property name="mouseTracking">
+   <bool>true</bool>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -19,7 +22,7 @@
      <rect>
       <x>70</x>
       <y>110</y>
-      <width>1200</width>
+      <width>1723</width>
       <height>673</height>
      </rect>
     </property>
@@ -1713,12 +1716,15 @@ p, li { white-space: pre-wrap; }
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="image1">
+        <widget class="ClickLabel" name="image1">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="mouseTracking">
+          <bool>true</bool>
          </property>
          <property name="acceptDrops">
           <bool>true</bool>
@@ -1730,7 +1736,7 @@ p, li { white-space: pre-wrap; }
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap>../../images/ZeroSubstanceCreation_220.png</pixmap>
+          <pixmap>../../images/ZeroSubstanceCreation.png</pixmap>
          </property>
         </widget>
        </item>
@@ -1942,8 +1948,8 @@ p, li { white-space: pre-wrap; }
      <rect>
       <x>74</x>
       <y>803</y>
-      <width>489</width>
-      <height>190</height>
+      <width>1897</width>
+      <height>670</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -1993,7 +1999,7 @@ p, li { white-space: pre-wrap; }
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap>../../images/ZeroSubstanceCreation_220.png</pixmap>
+          <pixmap>../../images/ZeroSubstanceCreation.png</pixmap>
          </property>
         </widget>
        </item>
@@ -2045,7 +2051,7 @@ p, li { white-space: pre-wrap; }
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap>../../images/ZeroSubstanceCreation_220.png</pixmap>
+          <pixmap>../../images/ZeroSubstanceCreation.png</pixmap>
          </property>
         </widget>
        </item>
@@ -2059,7 +2065,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1527</width>
+     <width>1888</width>
      <height>26</height>
     </rect>
    </property>
@@ -2087,6 +2093,13 @@ p, li { white-space: pre-wrap; }
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ClickLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">clicklabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
