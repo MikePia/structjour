@@ -132,7 +132,7 @@ class TestLayoutSheet(TestCase):
             jf = JournalFiles(indir=indir, infile=infile, mydevel=mydevel)
 
             trades, jf = Statement_DAS(jf).getTrades()
-            trades = InputDataFrame().processInputFile(trades)
+            trades, success = InputDataFrame().processInputFile(trades)
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
             # ::::::::::: end setup :::::::::::::
 
@@ -331,7 +331,7 @@ class TestLayoutSheet(TestCase):
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 
             trades, jf = Statement_DAS(jf).getTrades()
-            trades = InputDataFrame().processInputFile(trades)
+            trades, success = InputDataFrame().processInputFile(trades)
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -452,7 +452,7 @@ class TestLayoutSheet(TestCase):
             print(jf.inpathfile)
 
             trades, jf = Statement_DAS(jf).getTrades()
-            trades = InputDataFrame().processInputFile(trades)
+            trades, success = InputDataFrame().processInputFile(trades)
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -579,7 +579,7 @@ class TestLayoutSheet(TestCase):
 
 
             trades, jf = Statement_DAS(jf).getTrades()
-            trades = InputDataFrame().processInputFile(trades)
+            trades success = InputDataFrame().processInputFile(trades)
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert

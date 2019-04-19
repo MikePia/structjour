@@ -5,10 +5,14 @@ Created on Sep 2, 2018
 '''
 import pandas as pd
 
+from PyQt5.QtCore import QSettings
+from PyQt5.QtWidgets import QMessageBox
+
 from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
 from journal.statement import Statement_IBActivity, Statement_DAS
 from journalfiles import JournalFiles
+from journal.view.unbalancedcontrol import UnbalControl as Ubc
 
 # pylint: disable = C0103
 
@@ -37,15 +41,16 @@ def askUser(shares, question):
         return response
 
 
-class InputDataFrame(object):
+class InputDataFrame:
     '''Manipulation of the original import of the trade transactions. Abstract the label schema
     to a dictionary. Import from all soures is equalized here.'''
 
     def __init__(self, source="DAS"):
         '''Set the required columns in the import file.'''
-        if source != 'DAS':
-            print("Only DAS is currently supported")
+        if source not in ['DAS', 'IB_HTML']:
+            print("Only DAS and IB_HTML are currently supported")
             raise ValueError
+
 
     def processInputFile(self, trades, theDate=None, jf=None):
         '''
@@ -58,10 +63,12 @@ class InputDataFrame(object):
         trades = trades.sort_values([reqCol.acct, reqCol.ticker, reqCol.date, reqCol.time])
         trades = self.mkShortsNegative(trades)
         swingTrade = self.getOvernightTrades(trades)
-        swingTrade = self.figureOvernightTransactions(trades, jf)
+        swingTrade, success = self.figureOvernightTransactions(trades, jf)
+        if not success:
+            return None, success
         trades = self.insertOvernightRow(trades, swingTrade)
         trades = self.addDateField(trades, theDate)
-        return trades
+        return trades, True
 
     def addDateField(self, trades, theDate):
         '''
@@ -103,8 +110,7 @@ class InputDataFrame(object):
                 if d < early:
                     assert row[c.side] in ['HOLD+B', 'HOLD-B']
                     assert len(trades) > i + 1
-                    assert trades.at[i,
-                                        c.ticker] == trades.at[i+1, c.ticker]
+                    assert trades.at[i, c.ticker] == trades.at[i+1, c.ticker]
 
                     # Create the made up date- the day before the first tx from this input for
                     # this trade.
@@ -118,8 +124,7 @@ class InputDataFrame(object):
                 elif d > late:
                     assert row[c.side] in ['HOLD+', 'HOLD-']
                     assert i > 0
-                    assert trades.at[i,
-                                        c.ticker] == trades.at[i-1, c.ticker]
+                    assert trades.at[i, c.ticker] == trades.at[i-1, c.ticker]
 
                     tradeday = trades.at[i-1, c.date]
                     tradeday = pd.Timestamp(tradeday)
@@ -201,6 +206,7 @@ class InputDataFrame(object):
         rc = ReqCol()
 
         ldf_tick = self.getListTickerDF(dframe)
+        self.trades = ldf_tick
         overnightTrade = list()
         i = 0
         for ticker in ldf_tick:
@@ -256,9 +262,13 @@ class InputDataFrame(object):
 
     def figureOvernightTransactions(self, dframe, jf):
         '''
-        Determine how of the unbalanced shares were held:  before, after or both. We have to ask.
-        FIX THIS (Won't be so bad in the Windowed version) (Could get it from exporting position
-        window in addition Or maybe from using IBs input files instead.)
+        Determine how of the unbalanced shares were held:  before, after or both. In the conslose
+        version is an ugly interview. The Qt version is nicer but the exit back to the window here
+        is not a good design. Note that the DAS input using Qt is the only one that requires this
+        dialog and then only if the user does not provide a positions.csv input file.
+        :return (swingTrade, bool): The return value was fudged to allow Qt an exit all the way up
+                to the window if  the user does not balance their overnight trades. qtSwing has the
+                only possible False return. Kind of an ugly HACKALERt thing.
         '''
 
         # rc = ReqCol()
@@ -268,11 +278,100 @@ class InputDataFrame(object):
         reqcol = set(['Symb', 'Account', 'Shares'])
         if not pos.empty:
             if len(set(reqcol) & set(pos.columns)) == len(set(reqcol)):
-                return self.getOvernightTrades_DAS(swingTrade, pos)
+                swingTrade = self.getOvernightTrades_DAS(swingTrade, pos)
+                return swingTrade, True
             else:
                 msg = '\nthe positions file lacks the correct headings. Required headings are:\n'
                 msg += f'{reqcol}\n'
                 raise ValueError(msg)
+        settings = QSettings('zero_substance', 'structjour')
+        runtype = settings.value('runType')
+        if runtype == 'CONSOLE':
+            swingTrade = self.consoleSwing(swingTrade)
+            return swingTrade, True
+        elif runtype == 'QT':
+            return self.qtSwing(dframe, swingTrade)
+        msg = '\n\nRun Type for structjour must be either CONSOLE or QT as no other types are\n'
+        msg += 'currently supported. WEB type is planned for January 2020.\n\n'
+        raise TypeError(msg)
+
+    def qtSwing(self, df, swingTrade):
+        c = ReqCol()
+        for strade in swingTrade:
+            ubc = Ubc()
+            print(strade['acct'], strade['ticker'], strade['shares'])
+            trade = df[(df[c.ticker] == strade['ticker']) & (df[c.acct] == strade['acct'])]
+            keepTrying = True
+            while keepTrying:
+                ubc.runDialog(trade, strade['ticker'], strade['shares'], strade )
+                ok = ubc.exec()
+                print(ok)
+                if strade['shares'] != 0:
+                    msg = strade['ticker'] + ' still has unbalanced amounts. The trade must be balanced\n'
+                    msg += 'to continue. Would you like to continue?\n'
+                    ok = QMessageBox.question(ubc, 'ShareBalance', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    if ok == QMessageBox.Yes:
+                        print('Yes clicked.')
+                        ubc = Ubc()
+                    else:
+                        print('No clicked.')
+                        return None, False
+                else:
+                    keepTrying = False
+
+            print()
+            print(swingTrade)
+        return swingTrade, True
+           
+
+
+
+
+        # for i in range(len(swingTrade)):
+        #     tryAgain = True
+        #     while tryAgain:
+
+        #         question = '''There is an unbalanced amount of shares of {0} in the amount of {1}
+        #             in the account {2}. How many shares of {0} are you holding now? 
+        #             (Enter for {1}) '''.format(swingTrade[i]['ticker'],
+        #                                        swingTrade[i]['shares'],
+        #                                        swingTrade[i]['acct'])
+
+        #         swingTrade[i]['after'] = askUser(
+        #             swingTrade[i]['shares'], question)
+        #         swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
+        #             swingTrade[i]['after']
+
+        #         if swingTrade[i]['shares'] != 0:
+
+        #             question = '''There is now a prior unbalanced amount of shares of {0} amount
+        #             of {1} in the account {2}. How many shares of {0} were you holding before? 
+        #             (Enter for {1}) '''.format(swingTrade[i]['ticker'],
+        #                                        -swingTrade[i]['shares'],
+        #                                        swingTrade[i]['acct'])
+
+        #             swingTrade[i]['before'] = askUser(
+        #                 swingTrade[i]['shares'], question)
+        #             swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
+        #                 swingTrade[i]['before']
+
+        #         if swingTrade[i]['shares'] == 0:
+        #             # print("That works.")
+        #             tryAgain = False
+        #         else:
+        #             print()
+        #             print("There are {1} unaccounted for shares in {0}".format(
+        #                 swingTrade[i]['ticker'], swingTrade[i]['shares']))
+        #             print()
+        #             print("That does not add up. Starting over ...")
+        #             print()
+        #             print("Prior to reset version ", i, swingTrade)
+        #             swingTrade[i] = self.getOvernightTrades(dframe)[i]
+        #             print("reset version ", i, swingTrade)
+        # # print(swingTrade)
+        # return swingTrade
+
+    def consoleSwing(self, swingTrade):
         for i in range(len(swingTrade)):
             tryAgain = True
             while tryAgain:
@@ -316,6 +415,7 @@ class InputDataFrame(object):
                     print("reset version ", i, swingTrade)
         # print(swingTrade)
         return swingTrade
+
 
     def insertOvernightRow(self, dframe, swTrade):
         '''

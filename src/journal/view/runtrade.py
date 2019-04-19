@@ -1,3 +1,9 @@
+'''
+Created on Apr 1, 2019
+
+@author: Mike Petersen
+'''
+
 
 import os
 import sys
@@ -19,6 +25,7 @@ from journal.view.layoutforms import LayoutForms
 from journalfiles import JournalFiles
 from journal.view.sumcontrol import SumControl
 from journal.view.summaryform import Ui_MainWindow
+
 
 class runController:
     '''
@@ -51,6 +58,7 @@ class runController:
         print(self.inpathfile)
 
         # Defining this one connection here. Its different than all the others
+        
         self.ui.goBtn.pressed.connect(self.runnit)
 
     def runnit(self):
@@ -74,7 +82,9 @@ class runController:
             df, jf = tkt.getTrades()
 
         idf = InputDataFrame()
-        trades = idf.processInputFile(df, jf.theDate, jf)
+        trades,  success = idf.processInputFile(df, jf.theDate, jf)
+        if not success:
+            return
 
         tu = DefineTrades(self.inputtype)
         inputlen, dframe, ldf = tu.processOutputDframe(trades)

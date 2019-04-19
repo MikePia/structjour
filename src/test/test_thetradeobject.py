@@ -95,7 +95,7 @@ class TestTheTradeObject(unittest.TestCase):
         trades, jf = tkt.getTrades()
 
         idf = InputDataFrame()
-        trades = idf.processInputFile(trades)
+        trades, success = idf.processInputFile(trades)
 
         tu = DefineTrades()
         (dummy_len, dummy_df, ldf) = tu.processOutputDframe(trades)

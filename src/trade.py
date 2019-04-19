@@ -4,6 +4,8 @@ Top level module currently.
 '''
 # from PyQt5.QtWidgets import QApplication
 import os
+from PyQt5.QtCore import QSettings
+
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS as Ticket
@@ -33,6 +35,8 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
     :params mydevel: If True, use a specific file structure and let structjour create it. All can 
                      be overriden by using the specific parameters above.
     '''
+    settings = QSettings('zero_substance', 'structjour')
+    settings.setValue('runType', 'CONSOLE')
     #  indir=None, outdir=None, theDate=None, infile='trades.csv', mydevel=False
     jf = JournalFiles(indir=indir, outdir=outdir,
                       theDate=theDate, infile=infile, infile2=infile2, mydevel=mydevel)
@@ -55,7 +59,10 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
         df, jf = tkt.getTrades()
 
     idf = InputDataFrame()
-    trades = idf.processInputFile(df, jf.theDate, jf)
+    trades, success = idf.processInputFile(df, jf.theDate, jf)
+    if not success:
+        print('Failed. Between you and me, I think its a programming error')
+        return jf
 
     tu = DefineTrades()
     inputlen, dframe, ldf = tu.processOutputDframe(trades)
@@ -94,7 +101,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
 
 if __name__ == '__main__':
-    theD = '2019-04-12'
+    theD = '2019-04-03'
     # inf = 'trades.1116_messedUpTradeSummary10.csv'
     # inf = 'ActivityStatement.20190321.html'
     outd = 'out/'
