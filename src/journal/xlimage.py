@@ -58,6 +58,48 @@ class XLImage:
         im = PILImage.open(self.defaultImage)
         return im
 
+    def getPilImageNoDrama(self, name, outdir):
+        '''
+        Grab the contents of the clipboard to image. Warn the user if no image is retrieved. Then
+        save the image to the indicated place {outdir/name.png} and return an image and the fname.
+        :params name: The name to save the image.
+        :param outdir: The location to save the images.
+        :return img, pname: The pathname of the image we save. On failure return None and error
+                            message
+        '''
+        img = None
+        try:
+            if not os.path.exists(outdir):
+                os.mkdir(outdir)
+            msg = '''
+            Copy an image to the clipboard using snip for {0}
+            '''.format(name)
+
+            # pilImage = self.getPilImage(msg)
+            pilImage = ImageGrab.grabclipboard()
+            # ext = pilImage.format.lower()
+            if not pilImage:
+                return None, 'Failed to retrieve image from clipboard.' 
+            newSize = self.adjustSizeByHeight(pilImage.size)
+            pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
+
+            pname, ext = self.getResizeName(name, outdir)
+            pilImage.save(pname, ext)
+
+            img = Image(pname)
+
+        except IOError as e:
+            print("An exception occured '%s'" % e)
+            if img:
+                return img
+            return None, e.__str__()
+
+        return img, pname
+        
+
+
+        return im
+
     def getPilImage(self, msg):
         '''
         Retrieve the image from the clipboard, default location or filename input. Ask the user if
@@ -159,4 +201,13 @@ class XLImage:
         self.name = newName
 
         newName = os.path.join(os.path.normpath(outdir), newName)
+        count = 0
+        while True:
+            count += 1
+            if os.path.exists(newName):
+                nn, ext = os.path.splitext(newName)
+                newName = '{}_({}){}'.format(nn, + count, ext)
+            else:
+                break
+
         return (newName, os.path.splitext(newName)[1][1:])

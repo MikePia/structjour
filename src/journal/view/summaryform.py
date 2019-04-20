@@ -1122,7 +1122,7 @@ class Ui_MainWindow(object):
         self.chartEnd2.setObjectName("chartEnd2")
         self.horizontalLayout_5.addWidget(self.chartEnd2)
         self.verticalLayout_6.addLayout(self.horizontalLayout_5)
-        self.image2 = QtWidgets.QLabel(self.layoutWidget2)
+        self.image2 = ClickLabel(self.layoutWidget2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1154,7 +1154,7 @@ class Ui_MainWindow(object):
         self.chartEnd3.setObjectName("chartEnd3")
         self.horizontalLayout.addWidget(self.chartEnd3)
         self.verticalLayout_5.addLayout(self.horizontalLayout)
-        self.image3 = QtWidgets.QLabel(self.layoutWidget2)
+        self.image3 = ClickLabel(self.layoutWidget2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1250,4 +1250,4 @@ class Ui_MainWindow(object):
         self.actionChart_Settings.setText(_translate("MainWindow", "Chart Settings"))
 
 
-from clicklabel import ClickLabel
+from journal.view.clicklabel import ClickLabel

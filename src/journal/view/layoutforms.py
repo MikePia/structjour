@@ -216,3 +216,13 @@ class LayoutForms:
         :params val: The value for the notes widget
         '''
         self.ts[key][self.rc.notes] = val
+
+    def getImageName(self, key, wloc,  uinfo):
+
+         tto = self.ts[key]
+         rc = self.rc
+         print(rc.tix, rc.name, rc.start, rc.dur)
+        #  imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
+        #                                              tdf[frq.name].unique()[-1].replace(' ', '-'),
+        #                                              tdf[frq.start].unique()[-1],
+        #                                              tdf[frq.dur].unique()[-1], ft)

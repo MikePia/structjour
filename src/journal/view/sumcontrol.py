@@ -20,6 +20,7 @@ import pandas as pd
 from journal.view.summaryform import Ui_MainWindow
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.view.layoutforms import LayoutForms
+from journal.xlimage import XLImage
 
 # pylint: disable = C0103
 
@@ -83,6 +84,9 @@ class SumControl(QMainWindow):
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
         self.ui.explain.textChanged.connect(self.setExplain)
         self.ui.notes.textChanged.connect(self.setNotes)
+        self.ui.image1.clicked.connect(self.loadImage1)
+        self.ui.image2.clicked.connect(self.loadImage1)
+        self.ui.image3.clicked.connect(self.loadImage1)
 
         v = QDoubleValidator()
         self.ui.lost.setValidator(v)
@@ -110,27 +114,74 @@ class SumControl(QMainWindow):
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+    def mousePressEvent(self, event):
+        print('mouse Press', (event.x(), event.y()))
 
-    def contextMenuEvent(self, event):
-        img = self.ui.image1
+    def loadImage1(self, x, event):
+        '''
+        A signal from ClickLabel
+        :params x: The object origin (a ClickLabel object)
+        :params event: QContextMenuEvent object
+
+        :Programming Notes:
+        The mapTo thing -- Found no docs or discussions in answers.
+        None of the other map{To/From}{Parent/Global}({pos/globalPos}) things mapped correctly. By
+        Trial and error I finally tried None. That does not seem like it should be right but its
+        the only argument to mapTo() that didn't fail quietly-crashing the program. The fact that
+        it failed without comment is weird. I am expecting their undocumented code to change.
+        '''
+        print('loadIm1ge1', x.objectName(), event.pos(), event.globalPos())
+        img = x
         cmenu = QMenu(img)
+        
+        pi1 = cmenu.addAction("psych 1")
+        pi2 = cmenu.addAction("fractal 2")
+        pi3 = cmenu.addAction("starry night 3")
+        pi4 = cmenu.addAction("Paste from clipboard")
 
-        pi1 = cmenu.addAction("Paste Image 1")
-        pi2 = cmenu.addAction("Past Image 2")
-        pi3 = cmenu.addAction("Paste Image 3")
-        action = cmenu.exec_(self.mapToGlobal(event.pos()))
+        # This is the line in question and None arg is the crux
+        action = cmenu.exec_(self.mapTo(None, event.globalPos()))
 
         if action == pi1:
             fn = 'C:/python/E/structjour/src/images/psych.jpg'
-            self.ui.image1.setPixmap(QPixmap(fn))
+            x.setPixmap(QPixmap(fn))
         
         if action == pi2:
             fn = 'C:/python/E/structjour/src/images/fractal-art-fractals.jpg'
-            self.ui.image2.setPixmap(QPixmap(fn))
+            x.setPixmap(QPixmap(fn))
 
         if action == pi3:
             fn = 'C:/python/E/structjour/src/images/van_gogh-starry-night.jpg'
-            self.ui.image3.setPixmap(QPixmap(fn))
+            x.setPixmap(QPixmap(fn))
+        if action == pi4:
+            name = ''
+            if self.lf:
+
+                key = self.ui.tradeList.currentText()
+                name = self.lf.getImageName(key, x.objectName(),  'user')
+            else:
+                name = x.objectName() + '_user' 
+
+            self.pasteToLabel(x, name)
+
+    
+
+    def pasteToLabel(self, widg, name):
+        '''
+        Rather than paste, we call a method that saves the clipboard to a file, then we open it with QPixmap
+        '''
+        xlimg = XLImage()
+        img, pname = xlimg.getPilImageNoDrama(name, self.settings.value('outdir'))
+        if not img:
+            mbox = QMessageBox()
+            msg = pname + " Failed to get an image. Please select and copy an image."
+            mbox.setText(msg)
+            mbox.exec()
+            return
+
+        pixmap = QPixmap(pname)
+        widg.setPixmap(pixmap)
+
 
     def setExplain(self):
        key = self.ui.tradeList.currentText()
