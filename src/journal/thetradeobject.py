@@ -367,10 +367,10 @@ class SumReqFields:
 class TheTradeObject:
     '''
     Manages the creation of the Trade Summary objects from the the output DataFrame. These are
-    represented as the excel forms the user sees to review a trade showing entries and exits,
-    targets and stops, strategy and user analysis. This class holds the DataFrame representation
-    of that data. This class encapsulates the model data. The model is the summary of one trade in
-    a single row DataFrame.
+    presented as trade review object--the excel or qt summary form the user sees to review a trade
+    showing entries and exits, targets and stops, strategy and user analysis. That is specifically
+    the the attribute TheTrade as a dataFrame. TheTrade is the model for the trade review summary.
+    It is the trade flattened out into one row.
     :PreRequisite: The original DtaFrame should be transformed into the output DataFrame in which
     trades are represented in tickets and are seperated and labeled. It will work
         fine using the original input (still processed and labeled to the output DataFrame) but DAS
@@ -407,6 +407,9 @@ class TheTradeObject:
         self.strats = strats
         self.side = side
         self.shares = 0
+        self.chartSlot1 = None
+        self.chartSlot2 = None
+        self.chartSlot3 = None
 
     def runSummary(self):
         '''
@@ -615,67 +618,45 @@ class TheTradeObject:
             # ix0 is the index of the first row in df (df is a dataframe holding one trade in at
             # least 1 row (1 row per ticket)
             diff = 0
+
+            tm = pd.Timestamp(row[frc.time])
+            d = row[frc.date]
+            dtime = pd.Timestamp(d.year, d.month, d.day, tm.hour, tm.minute, tm.second)
+            price = row[frc.price]
+            shares = row[frc.shares]
             if count == 0:
-                entry1 = row[frc.price]
+                entry1 = price
             else:
-                diff = row[frc.price] - entry1
+                diff = price - entry1
 
             if long:
                 if (row[frc.side]).startswith('B') or (row[frc.side]).lower().startswith("hold+"):
-
-                    entries.append(
-                        [row[frc.price],
-                         row[frc.time],
-                         row[frc.shares],
-                         0,
-                         diff,
-                         "Entry"])
+                    entries.append([price, dtime, shares, 0, diff, "Entry"])
                 else:
-                    entries.append([
-                        row[frc.price],
-                        row[frc.time],
-                        row[frc.shares],
-                        row[frc.PL],
-                        diff,
-                        "Exit"])
+                    entries.append([price, dtime, shares, row[frc.PL], diff, "Exit"])
             else:
                 if (row[frc.side]).startswith('B'):
-                    entries.append([
-                        row[frc.price],
-                        row[frc.time],
-                        row[frc.shares],
-                        row[frc.PL],
-                        diff,
-                        "Exit"])
+                    entries.append([price, dtime, shares, row[frc.PL], diff, "Exit"])
                 else:
-                    entries.append([
-                        row[frc.price],
-                        row[frc.time],
-                        row[frc.shares],
-                        0, diff,
-                        "Entry"])
+                    entries.append([price, dtime, shares, 0, diff, "Entry"])
             count = count + 1
 
         if len(entries) > 8:
             more = len(entries) - 8
             self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
-            # Before doing anything-- was the input file processed into tickets?
-            # If not, there are probably fewer trades than it appears-- check for repeated
+            # If this triggered check that the input file processed into tickets.
+            # If not, there are probably fewer ticketts than it appears-- check for repeated
             # time entries
-            print(
-                'Holy cow, save this input file as a test file and finalize setEntries code.')
+            print('Holy cow, save this input file as a test file and finalize setEntries code.')
         for i, price in zip(range(len(entries)), entries):
 
             # Entry Price
-            if price[5] == "Entry":
-                col = "Entry" + str(i+1)
-            else:
-                col = "Exit" + str(i+1)
+            col = "Entry" + str(i+1) if price[5] == "Entry" else "Exit" + str(i+1)
             self.TheTrade[col] = price[0]
 
             # Entry Time
             col = "Time" + str(i+1)
-            self.TheTrade[col] = price[1]
+            self.TheTrade[col] = pd.Timestamp(price[1])
 
             # Entry Shares
             col = "EShare" + str(i+1)

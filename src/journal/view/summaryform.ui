@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1888</width>
+    <width>2334</width>
     <height>1567</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
      <rect>
       <x>70</x>
       <y>110</y>
-      <width>1723</width>
+      <width>2258</width>
       <height>673</height>
      </rect>
     </property>
@@ -1390,22 +1390,6 @@ p, li { white-space: pre-wrap; }
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="timeHead">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="text">
-          <string>Time:</string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="1">
         <widget class="QLabel" name="time1">
          <property name="sizePolicy">
@@ -1504,7 +1488,7 @@ p, li { white-space: pre-wrap; }
           <string notr="true">border: 1px solid black</string>
          </property>
          <property name="text">
-          <string>link:</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1688,6 +1672,19 @@ p, li { white-space: pre-wrap; }
          </property>
         </widget>
        </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="timeHeadBtn">
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Time:</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -1695,7 +1692,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QPushButton" name="updateBtn1">
+          <widget class="QPushButton" name="chart1Btn">
            <property name="maximumSize">
             <size>
              <width>60</width>
@@ -1708,20 +1705,39 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QTimeEdit" name="chartStart1"/>
+          <widget class="QDateTimeEdit" name="chart1Start"/>
          </item>
          <item>
-          <widget class="QTimeEdit" name="chartEnd1"/>
+          <widget class="QDateTimeEdit" name="chart1End"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="chart1Name">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="ClickLabel" name="image1">
+        <widget class="ClickLabel" name="chart1">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>1000</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="mouseTracking">
           <bool>true</bool>
@@ -1958,7 +1974,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
-          <widget class="QPushButton" name="updateBtn2">
+          <widget class="QPushButton" name="chart2Btn">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -1977,20 +1993,39 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QTimeEdit" name="chartStart2"/>
+          <widget class="QDateTimeEdit" name="chart2Start"/>
          </item>
          <item>
-          <widget class="QTimeEdit" name="chartEnd2"/>
+          <widget class="QDateTimeEdit" name="chart2End"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="chart2Name">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="ClickLabel" name="image2">
+        <widget class="ClickLabel" name="chart2">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>500</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="styleSheet">
           <string notr="true">border: 1px solid black</string>
@@ -2010,7 +2045,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QPushButton" name="updateBtn3">
+          <widget class="QPushButton" name="chart3Btn">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -2029,20 +2064,39 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <widget class="QTimeEdit" name="chartStart3"/>
+          <widget class="QDateTimeEdit" name="chart3Start"/>
          </item>
          <item>
-          <widget class="QTimeEdit" name="chartEnd3"/>
+          <widget class="QDateTimeEdit" name="chart3End"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="chart3Name">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="ClickLabel" name="image3">
+        <widget class="ClickLabel" name="chart3">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>500</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="styleSheet">
           <string notr="true">border: 1px solid black</string>
@@ -2065,7 +2119,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1888</width>
+     <width>2334</width>
      <height>26</height>
     </rect>
    </property>

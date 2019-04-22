@@ -84,9 +84,10 @@ class SumControl(QMainWindow):
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
         self.ui.explain.textChanged.connect(self.setExplain)
         self.ui.notes.textChanged.connect(self.setNotes)
-        self.ui.image1.clicked.connect(self.loadImage1)
-        self.ui.image2.clicked.connect(self.loadImage1)
-        self.ui.image3.clicked.connect(self.loadImage1)
+        self.ui.chart1.clicked.connect(self.loadImage1)
+        self.ui.chart2.clicked.connect(self.loadImage1)
+        self.ui.chart3.clicked.connect(self.loadImage1)
+        self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
 
         v = QDoubleValidator()
         self.ui.lost.setValidator(v)
@@ -108,12 +109,27 @@ class SumControl(QMainWindow):
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
 
-    
-
 
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+    def toggleDate(self):
+        '''
+        Toggles the inclusion of the date with the time in the 8 time entry widgets
+        '''
+        if not self.lf:
+            return
+        if self.lf.timeFormat == '%H:%M:%S':
+            self.lf.timeFormat = '%d/%m %H:%M:%S'
+        else:
+            self.lf.timeFormat = '%H:%M:%S'
+        print(self.lf.timeFormat)
+        key = self.ui.tradeList.currentText()
+        self.lf.reloadTimes(key)
+
+    def setChartData(self):
+        pass
+
     def mousePressEvent(self, event):
         print('mouse Press', (event.x(), event.y()))
 
@@ -163,8 +179,6 @@ class SumControl(QMainWindow):
                 name = x.objectName() + '_user' 
 
             self.pasteToLabel(x, name)
-
-    
 
     def pasteToLabel(self, widg, name):
         '''
@@ -826,11 +840,6 @@ class SumControl(QMainWindow):
     #=================================================================
     #================ End File setting dialog  methods ===============
     #=================================================================
-   
-
-        # print(ftarg, fstop)
-
-
 
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
