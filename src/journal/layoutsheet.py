@@ -4,6 +4,9 @@ Created on Oct 18, 2018
 @author: Mike Petersen
 '''
 import os
+import pandas as pd
+import numpy as np
+import datetime as dt
 
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -199,7 +202,7 @@ class LayoutSheet:
 
             #Put together the trade summary info for each trade and interview the trader
             tto = TheTradeObject(tdf, interview, srf)
-            tto.runSummary()
+            tto.runSummary(None)
             tradeSummaries.append(tto.TheTrade)
 
             #Place the format shapes/styles in the worksheet
@@ -226,6 +229,10 @@ class LayoutSheet:
 
                 if not tradeval:
                     continue
+                if isinstance(tradeval, (pd.Timestamp, dt.datetime, np.datetime64)):
+                    tradeval = pd.Timestamp(tradeval)
+
+
                 ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
 
         # print("Done with interview")

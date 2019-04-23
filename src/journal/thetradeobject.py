@@ -6,12 +6,15 @@ author: Mike Petersen
 created: September 1, 2018
 '''
 
+import os
 import datetime as dt
 
 import pandas as pd
 
 from journal.definetrades import FinReqCol
 from journal.dfutil import DataFrameUtil
+from journal.stock.graphstuff import FinPlot
+from journal.view.savecharts import SaveChart
 
 # pylint: disable=C0103
 
@@ -248,14 +251,14 @@ class SumReqFields:
             self.exit7: [(11, 4), 'normalNumberInside'],
             self.exit8: [(12, 4), 'normalNumberRight'],
 
-            self.time1: [(5, 5), 'normalSubLeft'],
-            self.time2: [(6, 5), 'normalSub'],
-            self.time3: [(7, 5), 'normalSub'],
-            self.time4: [(8, 5), 'normalSub'],
-            self.time5: [(9, 5), 'normalSub'],
-            self.time6: [(10, 5), 'normalSub'],
-            self.time7: [(11, 5), 'normalSub'],
-            self.time8: [(12, 5), 'normalSubRight'],
+            self.time1: [(5, 5), 'timeSubLeft'],
+            self.time2: [(6, 5), 'timeSub'],
+            self.time3: [(7, 5), 'timeSub'],
+            self.time4: [(8, 5), 'timeSub'],
+            self.time5: [(9, 5), 'timeSub'],
+            self.time6: [(10, 5), 'timeSub'],
+            self.time7: [(11, 5), 'timeSub'],
+            self.time8: [(12, 5), 'timeSubRight'],
 
             self.eshare1:  [(5, 6), 'normalSubLeft'],
             self.eshare2:  [(6, 6), 'normalSub'],
@@ -411,7 +414,7 @@ class TheTradeObject:
         self.chartSlot2 = None
         self.chartSlot3 = None
 
-    def runSummary(self):
+    def runSummary(self, imageName):
         '''
         Populate a DataFrame (self.TheTrade) with all the trade summary information, one row per
         trade. The information will then populate the the openpyxl / excel Trade Summary. The user
@@ -428,7 +431,7 @@ class TheTradeObject:
         self.__setHeaders()
         self.__setExplainNotes()
         self.__blandSpaceInMstkNote()
-        ret = self.__setEntries()
+        ret = self.__setEntries(imageName)
 
         # print("Side = ", self.df.loc[self.ix0][frc.side])
         if self.interview:
@@ -571,7 +574,7 @@ class TheTradeObject:
         return self.TheTrade[[self.srf.entryhead, self.srf.targhead, self.srf.stophead,
                               self.srf.rrhead, self.srf.maxhead]]
 
-    def __setEntries(self):
+    def __setEntries(self, imageName=None):
         '''
         This method places data into the trade summary from entries, exits, time of
         transaction, number of shares, and the difference between price of this
@@ -669,7 +672,26 @@ class TheTradeObject:
             # Entry diff
             col = "Diff" + str(i+1)
             self.TheTrade[col] = price[4]
+        if imageName:
+            self.setChartDataDefault(entries, imageName)
         return self.TheTrade
+
+    def setChartDataDefault(self, entries, imageName):
+        '''Set up default times and intervals for charts'''
+        start = entries[0][1]
+        for entry in entries:
+            if isinstance(entry[1], pd.Timestamp):
+                end = entry[1]
+        defaultIntervals = [1, 5, 15]
+        fp = FinPlot()
+        for i, di in enumerate(defaultIntervals):
+            imageName, ext = os.path.splitext(imageName)
+            imageName = '{}_{:02d}min{}'.format(imageName, di, ext)
+            begin, finish = fp.setTimeFrame(start, end, di)
+            l = (begin, finish, di, imageName)
+            self.TheTrade['chart' + str(i+1)]  = ''
+            self.TheTrade.at[0, 'chart' + str(i+1)] = l
+
 
     def __setTarget(self):
         '''Interview the user for the target. targdiff is handled as a formula elsewhere'''

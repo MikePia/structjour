@@ -94,8 +94,7 @@ class runController:
         margin = 25
 
         lf = LayoutForms(self.sc)
-        imageNames = lf.imageData(ldf)
-        tradeSummaries = lf.runSummaries(imageNames, ldf)
+        tradeSummaries = lf.runSummaries(ldf)
 
 
 

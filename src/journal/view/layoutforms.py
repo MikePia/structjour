@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from journal.definetrades import FinReqCol
 from journal.thetradeobject import TheTradeObject, SumReqFields
+from journal.stock.graphstuff import FinPlot
 # from journal.view.sumcontrol import SumControl
 # pylint: disable=C0103
 
@@ -101,33 +102,39 @@ class LayoutForms:
 
         self.rc = rc
         self.wd = wd
+        self.imageNames = None
         self.sc.loadLayoutForms(self)
 
     def imageData(self, ldf):
         frq = FinReqCol()
         imageNames = list()
         for tdf in ldf:
+            dur =  tdf[frq.dur].unique()[-1]
+            if isinstance(dur, pd.Timedelta):
+                dur = dur.__str__()
+            dur = dur.replace(' ', '_')
             imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
                                                      tdf[frq.name].unique()[-1].replace(' ', '-'),
                                                      tdf[frq.start].unique()[-1],
-                                                     tdf[frq.dur].unique()[-1], 'unused')
+                                                     dur, 'png')
             imageNames.append(imageName)
         return imageNames
 
 
-    def runSummaries(self, imageNames, ldf):
+    def runSummaries(self, ldf):
     
         tradeSummaries = list()
 
         srf = SumReqFields()
-
-        for count, (loc, tdf) in enumerate(zip(imageNames, ldf)):
+        self.imageNames = self.imageData(ldf)
+        assert len(ldf) == len(self.imageNames)
+        for count, (loc, tdf) in enumerate(zip(self.imageNames, ldf)):
 
             tto = TheTradeObject(tdf, False, srf)
-            tto.runSummary()
+            tto.runSummary(self.imageNames[count])
             tradeSummaries.append(tto.TheTrade)
-            for key in self.wd.keys():
-                print(key, tto.TheTrade[key].unique()[0])
+            # for key in self.wd.keys():
+            #     print(key, tto.TheTrade[key].unique()[0])
             tkey = f'{count+1} {tto.TheTrade[srf.name].unique()[0]}'
             self.ts[tkey] = tto.TheTrade
             self.sc.ui.tradeList.addItem(tkey)
@@ -151,20 +158,54 @@ class LayoutForms:
             self.wd[wkey].setText(daVal)
 
             print(wkey)
-            self.setChartTimes(self, key)
+        self.sc.setChartTimes()
+
+    def getChartData(self, key, ckey):
+        '''Get the chart data from the tradeObject'''
+        assert ckey in ('chart1', 'chart2', 'chart3')
+        tto = self.ts[key]
+        return tto[ckey].unique()[0]
+
+    def setChartData(self, key, ckey, data):
+        '''
+        Store the chart data in the trade object
+        :params key: Trade name from the tradeList
+        :params ckey: a key or a list of keys. Possible vals are (str) chart1 chart2 or chart3 If
+                        ckey is a list data must be a list of lists
+        :params data: a list or list of lists. Each has: [start, end, interval, name] 
+        '''
+        if self.ts:
+
+            assert len(self.ts[key] == 1)
+            if isinstance(ckey, list):
+                for k, d  in zip(ckey, data):
+                    assert k in ['chart1', 'chart2', 'chart3']
+                    self.ts[key].at[0, k] = d        
+                    return
+            assert key in ['chart1', 'chart2', 'chart3']
+            self.ts[key].at[0, ckey] = data
+        
+
 
     def setChartTimes(self, key):
         tto = self.ts[key]
+        start = pd.Timestamp(tto['Time1'].unique()[0])
         for i in range(1, 8):
             print(tto['Time' + str(i)])
-            daVal = tto['Time' + str(i)]
-            start = pd.Timestamp(tto['Time1'])
+            daVal = tto['Time' + str(i)].unique()[0]
             if isinstance(daVal, (pd.Timestamp, dt.datetime, np.datetime64)):
                 daVal = pd.Timestamp(daVal)
                 end = daVal
             
             
         print()
+        fp = FinPlot()
+        # t = self.sc.getchartIntervals()
+        self.sc.setChartTimes(start, end)
+        
+
+        
+
 
     def reloadTimes(self, key):
         tto = self.ts[key]

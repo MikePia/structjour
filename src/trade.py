@@ -104,6 +104,7 @@ if __name__ == '__main__':
     theD = '2019-04-03'
     # inf = 'trades.1116_messedUpTradeSummary10.csv'
     # inf = 'ActivityStatement.20190321.html'
+    theD = None
     outd = 'out/'
     inf = None
     positions = 'positions.csv'

@@ -314,6 +314,53 @@ class TradeFormat(object):
 
         self.addNamedStyle(normalNumberInside, 'normalNumberInside', wb)
 
+        #######################################     timeSubLeft     #########################
+        timeSubLeft = NamedStyle(name="timeSubLeft")
+        timeSubLeft.font = Font(color="FABF8F", size=11)
+        timeSubLeft.alignment = Alignment(
+            horizontal="left", vertical="bottom")
+        timeSubLeft.fill = PatternFill(
+            start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        timeSubLeft.border = Border(left=Side(style='double'),
+                                      right=Side(style='thin'),
+                                      top=Side(style='thin'),
+                                      bottom=Side(style='thin'))
+
+        timeSubLeft.number_format = 'h:mm:ss'
+
+        self.addNamedStyle(timeSubLeft, 'timeSubLeft', wb)
+
+        #######################################     timeSub     #############################
+        timeSub = NamedStyle(name="timeSub")
+        timeSub.font = Font(color="FABF8F", size=11)
+        timeSub.alignment = Alignment(horizontal="left", vertical="bottom")
+        timeSub.fill = PatternFill(
+            start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        timeSub.border = Border(left=Side(style='thin'),
+                                  right=Side(style='thin'),
+                                  top=Side(style='thin'),
+                                  bottom=Side(style='thin'))
+
+        timeSub.number_format = 'h:mm:ss'
+
+        self.addNamedStyle(timeSub, 'timeSub', wb)
+
+    #######################################     timeSubRight     ########################
+        timeSubRight = NamedStyle(name="timeSubRight")
+        timeSubRight.font = Font(color="FABF8F", size=11)
+        timeSubRight.alignment = Alignment(
+            horizontal="left", vertical="bottom")
+        timeSubRight.fill = PatternFill(
+            start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
+        timeSubRight.border = Border(left=Side(style='thin'),
+                                       right=Side(style='double'),
+                                       top=Side(style='thin'),
+                                       bottom=Side(style='thin'))
+        # normalSubLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+
+        self.addNamedStyle(timeSubRight, 'timeSubRight', wb)
+
+
         #######################################     normalSubLeft     #########################
         normalSubLeft = NamedStyle(name="normalSubLeft")
         normalSubLeft.font = Font(color="FABF8F", size=11)

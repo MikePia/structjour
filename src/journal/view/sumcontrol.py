@@ -21,6 +21,7 @@ from journal.view.summaryform import Ui_MainWindow
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.view.layoutforms import LayoutForms
 from journal.xlimage import XLImage
+from journal.stock.graphstuff import FinPlot
 
 # pylint: disable = C0103
 
@@ -62,12 +63,6 @@ class SumControl(QMainWindow):
             elif intype == 'IB_HTML':
                 self.ui.ibImport.setChecked(True)
 
-        charts = {'1': self.ui.chart1Min, '5': self.ui.chart5Min,
-                  '15': self.ui.chart15Min, '60': self.ui.chart60Min}
-        for x in self.settings.value('interval'):
-            charts[x].setChecked(True)
-            
-
 
         #Create connections for widgets on this form
         self.ui.targ.textEdited.connect(self.diffTarget)
@@ -75,10 +70,6 @@ class SumControl(QMainWindow):
         self.ui.dateEdit.dateChanged.connect(self.setFormDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
-        self.ui.chart1Min.clicked.connect(self.setCharts1)
-        self.ui.chart5Min.clicked.connect(self.setCharts5)
-        self.ui.chart15Min.clicked.connect(self.setCharts15)
-        self.ui.chart60Min.clicked.connect(self.setCharts60)
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.lost.textEdited.connect(self.setMstkVal)
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
@@ -251,46 +242,40 @@ class SumControl(QMainWindow):
         print(val)
         self.lf.populateTradeSumForms(val)
 
-    def setCharts1(self, b):
-        self.setCharts((self.ui.chart1Min, b))
+    def setChartTimes(self):
+        '''
+        Sets the begin and end times from the trade object data
+        '''
+        key = self.ui.tradeList.currentText()
+        c1 = self.lf.getChartData(key, 'chart1')
 
-    def setCharts5(self, b):
-        self.setCharts((self.ui.chart5Min, b))
+        self.ui.chart1Start.setDateTime(c1[0])
+        self.ui.chart1End.setDateTime(c1[1])
+        self.ui.chart1Interval.setValue(c1[2])
+        self.ui.chart1Name.setText(c1[3])
 
-    def setCharts15(self, b):
-        self.setCharts((self.ui.chart15Min, b))
+        c2 = self.lf.getChartData(key, 'chart2')
 
-    def setCharts60(self, b):
-        self.setCharts((self.ui.chart60Min, b))
+        self.ui.chart2Start.setDateTime(c2[0])
+        self.ui.chart2End.setDateTime(c2[1])
+        self.ui.chart2Interval.setValue(c2[2])
+        self.ui.chart2Name.setText(c2[3])
 
-    def setCharts(self, val):
-        print('This is val', val)
-        charts = [self.ui.chart1Min, self.ui.chart5Min,
-                  self.ui.chart15Min, self.ui.chart60Min]
+        c3 = self.lf.getChartData(key, 'chart3')
 
-        t = list()
-        for chart in charts:
-            print(chart.checkState())
-            if chart.checkState():
-                t.append(chart)
-        if len(t) == 3:
-            widg = set(charts) - set(t)
-            widg = widg.pop()
-            widg.setChecked(False)
-            widg.setEnabled(False)
+        self.ui.chart3Start.setDateTime(c3[0])
+        self.ui.chart3End.setDateTime(c3[1])
+        self.ui.chart3Interval.setValue(c3[2])
+        self.ui.chart3Name.setText(c3[3])
+        # , self.ui.chart1End), 
+        #           (self.ui.chart2Start, self.ui.chart2End), 
+        #           (self.ui.chart3Start, self.ui.chart3End)]
+        # fp = FinPlot()
+        # # for w, interval in zip(wlist, l):
+        #     start, finish = fp.setTimeFrame(begin, end, interval)
+        #     w[0].setDateTime(start)
+        #     w[1].setDateTime(finish)
 
-        elif len(t) >= 4:
-            #This should never happen but handle it anyway
-            val[0].setChecked(False)
-            val[0].setEnabled(False)
-        elif len(t) < 3:
-            for chart in charts:
-                chart.setEnabled(True)
-        
-        interval = list()
-        for w in t:
-            interval.append(w.text().split()[0])
-        self.settings.setValue('interval', interval)
 
     def dasDefault(self, b):
         print('DAS', b)
