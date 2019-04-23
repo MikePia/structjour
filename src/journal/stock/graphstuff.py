@@ -280,6 +280,8 @@ class FinPlot:
 
         dummy, df = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
+        if df.empty:
+            return None
         df['date'] = df.index
 
         df['date'] = df['date'].map(mdates.date2num)
@@ -390,7 +392,15 @@ class FinPlot:
         if self.interactive:
             plt.savefig('out/figure_1.png')
             plt.show()
+        count = 1
+        saveorig = save
+        while os.path.exists(save):
+            s, ext = os.path.splitext(saveorig)
+            save = '{}({}){}'.format(s,count,ext)
+            count = count + 1
+
         fig.savefig(save)
+        return save
 
 
 def localRun():

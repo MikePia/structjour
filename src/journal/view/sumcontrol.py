@@ -25,6 +25,15 @@ from journal.stock.graphstuff import FinPlot
 
 # pylint: disable = C0103
 
+def qtime2pd(qdt):
+    d = pd.Timestamp(qdt.date().year(), 
+                      qdt.date().month(), 
+                      qdt.date().day(),
+                      qdt.time().hour(), 
+                      qdt.time().minute(), 
+                      qdt.time().second())
+    return d
+
 class SumControl(QMainWindow):
     '''
     A control class for summaryform and its dialogs which are created  maintained by Qt designer.
@@ -78,6 +87,9 @@ class SumControl(QMainWindow):
         self.ui.chart1.clicked.connect(self.loadImage1)
         self.ui.chart2.clicked.connect(self.loadImage1)
         self.ui.chart3.clicked.connect(self.loadImage1)
+        self.ui.chart1Btn.pressed.connect(self.chartMagic1)
+        self.ui.chart2Btn.pressed.connect(self.chartMagic2)
+        self.ui.chart3Btn.pressed.connect(self.chartMagic3)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
 
         v = QDoubleValidator()
@@ -104,6 +116,44 @@ class SumControl(QMainWindow):
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+    def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
+        fp = FinPlot()
+        begin = qtime2pd(swidg.dateTime())
+        end = qtime2pd(ewidg.dateTime())
+        (dummy, rules, apilist) = fp.apiChooserList(begin, end, 'ib')
+        if apilist:
+            fp.api = apilist[0]
+        interval = iwidg.value()
+        name = nwidg.text()
+        outdir = self.settings.value('outdir')
+        ticker = self.ui.tradeList.currentText().split(' ')[1]
+        pname = os.path.join(outdir, name)
+        pname = os.path.abspath(pname)
+        pname = fp.graph_candlestick(ticker, begin, end, interval, save=pname)
+        if pname:
+            pixmap = QPixmap(pname)
+            widg.setPixmap(pixmap)
+            data = [begin, end, pname]
+            key = self.ui.tradeList.currentText()
+            self.lf.setChartData(key, data, c)
+            p, fname = os.path.split(pname)
+            nwidg.setText(fname)
+            
+
+    def chartMagic1(self):
+        self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
+                       self.ui.chart1Name, self.ui.chart1, 'chart1')
+
+
+    def chartMagic2(self):
+        self.chartMage(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
+                       self.ui.chart2Name, self.ui.chart2, 'chart2')
+
+    def chartMagic3(self):
+        self.chartMage(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
+                       self.ui.chart3Name, self.ui.chart3, 'chart3')
+
+
     def toggleDate(self):
         '''
         Toggles the inclusion of the date with the time in the 8 time entry widgets

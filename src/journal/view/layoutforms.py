@@ -117,6 +117,7 @@ class LayoutForms:
                                                      tdf[frq.name].unique()[-1].replace(' ', '-'),
                                                      tdf[frq.start].unique()[-1],
                                                      dur, 'png')
+            imageName = imageName.replace(':', '')
             imageNames.append(imageName)
         return imageNames
 
@@ -166,7 +167,7 @@ class LayoutForms:
         tto = self.ts[key]
         return tto[ckey].unique()[0]
 
-    def setChartData(self, key, ckey, data):
+    def setChartData(self, key, data, ckey):
         '''
         Store the chart data in the trade object
         :params key: Trade name from the tradeList
@@ -182,11 +183,9 @@ class LayoutForms:
                     assert k in ['chart1', 'chart2', 'chart3']
                     self.ts[key].at[0, k] = d        
                     return
-            assert key in ['chart1', 'chart2', 'chart3']
+            assert ckey in ['chart1', 'chart2', 'chart3']
             self.ts[key].at[0, ckey] = data
         
-
-
     def setChartTimes(self, key):
         tto = self.ts[key]
         start = pd.Timestamp(tto['Time1'].unique()[0])
@@ -202,10 +201,6 @@ class LayoutForms:
         fp = FinPlot()
         # t = self.sc.getchartIntervals()
         self.sc.setChartTimes(start, end)
-        
-
-        
-
 
     def reloadTimes(self, key):
         tto = self.ts[key]

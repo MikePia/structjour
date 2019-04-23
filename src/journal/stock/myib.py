@@ -282,6 +282,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     (resamp, (interval, minutes, origminutes)) = ni(minutes)
     # chart(symb, d, dur/, interval)
     ib = TestApp(7496, 7878)
+    # ib = TestApp(4002, 7979)
     # def getHistorical(self, symbol, end, dur, interval, exchange='NASDAQ'):
     df = ib.getHistorical(symb, end=end, dur=dur,
                           interval=interval, exchange='NASDAQ')
