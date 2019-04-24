@@ -1197,8 +1197,11 @@ class Ui_MainWindow(object):
         self.actionFileSettings.setObjectName("actionFileSettings")
         self.actionChart_Settings = QtWidgets.QAction(MainWindow)
         self.actionChart_Settings.setObjectName("actionChart_Settings")
+        self.actionStock_API = QtWidgets.QAction(MainWindow)
+        self.actionStock_API.setObjectName("actionStock_API")
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
+        self.menuFile.addAction(self.actionStock_API)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -1266,6 +1269,7 @@ class Ui_MainWindow(object):
         self.actionFileSettings.setText(_translate("MainWindow", "File Settings"))
         self.actionFileSettings.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.actionChart_Settings.setText(_translate("MainWindow", "Chart Settings"))
+        self.actionStock_API.setText(_translate("MainWindow", "Stock API"))
 
 
 from journal.view.clicklabel import ClickLabel

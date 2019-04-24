@@ -2123,6 +2123,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionFileSettings"/>
     <addaction name="actionChart_Settings"/>
+    <addaction name="actionStock_API"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -2138,6 +2139,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionChart_Settings">
    <property name="text">
     <string>Chart Settings</string>
+   </property>
+  </action>
+  <action name="actionStock_API">
+   <property name="text">
+    <string>Stock API</string>
    </property>
   </action>
  </widget>

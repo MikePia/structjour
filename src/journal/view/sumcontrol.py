@@ -22,6 +22,7 @@ from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.view.layoutforms import LayoutForms
 from journal.xlimage import XLImage
 from journal.stock.graphstuff import FinPlot
+from journal.view.sapicontrol import StockApi
 
 # pylint: disable = C0103
 
@@ -101,6 +102,7 @@ class SumControl(QMainWindow):
 
         
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
+        self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
 
         # Set the file related widgets
         self.ui.dateEdit.setDate(self.settings.value('theDate'))
@@ -623,7 +625,6 @@ class SumControl(QMainWindow):
 
         w.exec()
 
-    
 
     def closeit(self):
         self.w.close()
@@ -875,6 +876,11 @@ class SumControl(QMainWindow):
     #=================================================================
     #================ End File setting dialog  methods ===============
     #=================================================================
+
+    def stockAPIDlg(self):
+        sapi = StockApi()
+        sapi.show()
+
 
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
