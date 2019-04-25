@@ -14,9 +14,24 @@ import types
 import pandas as pd
 
 from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS
+from journal.statement import Statement_DAS, Statement_IBActivity
 from journal.definetrades import ReqCol
 from journalfiles import JournalFiles
+
+
+
+# import urllib.request, urllib.parse, urllib.error
+# from bs4 import BeautifulSoup, __version__ as bs4v
+# from journal.definetrades import ReqCol
+# from journalfiles import JournalFiles
+
+
+
+
+
+
+
+
 
 def getTestSet(length=6):
     '''Utility test set generator for MkShortNegative
@@ -243,3 +258,22 @@ class Test_Statements(unittest.TestCase):
         for df in listDf:
             self.assertEqual(len(df[rc.ticker].unique()), 1)
             self.assertEqual(len(df[rc.acct].unique()), 1)
+
+    def test_getPositionsIB(self):
+
+
+        infile= 'ActivityStatement.20190411.html'
+
+        jf = JournalFiles(infile=infile, theDate='2019-04-11', mydevel=True)
+
+        st = Statement_IBActivity(jf)
+        df = st.getPositions()
+
+
+
+def notmain():
+    t = Test_Statements()
+    t.test_getPositionsIB()
+
+if __name__ == '__main__':
+    notmain()

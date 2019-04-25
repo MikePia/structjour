@@ -8,6 +8,7 @@ Created on April 14, 2019
 
 import datetime as dt
 import numpy as np
+import pickle
 
 import pandas as pd
 from journal.definetrades import FinReqCol
@@ -21,7 +22,8 @@ class LayoutForms:
     Run theTradeObject summariew to get the tto DataFrame and populate
     the trade form for each trade
     '''
-    def __init__(self, sc):
+    def __init__(self, sc, jf):
+        self.jf = jf
         self.ts = dict()
         rc = SumReqFields()
         self.timeFormat = '%H:%M:%S'
@@ -105,7 +107,36 @@ class LayoutForms:
         self.imageNames = None
         self.sc.loadLayoutForms(self)
 
+
+    def saveTheTradeObject(self, name):
+        with open(name, "wb") as f:
+            pickle.dump(self.ts, f)
+
+    def loadSavedFile(self):
+        name = self.sc.getSaveName()
+        with open(name, "rb") as f:
+            self.ts = pickle.load(f)
+
+        print('load up the trade names now')
+        tradeSummaries = []
+        for key in self.ts:
+            self.sc.ui.tradeList.addItem(key)
+            tradeSummaries.append(self.ts[key])
+
+        # In prep to do the mistake summary and excel export, return the list it uses now
+        # It might be good to use the dict self.ts instead
+        return tradeSummaries
+
+
+
+
+        
+
     def imageData(self, ldf):
+        '''
+        Create generic image names. Structjour will use this to create specific names that include
+        interval info. Up to three images can be saved for each trade.
+        '''
         frq = FinReqCol()
         imageNames = list()
         for tdf in ldf:
@@ -121,7 +152,6 @@ class LayoutForms:
             imageNames.append(imageName)
         return imageNames
 
-
     def runSummaries(self, ldf):
     
         tradeSummaries = list()
@@ -129,6 +159,7 @@ class LayoutForms:
         srf = SumReqFields()
         self.imageNames = self.imageData(ldf)
         assert len(ldf) == len(self.imageNames)
+        self.sc.ui.tradeList.clear()
         for count, (loc, tdf) in enumerate(zip(self.imageNames, ldf)):
 
             tto = TheTradeObject(tdf, False, srf)

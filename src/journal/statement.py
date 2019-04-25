@@ -22,6 +22,7 @@ import os
 
 from pandas import DataFrame, read_csv
 # import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 import urllib.request, urllib.parse, urllib.error
@@ -332,7 +333,14 @@ class Statement_IBActivity:
             tableTag = tbldivs[0].find("table")
             df = pd.read_html(str(tableTag))
             assert len(df) == 1
-            df = df[0][df[0].Mult == 1.0].copy()
+            df = df[0]
+
+            # I believe different versions of bs parse the file differently to get float or str
+            if isinstance(df.Mult.iloc[0], (np.float64, float)):
+                df = df[df.Mult == 1.0].copy()
+            else:
+                assert isinstance(df.Mult.iloc[0], str)
+                df = df[df.Mult == '1'].copy()
             print('Retrieved open positions from tblOpenPositions')
         else:
             # The Long Open Positions table heirarchical and  pd cannot correctly parse it.
@@ -362,10 +370,10 @@ class Statement_IBActivity:
 
             df = df[df.Mult == '1'].copy()
         
-        if not df.empty:
-            df = df[['Symbol', 'Quantity']].copy()
-            df['Account'] = account
-            df = df.rename(columns={'Symbol': 'Symb', 'Quantity': 'Shares'})
+        # if not df.empty:
+        df = df[['Symbol', 'Quantity']].copy()
+        df['Account'] = account
+        df = df.rename(columns={'Symbol': 'Symb', 'Quantity': 'Shares'})
         
         return df
         
@@ -469,7 +477,7 @@ class Statement_IBActivity:
                         mkt = qty * price
                         PL = rpl - comSum
 
-                if 'O' in tdf.iloc[0].Code:
+                elif 'O' in tdf.iloc[0].Code:
 
                     bal = bal + qty
                     mkt = qty * price
@@ -718,5 +726,10 @@ def main():
     # df = filter_IBWebTradesTable(df[0])
     # print(df)
 
+def notmain():
+    t = Test_Statements()
+    t.test_getPositionsIB()
+
 if __name__ == '__main__':
-    main()
+    # main()
+    notmain()

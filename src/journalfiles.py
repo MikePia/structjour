@@ -64,8 +64,8 @@ class JournalFiles:
         self.monthformat = "_%Y%m_%B"
         self.dayformat = "_%m%d_%A"
         self.root = os.getcwd()
-        self.indir = indir if indir else os.path.join(self.root, 'data')
-        self.outdir = outdir if outdir else os.path.join(self.root, 'out')
+        self.indir = indir if indir else os.path.join(self.root, 'data/')
+        self.outdir = outdir if outdir else os.path.join(self.root, 'out/')
         self.infile = infile if infile else 'trades.csv'
         self.infile2 = infile2
         self.inpathfile2 = None

@@ -57,6 +57,7 @@ class SumControl(QMainWindow):
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
+        
         self.settings.setValue('runType', 'QT')
         now = None
         self.fui = None
@@ -92,6 +93,7 @@ class SumControl(QMainWindow):
         self.ui.chart2Btn.pressed.connect(self.chartMagic2)
         self.ui.chart3Btn.pressed.connect(self.chartMagic3)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
+        self.ui.saveBtn.pressed.connect(self.saveTradeObject)
 
         v = QDoubleValidator()
         self.ui.lost.setValidator(v)
@@ -118,19 +120,44 @@ class SumControl(QMainWindow):
     #=================================================================
     #==================== Main Form  methods =========================
     #=================================================================
+
+    def saveTradeObject(self):
+        outpathfile = self.getSaveName()
+        if os.path.exists(outpathfile):
+            print('Should probably pop up here and warn user they are overwriting a save.')
+        print(outpathfile)
+        print()
+        self.lf.saveTheTradeObject(outpathfile)
+
+    def getSaveName(self):
+        '''
+        This needs to be a name that can be gleaned from the info on the form and settings
+        loaded for each file name
+        '''
+        outdir = self.getOutdir()
+        infile = self.ui.infileEdit.text()
+        p, infile = os.path.split(infile)
+
+        outf, ext = os.path.splitext(infile)
+        outf = "." + outf + '.zst'
+        outpathfile = os.path.join(outdir, outf)
+        return outpathfile
+        
+
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
         fp = FinPlot()
+        fp.randomStyle = True
         begin = qtime2pd(swidg.dateTime())
         end = qtime2pd(ewidg.dateTime())
-        (dummy, rules, apilist) = fp.apiChooserList(begin, end, 'ib')
+        (dummy, rules, apilist) = fp.apiChooserList(begin, end, fp.api)
         if apilist:
             fp.api = apilist[0]
         interval = iwidg.value()
         name = nwidg.text()
-        outdir = self.settings.value('outdir')
+        outdir = self.getOutdir()
         ticker = self.ui.tradeList.currentText().split(' ')[1]
         pname = os.path.join(outdir, name)
-        pname = os.path.abspath(pname)
+
         pname = fp.graph_candlestick(ticker, begin, end, interval, save=pname)
         if pname:
             pixmap = QPixmap(pname)
@@ -140,21 +167,27 @@ class SumControl(QMainWindow):
             self.lf.setChartData(key, data, c)
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
+            return pname
+        return None
             
 
     def chartMagic1(self):
-        self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
-                       self.ui.chart1Name, self.ui.chart1, 'chart1')
-
+        pname = self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
+                               self.ui.chart1Name, self.ui.chart1, 'chart1')
+        if pname:
+            self.settings.setValue('chart1', pname)
 
     def chartMagic2(self):
-        self.chartMage(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
-                       self.ui.chart2Name, self.ui.chart2, 'chart2')
+        pname = self.chartMage(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
+                               self.ui.chart2Name, self.ui.chart2, 'chart2')
+        if pname:
+            self.settings.setValue('chart2', pname)
 
     def chartMagic3(self):
-        self.chartMage(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
-                       self.ui.chart3Name, self.ui.chart3, 'chart3')
-
+        pname = self.chartMage(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
+                               self.ui.chart3Name, self.ui.chart3, 'chart3')
+        if pname:
+            self.settings.setValue('chart3', pname)
 
     def toggleDate(self):
         '''
@@ -163,15 +196,12 @@ class SumControl(QMainWindow):
         if not self.lf:
             return
         if self.lf.timeFormat == '%H:%M:%S':
-            self.lf.timeFormat = '%d/%m %H:%M:%S'
+            self.lf.timeFormat = '%m/%d %H:%M:%S'
         else:
             self.lf.timeFormat = '%H:%M:%S'
         print(self.lf.timeFormat)
         key = self.ui.tradeList.currentText()
         self.lf.reloadTimes(key)
-
-    def setChartData(self):
-        pass
 
     def mousePressEvent(self, event):
         print('mouse Press', (event.x(), event.y()))
@@ -342,7 +372,7 @@ class SumControl(QMainWindow):
 
     def setFormDate(self):
         '''
-        Callback when dataEdit is changed. Gather the settings and locate whate input files exist.
+        Callback when dateEdit is changed. Gather the settings and locate whate input files exist.
         Enable/disable radio buttons to choose IB or DAS. Load up the filename in the lineEdit.
         If it exists, green. If not red. If the directory doesn't exist, set blank. If both files
         are available choose DAS (for now--That will be a setting configured in filesettings)
@@ -357,10 +387,6 @@ class SumControl(QMainWindow):
             self.ui.infileEdit.setText('')
             self.ui.infileEdit.setStyleSheet('color: black;')
             return
-
-
-
-
         sglob = ibinfile
         rgx = re.sub('{\*}', '.*', sglob)
     
@@ -372,8 +398,7 @@ class SumControl(QMainWindow):
                     fs.append(x.string)
             if fs:
                 ibinfile = fs[0]
-
-        self.settings.setValue('ibInfileName', ibinfile)
+                self.settings.setValue('ibInfileName', ibinfile)
 
         dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
         ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
@@ -395,9 +420,19 @@ class SumControl(QMainWindow):
         self.ui.infileEdit.setText(infile)
         if os.path.exists(infile):
             self.ui.infileEdit.setStyleSheet('color: green;')
-    
+            self.ui.goBtn.setStyleSheet('color:green')
+            if inputtype == 'IB_HtmL':
+                self.settings.setValue('ibInfileName', infile)
+            savename = self.getSaveName()
+            if os.path.exists(savename):
+                self.ui.infileEdit.setStyleSheet('color: blue;')
+                self.ui.loadBtn.setStyleSheet('color: blue;')
+            else:
+                self.ui.loadBtn.setStyleSheet('color: black;')
+
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
+            self.ui.goBtn.setStyleSheet('color:black')
 
         # if ibinfile and os.path.exists(ibinfile):
         #     self.ui.ibImport.setEnabled(True)
@@ -560,6 +595,15 @@ class SumControl(QMainWindow):
         inpath = os.path.join(journal, schemeFmt)
         return inpath
 
+    def getOutdir(self):
+        op = self.settings.value('outdirPolicy')
+        if  op == 'static':
+            return self.settings.value('outdir')
+        outdir = os.path.join(self.getDirectory(), 'out/')
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        return outdir
+
     #=================================================================
     #==================== File setting dialog  methods ===============
     #=================================================================
@@ -683,8 +727,9 @@ class SumControl(QMainWindow):
             self.settings.setValue('outdirPolicy', 'default')
 
             outpathfile = os.path.join(self.getDirectory(), 'out')
-            self.settings.setValue('outdir', outpathfile)
-            self.fui.outdir.setText(outpathfile)
+            self.settings.setValue('outdir', 'out/')
+            self.fui.outdir.setText('out/')
+            self.fui.outdir.setToolTip(outpathfile)
             self.fui.outdir.setFocusPolicy(Qt.NoFocus)
 
         if os.path.exists(outpathfile):
@@ -878,8 +923,8 @@ class SumControl(QMainWindow):
     #=================================================================
 
     def stockAPIDlg(self):
-        sapi = StockApi()
-        sapi.show()
+        sapi = StockApi(self.settings)
+        sapi.exec()
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ Created on Apr 1, 2019
 
 
 import os
+import pickle
 import sys
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
@@ -40,6 +41,15 @@ class runController:
         self.settings = self.sc.settings
         self.inputtype = self.settings.value('inputType')
 
+        self.initialize()
+
+
+        # Defining this one connection here. Its different than all the others
+        
+        self.ui.goBtn.pressed.connect(self.runnit)
+        self.ui.loadBtn.pressed.connect(self.loadit)
+
+    def initialize(self):
         ### Might blitz thes lines if JournalFiles gets an overhaul. For ease of transaiton
         ### We keep JournalFiles till its allworks into the Qt run
         self.indir = self.sc.getDirectory()
@@ -47,7 +57,10 @@ class runController:
             inkey = 'dasInfile'
         elif self.inputtype == 'IB_HTML':
             inkey = 'ibInfileName'
-        self.outdir = self.settings.value('outdir')
+        if self.settings.value('outdirPolicy') == 'default':
+            self.outdir = None
+        else:
+            self.outdir = self.settings.value('outdir')
         qd = self.settings.value('theDate')
         self.theDate = pd.Timestamp(qd.year(), qd.month(), qd.day())
         self.positions = self.settings.value('dasInfile2')
@@ -57,15 +70,27 @@ class runController:
         self.inpathfile = self.ui.infileEdit.text()
         print(self.inpathfile)
 
-        # Defining this one connection here. Its different than all the others
+    def loadit(self):
+        print('gonna loadit gonna loadit')
+        self.initialize()
+        jf = JournalFiles(indir=self.indir, outdir=self.outdir,
+                      theDate=self.theDate, infile=self.infile,
+                      inputType = self.inputtype, infile2=self.positions,
+                      mydevel=True)
+
+
+
+        lf = LayoutForms(self.sc, jf)
+        lf.loadSavedFile()
         
-        self.ui.goBtn.pressed.connect(self.runnit)
 
     def runnit(self):
         print('gonna runnit gonna runnit')
+        self.initialize()
         jf = JournalFiles(indir=self.indir, outdir=self.outdir,
-                      theDate=self.theDate, infile=self.infile, 
-                      infile2=self.positions, mydevel=True)
+                      theDate=self.theDate, infile=self.infile,
+                      inputType = self.inputtype, infile2=self.positions,
+                      mydevel=True)
 
         if self.inputtype == 'IB_HTML':
             jf.inputType = 'IB_HTML'
@@ -93,7 +118,7 @@ class runController:
         # images and Trade Summaries.
         margin = 25
 
-        lf = LayoutForms(self.sc)
+        lf = LayoutForms(self.sc, jf)
         tradeSummaries = lf.runSummaries(ldf)
 
 

@@ -34,7 +34,6 @@ class StockApi(QDialog):
 
     def okPressed(self):
         self.orderApis()
-        print('Did you mean to press close???')
         self.close()
 
 

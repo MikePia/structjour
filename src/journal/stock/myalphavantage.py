@@ -99,8 +99,8 @@ def ni(i):
         '1min' and '60min' and no resampling
     :return (bresample, (a,b,c)): (bool, (str, int, int)).
         :params bresample: a bool indicating the requested interval will need to be resampled
-        :params a: A str with the mav param for the REST api
-        :params b: An int representing the mav interval
+        :params a: A str with the av param for the REST api
+        :params b: An int representing the av interval
         :params c: an int representing the requested interval
     '''
     resamp = False

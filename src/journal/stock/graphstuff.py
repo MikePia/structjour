@@ -23,6 +23,8 @@ from journal.stock import myalphavantage as mav
 from journal.stock import myiex as iex
 from journal.stock import myib as ib
 
+from PyQt5.QtCore import QSettings
+
 # import urllib
 # import datetime as dt
 # from journal.stock import myalphavantage as mav
@@ -85,12 +87,16 @@ class FinPlot:
 
     def __init__(self, mplstyle='dark_background'):
         self.style = mplstyle
-        self.randomStyle = False
+        self.randomStyle = True
         self.interactive = False
-        self.preferences = ['ib', 'mav', 'bc', 'iex']
+        self.settings = QSettings('zero_substance', 'structjour')
+
+        p = self.settings.value('APIPref')
+        if p:
+            self.preferences = p.split(',') if p else ['ib', 'bc', 'av', 'iex']
 
         # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
-        self.api = 'ib'
+        self.api = self.preferences[0]
         self.ftype = '.png'
         self.format = "%H%M"
         self.base = 'trade'
@@ -103,21 +109,6 @@ class FinPlot:
         self.entries = []
         self.exits = []
 
-    def setApiPreferences(self, lprefs):
-        '''
-        Set the order of preference for which API to use to for stock chart data.
-        :params lprefs:An ordered list that may include the following members:
-        ['iex', 'mav', 'bc', 'ib'] The order will determine which to to try first and what order to
-        proceed if the previous api failed to retrive the data.
-        '''
-        apis = ['iex', 'mav', 'bc', 'ib']
-        self.preferences = []
-        p = []
-        for api in lprefs:
-            if api in apis:
-                p.append(api)
-        self.preferences = p
-        self.api = self.preferences[0]
 
     def matchFont(self, nm, default='arial$'):
         '''
@@ -140,7 +131,7 @@ class FinPlot:
 
     def apiChooserList(self, start, end, api=None):
         '''
-        Given the current list of apis as mav, bc, iex, and ib, determine if the given api will
+        Given the current list of apis as av, bc, iex, and ib, determine if the given api will
             likely return data for the given times.
         :params start: A datetime object or time stamp indicating the intended start of the chart.
         :params end: A datetime object or time stamp indicating the intended end of the chart.
@@ -170,8 +161,8 @@ class FinPlot:
         # Rule 2 No support any charts greater than 7 days prior till today
         if n > start:
             delt = n - start
-            if delt.days > 6 and 'mav' in suggestedApis:
-                suggestedApis.remove('mav')
+            if delt.days > 6 and 'av' in suggestedApis:
+                suggestedApis.remove('av')
                 lastday = n-pd.Timedelta(days=6)
                 violatedRules.append('AlphaVantage data before {} is unavailable.'.format(
                     lastday.strftime("%b %d")))
@@ -198,7 +189,7 @@ class FinPlot:
         if self.api == 'bc':
             # retrieves previous biz day until about 16:30
             return bc.getbc_intraday
-        if self.api == 'mav':
+        if self.api == 'av':
             return mav.getmav_intraday
         if self.api == 'ib':
             return ib.getib_intraday
