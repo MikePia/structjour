@@ -7,32 +7,35 @@ Created on April 14, 2019
 '''
 
 import datetime as dt
-import numpy as np
+import os
 import pickle
 
+import numpy as np
 import pandas as pd
+
 from journal.definetrades import FinReqCol
-from journal.thetradeobject import TheTradeObject, SumReqFields
-from journal.stock.graphstuff import FinPlot
+from journal.thetradeobject import SumReqFields, TheTradeObject
+
 # from journal.view.sumcontrol import SumControl
 # pylint: disable=C0103
+
 
 class LayoutForms:
     '''
     Run theTradeObject summariew to get the tto DataFrame and populate
     the trade form for each trade
     '''
+
     def __init__(self, sc, jf):
         self.jf = jf
         self.ts = dict()
         rc = SumReqFields()
         self.timeFormat = '%H:%M:%S'
 
-
         self.sc = sc
-        
+        self.tradeSummaries = None
 
-        #Widget Dictionary
+        # Widget Dictionary
         wd = dict()
         wd[rc.name] = sc.ui.title
         wd[rc.acct] = sc.ui.account
@@ -107,18 +110,20 @@ class LayoutForms:
         self.imageNames = None
         self.sc.loadLayoutForms(self)
 
-
     def saveTheTradeObject(self, name):
+        '''pickle tto'''
         with open(name, "wb") as f:
             pickle.dump(self.ts, f)
 
     def loadSavedFile(self):
+        '''Depickle a saved tto list'''
         name = self.sc.getSaveName()
         with open(name, "rb") as f:
             self.ts = pickle.load(f)
 
         print('load up the trade names now')
         tradeSummaries = []
+        self.sc.ui.tradeList.clear()
         for key in self.ts:
             self.sc.ui.tradeList.addItem(key)
             tradeSummaries.append(self.ts[key])
@@ -126,11 +131,6 @@ class LayoutForms:
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
         return tradeSummaries
-
-
-
-
-        
 
     def imageData(self, ldf):
         '''
@@ -140,20 +140,19 @@ class LayoutForms:
         frq = FinReqCol()
         imageNames = list()
         for tdf in ldf:
-            dur =  tdf[frq.dur].unique()[-1]
+            dur = tdf[frq.dur].unique()[-1]
             if isinstance(dur, pd.Timedelta):
                 dur = dur.__str__()
             dur = dur.replace(' ', '_')
             imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
                                                      tdf[frq.name].unique()[-1].replace(' ', '-'),
-                                                     tdf[frq.start].unique()[-1],
-                                                     dur, 'png')
+                                                     tdf[frq.start].unique()[-1], dur, 'png')
             imageName = imageName.replace(':', '')
             imageNames.append(imageName)
         return imageNames
 
     def runSummaries(self, ldf):
-    
+
         tradeSummaries = list()
 
         srf = SumReqFields()
@@ -170,8 +169,6 @@ class LayoutForms:
             tkey = f'{count+1} {tto.TheTrade[srf.name].unique()[0]}'
             self.ts[tkey] = tto.TheTrade
             self.sc.ui.tradeList.addItem(tkey)
-
-            
 
         self.tradeSummaries = tradeSummaries
         return tradeSummaries
@@ -191,12 +188,34 @@ class LayoutForms:
 
             print(wkey)
         self.sc.setChartTimes()
+        print(self.sc.ui.chart1Name.text())
+        iname1 = self.sc.ui.chart1Name.text()
+        iname2 = self.sc.ui.chart2Name.text()
+        iname3 = self.sc.ui.chart3Name.text()
+        outdir = self.sc.getOutdir()
+        ipathfilename1 = os.path.join(outdir, iname1)
+        ipathfilename2 = os.path.join(outdir, iname2)
+        ipathfilename3 = os.path.join(outdir, iname3)
+        self.sc.loadImageFromFile(self.sc.ui.chart1, ipathfilename1)
+        self.sc.loadImageFromFile(self.sc.ui.chart2, ipathfilename2)
+        self.sc.loadImageFromFile(self.sc.ui.chart3, ipathfilename3)
+        print('never were here')
 
     def getChartData(self, key, ckey):
         '''Get the chart data from the tradeObject'''
         assert ckey in ('chart1', 'chart2', 'chart3')
         tto = self.ts[key]
-        return tto[ckey].unique()[0]
+        name = tto[ckey].unique()[0]
+        begin = tto[ckey + 'Start'].unique()[0]
+        end = tto[ckey + 'End'].unique()[0]
+        if not isinstance(begin, (pd.Timestamp, dt.datetime, np.datetime64)) or (
+                not isinstance(end, (pd.Timestamp, dt.datetime, np.datetime64))):
+            print('WARNING: date type is not standard')
+            return None
+
+        interval = tto[ckey + 'Interval'].unique()[0]
+
+        return [name, begin, end, interval]
 
     def setChartData(self, key, data, ckey):
         '''
@@ -204,36 +223,26 @@ class LayoutForms:
         :params key: Trade name from the tradeList
         :params ckey: a key or a list of keys. Possible vals are (str) chart1 chart2 or chart3 If
                         ckey is a list data must be a list of lists
-        :params data: a list or list of lists. Each has: [start, end, interval, name] 
+        :params data: a list or list of lists. Each has: [start, end, interval, name]
         '''
         if self.ts:
 
             assert len(self.ts[key] == 1)
             if isinstance(ckey, list):
-                for k, d  in zip(ckey, data):
+                for k, d in zip(ckey, data):
                     assert k in ['chart1', 'chart2', 'chart3']
-                    self.ts[key].at[0, k] = d        
+                    self.ts[key].at[0, k] = d
                     return
             assert ckey in ['chart1', 'chart2', 'chart3']
-            self.ts[key].at[0, ckey] = data
-        
-    def setChartTimes(self, key):
-        tto = self.ts[key]
-        start = pd.Timestamp(tto['Time1'].unique()[0])
-        for i in range(1, 8):
-            print(tto['Time' + str(i)])
-            daVal = tto['Time' + str(i)].unique()[0]
-            if isinstance(daVal, (pd.Timestamp, dt.datetime, np.datetime64)):
-                daVal = pd.Timestamp(daVal)
-                end = daVal
-            
-            
-        print()
-        fp = FinPlot()
-        # t = self.sc.getchartIntervals()
-        self.sc.setChartTimes(start, end)
+            self.ts[key][ckey] = data[0]
+            self.ts[key][ckey + 'Start'] = data[1]
+            self.ts[key][ckey + 'End'] = data[2]
+            self.ts[key][ckey + 'Interval'] = data[3]
 
     def reloadTimes(self, key):
+        '''
+        reload the time values for the trade time entries.
+        '''
         tto = self.ts[key]
         twidgets = [self.sc.ui.time1, self.sc.ui.time2, self.sc.ui.time3, self.sc.ui.time4,
                     self.sc.ui.time5, self.sc.ui.time6, self.sc.ui.time7, self.sc.ui.time8]
@@ -249,6 +258,7 @@ class LayoutForms:
         print()
 
     def setTargVals(self, key, targ, diff, rr):
+        '''Stre the values affeted by a change in the target value'''
 
         rc = self.rc
         print(key, targ, diff, rr)
@@ -260,6 +270,10 @@ class LayoutForms:
         print()
 
     def setStopVals(self, key, stop, diff, rr, maxloss):
+        '''
+        When the user enters a value in stoploss several things happen in the allback then
+        here we store all the related values in tto.
+        '''
 
         rc = self.rc
         print(key, stop, diff, rr)
@@ -270,7 +284,7 @@ class LayoutForms:
             tto[rc.rr] = rr
         maxloss = 0.0 if not maxloss else maxloss
         tto[rc.maxloss] = maxloss
-        
+
         lost = 0.0
         note = ''
         clean = tto['clean'].unique()[0]
@@ -288,13 +302,13 @@ class LayoutForms:
                 note = 'Loss exceeds max loss!'
                 tto[rc.mstknote] = note
         return (lost, note, clean)
-    
+
     def setClean(self, key, b):
         '''
         Set DataFrame theTrade col clean to b
         :params key: The current trade name is the key found in the tradeList Combo box
         :params b: bool
-        ''' 
+        '''
         self.ts[key]['clean'] = b
 
     def setMstkVals(self, key, val, note):
@@ -323,12 +337,39 @@ class LayoutForms:
         '''
         self.ts[key][self.rc.notes] = val
 
-    def getImageName(self, key, wloc,  uinfo):
+    def getImageName(self, key, wloc, uinfo=''):
+        '''
+        This is an image name for a pasted image. We don't know the interval or time limits beyond
+        the trade times. Remove any interval info, add the widget name (aka the wloc) to the
+        generic name.
+        :params key: The name of the trade from the tradeList
+        :params wloc: The name of the clickLabel widget
+        :params uinfo: Misc string to add to the name
+        '''
 
-         tto = self.ts[key]
-         rc = self.rc
-        #  print(rc.tix, rc.name, rc.start, rc.dur)
-        #  imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
-        #                                              tdf[frq.name].unique()[-1].replace(' ', '-'),
-        #                                              tdf[frq.start].unique()[-1],
-        #                                              tdf[frq.dur].unique()[-1], ft)
+        name = self.ts[key][wloc].unique()[0]
+        data = self.getChartData(key, wloc)
+        if name:
+            n, ext = os.path.splitext(name)
+            if n.endswith('min'):
+                n = n[:-5]
+
+            n = n + wloc + uinfo + ext
+        elif data:
+            # Just in case the name is missing
+            b = data[1]
+            e = data[2]
+            begin = pd.Timestamp(b.date().year(), b.date().month(), b.date().day(),
+                                 b.time().hour(), b.time().minute(), b.time().second())
+            end = pd.Timestamp(e.date().year(), e.date().month(), e.date().day(),
+                               e.time().hour(), e.time().minute(), e.time().second())
+            delt = end - begin
+            bstring = begin.strftime('%H%M%S')
+            estring = delt.__str__().replace(':', '.')
+            n = 'Trade{}_{}_{}_{}_{}.png'.format(
+                key, bstring, estring, wloc, uinfo)
+            n = n.replace(' ', '_')
+        if data[0] != n:
+            data[0] = n
+            self.setChartData(key, data, wloc)
+        return n

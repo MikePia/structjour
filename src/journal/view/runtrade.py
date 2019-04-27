@@ -38,8 +38,6 @@ class runController:
     def __init__(self, sc):
         self.sc = sc
         self.ui = self.sc.ui
-        self.settings = self.sc.settings
-        self.inputtype = self.settings.value('inputType')
 
         self.initialize()
 
@@ -52,6 +50,8 @@ class runController:
     def initialize(self):
         ### Might blitz thes lines if JournalFiles gets an overhaul. For ease of transaiton
         ### We keep JournalFiles till its allworks into the Qt run
+        self.settings = self.sc.settings
+        self.inputtype = self.settings.value('inputType')
         self.indir = self.sc.getDirectory()
         if self.inputtype == 'DAS':
             inkey = 'dasInfile'
@@ -72,6 +72,8 @@ class runController:
 
     def loadit(self):
         print('gonna loadit gonna loadit')
+        daDate = self.ui.dateEdit.date()
+        self.settings.setValue('theDate', daDate)
         self.initialize()
         jf = JournalFiles(indir=self.indir, outdir=self.outdir,
                       theDate=self.theDate, infile=self.infile,

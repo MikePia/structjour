@@ -39,15 +39,15 @@ class XLImage:
         self.name = None
 
 
-    def adjustSizeByHeight(self, sz):
+    def adjustSizeByHeight(self, sz, cells = None):
         '''
         Adjust size to keep the aspect ratio the same as determined by self.numCells and
         self.pixPerCell
         '''
         #TODO Make some contraption to adjust the size by the user.
         w, h = sz
-
-        newHeight = self.numCells * self.pixPerCell
+        cells = cells if cells else self.numCells
+        newHeight = cells * self.pixPerCell
         newWidth = newHeight * w/h
         nw = int(newWidth)
         nh = int(newHeight)
@@ -67,20 +67,20 @@ class XLImage:
         :return img, pname: The pathname of the image we save. On failure return None and error
                             message
         '''
+
+        #Setting  a default size for this method-- this should go in pref somehow
+        CELLS = 33
         img = None
         try:
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
-            msg = '''
-            Copy an image to the clipboard using snip for {0}
-            '''.format(name)
 
             # pilImage = self.getPilImage(msg)
             pilImage = ImageGrab.grabclipboard()
             # ext = pilImage.format.lower()
             if not pilImage:
                 return None, 'Failed to retrieve image from clipboard.' 
-            newSize = self.adjustSizeByHeight(pilImage.size)
+            newSize = self.adjustSizeByHeight(pilImage.size, CELLS)
             pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
 
             pname, ext = self.getResizeName(name, outdir)
@@ -95,10 +95,6 @@ class XLImage:
             return None, e.__str__()
 
         return img, pname
-        
-
-
-        return im
 
     def getPilImage(self, msg):
         '''

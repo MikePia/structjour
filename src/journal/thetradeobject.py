@@ -14,7 +14,6 @@ import pandas as pd
 from journal.definetrades import FinReqCol
 from journal.dfutil import DataFrameUtil
 from journal.stock.graphstuff import FinPlot
-from journal.view.savecharts import SaveChart
 
 # pylint: disable=C0103
 
@@ -30,13 +29,13 @@ class SumReqFields:
     Manage the required columns, cell location and namedStyle for the summary aka TheTradeObject
     and TheTradeStyle. There are three types of data represented here.
     :attribute self.rc (The data): The data is held in the locations represented by self.rc and the
-        associatied dict keys. The keys can be 0f course accessed as strings or as attributes such
+        associatied dict keys. The keys can be of course accessed as strings or as attributes such
         as self.name. The latter should be used to maintain portable input files. This data will be
         placed in the workbooks in the trade summaries. The rc columns are used in a DataFrame (aka
         TheTrade) that summarizes each single trade with a single row. This summary information
-        includes information from the user, target, stop, strategy, notes etc.
-    :attribute self.tfcolumns (The style): This the the tradeformat form. The form can be re-shaped
-        by changing this data structure. These will style workbook in the trade summaries
+        includes information from the user, target, stop, strategy, notes, saved images etc.
+    :attribute self.tfcolumns (The style): This the the tradeformat excel form. The form can be 
+        re-shaped by changing this data structure. These will style workbook in the trade summaries
     :attribute self.tfformulas (hybrid data): These entries will override the rc data. The entries
         represent excel formulas. Most formulas require a mapping of cells done just after the cell
         styling.
@@ -685,12 +684,14 @@ class TheTradeObject:
         defaultIntervals = [1, 5, 15]
         fp = FinPlot()
         for i, di in enumerate(defaultIntervals):
-            imageName, ext = os.path.splitext(imageName)
-            imageName = '{}_{:02d}min{}'.format(imageName, di, ext)
+            iName, ext = os.path.splitext(imageName)
+            iName = '{}_{:02d}min{}'.format(iName, di, ext)
             begin, finish = fp.setTimeFrame(start, end, di)
-            l = (begin, finish, di, imageName)
-            self.TheTrade['chart' + str(i+1)]  = ''
-            self.TheTrade.at[0, 'chart' + str(i+1)] = l
+
+            self.TheTrade['chart'+ str(i+1)] = iName
+            self.TheTrade['chart'+ str(i+1) + 'Start'] = begin
+            self.TheTrade['chart'+ str(i+1) + 'End'] = finish
+            self.TheTrade['chart'+ str(i+1) + 'Interval'] = di
 
 
     def __setTarget(self):

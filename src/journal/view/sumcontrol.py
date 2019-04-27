@@ -12,28 +12,34 @@ import os
 import re
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox, QMenu
-from PyQt5.QtCore import QSettings, QDate, Qt
-from PyQt5.QtGui import QFont, QDoubleValidator, QPixmap
+from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
+from PyQt5.QtGui import QDoubleValidator, QPixmap
 
 import pandas as pd
 
 from journal.view.summaryform import Ui_MainWindow
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
-from journal.view.layoutforms import LayoutForms
 from journal.xlimage import XLImage
 from journal.stock.graphstuff import FinPlot
 from journal.view.sapicontrol import StockApi
 
 # pylint: disable = C0103
 
+
 def qtime2pd(qdt):
-    d = pd.Timestamp(qdt.date().year(), 
-                      qdt.date().month(), 
-                      qdt.date().day(),
-                      qdt.time().hour(), 
-                      qdt.time().minute(), 
-                      qdt.time().second())
+    '''Return a pandas Timestamp from a QDateTime'''
+    d = pd.Timestamp(qdt.date().year(),
+                     qdt.date().month(),
+                     qdt.date().day(),
+                     qdt.time().hour(),
+                     qdt.time().minute(),
+                     qdt.time().second())
     return d
+
+def pd2qtime(pdt):
+    '''Return a QDateTime from a time objet of Timestamp'''
+    pdt = pd.Timestamp(pdt)
+    return QDateTime(pdt.year, pdt.month, pdt.day, pdt. hour, pdt.minute, pdt.second)
 
 class SumControl(QMainWindow):
     '''
@@ -42,7 +48,8 @@ class SumControl(QMainWindow):
     (fui) is set up in FileSetDlg.
     :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile', 'dasInfile2',
                      'ibInfile', ibInfileName', outdir, 'interval', inputType]
-    ''' 
+    '''
+
     def __init__(self):
         '''
         Retrieve and load settings, and  create action signals for the SumControl Form.
@@ -50,14 +57,14 @@ class SumControl(QMainWindow):
         '''
         super().__init__()
 
-
+        self.defaultImage = 'C:/python/E/structjour/src/images/ZeroSubstanceCreation_500x334.png'
         ui = Ui_MainWindow()
         ui.setupUi(self)
 
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
-        
+
         self.settings.setValue('runType', 'QT')
         now = None
         self.fui = None
@@ -74,8 +81,7 @@ class SumControl(QMainWindow):
             elif intype == 'IB_HTML':
                 self.ui.ibImport.setChecked(True)
 
-
-        #Create connections for widgets on this form
+        # Create connections for widgets on this form
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
         self.ui.dateEdit.dateChanged.connect(self.setFormDate)
@@ -100,9 +106,6 @@ class SumControl(QMainWindow):
         self.ui.targ.setValidator(v)
         self.ui.stop.setValidator(v)
 
-        
-
-        
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
         self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
 
@@ -116,15 +119,15 @@ class SumControl(QMainWindow):
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
 
-
-    #=================================================================
-    #==================== Main Form  methods =========================
-    #=================================================================
+    # =================================================================
+    # ==================== Main Form  methods =========================
+    # =================================================================
 
     def saveTradeObject(self):
         outpathfile = self.getSaveName()
         if os.path.exists(outpathfile):
-            print('Should probably pop up here and warn user they are overwriting a save.')
+            print(
+                'Should probably pop up here and warn user they are overwriting a save.')
         print(outpathfile)
         print()
         self.lf.saveTheTradeObject(outpathfile)
@@ -142,7 +145,11 @@ class SumControl(QMainWindow):
         outf = "." + outf + '.zst'
         outpathfile = os.path.join(outdir, outf)
         return outpathfile
-        
+
+    def loadImageFromFile(self, widg, name):
+        if not os.path.exists(name):
+            name = self.defaultImage
+        widg.setPixmap(QPixmap(name))
 
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
         fp = FinPlot()
@@ -162,14 +169,13 @@ class SumControl(QMainWindow):
         if pname:
             pixmap = QPixmap(pname)
             widg.setPixmap(pixmap)
-            data = [begin, end, pname]
+            data = [pname, begin, end, interval]
             key = self.ui.tradeList.currentText()
             self.lf.setChartData(key, data, c)
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
             return pname
         return None
-            
 
     def chartMagic1(self):
         pname = self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
@@ -222,7 +228,7 @@ class SumControl(QMainWindow):
         print('loadIm1ge1', x.objectName(), event.pos(), event.globalPos())
         img = x
         cmenu = QMenu(img)
-        
+
         pi1 = cmenu.addAction("psych 1")
         pi2 = cmenu.addAction("fractal 2")
         pi3 = cmenu.addAction("starry night 3")
@@ -234,7 +240,7 @@ class SumControl(QMainWindow):
         if action == pi1:
             fn = 'C:/python/E/structjour/src/images/psych.jpg'
             x.setPixmap(QPixmap(fn))
-        
+
         if action == pi2:
             fn = 'C:/python/E/structjour/src/images/fractal-art-fractals.jpg'
             x.setPixmap(QPixmap(fn))
@@ -244,21 +250,36 @@ class SumControl(QMainWindow):
             x.setPixmap(QPixmap(fn))
         if action == pi4:
             name = ''
+            key = self.ui.tradeList.currentText()
             if self.lf:
 
-                key = self.ui.tradeList.currentText()
-                name = self.lf.getImageName(key, x.objectName(),  'user')
+                name = self.lf.getImageName(key, x.objectName())
             else:
-                name = x.objectName() + '_user' 
+                name = x.objectName() + '_user'
 
-            self.pasteToLabel(x, name)
+            pname = self.pasteToLabel(x, name)
+            if not pname:
+                return
+            p, nname = os.path.split(pname)
+            if nname != name:
+                data = self.lf.getChartData(key, x.objectName())
+                print()
+                data[0] = nname
+                self.lf.setChartData(key, data, x.objectName())
+            xn = x.objectName()
+            if xn == 'chart1':
+                self.ui.chart1Name.setText(nname)
+            if xn == 'chart2':
+                self.ui.chart2Name.setText(nname)
+            if xn == 'chart3':
+                self.ui.chart3Name.setText(nname)
 
     def pasteToLabel(self, widg, name):
         '''
         Rather than paste, we call a method that saves the clipboard to a file, then we open it with QPixmap
         '''
         xlimg = XLImage()
-        img, pname = xlimg.getPilImageNoDrama(name, self.settings.value('outdir'))
+        img, pname = xlimg.getPilImageNoDrama(name, self.getOutdir())
         if not img:
             mbox = QMessageBox()
             msg = pname + " Failed to get an image. Please select and copy an image."
@@ -268,13 +289,13 @@ class SumControl(QMainWindow):
 
         pixmap = QPixmap(pname)
         widg.setPixmap(pixmap)
-
+        return pname
 
     def setExplain(self):
-       key = self.ui.tradeList.currentText()
-       text = self.ui.explain.toPlainText()
-       print(text)
-       self.lf.setExplain(key, text)
+        key = self.ui.tradeList.currentText()
+        text = self.ui.explain.toPlainText()
+        print(text)
+        self.lf.setExplain(key, text)
 
     def setNotes(self):
         key = self.ui.tradeList.currentText()
@@ -295,7 +316,6 @@ class SumControl(QMainWindow):
         fval = float(val)
         self.lf.setMstkVals(key, fval, note)
 
-
     def setMstkNote(self):
         val = self.ui.lost.text()
         note = self.ui.sumNote.toPlainText()
@@ -307,22 +327,23 @@ class SumControl(QMainWindow):
             val = '0.0'
         fval = float(val)
         self.lf.setMstkVals(key, fval, note)
-            
+
     def loadLayoutForms(self, lf):
         self.lf = lf
 
-    def loadTrade(self, val):
+    def loadTrade(self, key):
         '''
-        CallBack for tradeList -- the combo box
-        Loads up the trade values when tradeList changes
-        :params val: The trade name and key for the widget collection in Layout Forms
+        CallBack for tradeList -- the combo box. Callback sends currentText-- which is our key
+        loading the trade. Can also call it manually. Loads up the trade values when tradeList
+        selection changes
+        :params key: The trade name and key for the widget collection in Layout Forms
         :Prerequisites: loadLayoutForm must be called before the box is used
         '''
-        if not val:
+        if not key:
             print('No Val')
             return
-        print(val)
-        self.lf.populateTradeSumForms(val)
+        print(key)
+        self.lf.populateTradeSumForms(key)
 
     def setChartTimes(self):
         '''
@@ -331,26 +352,26 @@ class SumControl(QMainWindow):
         key = self.ui.tradeList.currentText()
         c1 = self.lf.getChartData(key, 'chart1')
 
-        self.ui.chart1Start.setDateTime(c1[0])
-        self.ui.chart1End.setDateTime(c1[1])
-        self.ui.chart1Interval.setValue(c1[2])
-        self.ui.chart1Name.setText(c1[3])
+        self.ui.chart1Name.setText(c1[0])
+        self.ui.chart1Start.setDateTime(pd2qtime(c1[1]))
+        self.ui.chart1End.setDateTime(pd2qtime(c1[2]))
+        self.ui.chart1Interval.setValue(c1[3])
 
         c2 = self.lf.getChartData(key, 'chart2')
 
-        self.ui.chart2Start.setDateTime(c2[0])
-        self.ui.chart2End.setDateTime(c2[1])
-        self.ui.chart2Interval.setValue(c2[2])
-        self.ui.chart2Name.setText(c2[3])
+        self.ui.chart2Name.setText(c2[0])
+        self.ui.chart2Start.setDateTime(pd2qtime(c2[1]))
+        self.ui.chart2End.setDateTime(pd2qtime(c2[2]))
+        self.ui.chart2Interval.setValue(c2[3])
 
         c3 = self.lf.getChartData(key, 'chart3')
 
-        self.ui.chart3Start.setDateTime(c3[0])
-        self.ui.chart3End.setDateTime(c3[1])
-        self.ui.chart3Interval.setValue(c3[2])
-        self.ui.chart3Name.setText(c3[3])
-        # , self.ui.chart1End), 
-        #           (self.ui.chart2Start, self.ui.chart2End), 
+        self.ui.chart3Name.setText(c3[0])
+        self.ui.chart3Start.setDateTime(pd2qtime(c3[1]))
+        self.ui.chart3End.setDateTime(pd2qtime(c3[2]))
+        self.ui.chart3Interval.setValue(c3[3])
+        # , self.ui.chart1End),
+        #           (self.ui.chart2Start, self.ui.chart2End),
         #           (self.ui.chart3Start, self.ui.chart3End)]
         # fp = FinPlot()
         # # for w, interval in zip(wlist, l):
@@ -358,12 +379,10 @@ class SumControl(QMainWindow):
         #     w[0].setDateTime(start)
         #     w[1].setDateTime(finish)
 
-
     def dasDefault(self, b):
         print('DAS', b)
         self.settings.setValue('inputType', 'DAS')
         self.setFormDate()
-
 
     def ibDefault(self, b):
         print('ib', b)
@@ -389,7 +408,7 @@ class SumControl(QMainWindow):
             return
         sglob = ibinfile
         rgx = re.sub('{\*}', '.*', sglob)
-    
+
         fs = list()
         if os.path.exists(indir):
             for f in os.listdir(indir):
@@ -416,7 +435,7 @@ class SumControl(QMainWindow):
         #         infile = ibinfile
         #     else:
         #         infile = dasinfile
-                
+
         self.ui.infileEdit.setText(infile)
         if os.path.exists(infile):
             self.ui.infileEdit.setStyleSheet('color: green;')
@@ -444,7 +463,7 @@ class SumControl(QMainWindow):
         #     self.ui.dasImport.setEnabled(False)
 
     def getInfile(self):
-        #TODO Need a choosing mechanism for DAS or IB
+        # TODO Need a choosing mechanism for DAS or IB
         d = self.getDirectory()
         infile = self.settings.value('dasInfile')
         if not d or not infile:
@@ -463,7 +482,7 @@ class SumControl(QMainWindow):
         try:
             fval = float(val)
             fpl = float(self.ui.entry1.text())
-            
+
             fdiff = fval-fpl
             diff = '{:.02f}'.format(fdiff)
         except ValueError:
@@ -480,7 +499,7 @@ class SumControl(QMainWindow):
 
     def stopLoss(self, val):
         '''
-        Set the stopDiff to the difference between the stoploss and the actual PL, then 
+        Set the stopDiff to the difference between the stoploss and the actual PL, then
         call rrCalc
         '''
         diff = 0
@@ -499,7 +518,8 @@ class SumControl(QMainWindow):
 
         if self.lf:
             key = self.ui.tradeList.currentText()
-            (lost, note, clean) = self.lf.setStopVals(key, fval, fdiff, rr, mxloss)
+            (lost, note, clean) = self.lf.setStopVals(
+                key, fval, fdiff, rr, mxloss)
             if lost or clean:
                 # Note these widgets are only set if the user has not edited either widget. This is
                 # the only place they are 'auto set'
@@ -507,14 +527,12 @@ class SumControl(QMainWindow):
                 self.ui.lost.setText(str(lost))
                 self.ui.sumNote.setText(note)
 
-    
-    def rrCalc(self, targDiff = None, slDiff = None):
+    def rrCalc(self, targDiff=None, slDiff=None):
         '''
         Figure and set the Risk:Reward label
         '''
         targDiff = self.ui.targDiff.text() if not targDiff else targDiff
         slDiff = self.ui.stopDiff.text() if not slDiff else slDiff
-        
 
         try:
             ftarg = float(targDiff)
@@ -545,8 +563,6 @@ class SumControl(QMainWindow):
         slDiff = self.ui.stopDiff.text()
         shares = self.ui.pos.text()
         shares = shares.split(' ')[0]
-            
-
 
         try:
             slDiff = float(slDiff)
@@ -570,9 +586,9 @@ class SumControl(QMainWindow):
 
         return sval
 
-    #=================================================================
-    #==================== End Main Form methods =====================
-    #=================================================================
+    # =================================================================
+    # ==================== End Main Form methods =====================
+    # =================================================================
 
     def getDirectory(self):
 
@@ -580,7 +596,7 @@ class SumControl(QMainWindow):
         journal = self.settings.value('journal')
         if not scheme or not journal:
             return None
-    
+
         d = self.settings.value('theDate')
         d = pd.Timestamp(d.year(), d.month(), d.day())
         Year = d.year
@@ -589,7 +605,8 @@ class SumControl(QMainWindow):
         day = d.strftime('%d')
         DAY = d.strftime('%A')
         try:
-            schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
+            schemeFmt = scheme.format(
+                Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         except KeyError:
             return None
         inpath = os.path.join(journal, schemeFmt)
@@ -597,16 +614,16 @@ class SumControl(QMainWindow):
 
     def getOutdir(self):
         op = self.settings.value('outdirPolicy')
-        if  op == 'static':
+        if op == 'static':
             return self.settings.value('outdir')
         outdir = os.path.join(self.getDirectory(), 'out/')
         if not os.path.exists(outdir):
             os.mkdir(outdir)
         return outdir
 
-    #=================================================================
-    #==================== File setting dialog  methods ===============
-    #=================================================================
+    # =================================================================
+    # ==================== File setting dialog  methods ===============
+    # =================================================================
 
     def fileSetDlg(self):
         '''
@@ -637,9 +654,8 @@ class SumControl(QMainWindow):
         daDate = self.settings.value('theDate')
         if daDate:
             fui.theDate.setDate(daDate)
-        
 
-        # Define actions. 
+        # Define actions.
         fui.journalBtn.pressed.connect(self.setJournalDlg)
         fui.journal.returnPressed.connect(self.setJournalDir)
 
@@ -655,7 +671,7 @@ class SumControl(QMainWindow):
         fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
         fui.ibInfile.returnPressed.connect(self.setIBInfile)
 
-        fui.outdirDefault.clicked.connect(self.setOutdir) 
+        fui.outdirDefault.clicked.connect(self.setOutdir)
         fui.outdirStatic.clicked.connect(self.setOutdir)
         fui.outdir.returnPressed.connect(self.setOutdir)
 
@@ -669,7 +685,6 @@ class SumControl(QMainWindow):
 
         w.exec()
 
-
     def closeit(self):
         self.w.close()
 
@@ -682,7 +697,6 @@ class SumControl(QMainWindow):
         self.setDASInfile2()
         self.setIBInfile()
         self.setOutdir()
-
 
     def setToday(self):
         '''
@@ -716,7 +730,7 @@ class SumControl(QMainWindow):
         '''
         Call only when file settings dialog (self.fui) is active.
         '''
-        outdir = self.fui.outdir.text() 
+        outdir = self.fui.outdir.text()
         outpathfile = ''
         if self.fui.outdirStatic.isChecked():
             self.settings.setValue('outdirPolicy', 'static')
@@ -762,7 +776,7 @@ class SumControl(QMainWindow):
                 return
         rgx = re.sub('{\*}', '.*', sglob)
         d = self.getDirectory()
-    
+
         # What should turn red here????
         if not os.path.exists(d):
             return
@@ -812,7 +826,7 @@ class SumControl(QMainWindow):
         infile2 = self.fui.dasInfile2.text()
         infile2 = os.path.split(infile2)[1]
         self.settings.setValue('dasInfile2', infile2)
-    
+
         self.fui.scheme.setStyleSheet("color: black;")
         inpathfile = os.path.join(inpath, infile2)
         if not os.path.exists(inpathfile):
@@ -828,7 +842,7 @@ class SumControl(QMainWindow):
         fname = self.settings.value('dasInfile')
         self.fui.dasInfile.setText(fname)
         self.fui.dasInfile.setStyleSheet("color: black;")
-        
+
     def setDASInfile(self):
         '''
         Call only when file settings dialog (self.fui) is active.
@@ -840,7 +854,7 @@ class SumControl(QMainWindow):
         self.settings.setValue('dasInfile', infile)
         if not scheme or not journal or not infile:
             return
-    
+
         d = self.settings.value('theDate')
         d = pd.Timestamp(d.year(), d.month(), d.day())
         Year = d.year
@@ -849,7 +863,8 @@ class SumControl(QMainWindow):
         day = d.strftime('%d')
         DAY = d.strftime('%A')
         try:
-            schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
+            schemeFmt = scheme.format(
+                Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
             self.fui.scheme.setStyleSheet("color: black;")
         except KeyError:
             return
@@ -860,7 +875,7 @@ class SumControl(QMainWindow):
         else:
             self.fui.dasInfile.setStyleSheet("color: green;")
         self.fui.dasInfile.setText(inpathfile)
-        
+
     def setTheScheme(self, scheme):
         '''
         Button, LineEdit and Label used to set and display a directory naming scheme.
@@ -874,12 +889,13 @@ class SumControl(QMainWindow):
         day = ddate.strftime('%d')
         DAY = ddate.strftime('%A')
         try:
-            schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
+            schemeFmt = scheme.format(
+                Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
             self.fui.scheme.setStyleSheet("color: black;")
         except (KeyError, ValueError):
             self.fui.scheme.setStyleSheet("color: red;")
             schemeFmt = scheme
-            
+
         self.fui.schemeLbl.setText(schemeFmt)
         self.fui.scheme.setText(scheme)
         self.settings.setValue('scheme', scheme)
@@ -907,7 +923,7 @@ class SumControl(QMainWindow):
         '''
 
         path = QFileDialog.getExistingDirectory(None, "Select Directory")
-        self.fui.journal.setText(path) 
+        self.fui.journal.setText(path)
         self.settings.setValue('journal', path)
 
     def setJournalDir(self):
@@ -918,11 +934,12 @@ class SumControl(QMainWindow):
             self.fui.journal.setStyleSheet("color: green;")
             self.settings.setValue('journal', path)
 
-    #=================================================================
-    #================ End File setting dialog  methods ===============
-    #=================================================================
+    # =================================================================
+    # ================ End File setting dialog  methods ===============
+    # =================================================================
 
     def stockAPIDlg(self):
+        '''Fire up the stock Api settings dialog'''
         sapi = StockApi(self.settings)
         sapi.exec()
 
@@ -931,7 +948,6 @@ if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    w = SumControl()
-    w.show()
+    win = SumControl()
+    win.show()
     sys.exit(app.exec_())
-    
