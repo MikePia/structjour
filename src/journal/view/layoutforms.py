@@ -1,5 +1,6 @@
 '''
-Populate the Qt forms
+Populate the Qt forms. Generally loyoutforms populates the trade summaries for QT and layoutsheets
+populates the form entries for excel.
 
 Created on April 14, 2019
 
@@ -17,16 +18,20 @@ from journal.definetrades import FinReqCol
 from journal.thetradeobject import SumReqFields, TheTradeObject
 
 # from journal.view.sumcontrol import SumControl
-# pylint: disable=C0103
+# pylint: disable=C0103, C1801
 
 
 class LayoutForms:
     '''
-    Run theTradeObject summariew to get the tto DataFrame and populate
-    the trade form for each trade
+    Run theTradeObject summaries to get the tto DataFrame and populate
+    the trade form for each trade.
     '''
 
     def __init__(self, sc, jf):
+        '''
+        Initialize the obect and create a Widget dictionary using the same keys as the keys to the
+        tto object to populate the data.
+        '''
         self.jf = jf
         self.ts = dict()
         rc = SumReqFields()
@@ -35,7 +40,7 @@ class LayoutForms:
         self.sc = sc
         self.tradeSummaries = None
 
-        # Widget Dictionary
+        # Widget Dictionary. Keys are same keys for TheTradeObject.TheTrade object
         wd = dict()
         wd[rc.name] = sc.ui.title
         wd[rc.acct] = sc.ui.account
@@ -111,12 +116,15 @@ class LayoutForms:
         self.sc.loadLayoutForms(self)
 
     def saveTheTradeObject(self, name):
-        '''pickle tto'''
+        '''pickle tto list'''
         with open(name, "wb") as f:
             pickle.dump(self.ts, f)
 
     def loadSavedFile(self):
-        '''Depickle a saved tto list'''
+        '''
+        Depickle a saved tto list. Clear then repopulate the tradeList widget. The first append
+        will trigger the loading mechanism from tto to QT widgets
+        '''
         name = self.sc.getSaveName()
         with open(name, "rb") as f:
             self.ts = pickle.load(f)
@@ -152,6 +160,15 @@ class LayoutForms:
         return imageNames
 
     def runSummaries(self, ldf):
+        '''
+        This script creates the tto object for each trade in the input file and appends it to a
+        list It also creates a generic name for assoiated images. That name will be altered for
+        speific images that may be created via the stock api or added by the user. Finally the
+        sript creates the tradeList key and adds it to the tradeList widget. The key is used to
+        retrieve the tto data from the tradeList widget currentText selection.
+        :params ldf: A list of DataFrames. Each df is a complete trade from initial purchace or
+                    hold to 0 shares or hold.
+        '''
 
         tradeSummaries = list()
 
@@ -159,14 +176,14 @@ class LayoutForms:
         self.imageNames = self.imageData(ldf)
         assert len(ldf) == len(self.imageNames)
         self.sc.ui.tradeList.clear()
-        for count, (loc, tdf) in enumerate(zip(self.imageNames, ldf)):
+        for i, (imageName, tdf) in enumerate(zip(self.imageNames, ldf)):
 
             tto = TheTradeObject(tdf, False, srf)
-            tto.runSummary(self.imageNames[count])
+            tto.runSummary(imageName)
             tradeSummaries.append(tto.TheTrade)
             # for key in self.wd.keys():
             #     print(key, tto.TheTrade[key].unique()[0])
-            tkey = f'{count+1} {tto.TheTrade[srf.name].unique()[0]}'
+            tkey = f'{i+1} {tto.TheTrade[srf.name].unique()[0]}'
             self.ts[tkey] = tto.TheTrade
             self.sc.ui.tradeList.addItem(tkey)
 
@@ -174,8 +191,15 @@ class LayoutForms:
         return tradeSummaries
 
     def populateTradeSumForms(self, key):
+        '''
+        Use the widget dictionary (self.wd) and tto to populate the form. The images and related
+        widgets are handled seperately.
+        :Programming Note: Maybe handle the image together with everything else. All the relate
+        widgets have entries and keys in tto. Cleaner. Easier to maintain. Back burner 4/27/19
+        '''
+
         tto = self.ts[key]
-        for wkey in self.wd.keys():
+        for wkey in self.wd:
             daVal = tto[wkey].unique()[0]
             if isinstance(daVal, (np.floating, float)):
                 daVal = '{:.02f}'.format(daVal)
@@ -202,7 +226,13 @@ class LayoutForms:
         print('never were here')
 
     def getChartData(self, key, ckey):
-        '''Get the chart data from the tradeObject'''
+        '''
+        Get the chart data from the tradeObject
+        :params key: Trade name from the tradeList widget
+        :params ckey: The widget name of the clickLabel will be one of 'chart1', 'chart2', or
+                    'chart3'
+        '''
+
         assert ckey in ('chart1', 'chart2', 'chart3')
         tto = self.ts[key]
         name = tto[ckey].unique()[0]
@@ -221,9 +251,9 @@ class LayoutForms:
         '''
         Store the chart data in the trade object
         :params key: Trade name from the tradeList
-        :params ckey: a key or a list of keys. Possible vals are (str) chart1 chart2 or chart3 If
-                        ckey is a list data must be a list of lists
         :params data: a list or list of lists. Each has: [start, end, interval, name]
+        :params ckey: The widget name of the clickLabel will be one of 'chart1', 'chart2', or
+                    'chart3'
         '''
         if self.ts:
 
@@ -241,7 +271,8 @@ class LayoutForms:
 
     def reloadTimes(self, key):
         '''
-        reload the time values for the trade time entries.
+        reload the time values for the trade time entries. This is done after toggling the date
+        format to use (includes date info or not).
         '''
         tto = self.ts[key]
         twidgets = [self.sc.ui.time1, self.sc.ui.time2, self.sc.ui.time3, self.sc.ui.time4,
@@ -258,10 +289,9 @@ class LayoutForms:
         print()
 
     def setTargVals(self, key, targ, diff, rr):
-        '''Stre the values affeted by a change in the target value'''
+        '''Store the values affected by a change in the target value'''
 
         rc = self.rc
-        print(key, targ, diff, rr)
         tto = self.ts[key]
         tto[rc.targ] = targ
         tto[rc.targdiff] = diff
@@ -271,12 +301,12 @@ class LayoutForms:
 
     def setStopVals(self, key, stop, diff, rr, maxloss):
         '''
-        When the user enters a value in stoploss several things happen in the allback then
-        here we store all the related values in tto.
+        When the user enters a value in stoploss several things happen in the callback then
+        here we store all the related values in tto. If the widgets have been marked clean,
+        determine if a loss in PL exceeds maxloss. If so, save the data to tto
         '''
 
         rc = self.rc
-        print(key, stop, diff, rr)
         tto = self.ts[key]
         tto[rc.stoploss] = stop
         tto[rc.sldiff] = diff
@@ -305,7 +335,7 @@ class LayoutForms:
 
     def setClean(self, key, b):
         '''
-        Set DataFrame theTrade col clean to b
+        Set set tto.clean to b
         :params key: The current trade name is the key found in the tradeList Combo box
         :params b: bool
         '''
@@ -313,7 +343,7 @@ class LayoutForms:
 
     def setMstkVals(self, key, val, note):
         '''
-        Set DataFrame theTrade cols values for the two mistake widgets
+        Set tto mstkval and mstknote to given values
         :params key: The current trade name is the key found in the tradeList Combo box
         :params val: Float, The value for the 'lost' widget
         :params note: The value for the sumNotes widget
@@ -323,7 +353,7 @@ class LayoutForms:
 
     def setExplain(self, key, val):
         '''
-        Set DataFrame theTrade col explain to val
+        Set tto explain to val
         :params key: The current trade name is the key found in the tradeList Combo box
         :params val: The value for the explain widget
         '''
@@ -331,7 +361,7 @@ class LayoutForms:
 
     def setNotes(self, key, val):
         '''
-        Set DataFrame theTrade col notes to val
+        Set tto notes to val
         :params key: The current trade name is the key found in the tradeList Combo box
         :params val: The value for the notes widget
         '''
@@ -340,7 +370,7 @@ class LayoutForms:
     def getImageName(self, key, wloc, uinfo=''):
         '''
         This is an image name for a pasted image. We don't know the interval or time limits beyond
-        the trade times. Remove any interval info, add the widget name (aka the wloc) to the
+        the trade times. Remove any interval info, add the widget name (e.g. 'chart1') to the
         generic name.
         :params key: The name of the trade from the tradeList
         :params wloc: The name of the clickLabel widget
