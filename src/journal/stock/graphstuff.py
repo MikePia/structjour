@@ -303,10 +303,11 @@ class FinPlot:
         for entry in self.entries:
             e = entry[0]
             candle = entry[1]
-            # tix = entry[3]
-            
-            l = ax1.plot(df_ohlc.date[candle], e, marker='^',
-                         color='g', markersize=markersize)
+            if entry[2] == 'B':
+                l = ax1.plot(df_ohlc.date[candle], e, marker='^', color='g', markersize=markersize)
+            elif entry[2] == 'S':
+                l = ax1.plot(df_ohlc.date[candle], e, marker='v', color='r', markersize=markersize)
+
             plt.setp(l, markersize=markersize)
 
         for ex in self.exits:
@@ -314,8 +315,6 @@ class FinPlot:
             candle = ex[1]
             # tix = ex[3]
 
-            l = ax1.plot(df_ohlc.date[candle], e, marker='v',
-                         color='r', markersize=markersize)
             plt.setp(l, markersize=markersize)
 
         # fig = plt.Figure

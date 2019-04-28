@@ -643,6 +643,10 @@ class TheTradeObject:
                     entries.append([price, dtime, shares, 0, diff, "Entry"])
             count = count + 1
 
+        # Store this bit seperately for use in chart creation. Avoid having to re-constitute the details. We will
+        # add these to a dictionary in LayoutForms using the same key as lf.ts
+        self.entries = entries
+
         if len(entries) > 8:
             more = len(entries) - 8
             self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)

@@ -34,6 +34,7 @@ class LayoutForms:
         '''
         self.jf = jf
         self.ts = dict()
+        self.entries = dict()
         rc = SumReqFields()
         self.timeFormat = '%H:%M:%S'
 
@@ -118,7 +119,7 @@ class LayoutForms:
     def saveTheTradeObject(self, name):
         '''pickle tto list'''
         with open(name, "wb") as f:
-            pickle.dump(self.ts, f)
+            pickle.dump((self.ts, self.entries), f)
 
     def loadSavedFile(self):
         '''
@@ -127,7 +128,7 @@ class LayoutForms:
         '''
         name = self.sc.getSaveName()
         with open(name, "rb") as f:
-            self.ts = pickle.load(f)
+            (self.ts, self.entries) = pickle.load(f)
 
         print('load up the trade names now')
         tradeSummaries = []
@@ -185,6 +186,7 @@ class LayoutForms:
             #     print(key, tto.TheTrade[key].unique()[0])
             tkey = f'{i+1} {tto.TheTrade[srf.name].unique()[0]}'
             self.ts[tkey] = tto.TheTrade
+            self.entries[tkey] = tto.entries
             self.sc.ui.tradeList.addItem(tkey)
 
         self.tradeSummaries = tradeSummaries
@@ -225,6 +227,17 @@ class LayoutForms:
         self.sc.loadImageFromFile(self.sc.ui.chart3, ipathfilename3)
         print('never were here')
 
+    def getEntries(self, key):
+        '''
+        The entries are pickled seperately in the dict self.entries. It uses parallel keys to
+        self.ts. This data is trade information, read only and is used currently for chart
+        generation. The data structure is: 
+        [price, time, share, pl, diff, entryOrExit]. Share is positive for buy, negative for sell.
+        :params key: Trade name from the tradeList sidget
+        '''
+        entries = self.entries[key]
+        return entries
+
     def getChartData(self, key, ckey):
         '''
         Get the chart data from the tradeObject
@@ -240,7 +253,7 @@ class LayoutForms:
         end = tto[ckey + 'End'].unique()[0]
         if not isinstance(begin, (pd.Timestamp, dt.datetime, np.datetime64)) or (
                 not isinstance(end, (pd.Timestamp, dt.datetime, np.datetime64))):
-            print('WARNING: date type is not standard')
+            print('WARNING: date type is not standard', type(begin))
             return None
 
         interval = tto[ckey + 'Interval'].unique()[0]

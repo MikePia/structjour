@@ -165,12 +165,30 @@ class SumControl(QMainWindow):
         ticker = self.ui.tradeList.currentText().split(' ')[1]
         pname = os.path.join(outdir, name)
 
+        key = self.ui.tradeList.currentText()
+        Long = False
+        
+        entries = self.lf.getEntries(key)
+        fpentries = list()
+        L_or_S = 'B'
+        for e in entries:
+            etime = e[1]
+            diff = etime - begin
+
+            #TODO  Current API all intervals are in minutes. Fix this limitation -- Have to deal
+            # with  skipping null after hours data
+            candleindex = int(diff.total_seconds()/60//interval)
+            if e[2] < 0:
+                L_or_S = 'S'
+            fpentries.append([e[0], candleindex, L_or_S])
+
+        fp.entries = fpentries
+
         pname = fp.graph_candlestick(ticker, begin, end, interval, save=pname)
         if pname:
             pixmap = QPixmap(pname)
             widg.setPixmap(pixmap)
             data = [pname, begin, end, interval]
-            key = self.ui.tradeList.currentText()
             self.lf.setChartData(key, data, c)
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
