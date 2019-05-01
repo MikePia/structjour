@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>2001</width>
+    <height>515</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QScrollArea" name="scrollArea">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>10</y>
+     <width>1101</width>
+     <height>471</height>
+    </rect>
+   </property>
+   <property name="widgetResizable">
+    <bool>true</bool>
+   </property>
+   <widget class="QWidget" name="scrollAreaWidgetContents">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1099</width>
+      <height>469</height>
+     </rect>
+    </property>
+    <widget class="QTableWidget" name="tableWidget_3">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>60</y>
+       <width>1061</width>
+       <height>261</height>
+      </rect>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>1061</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <column>
+      <property name="text">
+       <string>TIndex</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Start</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Time</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Symb</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Side</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Price</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Qty</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Balance</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Acount</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>P / L</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Sum</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Duration</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Date</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>O/C</string>
+      </property>
+     </column>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>1160</x>
+     <y>20</y>
+     <width>831</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>831</width>
+     <height>16777215</height>
+    </size>
+   </property>
+   <row>
+    <property name="text">
+     <string>New Row</string>
+    </property>
+   </row>
+   <column>
+    <property name="text">
+     <string>Name</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>P / L</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Lost P / L</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Mistake or Pertinent feature of trade</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>1160</x>
+     <y>230</y>
+     <width>821</width>
+     <height>221</height>
+    </rect>
+   </property>
+   <row>
+    <property name="text">
+     <string>Daily P / L  Summary</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Live Total</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Sim Total</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Highest Profit</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Largest Loss</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Average Win</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Average Loss</string>
+    </property>
+   </row>
+   <column>
+    <property name="text">
+     <string>New Column</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>New Column</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>New Column</string>
+    </property>
+   </column>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -331,6 +331,20 @@ certainty that you will make mistakes'''
             "Holiday", "On Persusasion", "Ryan Holiday, Author",
             '''You can’t reason people out of positions they didn’t reason themselves into.'''
         ])
+        quotes.append([
+            "Buffett", "On Associates", "Warren Buffett, CEO Berkshire Hathaway",
+            '''It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and
+you'll drift in that direction. You're looking for three things, generally, in a person: intelligence, energy, and integrity. And
+if they don't have the last one, don't even bother with the first two.'''
+        ])
+
+
+
+
+
+
+
+
 
         df = pd.DataFrame(data=quotes, columns=['name', 'on', 'who', 'quote'])
         self.df = df

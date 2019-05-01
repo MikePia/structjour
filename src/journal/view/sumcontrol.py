@@ -98,6 +98,9 @@ class SumControl(QMainWindow):
         self.ui.chart1Btn.pressed.connect(self.chartMagic1)
         self.ui.chart2Btn.pressed.connect(self.chartMagic2)
         self.ui.chart3Btn.pressed.connect(self.chartMagic3)
+        self.ui.chart1Interval.editingFinished.connect(self.chart1IntervalChanged)
+        # self.ui.chart2Interval.editingFinished(self.chart2IntervalChanged)
+        # self.ui.chart3Interval.editingFinished(self.chart3IntervalChanged)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
         self.ui.saveBtn.pressed.connect(self.saveTradeObject)
 
@@ -151,6 +154,14 @@ class SumControl(QMainWindow):
             name = self.defaultImage
         widg.setPixmap(QPixmap(name))
 
+    def chart1IntervalChanged(self):
+        val = self.ui.chart1Interval.value()
+        key = self.ui.tradeList.currentText()
+        data = self.lf.getChartData(key, 'chart1')
+        data[3] = val
+        self.lf.setChartData(key, data, 'chart1')
+
+
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
         fp = FinPlot()
         fp.randomStyle = True
@@ -160,17 +171,18 @@ class SumControl(QMainWindow):
         if apilist:
             fp.api = apilist[0]
         interval = iwidg.value()
-        name = nwidg.text()
+        # name = nwidg.text()
+        key = self.ui.tradeList.currentText()
+        name = self.lf.getImageNameX(key, c)
         outdir = self.getOutdir()
         ticker = self.ui.tradeList.currentText().split(' ')[1]
+
         pname = os.path.join(outdir, name)
 
-        key = self.ui.tradeList.currentText()
         Long = False
         
         entries = self.lf.getEntries(key)
         fpentries = list()
-        L_or_S = 'B'
         for e in entries:
             etime = e[1]
             diff = etime - begin
@@ -178,6 +190,7 @@ class SumControl(QMainWindow):
             #TODO  Current API all intervals are in minutes. Fix this limitation -- Have to deal
             # with  skipping null after hours data
             candleindex = int(diff.total_seconds()/60//interval)
+            L_or_S = 'B'
             if e[2] < 0:
                 L_or_S = 'S'
             fpentries.append([e[0], candleindex, L_or_S])
@@ -187,6 +200,7 @@ class SumControl(QMainWindow):
         pname = fp.graph_candlestick(ticker, begin, end, interval, save=pname)
         if pname:
             pixmap = QPixmap(pname)
+            pixmap = pixmap.scaled(widg.width(), widg.height(), Qt.IgnoreAspectRatio)
             widg.setPixmap(pixmap)
             data = [pname, begin, end, interval]
             self.lf.setChartData(key, data, c)

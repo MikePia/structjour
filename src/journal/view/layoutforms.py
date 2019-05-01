@@ -14,6 +14,8 @@ import pickle
 import numpy as np
 import pandas as pd
 
+from journal.view.sumcontrol import qtime2pd
+
 from journal.definetrades import FinReqCol
 from journal.thetradeobject import SumReqFields, TheTradeObject
 
@@ -402,15 +404,43 @@ class LayoutForms:
             # Just in case the name is missing
             b = data[1]
             e = data[2]
-            begin = pd.Timestamp(b.date().year(), b.date().month(), b.date().day(),
-                                 b.time().hour(), b.time().minute(), b.time().second())
-            end = pd.Timestamp(e.date().year(), e.date().month(), e.date().day(),
-                               e.time().hour(), e.time().minute(), e.time().second())
+
+            begin = qtime2pd(b)
+            end = qtime2pd(e)
+            # begin = pd.Timestamp(b.date().year(), b.date().month(), b.date().day(),
+            #                      b.time().hour(), b.time().minute(), b.time().second())
+            # end = pd.Timestamp(e.date().year(), e.date().month(), e.date().day(),
+            #                    e.time().hour(), e.time().minute(), e.time().second())
             delt = end - begin
             bstring = begin.strftime('%H%M%S')
             estring = delt.__str__().replace(':', '.')
             n = 'Trade{}_{}_{}_{}_{}.png'.format(
                 key, bstring, estring, wloc, uinfo)
+            n = n.replace(' ', '_')
+        if data[0] != n:
+            data[0] = n
+            self.setChartData(key, data, wloc)
+        return n
+
+    def getImageNameX(self, key, wloc):
+        '''
+        This is a chart name for which we know the candle interval because we gave that parameter
+        to the stock api.
+        '''
+        name = key.replace(' ', '_')
+        data = self.getChartData(key, wloc)
+        if data:
+            # Just in case the name is missing
+            b = pd.Timestamp(data[1])
+            e = pd.Timestamp(data[2])
+            
+
+            delt = e - b
+            bstring = b.strftime('%H%M%S')
+            estring = delt.__str__().replace(':', '.')
+            istring = str(data[3]) + 'min'
+            n = 'Trade{}_{}_{}_{}.png'.format(
+                name, bstring, estring, istring)
             n = n.replace(' ', '_')
         if data[0] != n:
             data[0] = n

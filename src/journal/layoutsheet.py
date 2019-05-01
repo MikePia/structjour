@@ -59,8 +59,8 @@ class LayoutSheet:
 
     def imageData(self, df, ldf, ft="png"):
         '''
-        Gateher the image names and determine the locations in the Excel doc to place them. Excel
-        has a few things at top followed by trade summariew, charts and tables for each trade.
+        Gather the image names and determine the locations in the Excel doc to place them. Excel
+        has a few things at top followed by trade summaries, charts and tables for each trade.
         Return with the image name/location data structure. The structure can be used for the Excel
         DataFrame-- to navigate summary form locations and just for the names
         :params df: The DataFrame representing the input file plus some stuff added in

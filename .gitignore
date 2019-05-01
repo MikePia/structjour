@@ -14,7 +14,9 @@ out/
 .vscode
 doodles
 *.sql
+*.sql*
 *.db
+*.txt
 src/run.py
 src/DisciplinedCopy1.xlsx
 src/images

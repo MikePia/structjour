@@ -254,11 +254,12 @@ class FinPlot:
             acceptible apis. To place tx markers, set (or clear) fp.entries and fp.exits prior to calling
         :params symbol: The stock ticker
         :params start: A datetime object or time string for the begining of the graph. The day must
-            be within the last 7 days. This may change in the future.
+                     be within the last 7 days. This may change in the future.
         :params end: A datetime object or time string for the end of a graph. Defaults to whatever
-            the call gets.
+                     the call gets.
         :params dtFormat: a strftime formt to display the dates on the x axis of the chart
-        :parmas st: The matplot lib style for style.use(st)
+        :parmas st: The matplot lib style for style.use(st). If fp.randomStyle is set,
+                     it overrides.
         '''
 
         start = pd.Timestamp(start)
@@ -269,6 +270,7 @@ class FinPlot:
             self.style = style.available[r]
         style.use(self.style)
 
+        # Get the data from some stock api
         dummy, df = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
         if df.empty:
@@ -281,14 +283,15 @@ class FinPlot:
         df_volume = df[['date', 'volume']]
 
         ax1 = plt.subplot2grid((6, 1), (0, 0), rowspan=5, colspan=1)
-        ttimes = start.strftime("%a %b %d %H:%M-->") + end.strftime('%H:%M')
-        plt.title(f'{symbol} Daily chart\n{self.style}, {ttimes}')
-        fig = plt.gcf()
-        ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1,
-                               colspan=1, sharex=ax1)
-        plt.ylabel('Volume')
 
-        # width = ((60))//86400.0
+        ttimes = start.strftime("%a %b %d %H:%M-->") + end.strftime('%H:%M')
+        plt.title(f'{symbol} {minutes} minute chart\n{self.style}, {ttimes}')
+        
+        fig = plt.gcf()
+        ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1, colspan=1, sharex=ax1)
+        # plt.ylabel('Volume')
+
+        # candle width is related to time as a percentage of a day
         width = (minutes*35)/(3600 * 24)
         candlestick_ohlc(ax1, df_ohlc.values, width, colorup='g', alpha=.75)
 
@@ -359,6 +362,9 @@ class FinPlot:
         # go to 0 and the data is smushed at the top.
         # It seems the iex data is on average much more sparse. So far with my test data, only iex
         # requires this bit.  And it seemed to work the first day but its not working now.
+        # This stuff is moot right now-as the names don't include api... But this is a desparate
+        # attempt to use the iex intraday stuff inspite of its sparse data. It could minimally
+        # work so I'll leave it here unobtrusively for later work.
         if save.find('iex') > 0:
             if df_ohlc.low.min() == -1:
                 margin = .08
