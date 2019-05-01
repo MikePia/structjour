@@ -25,7 +25,7 @@ class Ui_Form(object):
         self.page.setObjectName("page")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.page)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.strategyNotes = QtWidgets.QTextEdit(self.page)
+        self.strategyNotes = MyTextEdit(self.page)
         self.strategyNotes.setObjectName("strategyNotes")
         self.horizontalLayout_2.addWidget(self.strategyNotes)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -187,3 +187,4 @@ class Ui_Form(object):
 
 from PyQt5 import QtWebEngineWidgets
 from journal.view.clicklabel import ClickLabel
+from journal.view.mytextedit import MyTextEdit

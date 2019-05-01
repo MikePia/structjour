@@ -34,7 +34,7 @@
    <widget class="QWidget" name="page">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QTextEdit" name="strategyNotes"/>
+      <widget class="MyTextEdit" name="strategyNotes"/>
      </item>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -305,6 +305,11 @@
    <class>ClickLabel</class>
    <extends>QLabel</extends>
    <header location="global">journal.view.clicklabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MyTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header location="global">journal.view.mytextedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -22,17 +22,27 @@ Created on April 8, 2019
 @author: Mike Petersen
 '''
 
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import  QContextMenuEvent
+from PyQt5.QtWidgets import QTextEdit, QAction
 
 # pylint: disable = C0103
 
-class ClickLabel(QLabel):
-    '''Add a context menu to a QLabel'''
-    clicked = pyqtSignal(QLabel, QContextMenuEvent)
+
+
+class MyTextEdit(QTextEdit):
+    '''Define a commit action for this widget in its context menu.'''
 
     def contextMenuEvent(self, event):
-        ''' Override and add emit'''
-        self.clicked.emit(self, event)
-        QLabel.contextMenuEvent(self, event)
+        ''' Override '''
+        # print('Here we are again', event)
+        stdMenu = self.createStandardContextMenu()
+        commitAction = QAction("Commit", self)
+        commitAction.setShortcut("Ctrl+S")
+
+
+        stdMenu.addAction(commitAction)
+        # commitAction.setShortcut('Ctrl+s')
+        # stdMenu.insertMenu( stdMenu.actions().first(), newMenu )
+        action = stdMenu.exec(event.globalPos())
+
+        if action == commitAction:
+            print('fukinfinly')

@@ -19,6 +19,7 @@ class StratControl(QWidget):
         self.loadStrategies()
     
 
+    
     def stratNotesChanged(self):
         print('Notes changed')
         self.setWindowTitle('Strategy Browser ... text edited')
