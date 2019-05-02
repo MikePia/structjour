@@ -24,6 +24,8 @@ Created on April 8, 2019
 
 from PyQt5.QtWidgets import QTextEdit, QAction
 
+from strategy.strategies import Strategy
+
 # pylint: disable = C0103
 
 
@@ -46,3 +48,4 @@ class MyTextEdit(QTextEdit):
 
         if action == commitAction:
             print('fukinfinly')
+            strat = Strategy()
