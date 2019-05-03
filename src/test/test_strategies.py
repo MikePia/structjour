@@ -17,6 +17,77 @@ class TestStrategy(TestCase):
         self.somestrats = ['ABCD', 'Bull Flag', 'Fallen Angel', 'VWAP Support', 'VWAP Reversal']
         self.strat = Strategy(db='C:/python/E/structjour/src/test/testdb.sqlite')
 
+    def test_removeLink(self):
+        strat = self.strat
+        strat.dropTables()
+        strat.createTables()
+        strat.loadDefault()
+        addme = 'CUT LOSERS'
+        strat.addStrategy(addme)
+
+        link = 'http:/the/strategy/w/site.html'
+        link2 = 'http:/the/strategy/x/site.html'
+        link3 = 'http:/the/strategy/y/site.html'
+        link4 = 'http:/the/strategy/z/site.html'
+        
+        links = [link, link2, link3, link4]
+        for l in links:
+            strat.setLink(addme, l)
+        for l in links:
+            strat.removeLink(addme, l)
+        x = strat.getLinks(addme)
+        self.assertTrue(not x)
+
+    def test_setLink(self):
+        strat = self.strat
+        strat.dropTables()
+        strat.createTables()
+        strat.loadDefault()
+        addme = 'CUT LOSERS'
+        strat.addStrategy(addme)
+
+        link = 'http:/the/strategy/w/site.html'
+        link2 = 'http:/the/strategy/x/site.html'
+        link3 = 'http:/the/strategy/y/site.html'
+        link4 = 'http:/the/strategy/z/site.html'
+        
+        links = [link, link2, link3, link4]
+        for l in links:
+            strat.setLink(addme, l)
+
+        dblinks = strat.getLinks(addme)
+
+        for l in links:
+            self.assertIn(l, dblinks)
+
+    def test_removeImage(self):
+        strat = self.strat
+        strat.dropTables()
+        strat.createTables()
+        strat.loadDefault()
+        addme = 'WINNERS RUN'
+        strat.addStrategy(addme)
+
+        imagename = 'C:/the/end/of/all/time.png'
+        strat.setImage1(addme, imagename)
+        im = strat.getImage1(addme)
+        self.assertEqual(imagename, im)
+
+        imagename2 = 'C:/and/its/waypast/due.png'
+        strat.setImage2(addme, imagename2)
+        im = strat.getImage2(addme)
+        self.assertEqual(imagename2, im)
+
+        strat.removeImage1(addme)
+        im = strat.getImage1(addme)
+        self.assertTrue(not im)
+
+        strat.removeImage2(addme)
+        im = strat.getImage2(addme)
+        self.assertTrue(not im)
+
+
+
     def test_setImage1(self):
 
         strat = self.strat
@@ -31,6 +102,8 @@ class TestStrategy(TestCase):
         im = strat.getImage1(addme)
         self.assertEqual(imagename, im)
 
+
+
         imagename = 'C:/the/beginning/of/no/time.png'
         strat.setImage1(addme, imagename)
         im = strat.getImage1(addme)
@@ -41,11 +114,6 @@ class TestStrategy(TestCase):
         im = strat.getImage2(addme)
         self.assertEqual(imagename, im)
         
-        # desc = desc + " and its about time."
-        # strat.setDescription(addme, desc)
-        # d = strat.getDescription(addme)
-        # self.assertEqual(desc, d[1])
-
 
     def test_setDescription(self):
         desc = "Its the end of the world as we know it"
@@ -195,7 +263,11 @@ def notmain():
     # t.test_getStrategies()
     # t.test_setPreferred()
     # t.test_setDescription()
-    t.test_setImage1()
+    # t.test_setImage1()
+    # t.test_removeImage()
+    # t.test_setLink()
+    t.test_removeLink()
+
 if __name__ == '__main__':
     notmain()
     

@@ -28,11 +28,31 @@ class Strategy:
         if create:
             self.createTables()
 
+    def setLink(self, key, url):
+        sid = self.getId(key)
+        
+        self.conn.execute('''INSERT INTO links (link, strategy_id)
+            VALUES(?, ?)''', (url, sid))
+        self.conn.commit()
+
+    def getLinks(self, key):
+        sid = self.getId(key)
+        
+        cursor = self.conn.execute('''SELECT link FROM links WHERE strategy_id  = ?''', (sid, ))
+        x = cursor.fetchall()
+        xlist = [z[0] for z in x]
+        return xlist
+        
+    def removeLink(self, key, url):
+        sid = self.getId(key)
+        self.conn.execute('''delete from links where link = ? and strategy_id = ?''', (url, sid,))
+        self.conn.commit()
+
     def removeImage(self, key, widget):
         x = self.getId(key)
         cursor = self.conn.execute('''DELETE FROM images
             WHERE strategy_id = ? AND widget = ?;''', (x, widget)    )
-        
+
 
     def removeImage1(self, key):
         self.removeImage(key, 'chart1')

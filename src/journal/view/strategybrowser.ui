@@ -29,7 +29,7 @@
     </sizepolicy>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="page">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -125,7 +125,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="strategyUrls">
+         <widget class="QComboBox" name="linkList">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -141,7 +141,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="strategyAdd_2">
+         <widget class="QLineEdit" name="addLink">
           <property name="minimumSize">
            <size>
             <width>300</width>
@@ -151,9 +151,16 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="strategyAddBtn_2">
+         <widget class="QPushButton" name="addLinkBtn">
           <property name="text">
            <string>Add link</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeLinkBtn">
+          <property name="text">
+           <string>Remove Link</string>
           </property>
          </widget>
         </item>

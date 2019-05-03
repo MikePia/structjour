@@ -2,7 +2,7 @@ import os
 import sys
 from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QUrl
 
 from journal.xlimage import XLImage
 from journal.view.strategybrowser import Ui_Form
@@ -28,8 +28,37 @@ class StratControl(QWidget):
         self.ui.chart1.clicked.connect(self.loadImage)
         self.ui.chart2.clicked.connect(self.loadImage)
         self.ui.strategyNotes.clicked.connect(self.saveNotes)
+        self.ui.pageSelect.currentItemChanged.connect(self.changePage)
+
+        self.ui.addLinkBtn.pressed.connect(self.addLinkToList)
+        self.ui.removeLinkBtn.pressed.connect(self.removeLink)
+        self.ui.linkList.currentTextChanged.connect(self.loadPage)
         self.strat = Strategy()
         self.loadStrategies()
+
+    def loadPage(self, val):
+        print('val', val)
+        self.ui.strategyBrowse.load(QUrl(val))
+
+    def removeLink(self):
+        index = self.ui.linkList.currentIndex()
+        self.ui.linkList.removeItem(index)
+
+
+    def addLinkToList(self):
+        link = self.ui.addLink.text()
+        if link:
+            self.ui.linkList.addItem(link)
+            self.ui.addLink.setText('')
+            index = self.ui.linkList.findText(link)
+            self.ui.linkList.setCurrentIndex(index)
+
+    def changePage(self, val):
+        print("changePage", val)
+        if val.data(0) == 'Text and Images':
+            self.ui.stackedWidget.setCurrentIndex(0)
+        else:
+            self.ui.stackedWidget.setCurrentIndex(1)
 
     def loadImage(self, x, event):
         '''
