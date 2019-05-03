@@ -15,9 +15,71 @@ class TestStrategy(TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
         self.somestrats = ['ABCD', 'Bull Flag', 'Fallen Angel', 'VWAP Support', 'VWAP Reversal']
+        self.strat = Strategy(db='C:/python/E/structjour/src/test/testdb.sqlite')
+
+    def test_setImage1(self):
+
+        strat = self.strat
+        strat.dropTables()
+        strat.createTables()
+        strat.loadDefault()
+        addme = 'BUY LOWER'
+        strat.addStrategy(addme)
+
+        imagename = 'C:/the/end/of/all/time.png'
+        strat.setImage1(addme, imagename)
+        im = strat.getImage1(addme)
+        self.assertEqual(imagename, im)
+
+        imagename = 'C:/the/beginning/of/no/time.png'
+        strat.setImage1(addme, imagename)
+        im = strat.getImage1(addme)
+        self.assertEqual(imagename, im)
+
+        imagename = 'C:/and/all/the/rest.png'
+        strat.setImage2(addme, imagename)
+        im = strat.getImage2(addme)
+        self.assertEqual(imagename, im)
+        
+        # desc = desc + " and its about time."
+        # strat.setDescription(addme, desc)
+        # d = strat.getDescription(addme)
+        # self.assertEqual(desc, d[1])
+
+
+    def test_setDescription(self):
+        desc = "Its the end of the world as we know it"
+        strat = self.strat
+        strat.dropTables()
+        strat.createTables()
+        strat.loadDefault()
+        addme = 'SELL HIGHER'
+        strat.addStrategy(addme)
+        strat.setDescription(addme, desc)
+        d = strat.getDescription(addme)
+        self.assertEqual(desc, d[1])
+        desc = desc + " and its about time."
+        strat.setDescription(addme, desc)
+        d = strat.getDescription(addme)
+        self.assertEqual(desc, d[1])
+
+    def test_setPreferred(self):
+        strat = self.strat
+        strat.dropTables()
+        strat.createTables()
+        strat.loadDefault()
+        addme = 'SELL HIGHER'
+        strat.addStrategy(addme)
+        s = strat.getStrategy(addme)
+        pref = s[1]
+        self.assertEqual(pref, 1)
+        strat.setPreferred(addme, 0)
+        s = strat.getStrategy(addme)
+        pref = s[1]
+        self.assertEqual(pref, 0)
 
     def test_addStrategy(self):
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
         strat.createTables()
         strat.loadDefault()
@@ -26,7 +88,7 @@ class TestStrategy(TestCase):
         self.assertEqual(x[0], "SELL HIGHER")
 
     def test_removeStrategy(self):
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
         strat.createTables()
         strat.loadDefault()
@@ -42,7 +104,7 @@ class TestStrategy(TestCase):
         pass
 
     def test_getStrategies(self):
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
         strat.createTables()
         strat.loadDefault()
@@ -52,9 +114,8 @@ class TestStrategy(TestCase):
             self.assertIn(s, slist)
         print()
 
-
     def test_getDescription(self):
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
         strat.createTables()
         strat.loadDefault()
@@ -68,7 +129,7 @@ class TestStrategy(TestCase):
     
     def test_droptables(self):
         '''test Strategy.dropTables'''
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
         strat.createTables()
         strat.loadDefault()
@@ -95,7 +156,7 @@ class TestStrategy(TestCase):
 
     def test_createTables(self):
         '''Test Strategy.createTables'''
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
 
         strat.createTables()
@@ -113,7 +174,7 @@ class TestStrategy(TestCase):
             self.assertIn(t, slist)
 
     def test_loadDefault(self):
-        strat = Strategy()
+        strat = self.strat
         strat.dropTables()
 
         strat.createTables()
@@ -127,12 +188,14 @@ class TestStrategy(TestCase):
 def notmain():
     t = TestStrategy()
     # t.test_createTables()
-    # t.test_loadDefault()
+    t.test_loadDefault()
     # t.test_getDescription()
     # t.test_removeStrategy()
     # t.test_addStrategy()
-    t.test_getStrategies()
-
+    # t.test_getStrategies()
+    # t.test_setPreferred()
+    # t.test_setDescription()
+    t.test_setImage1()
 if __name__ == '__main__':
     notmain()
     

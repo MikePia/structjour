@@ -23,10 +23,62 @@ class Strategy:
         if not os.path.exists(db):
             msg = 'No db listed-- do we recreate the default and add a setting?'
             raise ValueError(msg)
-        self.conn = sqlite3.connect('C:/python/E/structjour/src/strategy/t1.sqlite')
+        self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()
         if create:
             self.createTables()
+
+    def removeImage(self, key, widget):
+        x = self.getId(key)
+        cursor = self.conn.execute('''DELETE FROM images
+            WHERE strategy_id = ? AND widget = ?;''', (x, widget)    )
+        
+
+    def removeImage1(self, key):
+        self.removeImage(key, 'chart1')
+
+    def removeImage2(self, key):
+        self.removeImage(key, 'chart2')
+
+    def setImage(self, key, name, widget):
+        '''
+        Set the one image for chart1 or chart2 and the strategy key. The widget is constrained
+        to either chart1 or chart2. Need to manually constrain only one (chart1, chart2) for each
+        strategy (sqlite constraints with unique combination of cell contents?)
+        '''
+        print('setting', key, name)
+        sid = self.getId(key)
+        cursor = self.conn.execute('''SELECT name FROM images
+            WHERE strategy_id = ? and widget = ?''', (sid, widget,))
+        if cursor.fetchone():
+            self.removeImage(key, widget)
+        
+        self.conn.execute('''INSERT INTO images (name, widget, strategy_id)
+            VALUES(?, ?, ?)''', (name, widget, sid))
+        self.conn.commit()
+
+    def setImage1(self, key, name):
+        self.setImage(key, name, 'chart1')
+
+    def setImage2(self, key, name):
+        self.setImage(key, name, 'chart2')
+
+    def getImage(self, strat, widget):
+        cursor = self.conn.execute('''SELECT images.name, strategy.id FROM images
+            JOIN strategy
+            ON strategy_id = strategy.id
+            WHERE strategy.name=? AND widget = ? ''', (strat, widget))
+        x = cursor.fetchone()
+        if x:
+            return x[0]
+        else:
+            return ''
+
+    def getImage1(self, strat):
+        return self.getImage(strat, 'chart1')
+
+    def getImage2(self, strat):
+        return self.getImage(strat, 'chart2')
 
     def getConnection(self):
         return self.conn
@@ -36,6 +88,19 @@ class Strategy:
         cursor = self.conn.execute('''
             DELETE FROM strategy WHERE name = ?''', (name,))
         return cursor.fetchone()
+
+    def setPreferred(self, name, pref):
+        x = self.cur.execute('''UPDATE strategy
+            SET preferred = ?
+            WHERE name = ?''', (0, name))
+    def getId(self, name):
+        cursor = self.conn.execute('''
+            select id from strategy 
+            WHERE name = ?''', (name, ))
+        s = cursor.fetchone()
+        return s[0] 
+
+
 
     def addStrategy(self, name, preferred=1):
         '''Add the strategy name to table strategy'''
@@ -68,6 +133,23 @@ class Strategy:
             ON strategy.id = description.strategy_id 
             WHERE name = ?''', (name, ))
         return cursor.fetchone()
+
+    def setDescription(self, name, desc):
+        sid = self.getId(name)
+        # Set source to user
+        source = 2 
+        cursor = self.conn.execute('''Select description from description
+            WHERE strategy_id = ?''', (sid,))
+        if not cursor.fetchone():
+            self.conn.execute('''INSERT INTO description (description, source_id, strategy_id)
+                VALUES(?, ?, ?)''', (desc, source,sid))
+        else:
+            self.conn.execute("""UPDATE description
+                SET description=?, source_id=?
+                WHERE strategy_id = ?""", (desc, source, sid))
+        self.conn.commit()
+
+
 
 
     def getStrategies(self):
@@ -112,7 +194,7 @@ class Strategy:
 
         for key, count in zip(tso.strats.keys(), range(len(tso.strats.keys()))):
             self.cur.execute('SELECT id FROM strategy WHERE name = ?', (key,))
-            print(key)
+            # print(key)
             strategy_id = self.cur.fetchone()[0]
             self.cur.execute('''INSERT INTO description(id, description, source_id, strategy_id)
                             VALUES(?, ?, ?, ?)''',
@@ -125,12 +207,10 @@ class Strategy:
     def createTables(self):
         self.cur.execute('''
         CREATE TABLE strategy (
-            id	integer,
+	        id	INTEGER PRIMARY KEY AUTOINCREMENT,
             name	text UNIQUE,
             short_name	text,
-            preferred	INTEGER,
-            PRIMARY KEY(id)
-        );''')
+            preferred	INTEGER DEFAULT 1);''')
 
         self.cur.execute('''
         CREATE TABLE source (
@@ -140,27 +220,26 @@ class Strategy:
 
         self.cur.execute('''
         CREATE TABLE description (
-            id integer PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             description text,
             source_id integer,
-            strategy_id integer,
+            strategy_id INTEGER UNIQUE,
             FOREIGN KEY (source_id) REFERENCES source(id),
             FOREIGN KEY (strategy_id) REFERENCES strategy(id)
         );''')
 
         self.cur.execute('''
         CREATE TABLE images (
-            id integer PRIMARY KEY,
-            image text,
-            source_id integer,
-            strategy_id integer,
-            FOREIGN KEY (source_id) REFERENCES source(id),
-            FOREIGN KEY (strategy_id) REFERENCES strategy(id)
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE,
+            widget	INTEGER CHECK(widget="chart1" OR widget="chart2"),
+            strategy_id	INTEGER,
+            FOREIGN KEY(strategy_id) REFERENCES strategy(id)
         );''')
 
         self.cur.execute('''
         CREATE TABLE links (
-            id integer PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             link text,
             strategy_id integer,
             FOREIGN  KEY (strategy_id) REFERENCES strategy(id)
@@ -175,6 +254,8 @@ def notmain():
     t.dropTables()
     t.createTables()
     t.loadDefault()
+    x = t.getId('Fallen Angel')
+    print(x)
 
 
 if __name__ == '__main__':

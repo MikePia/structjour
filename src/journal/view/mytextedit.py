@@ -22,7 +22,9 @@ Created on April 8, 2019
 @author: Mike Petersen
 '''
 
-from PyQt5.QtWidgets import QTextEdit, QAction
+from PyQt5.QtWidgets import QTextEdit, QAction, QLabel
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import  QContextMenuEvent
 
 from strategy.strategies import Strategy
 
@@ -31,7 +33,8 @@ from strategy.strategies import Strategy
 
 
 class MyTextEdit(QTextEdit):
-    '''Define a commit action for this widget in its context menu.'''
+    '''Create a new menu item and emit a signal when it is chosen'''
+    clicked = pyqtSignal(QLabel, QContextMenuEvent)
 
     def contextMenuEvent(self, event):
         ''' Override '''
@@ -42,10 +45,7 @@ class MyTextEdit(QTextEdit):
 
 
         stdMenu.addAction(commitAction)
-        # commitAction.setShortcut('Ctrl+s')
-        # stdMenu.insertMenu( stdMenu.actions().first(), newMenu )
         action = stdMenu.exec(event.globalPos())
 
         if action == commitAction:
-            print('fukinfinly')
-            strat = Strategy()
+            self.clicked.emit(self, event)

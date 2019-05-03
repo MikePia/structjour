@@ -16,13 +16,11 @@ cur.execute('DROP TABLE IF EXISTS images')
 cur.execute('DROP TABLE IF EXISTS links')
 
 cur.execute('''
-CREATE TABLE strategy (
-	id	integer,
-	name	text,
-	short_name	text UNIQUE,
-	preferred	INTEGER,
-	PRIMARY KEY(id)
-);''')
+    CREATE TABLE strategy (
+        id	INTEGER PRIMARY KEY AUTOINCREMENT,
+        name	text UNIQUE,
+        short_name	text,
+        preferred	INTEGER DEFAULT 1);''')
 
 
 
@@ -39,27 +37,26 @@ CREATE TABLE source (
 
 cur.execute('''
 CREATE TABLE description (
-	id integer PRIMARY KEY,
-	description text,
-	source_id integer,
-	strategy_id integer,
-    FOREIGN KEY (source_id) REFERENCES source(id),
-    FOREIGN KEY (strategy_id) REFERENCES strategy(id)
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            description text,
+            source_id integer,
+            strategy_id INTEGER UNIQUE,
+            FOREIGN KEY (source_id) REFERENCES source(id),
+            FOREIGN KEY (strategy_id) REFERENCES strategy(id)
 );''')
 
 cur.execute('''
 CREATE TABLE images (
-	id integer PRIMARY KEY,
-	image text,
-	source_id integer,
-	strategy_id integer,
-    FOREIGN KEY (source_id) REFERENCES source(id),
-    FOREIGN KEY (strategy_id) REFERENCES strategy(id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name    TEXT UNIQUE,
+	widget	INTEGER CHECK(widget="chart1" OR widget="chart2"),
+	strategy_id	INTEGER,
+	FOREIGN KEY(strategy_id) REFERENCES strategy(id)
 );''')
 
 cur.execute('''
 CREATE TABLE links (
-	id integer PRIMARY KEY,
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	link text,
 	strategy_id integer,
     FOREIGN  KEY (strategy_id) REFERENCES strategy(id)

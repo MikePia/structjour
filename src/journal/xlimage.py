@@ -58,6 +58,33 @@ class XLImage:
         im = PILImage.open(self.defaultImage)
         return im
 
+    def getPilImageNoDramaForReal(self, name):
+        '''
+        '''
+
+        #Setting  a default size for this method-- this should go in pref somehow
+        img = None
+        try:
+
+            pilImage = ImageGrab.grabclipboard()
+            if not pilImage:
+                return None, 'Failed to retrieve image from clipboard.' 
+            nn, ext = os.path.splitext(name)
+            pilImage.save(name, ext[1:])
+
+            img = Image(name)
+
+        except IOError as e:
+            print("An exception occured '%s'" % e)
+            if img:
+                return img
+            return None, e.__str__()
+
+        return img, name
+    
+    
+    
+    
     def getPilImageNoDrama(self, name, outdir):
         '''
         Grab the contents of the clipboard to image. Warn the user if no image is retrieved. Then
