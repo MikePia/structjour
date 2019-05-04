@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1250</width>
-    <height>537</height>
+    <width>1228</width>
+    <height>810</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,17 +19,17 @@
      <x>50</x>
      <y>100</y>
      <width>1111</width>
-     <height>401</height>
+     <height>661</height>
     </rect>
    </property>
    <property name="sizePolicy">
-    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+    <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="page">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -111,7 +111,7 @@
        <x>0</x>
        <y>30</y>
        <width>1081</width>
-       <height>361</height>
+       <height>641</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">

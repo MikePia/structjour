@@ -1,6 +1,6 @@
 import os
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
+from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox, QMainWindow, QDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QSettings, QUrl
 
@@ -8,7 +8,7 @@ from journal.xlimage import XLImage
 from journal.view.strategybrowser import Ui_Form
 from strategy.strategies import Strategy
 
-class StratControl(QWidget):
+class StratControl(QDialog):
     def __init__(self):
         super().__init__(parent=None)
         self.ui = Ui_Form()
@@ -42,7 +42,10 @@ class StratControl(QWidget):
 
     def removeLink(self):
         index = self.ui.linkList.currentIndex()
+        url = self.ui.linkList.currentText()
         self.ui.linkList.removeItem(index)
+        key = self.ui.strategyCb.currentText()
+        self.strat.removeLink(key, url)
 
 
     def addLinkToList(self):
@@ -52,6 +55,8 @@ class StratControl(QWidget):
             self.ui.addLink.setText('')
             index = self.ui.linkList.findText(link)
             self.ui.linkList.setCurrentIndex(index)
+            key = self.ui.strategyCb.currentText()
+            self.strat.setLink(key, link)
 
     def changePage(self, val):
         print("changePage", val)
@@ -190,14 +195,21 @@ class StratControl(QWidget):
         else:
             pixmap = QPixmap(image2)
             self.ui.chart2.setPixmap(pixmap)
+        daLinks = self.strat.getLinks(key)
+        self.ui.linkList.clear()
+        for l in daLinks:
+            self.ui.linkList.addItem(l)
+
+
+        
 
 
     def loadStrategies(self):
         '''Load the strategy combo box from the db'''
         
-        cursor = self.strat.getStrategies()
+        strats = self.strat.getStrategies()
         self.ui.strategyCb.clear()
-        for row in cursor:
+        for row in strats:
             self.ui.strategyCb.addItem(row[1])
             if row[3] == 1:
                 self.ui.preferred.setChecked(True)

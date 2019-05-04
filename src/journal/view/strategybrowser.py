@@ -12,10 +12,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1250, 537)
+        Form.resize(1228, 810)
         self.stackedWidget = QtWidgets.QStackedWidget(Form)
-        self.stackedWidget.setGeometry(QtCore.QRect(50, 100, 1111, 401))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred)
+        self.stackedWidget.setGeometry(QtCore.QRect(50, 100, 1111, 661))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.stackedWidget.sizePolicy().hasHeightForWidth())
@@ -61,7 +61,7 @@ class Ui_Form(object):
         self.page_2 = QtWidgets.QWidget()
         self.page_2.setObjectName("page_2")
         self.layoutWidget = QtWidgets.QWidget(self.page_2)
-        self.layoutWidget.setGeometry(QtCore.QRect(0, 30, 1081, 361))
+        self.layoutWidget.setGeometry(QtCore.QRect(0, 30, 1081, 641))
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -165,7 +165,7 @@ class Ui_Form(object):
         self.horizontalLayout.addLayout(self.verticalLayout)
 
         self.retranslateUi(Form)
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):

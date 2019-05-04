@@ -827,8 +827,9 @@ class TheTradeObject:
         self.TheTrade[self.srf.mstknote] = "Final note"
 
     def __setExplainNotes(self):
-        self.TheTrade[self.srf.explain] = "Technical description of the trade"
-        self.TheTrade[self.srf.notes] = "Evaluation of the trade"
+        # self.TheTrade[self.srf.explain] = "Technical description of the trade"
+        # self.TheTrade[self.srf.notes] = "Evaluation of the trade"
+        pass
 
 
 def notmain():

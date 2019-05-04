@@ -124,11 +124,6 @@ class runController:
         tradeSummaries = lf.runSummaries(ldf)
 
 
-
-
-        
-
-
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))

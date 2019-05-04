@@ -436,6 +436,9 @@
          <property name="text">
           <string/>
          </property>
+         <property name="placeholderText">
+          <string>Enter target</string>
+         </property>
         </widget>
        </item>
        <item row="6" column="2">
@@ -519,7 +522,7 @@
           </font>
          </property>
          <property name="text">
-          <string/>
+          <string>Enter initial stop</string>
          </property>
         </widget>
        </item>
@@ -728,6 +731,9 @@ Lost</string>
          <property name="text">
           <string/>
          </property>
+         <property name="placeholderText">
+          <string>Loss by error</string>
+         </property>
         </widget>
        </item>
        <item row="11" column="0" colspan="3">
@@ -754,7 +760,10 @@ Lost</string>
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:12pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:7.8pt;&quot;&gt;summary note&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="placeholderText">
+          <string>Describe error or summarize trade</string>
          </property>
         </widget>
        </item>
@@ -1330,6 +1339,9 @@ p, li { white-space: pre-wrap; }
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="placeholderText">
+          <string>Description of trade</string>
+         </property>
         </widget>
        </item>
        <item row="1" column="4">
@@ -1422,28 +1434,6 @@ p, li { white-space: pre-wrap; }
          </property>
         </widget>
        </item>
-       <item row="0" column="3" colspan="3">
-        <widget class="QLabel" name="strategy">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial Rounded MT Bold</family>
-           <pointsize>24</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">border: 1px solid black</string>
-         </property>
-         <property name="text">
-          <string>Strategy</string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="5">
         <widget class="QLabel" name="time5">
          <property name="sizePolicy">
@@ -1488,7 +1478,10 @@ p, li { white-space: pre-wrap; }
           <string notr="true">border: 1px solid black</string>
          </property>
          <property name="text">
-          <string/>
+          <string>http://duckduclgo.com</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -1670,6 +1663,9 @@ p, li { white-space: pre-wrap; }
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="placeholderText">
+          <string>Analysis of trade</string>
+         </property>
         </widget>
        </item>
        <item row="3" column="0">
@@ -1683,6 +1679,24 @@ p, li { white-space: pre-wrap; }
          <property name="text">
           <string>Time:</string>
          </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="3">
+        <widget class="QComboBox" name="strategy">
+         <property name="font">
+          <font>
+           <family>Arial Rounded MT Bold</family>
+           <pointsize>18</pointsize>
+          </font>
+         </property>
+         <property name="editable">
+          <bool>true</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>Strategy</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
@@ -1960,7 +1974,7 @@ p, li { white-space: pre-wrap; }
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>74</x>
@@ -2152,6 +2166,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionFileSettings"/>
     <addaction name="actionChart_Settings"/>
     <addaction name="actionStock_API"/>
+    <addaction name="actionStrategy_Browser"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -2172,6 +2187,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionStock_API">
    <property name="text">
     <string>Stock API</string>
+   </property>
+  </action>
+  <action name="actionStrategy_Browser">
+   <property name="text">
+    <string>Strategy Browser</string>
    </property>
   </action>
  </widget>

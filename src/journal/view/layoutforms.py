@@ -19,6 +19,7 @@ from journal.view.sumcontrol import qtime2pd
 from journal.definetrades import FinReqCol
 from journal.thetradeobject import SumReqFields, TheTradeObject
 
+
 # from journal.view.sumcontrol import SumControl
 # pylint: disable=C0103, C1801
 
@@ -130,7 +131,13 @@ class LayoutForms:
         '''
         name = self.sc.getSaveName()
         with open(name, "rb") as f:
-            (self.ts, self.entries) = pickle.load(f)
+            test = pickle.load(f)
+            if len(test) != 2:
+                print('Save is in the wrong format. Save it again to correct it')
+                # self.ts = test
+                return
+            (self.ts, self.entries) = test
+            print()
 
         print('load up the trade names now')
         tradeSummaries = []
@@ -212,9 +219,14 @@ class LayoutForms:
             elif isinstance(daVal, (pd.Timestamp, dt.datetime, np.datetime64)):
                 daVal = pd.Timestamp(daVal)
                 daVal = daVal.strftime(self.timeFormat)
+            elif wkey == "Strategy":
+                continue
             self.wd[wkey].setText(daVal)
+            # print(wkey)
 
-            print(wkey)
+        strat = tto['Strategy'].unique()[0]
+        self.sc.loadStrategies(strat)
+        
         self.sc.setChartTimes()
         print(self.sc.ui.chart1Name.text())
         iname1 = self.sc.ui.chart1Name.text()
@@ -336,9 +348,9 @@ class LayoutForms:
         name = tto[rc.name].unique()[0]
         pl = tto[rc.pl].unique()[0]
         if maxloss and clean:
-            if 'long' in name and diff >= 0:
+            if 'long' in name.lower() and diff >= 0:
                 return lost, note, clean
-            if 'short' in name and diff <= maxloss:
+            if 'short' in name.lower() and diff <= maxloss:
                 return lost, note, clean
             assert maxloss < 0
             if maxloss > pl:
@@ -382,6 +394,10 @@ class LayoutForms:
         '''
         self.ts[key][self.rc.notes] = val
 
+    def setStrategy(self, key, val):
+        '''Sets tto strategy to val'''
+        self.ts[key][self.rc.strat] = val
+
     def getImageName(self, key, wloc, uinfo=''):
         '''
         This is an image name for a pasted image. We don't know the interval or time limits beyond
@@ -398,8 +414,12 @@ class LayoutForms:
             n, ext = os.path.splitext(name)
             if n.endswith('min'):
                 n = n[:-5]
-
-            n = n + wloc + uinfo + ext
+            wwloc = wloc
+            if n.find(wwloc) > 0:
+                wwloc = ''
+            if uinfo and n.find(unifo) > 0:
+                uinfo = ''
+            n = n + wwloc + uinfo + ext
         elif data:
             # Just in case the name is missing
             b = data[1]

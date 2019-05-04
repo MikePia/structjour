@@ -232,9 +232,9 @@ class FinPlot:
         begin = mopen if begin <= orbu else begin
         end = mclose if end >= endday else end
 
-        # Trim pre and post market times
-        begin = mopen if mopen > begin else begin
-        end = mclose if mclose < end else end
+        # Trim pre and post market times  XXXX Leave
+        # begin = mopen if mopen > begin else begin
+        # end = mclose if mclose < end else end
 
         return begin, end
 
@@ -274,6 +274,8 @@ class FinPlot:
         dummy, df = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
         if df.empty:
+            self.settings.setValue('errorCode', str(dummy['code']))
+            self.settings.setValue('errorMessage', dummy['message'])
             return None
         df['date'] = df.index
 
@@ -306,6 +308,8 @@ class FinPlot:
         for entry in self.entries:
             e = entry[0]
             candle = entry[1]
+            if candle >= len(df_ohlc.date) or candle < 0:
+                continue
             if entry[2] == 'B':
                 l = ax1.plot(df_ohlc.date[candle], e, marker='^', color='g', markersize=markersize)
             elif entry[2] == 'S':

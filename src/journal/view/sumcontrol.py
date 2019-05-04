@@ -22,6 +22,9 @@ from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.xlimage import XLImage
 from journal.stock.graphstuff import FinPlot
 from journal.view.sapicontrol import StockApi
+from journal.view.stratcontrol import StratControl
+
+from strategy.strategies import Strategy
 
 # pylint: disable = C0103
 
@@ -99,10 +102,11 @@ class SumControl(QMainWindow):
         self.ui.chart2Btn.pressed.connect(self.chartMagic2)
         self.ui.chart3Btn.pressed.connect(self.chartMagic3)
         self.ui.chart1Interval.editingFinished.connect(self.chart1IntervalChanged)
-        # self.ui.chart2Interval.editingFinished(self.chart2IntervalChanged)
-        # self.ui.chart3Interval.editingFinished(self.chart3IntervalChanged)
+        self.ui.chart2Interval.editingFinished.connect(self.chart2IntervalChanged)
+        self.ui.chart3Interval.editingFinished.connect(self.chart3IntervalChanged)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
         self.ui.saveBtn.pressed.connect(self.saveTradeObject)
+        self.ui.strategy.currentIndexChanged.connect(self.strategyChanged)
 
         v = QDoubleValidator()
         self.ui.lost.setValidator(v)
@@ -111,6 +115,7 @@ class SumControl(QMainWindow):
 
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
         self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
+        self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
 
         # Set the file related widgets
         self.ui.dateEdit.setDate(self.settings.value('theDate'))
@@ -126,14 +131,39 @@ class SumControl(QMainWindow):
     # ==================== Main Form  methods =========================
     # =================================================================
 
+    def strategyChanged(self, index):
+        print('strat change', index)
+        text = self.ui.strategy.currentText()
+        if not text:
+            return
+        strat = Strategy()
+        strats = [x[1] for x in strat.getStrategies()]
+        if not text in strats:
+            msg = f'Would you like to add the strategy {text} to the database?'
+            ok = QMessageBox.question(self, 'New strategy', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if ok == QMessageBox.Yes:
+                print('yes clicked.')
+            else:
+                text = ''
+            self.loadStrategies(text)
+        
+        key = self.ui.tradeList.currentText()
+        self.lf.setStrategy(key, text)
+            
+
     def saveTradeObject(self):
+        if not self.lf:
+            print('Nothing to save')
+            return
         outpathfile = self.getSaveName()
         if os.path.exists(outpathfile):
-            print(
-                'Should probably pop up here and warn user they are overwriting a save.')
+            print('Should probably pop up here and warn user they are overwriting a save.')
         print(outpathfile)
         print()
+
         self.lf.saveTheTradeObject(outpathfile)
+        self.ui.infileEdit.setStyleSheet('color: blue;')
+
 
     def getSaveName(self):
         '''
@@ -154,15 +184,30 @@ class SumControl(QMainWindow):
             name = self.defaultImage
         widg.setPixmap(QPixmap(name))
 
+
+    def chartIntervalChanged(self, val, ckey):
+        key = self.ui.tradeList.currentText()
+        data = self.lf.getChartData(key, ckey)
+        data[3] = val
+        self.lf.setChartData(key, data, ckey)
+
     def chart1IntervalChanged(self):
         val = self.ui.chart1Interval.value()
-        key = self.ui.tradeList.currentText()
-        data = self.lf.getChartData(key, 'chart1')
-        data[3] = val
-        self.lf.setChartData(key, data, 'chart1')
+        self.chartIntervalChanged(val, 'chart1')
+
+    def chart2IntervalChanged(self):
+        val = self.ui.chart2Interval.value()
+        self.chartIntervalChanged(val, 'chart2')
+
+    def chart3IntervalChanged(self):
+        val = self.ui.chart3Interval.value()
+        self.chartIntervalChanged(val, 'chart3')
 
 
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
+        if not self.lf:
+            print('No trade to get chart for')
+            return
         fp = FinPlot()
         fp.randomStyle = True
         begin = qtime2pd(swidg.dateTime())
@@ -185,11 +230,12 @@ class SumControl(QMainWindow):
         fpentries = list()
         for e in entries:
             etime = e[1]
-            diff = etime - begin
+            diff = etime - begin if (etime > begin) else (begin-etime)
 
             #TODO  Current API all intervals are in minutes. Fix this limitation -- Have to deal
             # with  skipping null after hours data
             candleindex = int(diff.total_seconds()/60//interval)
+            candleindex = -candleindex if etime < begin else candleindex
             L_or_S = 'B'
             if e[2] < 0:
                 L_or_S = 'S'
@@ -207,6 +253,17 @@ class SumControl(QMainWindow):
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
             return pname
+        else:
+            errorCode = self.settings.value('errorCode')
+            errorMessage = self.settings.value('errorMessage')
+            if errorMessage:
+                mbox = QMessageBox()
+                msg = errorCode + '\n' + errorMessage
+                mbox.setText(msg)
+                mbox.exec()
+                self.settings.setValue('code', '')
+                self.settings.setValue('message', '')
+
         return None
 
     def chartMagic1(self):
@@ -289,7 +346,8 @@ class SumControl(QMainWindow):
             else:
                 name = x.objectName() + '_user'
 
-            pname = self.pasteToLabel(x, name)
+            pname = os.path.join(self.getOutdir(), name)
+            pname = self.pasteToLabel(x, pname)
             if not pname:
                 return
             p, nname = os.path.split(pname)
@@ -311,7 +369,7 @@ class SumControl(QMainWindow):
         Rather than paste, we call a method that saves the clipboard to a file, then we open it with QPixmap
         '''
         xlimg = XLImage()
-        img, pname = xlimg.getPilImageNoDrama(name, self.getOutdir())
+        img, pname = xlimg.getPilImageNoDramaForReal(name)
         if not img:
             mbox = QMessageBox()
             msg = pname + " Failed to get an image. Please select and copy an image."
@@ -324,18 +382,27 @@ class SumControl(QMainWindow):
         return pname
 
     def setExplain(self):
+        if not self.lf:
+            print('No trades are loaded. Nothing to explain')
+            return
         key = self.ui.tradeList.currentText()
         text = self.ui.explain.toPlainText()
         print(text)
         self.lf.setExplain(key, text)
 
     def setNotes(self):
+        if not self.lf:
+            print('No trades are loaded nothing to analyze.')
+            return
         key = self.ui.tradeList.currentText()
         text = self.ui.notes.toPlainText()
         print(text)
         self.lf.setNotes(key, text)
 
     def setMstkVal(self, val):
+        if not self.lf:
+            print('No trades are loaded.')
+            return
         note = self.ui.sumNote.toPlainText()
         key = self.ui.tradeList.currentText()
         if not val:
@@ -349,6 +416,9 @@ class SumControl(QMainWindow):
         self.lf.setMstkVals(key, fval, note)
 
     def setMstkNote(self):
+        if not self.lf:
+            print('No trades are loaded. Nothing to summarize.')
+            return
         val = self.ui.lost.text()
         note = self.ui.sumNote.toPlainText()
         key = self.ui.tradeList.currentText()
@@ -376,6 +446,28 @@ class SumControl(QMainWindow):
             return
         print(key)
         self.lf.populateTradeSumForms(key)
+
+    def loadStrategies(self, strat):
+        '''
+        Load strategies from database into the strategy Combobox. If the tto stored strategy is not
+        in the db, then add it too. Call lf.setStrategy to update the tto
+        :strat: THe currently stored strat for this trade
+        '''
+        strats = Strategy()
+        stratlist = [x[1] for x in strats.getStrategies()]
+        if strat and not strat in stratlist:
+            strats.addStrategy(strat)
+            stratlist = [x[1] for x in strats.getStrategies()]
+        self.ui.strategy.clear()
+        self.ui.strategy.addItem('')
+        for s in stratlist:
+            self.ui.strategy.addItem(s)
+            if strat:
+                index = self.ui.strategy.findText(strat)
+                self.ui.strategy.setCurrentIndex(index)
+
+        key = self.ui.tradeList.currentText()        
+        self.lf.setStrategy(key, strat)
 
     def setChartTimes(self):
         '''
@@ -974,6 +1066,12 @@ class SumControl(QMainWindow):
         '''Fire up the stock Api settings dialog'''
         sapi = StockApi(self.settings)
         sapi.exec()
+
+    def stratBrowseDlg(self):
+        stratB = StratControl()
+        stratB.show()
+        stratB.exec()
+
 
 
 if __name__ == '__main__':
