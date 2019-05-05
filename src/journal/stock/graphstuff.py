@@ -5,32 +5,34 @@ single day minute charts (1,5, 10 min etc)
 
 @creation_date: 1/13/19
 '''
-import os
-import re
 import datetime as dt
+import os
 import random
-import pandas as pd
-from mpl_finance import candlestick_ohlc
+import re
 
 import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-from matplotlib import style
+import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from matplotlib import style
 
-from journal.stock import mybarchart as bc
-from journal.stock import myalphavantage as mav
-from journal.stock import myiex as iex
-from journal.stock import myib as ib
+import pandas as pd
 
+from mpl_finance import candlestick_ohlc
 from PyQt5.QtCore import QSettings
+
+from journal.stock import myalphavantage as mav
+from journal.stock import mybarchart as bc
+from journal.stock import myib as ib
+from journal.stock import myiex as iex
 
 # import urllib
 # import datetime as dt
 # from journal.stock import myalphavantage as mav
 # from journal.stock import myiex as iex
 # import numpy as np
-# pylint: disable = C0103, E1121, W0603
+# pylint: disable = C0103, W0603
+
 
 
 FILL = 2
@@ -103,8 +105,8 @@ class FinPlot:
         self.adjust = dict()
         self.setadjust()
 
-        # data structure [entry, cande, minutes, tix].. 
-        # entry price, nth candle, interval time index value  
+        # data structure [entry, cande, minutes, tix]
+        # entry price, nth candle, interval time index value
         # Currently using the candle index instead of the time index
         self.entries = []
         self.exits = []
@@ -251,7 +253,8 @@ class FinPlot:
                           dtFormat="%H:%M", save='trade'):
         '''
         Currently this will retrieve the data using apiChooser. Set self.preferences to limit
-            acceptible apis. To place tx markers, set (or clear) fp.entries and fp.exits prior to calling
+            acceptible apis. To place tx markers, set (or clear) fp.entries and fp.exits prior
+            to calling
         :params symbol: The stock ticker
         :params start: A datetime object or time string for the begining of the graph. The day must
                      be within the last 7 days. This may change in the future.
@@ -288,7 +291,7 @@ class FinPlot:
 
         ttimes = start.strftime("%a %b %d %H:%M-->") + end.strftime('%H:%M')
         plt.title(f'{symbol} {minutes} minute chart\n{self.style}, {ttimes}')
-        
+
         fig = plt.gcf()
         ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1, colspan=1, sharex=ax1)
         # plt.ylabel('Volume')
@@ -352,12 +355,11 @@ class FinPlot:
         ax1.text(df_ohlc.date[idx], df_ohlc.low.min(), 'ZeroSubstance',
                  fontdict={'fontname': self.matchFont('onyx'), 'size': 32, 'color': '161616'})
 
-        
         msg = f'{len(df.index)} candles, msize: {int(markersize)}, cwidth: {int(width*100000)}'
         plt.xlabel(msg)
         # plt.ylabel('Prices over here')
 
-    #     plt.legend()
+        # plt.legend()
         ad = self.adjust
         plt.subplots_adjust(left=ad['left'], bottom=ad['bottom'], right=ad['right'],
                             top=ad['top'], wspace=0.2, hspace=0.2)
@@ -396,7 +398,7 @@ class FinPlot:
         saveorig = save
         while os.path.exists(save):
             s, ext = os.path.splitext(saveorig)
-            save = '{}({}){}'.format(s,count,ext)
+            save = '{}({}){}'.format(s, count, ext)
             count = count + 1
 
         fig.savefig(save)
