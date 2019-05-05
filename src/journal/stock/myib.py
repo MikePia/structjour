@@ -185,6 +185,7 @@ class TestApp(TestWrapper, TestClient):
         :params dur: a string for how long before end should the chart begin "1 D"
         :params interval: candle len
         '''
+        AFTERHOURS = 0
 
         if not validateDurString(dur):
             print("Duration must be formatted like '3 D' using S, D, W, M, or Y")
@@ -217,8 +218,8 @@ class TestApp(TestWrapper, TestClient):
         # self.reqHistoricalData(18002, ContractSamples.ContFut(), timeStr,
         #                        "1 Y", "1 month", "TRADES", 0, 1, False, []);
         # queryTime = DateTime.Now.AddMonths(-6).ToString("yyyyMMdd HH:mm:ss");
-        self.reqHistoricalData(4001, contract, timeStr, dur,
-                               interval, "TRADES", 1, 1, False, [])
+        self.reqHistoricalData(4002, contract, timeStr, dur,
+                               interval, "TRADES", AFTERHOURS, 1, False, [])
         # client.reqHistoricalData(4002, ContractSamples.EuropeanStock(), queryTime,
         #                          "10 D", "1 min", "TRADES", 1, 1, false, null);
         # print('Requesting access')
@@ -270,29 +271,27 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         dur = f'{(end-start).days + 1} D'
     else:
         dur = f'{(end-start).days} D'
-        print('Requests longer than 6 days are not supported. (for now)')
-        return 0, pd.DataFrame([], [])
+        print('Requests longer than 6 days are tentavely supported. (for now)')
+        # return 0, pd.DataFrame([], [])
 
     # if the end = 9:31 and dur = 3 minutes, ib will retrieve a start of the preceding day @ 15:58
-    # This is unique behavior in implemeted apis. We will just let ib do whatever and cut off the
-    # beginning below.
+    # This is unique behavior in implemeted apis. We will just let ib do whatever and cut off any
+    # data prior to the requested data. In that we get no after hours, a request for 7 will begin
+    # at 9:30 (instead of the previous day at 1330)
 
     symb = symbol
-    # daDate = end
     (resamp, (interval, minutes, origminutes)) = ni(minutes)
-    # chart(symb, d, dur/, interval)
-    ib = TestApp(7496, 7878)
-    # ib = TestApp(4002, 7979)
-    # def getHistorical(self, symbol, end, dur, interval, exchange='NASDAQ'):
-    df = ib.getHistorical(symb, end=end, dur=dur,
-                          interval=interval, exchange='NASDAQ')
+    # ib = TestApp(7496, 7878)
+    ib = TestApp(4002, 7979)
+    df = ib.getHistorical(symb, end=end, dur=dur, interval=interval, exchange='NASDAQ')
     lendf = len(df)
     if lendf == 0:
         return 0, df
 
-    # df.set_index(df.date)
+    # Normalize the date to our favorite format 
     df.index = pd.to_datetime(df.index)
     if start > df.index[0]:
+        print(start, "Cutting off from: ", df.index[0])
         df = df.loc[df.index >= start]
     if resamp:
         srate = f'{origminutes}T'
@@ -307,13 +306,11 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     return len(df), df
 
 
-    # df = getIb_Hist(symbol, end=end, dur=dur, interval=minutes)
-    # return df
 def isConnected():
     '''Call TestApp.isConnected and return result'''
     host = '127.0.0.1'
-    port = 7496
-    clientId = 7878
+    port = 4002
+    clientId = 7979
     ib = TestApp(host, port)
     ib.connect(host, port, clientId)
     connected = ib.isConnected()
