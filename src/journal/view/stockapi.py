@@ -172,7 +172,7 @@ class Ui_Dialog(object):
         self.label_9.setText(_translate("Dialog", "<html><head/><body><p><a href=\"https://iextrading.com/api-exhibit-a/\"><span style=\" text-decoration: underline; color:#0000ff;\">IEX Terms of use</span></a></p></body></html>"))
         self.iexCb.setToolTip(_translate("Dialog", "<html><head/><body><p>IEX is free for unlimited reasonable use but, unfortunately its intraday results produce poor charts. Its too sparse. The historical end of day results, by the way, are excellent and deep.</p></body></html>"))
         self.iexCb.setText(_translate("Dialog", "IEX"))
-        self.label_10.setText(_translate("Dialog", "Order these in preference then press enter "))
+        self.label_10.setText(_translate("Dialog", "Order the tokens ib, bc, av, and iex for preference"))
         self.APIPref.setText(_translate("Dialog", "ib, bc, av, iex"))
 
 

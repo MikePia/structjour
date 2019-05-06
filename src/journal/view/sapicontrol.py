@@ -5,10 +5,11 @@ import sys
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QDialog, QApplication
 from journal.view.stockapi import Ui_Dialog as SapiDlg
+from PyQt5.QtGui import QIntValidator
 
 class StockApi(QDialog):
     '''
-    [APIPref, ibPort, ibId, ibPaperPort, ibPaperId, ibRealPref]
+    [APIPref, ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealPref]
     '''
     def __init__(self, settings):
         super().__init__()
@@ -39,6 +40,13 @@ class StockApi(QDialog):
         self.ui.okBtn.pressed.connect(self.okPressed)
 
         self.ui.APIPref.setStyleSheet('color: black;')
+        
+        v = QIntValidator()
+        self.ui.ibRealPort.setValidator(v)
+        self.ui.ibRealId.setValidator(v)
+        self.ui.ibPaperPort.setValidator(v)
+        self.ui.ibPaperId.setValidator(v)
+
 
         self.initFromSettings()
         # self.sortIt(None)
@@ -47,10 +55,10 @@ class StockApi(QDialog):
         self.show()
 
     def initFromSettings(self):
-        val = self.settings.value('ibPort', '')
+        val = self.settings.value('ibRealPort', '')
         self.ui.ibRealPort.setText(val)
 
-        val = self.settings.value('ibId')
+        val = self.settings.value('ibRealId')
         self.ui.ibRealId.setText(val)
 
         val = self.settings.value('ibPaperPort')
@@ -90,12 +98,12 @@ class StockApi(QDialog):
     def setIbRealPort(self):
         text = self.ui.ibRealPort.text()
         print('real', text)
-        self.settings.setValue('ibPort', text)
+        self.settings.setValue('ibRealPort', text)
 
     def setIbRealId(self):
         text = self.ui.ibRealId.text()
         print('real', text)
-        self.settings.setValue('ibId', text)
+        self.settings.setValue('ibRealId', text)
 
     def setIbPaperId(self):
         text = self.ui.ibPaperId.text()
@@ -158,7 +166,7 @@ class StockApi(QDialog):
 
     def reorderAPIPref(self, last):
         ul = self.ui.APIPref.text()
-        ulist = ul.replace(' ', '').split(',')
+        ulist = ul.replace(' ', '').split(',') if ul else []
         if last and last in ulist:
             ulist.remove(last)
             ulist.append(last)
@@ -214,6 +222,6 @@ if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    settings = QSettings('zero_substance', 'structjour')
+    settings = QSettings('zero_substance/stockapi', 'structjour')
     w = StockApi(settings)
     sys.exit(app.exec_())

@@ -266,7 +266,7 @@
       <item>
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Order these in preference then press enter </string>
+         <string>Order the tokens ib, bc, av, and iex for preference</string>
         </property>
        </widget>
       </item>

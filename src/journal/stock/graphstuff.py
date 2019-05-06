@@ -91,11 +91,15 @@ class FinPlot:
         self.style = mplstyle
         self.randomStyle = True
         self.interactive = False
-        self.settings = QSettings('zero_substance', 'structjour')
+        self.settings = QSettings('zero_substance/stockapi', 'structjour')
+        self.ibPort = 0
+        self.ibId = 0
 
         p = self.settings.value('APIPref')
         if p:
+            p = p.replace(' ', '')
             self.preferences = p.split(',') if p else ['ib', 'bc', 'av', 'iex']
+        self.setIbStuff()
 
         # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
         self.api = self.preferences[0]
@@ -110,6 +114,22 @@ class FinPlot:
         # Currently using the candle index instead of the time index
         self.entries = []
         self.exits = []
+
+    def setIbStuff(self):
+        pref = self.preferences
+        if 'ib' in pref:
+            k = self.settings.allKeys()
+            ibreal = self.settings.value('ibRealCb', False, bool)
+            ibPaper = self.settings.value('ibPaperCb', False, bool)
+            ibpref = self.settings.value('ibPref')
+            if ibreal:
+                self.ibPort = self.settings.value('ibRealPort')
+                self.ibId = self.settings.value('ibRealId')
+            elif ibPaper:
+                self.ibPort = self.settings.value('ibPaperPort')
+                self.ibId = self.settings.value('ibPaperId')
+
+        print()
 
 
     def matchFont(self, nm, default='arial$'):
@@ -411,19 +431,9 @@ def localRun():
     # tdy = dt.datetime.today()
 
     fp = FinPlot()
-    odate = dt.datetime(2019, 1, 19, 9, 40)
-    cdate = dt.datetime(2019, 1, 19, 16, 30)
-    interval = 60
-    for dummy in range(1, 10):
-        s, e = fp.setTimeFrame(odate, cdate, interval)
-        print(odate.strftime("%B %d %H:%M"),
-              ' .../... ', cdate.strftime("%B %d %H:%M"))
-
-        print(s.strftime("%B %d %H:%M"), ' .../... ', e.strftime("%B %d %H:%M"))
-        print()
-        mins = 40
-        odate = odate + dt.timedelta(0, mins * 60)
-        cdate = cdate - dt.timedelta(0, mins * 60)
+    # odate = dt.datetime(2019, 1, 19, 9, 40)
+    # cdate = dt.datetime(2019, 1, 19, 16, 30)
+    # interval = 60
 
 
 if __name__ == '__main__':
