@@ -91,10 +91,10 @@ class FinPlot:
         self.style = mplstyle
         self.randomStyle = True
         self.interactive = False
-        self.settings = QSettings('zero_substance/stockapi', 'structjour')
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
 
         # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
-        p = self.settings.value('APIPref')
+        p = self.apiset.value('APIPref')
         if p:
             p = p.replace(' ', '')
             self.preferences = p.split(',')
@@ -281,8 +281,8 @@ class FinPlot:
         dummy, df = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
         if df.empty:
-            self.settings.setValue('errorCode', str(dummy['code']))
-            self.settings.setValue('errorMessage', dummy['message'])
+            self.apiset.setValue('errorCode', str(dummy['code']))
+            self.apiset.setValue('errorMessage', dummy['message'])
             return None
         df['date'] = df.index
 

@@ -266,15 +266,16 @@ class SumControl(QMainWindow):
             nwidg.setText(fname)
             return pname
         else:
-            errorCode = self.settings.value('errorCode')
-            errorMessage = self.settings.value('errorMessage')
+            apiset = QSettings('zero_substance/stockapi', 'structjour')
+            errorCode = apiset.value('errorCode')
+            errorMessage = apiset.value('errorMessage')
             if errorMessage:
                 mbox = QMessageBox()
                 msg = errorCode + '\n' + errorMessage
                 mbox.setText(msg)
                 mbox.exec()
-                self.settings.setValue('code', '')
-                self.settings.setValue('message', '')
+                apiset.setValue('code', '')
+                apiset.setValue('message', '')
 
         return None
 

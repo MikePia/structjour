@@ -45,8 +45,8 @@ def getPrevTuesWed(td):
 
 class IbSettings:
     def __init__(self):
-        self.settings = QSettings('zero_substance/stockapi', 'structjour')
-        p = self.settings.value('APIPref')
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
+        p = self.apiset.value('APIPref')
         if p:
             p = p.replace(' ', '')
             self.preferences = p.split(',')
@@ -58,15 +58,15 @@ class IbSettings:
     def setIbStuff(self):
         pref = self.preferences
         if 'ib' in pref:
-            ibreal = self.settings.value('ibRealCb', False, bool)
-            ibPaper = self.settings.value('ibPaperCb', False, bool)
-            ibpref = self.settings.value('ibPref')
+            ibreal = self.apiset.value('ibRealCb', False, bool)
+            ibPaper = self.apiset.value('ibPaperCb', False, bool)
+            ibpref = self.apiset.value('ibPref')
             if ibreal:
-                self.ibPort = self.settings.value('ibRealPort', 7496, int)
-                self.ibId = self.settings.value('ibRealId', 7878, int)
+                self.ibPort = self.apiset.value('ibRealPort', 7496, int)
+                self.ibId = self.apiset.value('ibRealId', 7878, int)
             elif ibPaper:
-                self.ibPort = self.settings.value('ibPaperPort', 4001, int)
-                self.ibId = self.settings.value('ibPaperId', 7979, int)
+                self.ibPort = self.apiset.value('ibPaperPort', 4001, int)
+                self.ibId = self.apiset.value('ibPaperId', 7979, int)
 
     def getIbSettings(self):
         #TODO abstrast host like port and id-- set it in the stockapi dialog
