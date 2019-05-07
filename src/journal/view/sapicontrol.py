@@ -14,7 +14,7 @@ class StockApi(QDialog):
     def __init__(self, settings):
         super().__init__()
 
-        self.settings = settings
+        self.apiset = settings
     
         ui = SapiDlg()
         ui.setupUi(self)
@@ -55,40 +55,40 @@ class StockApi(QDialog):
         self.show()
 
     def initFromSettings(self):
-        val = self.settings.value('ibRealPort', '')
+        val = self.apiset.value('ibRealPort', '')
         self.ui.ibRealPort.setText(val)
 
-        val = self.settings.value('ibRealId')
+        val = self.apiset.value('ibRealId')
         self.ui.ibRealId.setText(val)
 
-        val = self.settings.value('ibPaperPort')
+        val = self.apiset.value('ibPaperPort')
         self.ui.ibPaperPort.setText(val)
 
-        val = self.settings.value('ibPaperId')
+        val = self.apiset.value('ibPaperId')
         self.ui.ibPaperId.setText(val)
 
-        val = self.settings.value('ibRealCb', False, bool)
+        val = self.apiset.value('ibRealCb', False, bool)
         self.ui.ibRealCb.setChecked(val)
 
-        val = self.settings.value('ibPaperCb', False, bool)
+        val = self.apiset.value('ibPaperCb', False, bool)
         self.ui.ibPaperCb.setChecked(val)
 
-        val = self.settings.value('bcCb', False, bool)
+        val = self.apiset.value('bcCb', False, bool)
         self.ui.bcCb.setChecked(val)
         
-        val = self.settings.value('bcKey', '')
+        val = self.apiset.value('bcKey', '')
         self.ui.bcKey.setText(val)
 
-        val = self.settings.value('avCb', False, bool)
+        val = self.apiset.value('avCb', False, bool)
         self.ui.avCb.setChecked(val)
         
-        val = self.settings.value('avKey', '')
+        val = self.apiset.value('avKey', '')
         self.ui.avKey.setText(val)
 
-        val = self.settings.value('iexCb', False, bool)
+        val = self.apiset.value('iexCb', False, bool)
         self.ui.iexCb.setChecked(val)
 
-        val = self.settings.value('APIPref')
+        val = self.apiset.value('APIPref')
         self.ui.APIPref.setText(val)
 
         self.sortIt(None)
@@ -98,22 +98,22 @@ class StockApi(QDialog):
     def setIbRealPort(self):
         text = self.ui.ibRealPort.text()
         print('real', text)
-        self.settings.setValue('ibRealPort', text)
+        self.apiset.setValue('ibRealPort', text)
 
     def setIbRealId(self):
         text = self.ui.ibRealId.text()
         print('real', text)
-        self.settings.setValue('ibRealId', text)
+        self.apiset.setValue('ibRealId', text)
 
     def setIbPaperId(self):
         text = self.ui.ibPaperId.text()
         print('real', text)
-        self.settings.setValue('ibPaperId', text)
+        self.apiset.setValue('ibPaperId', text)
 
     def setIbPaperPort(self):
         text = self.ui.ibPaperPort.text()
         print('real', text)
-        self.settings.setValue('ibPaperPort', text)
+        self.apiset.setValue('ibPaperPort', text)
 
     def okPressed(self):
         self.orderApis()
@@ -121,47 +121,47 @@ class StockApi(QDialog):
 
     def orderApis(self):
         val = self.ui.APIPref.text()
-        self.settings.setValue('APIPref', val)
+        self.apiset.setValue('APIPref', val)
         self.sortIt(None)
     
 
     def ibClicked(self, b):
         print('real clicked')
-        self.settings.setValue('ibRealPref', b)
-        self.settings.setValue('ibRealCb', b)
+        self.apiset.setValue('ibRealPref', b)
+        self.apiset.setValue('ibRealCb', b)
         if b:
-            self.settings.setValue('ibPaperCb', not b)
+            self.apiset.setValue('ibPaperCb', not b)
             self.ui.ibPaperCb.setChecked(not b)
         self.sortIt('ib')
 
     def ibPaperclicked(self, b):
         print('paper clicked')
         # self.ui.ibPaperCb.setChecked(b)
-        self.settings.setValue('ibRealPref', not b)
-        self.settings.setValue('ibPaperCb', b)
+        self.apiset.setValue('ibRealPref', not b)
+        self.apiset.setValue('ibPaperCb', b)
         if b:
-            self.settings.setValue('ibRealCb', not b)
+            self.apiset.setValue('ibRealCb', not b)
             self.ui.ibRealCb.setChecked(not b)
         self.sortIt('ib')
 
     def setBcCb(self, b):
-        self.settings.setValue('bcCb', b)
+        self.apiset.setValue('bcCb', b)
         self.sortIt('bc')
 
     def setBcKey(self):
         val = self.ui.bcKey.text()
-        self.settings.setValue('bcKey', val)
+        self.apiset.setValue('bcKey', val)
 
     def setAvCb(self, b):
-        self.settings.setValue('avCb', b)
+        self.apiset.setValue('avCb', b)
         self.sortIt('av')
 
     def setAvKey(self):
         val = self.ui.avKey.text()
-        self.settings.setValue('avKey', val)
+        self.apiset.setValue('avKey', val)
 
     def setIexCb(self, b):
-        self.settings.setValue('iexCb', b)
+        self.apiset.setValue('iexCb', b)
         self.sortIt('iex')
 
     def reorderAPIPref(self, last):
@@ -176,7 +176,7 @@ class StockApi(QDialog):
             if newul:
                 newul = newul[:-2]
                 ul = newul
-        self.settings.setValue('APIPref', ul)
+        self.apiset.setValue('APIPref', ul)
         return ul, ulist
 
     def sortIt(self, last):
@@ -222,6 +222,6 @@ if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    settings = QSettings('zero_substance/stockapi', 'structjour')
-    w = StockApi(settings)
+    apisettings = QSettings('zero_substance/stockapi', 'structjour')
+    w = StockApi(apisettings)
     sys.exit(app.exec_())
