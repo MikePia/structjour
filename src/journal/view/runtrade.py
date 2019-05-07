@@ -10,6 +10,7 @@ import pickle
 import sys
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
+from PyQt5.QtCore import QDate, QDateTime
 
 import pandas as pd
 
@@ -24,8 +25,10 @@ from journal.view.layoutforms import LayoutForms
 
 
 from journalfiles import JournalFiles
-from journal.view.sumcontrol import SumControl
+from journal.view.sumcontrol import SumControl, qtime2pd
 from journal.view.summaryform import Ui_MainWindow
+
+# pylint: disable = C0103
 
 
 class runController:
@@ -53,6 +56,7 @@ class runController:
         self.settings = self.sc.settings
         self.inputtype = self.settings.value('inputType')
         self.indir = self.sc.getDirectory()
+        inkey = ''
         if self.inputtype == 'DAS':
             inkey = 'dasInfile'
         elif self.inputtype == 'IB_HTML':
@@ -61,8 +65,10 @@ class runController:
             self.outdir = None
         else:
             self.outdir = self.settings.value('outdir')
-        qd = self.settings.value('theDate')
-        self.theDate = pd.Timestamp(qd.year(), qd.month(), qd.day())
+        theDate = self.settings.value('theDate', pd.Timestamp.today())
+        if theDate and isinstance(theDate, (QDate, QDateTime)):
+            theDate = qtime2pd(theDate)
+        self.theDate = theDate
         self.positions = self.settings.value('dasInfile2')
 
         ### end blitz

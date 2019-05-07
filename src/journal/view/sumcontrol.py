@@ -31,12 +31,19 @@ from strategy.strategies import Strategy
 
 def qtime2pd(qdt):
     '''Return a pandas Timestamp from a QDateTime'''
-    d = pd.Timestamp(qdt.date().year(),
-                     qdt.date().month(),
-                     qdt.date().day(),
-                     qdt.time().hour(),
-                     qdt.time().minute(),
-                     qdt.time().second())
+    if isinstance(qdt, QDateTime):
+        d = pd.Timestamp(qdt.date().year(),
+                         qdt.date().month(),
+                         qdt.date().day(),
+                         qdt.time().hour(),
+                         qdt.time().minute(),
+                         qdt.time().second())
+    elif isinstance(qdt, QDate):
+        d = pd.Timestamp(qdt.year(),
+                         qdt.month(),
+                         qdt.day())
+    else:
+        return qdt
     return d
 
 def pd2qtime(pdt):
@@ -118,7 +125,9 @@ class SumControl(QMainWindow):
         self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
 
         # Set the file related widgets
-        self.ui.dateEdit.setDate(self.settings.value('theDate'))
+        d = pd.Timestamp.today()
+        theDate = self.settings.value('theDate', d)
+        self.ui.dateEdit.setDate(theDate)
         self.setFormDate()
         # self.ui.infileEdit.setText(self.getInfile())
 
@@ -215,6 +224,9 @@ class SumControl(QMainWindow):
         (dummy, rules, apilist) = fp.apiChooserList(begin, end, fp.api)
         if apilist:
             fp.api = apilist[0]
+        else:
+            print('Another fn pop dialog?. Or pop the dialog here. Please choose a stock api to use. Select stockapi from the file meny.')
+            return
         interval = iwidg.value()
         # name = nwidg.text()
         key = self.ui.tradeList.currentText()
@@ -412,6 +424,8 @@ class SumControl(QMainWindow):
             val = 0.0
         else:
             self.lf.setClean(key, False)
+        if val == '-' or val == '':
+            return
         fval = float(val)
         self.lf.setMstkVals(key, fval, note)
 
@@ -522,6 +536,8 @@ class SumControl(QMainWindow):
         ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir]
         '''
         daDate = self.ui.dateEdit.date()
+        if isinstance(daDate, (QDate, QDateTime)):
+            daDate = qtime2pd(daDate)
         self.settings.setValue('theDate', daDate)
         indir = self.getDirectory()
         dasinfile = self.settings.value('dasInfile')
@@ -530,18 +546,19 @@ class SumControl(QMainWindow):
             self.ui.infileEdit.setText('')
             self.ui.infileEdit.setStyleSheet('color: black;')
             return
-        sglob = ibinfile
-        rgx = re.sub('{\*}', '.*', sglob)
+        if ibinfile:
+            sglob = ibinfile
+            rgx = re.sub('{\*}', '.*', sglob)
 
-        fs = list()
-        if os.path.exists(indir):
-            for f in os.listdir(indir):
-                x = re.search((rgx), f)
-                if x:
-                    fs.append(x.string)
-            if fs:
-                ibinfile = fs[0]
-                self.settings.setValue('ibInfileName', ibinfile)
+            fs = list()
+            if os.path.exists(indir):
+                for f in os.listdir(indir):
+                    x = re.search((rgx), f)
+                    if x:
+                        fs.append(x.string)
+                if fs:
+                    ibinfile = fs[0]
+                    self.settings.setValue('ibInfileName', ibinfile)
 
         dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
         ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
@@ -554,11 +571,8 @@ class SumControl(QMainWindow):
             elif inputtype == 'IB_HTML':
                 infile = ibinfile
 
-        # if not infile:
-        #     if ibinfile and not dasinfile:
-        #         infile = ibinfile
-        #     else:
-        #         infile = dasinfile
+        if not infile:
+            return
 
         self.ui.infileEdit.setText(infile)
         if os.path.exists(infile):
@@ -577,14 +591,6 @@ class SumControl(QMainWindow):
             self.ui.infileEdit.setStyleSheet('color: red;')
             self.ui.goBtn.setStyleSheet('color:black')
 
-        # if ibinfile and os.path.exists(ibinfile):
-        #     self.ui.ibImport.setEnabled(True)
-        # else:
-        #     self.ui.ibImport.setEnabled(False)
-        # if dasinfile and os.path.exists(dasinfile):
-        #     self.ui.dasImport.setEnabled(True)
-        # else:
-        #     self.ui.dasImport.setEnabled(False)
 
     def getInfile(self):
         # TODO Need a choosing mechanism for DAS or IB
@@ -602,6 +608,9 @@ class SumControl(QMainWindow):
         Triggered when the targ value changes, set targ, tarDiff and rr. Then store vals in tto
         '''
         # Set the targ, targDiff and rr widgets
+        if not self.lf:
+            print('No trade to for which to provide a target price')
+            return
         diff = 0
         try:
             fval = float(val)
@@ -626,6 +635,9 @@ class SumControl(QMainWindow):
         Set the stopDiff to the difference between the stoploss and the actual PL, then
         call rrCalc
         '''
+        if not self.lf:
+            print('No trade to for which to provide a stop price')
+            return
         diff = 0
         try:
             fval = float(val)
@@ -722,7 +734,8 @@ class SumControl(QMainWindow):
             return None
 
         d = self.settings.value('theDate')
-        d = pd.Timestamp(d.year(), d.month(), d.day())
+        if isinstance(d, (QDate, QDateTime)):
+            d = qtime2pd(d)
         Year = d.year
         month = d.strftime('%m')
         MONTH = d.strftime('%B')
@@ -776,8 +789,10 @@ class SumControl(QMainWindow):
         state = True if state == "true" else False
         fui.theDateCbox.setChecked(state)
         daDate = self.settings.value('theDate')
-        if daDate:
-            fui.theDate.setDate(daDate)
+        if not daDate:
+            daDate = pd.Timestamp.today()
+            self.settings.setValue(daDate)
+        fui.theDate.setDate(daDate)
 
         # Define actions.
         fui.journalBtn.pressed.connect(self.setJournalDlg)
@@ -806,6 +821,7 @@ class SumControl(QMainWindow):
         fui.okBtn.pressed.connect(self.closeit)
 
         # self.contextMenus()
+        # d = self.settings.value()
 
         w.exec()
 
@@ -980,7 +996,8 @@ class SumControl(QMainWindow):
             return
 
         d = self.settings.value('theDate')
-        d = pd.Timestamp(d.year(), d.month(), d.day())
+        if isinstance(d, (QDate, QDateTime)):
+            d = qtime2pd(d)
         Year = d.year
         month = d.strftime('%m')
         MONTH = d.strftime('%B')
@@ -1006,12 +1023,16 @@ class SumControl(QMainWindow):
         Call only when file settings dialog (self.fui) is active.
         '''
         d = self.settings.value('theDate')
-        ddate = pd.Timestamp(d.year(), d.month(), d.day())
-        Year = ddate.year
-        month = ddate.strftime('%m')
-        MONTH = ddate.strftime('%B')
-        day = ddate.strftime('%d')
-        DAY = ddate.strftime('%A')
+        if not d:
+            d = pd.Timestamp.today()
+        elif isinstance(d, (QDate, QDateTime)):
+            d = qtime2pd(d)
+
+        Year = d.year
+        month = d.strftime('%m')
+        MONTH = d.strftime('%B')
+        day = d.strftime('%d')
+        DAY = d.strftime('%A')
         try:
             schemeFmt = scheme.format(
                 Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
@@ -1064,7 +1085,8 @@ class SumControl(QMainWindow):
 
     def stockAPIDlg(self):
         '''Fire up the stock Api settings dialog'''
-        sapi = StockApi(self.settings)
+        settings = QSettings('zero_substance/stockapi', 'structjour')
+        sapi = StockApi(settings)
         sapi.exec()
 
     def stratBrowseDlg(self):
