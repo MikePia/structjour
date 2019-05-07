@@ -7,6 +7,7 @@ Local utility functions shared by some stock modules and test code.
 '''
 # pylint: disable = C0103
 import datetime as dt
+from PyQt5.QtCore import QSettings
 
 def getLastWorkDay(d=None):
     '''
@@ -41,6 +42,39 @@ def getPrevTuesWed(td):
         deltdays = 4
     before = td - dt.timedelta(deltdays)
     return before
+
+class IbSettings:
+    def __init__(self):
+        self.settings = QSettings('zero_substance/stockapi', 'structjour')
+        p = self.settings.value('APIPref')
+        if p:
+            p = p.replace(' ', '')
+            self.preferences = p.split(',')
+        else:
+            self.preferences = ['ib', 'bc', 'av', 'iex']
+        self.setIbStuff()
+
+
+    def setIbStuff(self):
+        pref = self.preferences
+        if 'ib' in pref:
+            ibreal = self.settings.value('ibRealCb', False, bool)
+            ibPaper = self.settings.value('ibPaperCb', False, bool)
+            ibpref = self.settings.value('ibPref')
+            if ibreal:
+                self.ibPort = self.settings.value('ibRealPort', 7496, int)
+                self.ibId = self.settings.value('ibRealId', 7878, int)
+            elif ibPaper:
+                self.ibPort = self.settings.value('ibPaperPort', 4001, int)
+                self.ibId = self.settings.value('ibPaperId', 7979, int)
+
+    def getIbSettings(self):
+        #TODO abstrast host like port and id-- set it in the stockapi dialog
+        d = {'port': self.ibPort,
+                'id': self.ibId,
+                'host': '127.0.0.1'}
+        return d
+
 
 
 def notmain():

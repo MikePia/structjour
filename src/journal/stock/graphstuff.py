@@ -92,17 +92,16 @@ class FinPlot:
         self.randomStyle = True
         self.interactive = False
         self.settings = QSettings('zero_substance/stockapi', 'structjour')
-        self.ibPort = 0
-        self.ibId = 0
 
+        # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
         p = self.settings.value('APIPref')
         if p:
             p = p.replace(' ', '')
-            self.preferences = p.split(',') if p else ['ib', 'bc', 'av', 'iex']
-        self.setIbStuff()
-
-        # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
+            self.preferences = p.split(',')
+        else:
+            self.preferences =  ['ib', 'bc', 'av', 'iex']
         self.api = self.preferences[0]
+
         self.ftype = '.png'
         self.format = "%H%M"
         self.base = 'trade'
@@ -115,21 +114,6 @@ class FinPlot:
         self.entries = []
         self.exits = []
 
-    def setIbStuff(self):
-        pref = self.preferences
-        if 'ib' in pref:
-            k = self.settings.allKeys()
-            ibreal = self.settings.value('ibRealCb', False, bool)
-            ibPaper = self.settings.value('ibPaperCb', False, bool)
-            ibpref = self.settings.value('ibPref')
-            if ibreal:
-                self.ibPort = self.settings.value('ibRealPort')
-                self.ibId = self.settings.value('ibRealId')
-            elif ibPaper:
-                self.ibPort = self.settings.value('ibPaperPort')
-                self.ibId = self.settings.value('ibPaperId')
-
-        print()
 
 
     def matchFont(self, nm, default='arial$'):

@@ -10,6 +10,8 @@ from threading import Thread
 import queue
 import pandas as pd
 
+
+
 from ibapi import wrapper
 from ibapi.client import EClient
 
@@ -17,7 +19,7 @@ from ibapi.client import EClient
 from ibapi.common import TickerId
 from ibapi.contract import Contract
 
-from journal.stock.utilities import getLastWorkDay
+from journal.stock.utilities import getLastWorkDay, IbSettings
 
 
 # import time
@@ -88,6 +90,9 @@ def validateDurString(s):
     return True
 
 
+
+
+
 class TestClient(EClient):
     '''
     Inherit from the sample code
@@ -147,7 +152,7 @@ class TestWrapper(wrapper.EWrapper):
         self.storage.put(df)
         # GDF=df
         # print(df)
-#         print(df.tail(2))
+        # print(df.tail(2))
         # exit()
 
 
@@ -155,11 +160,12 @@ class TestApp(TestWrapper, TestClient):
     '''
     My very own double
     '''
-    def __init__(self, port, cid):
+    def __init__(self, port, cid, host):
         TestWrapper.__init__(self)
         TestClient.__init__(self, wrapprr=self)
         self.port = port
         self.cid = cid
+        self.host = host
         # ! [socket_init]
 
         self.started = False
@@ -281,8 +287,12 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
 
     symb = symbol
     (resamp, (interval, minutes, origminutes)) = ni(minutes)
-    # ib = TestApp(7496, 7878)
-    ib = TestApp(4002, 7979)
+    
+    # ib = TestApp(7496, 7878, '127.0.0.1')
+    # ib = TestApp(4002, 7979, '127.0.0.1')
+    x = IbSettings()
+    ibs = x.getIbSettings()
+    ib = TestApp(ibs['port'], ibs['id'], ibs['host'])
     df = ib.getHistorical(symb, end=end, dur=dur, interval=interval, exchange='NASDAQ')
     lendf = len(df)
     if lendf == 0:
@@ -306,12 +316,17 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     return len(df), df
 
 
+
+
+
 def isConnected():
     '''Call TestApp.isConnected and return result'''
-    host = '127.0.0.1'
-    port = 4002
-    clientId = 7979
-    ib = TestApp(host, port)
+    x = IbSettings()
+    ibs = x.getIbSettings()
+    host = ibs['host']
+    port = ibs['port']
+    clientId = ibs['id']
+    ib = TestApp(port, clientId, host)
     ib.connect(host, port, clientId)
     connected = ib.isConnected()
     if connected:
