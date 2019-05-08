@@ -10,17 +10,27 @@ import datetime as dt
 import requests
 import pandas as pd
 from journal.stock.picklekey import getKey as getReg
-from journal.stock import utilities as util
+from journal.stock.utilities import ManageKeys, getLastWorkDay
+
+
 # pylint: disable = C0103, R0912, R0914, R0915
+
+# Deprecated
 APIKEY = getReg('barchart')['key']
 
 # https://marketdata.websol.barchart.com/getHistory.json?apikey={APIKEY}&symbol=AAPL&type=minutes&startDate=20181001&maxRecords=100&interval=5&order=asc&sessionFilter=EFK&splits=true&dividends=true&volume=sum&nearby=1&jerq=true
 
+def getApiKeyPickled():
+    '''Deprecated'''
+    '''Returns the key for the barchart API
+    '''
+    return APIKEY
 
 def getApiKey():
     '''Returns the key for the barchart API
     '''
-    return APIKEY
+    mk = ManageKeys()
+    return mk.getKey('bc')
 
 
 def getLimits():
@@ -72,7 +82,7 @@ ORDER = ['asc', 'desc']
 VOLUME = ['total', 'sum', 'contract', 'sumcontract', 'sumtotal']
 
 # For testing
-DEMO_PARAMS = {'apikey': APIKEY,
+DEMO_PARAMS = {'apikey': getApiKey(),
                'symbol': 'AAPL',
                'type': 'minutes',
                'startDate': '2018-12-03 12:45',
@@ -90,7 +100,7 @@ DEMO_PARAMS = {'apikey': APIKEY,
 def setParams(symbol, minutes, startDay):
     '''Internal utility method'''
     params = {}
-    params['apikey'] = APIKEY
+    params['apikey'] = getApiKey()
     params['symbol'] = symbol
     params['type'] = 'minutes'
     params['interval'] = minutes
@@ -104,7 +114,7 @@ def setParams(symbol, minutes, startDay):
     return params
 
 # Not getting the current date-- maybe after the market closes?
-def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
+def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
     '''
     Note that getHistory will return previous day's prices until 15 minutes after the market
         closes. We will generate a warning if our start or end date differ from the date of the
@@ -131,7 +141,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if not start:
         tdy = dt.datetime.today()
         start = dt.datetime(tdy.year, tdy.month, tdy.day, 6, 0)
-        start = util.getLastWorkDay(start)
+        start = getLastWorkDay(start)
     end = pd.to_datetime(end)
     start = pd.to_datetime(start)
     startDay = start.strftime("%Y%m%d")
@@ -194,11 +204,15 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         print(msg)
 
     if start > df.index[0]:
+        rstart = df.index[0]
+        rend = df.index[-1]
         df = df.loc[df.index >= start]
+
         lendf = len(df)
         if lendf == 0:
             msg = '\nWARNING: all data has been removed.'
             msg = msg + f'\nThe Requested start was({start}).'
+            msg = msg + f'\nBarchart returned data beginning {rstart} and ending {rend}'
             print(msg)
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
@@ -232,6 +246,11 @@ def main():
     dummy, d = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
     print(len(d))
 
+def notmain():
+
+    print(getApiKeyPickled())
+    print(getApiKey())
 
 if __name__ == '__main__':
-    main()
+    # main()
+    notmain()

@@ -18,7 +18,8 @@ import datetime as dt
 import time
 import requests
 import pandas as pd
-from journal.stock.picklekey import getKey
+from journal.stock.picklekey import getKey as getPickledKey
+from journal.stock.utilities import ManageKeys
 # import pickle
 
 BASE_URL = 'https://www.alphavantage.co/query?'
@@ -63,11 +64,17 @@ OUTPUTSIZE = ('compact', 'full')  # compact is default
 INTERVAL = ('1min', '5min', '15min', '30min',
             '60min', 'daily', 'weekly', 'monthly')
 
-APIKEY = getKey('alphavantage')['key']
+# Deprecated
+APIKEY = getPickledKey('alphavantage')['key']
 
-def getkey():
+def getKey():
+    mk=ManageKeys()
+    return mk.getKey('av')
+
+
+def getkeyPickled():
     '''My Personal key'''
-    k = getKey('alphavantage')
+    k = getPickledKey('alphavantage')
     return k
 
 def getapis():
@@ -177,7 +184,8 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     params['symbol'] = symbol
     params['outputsize'] = 'full'
     params['datatype'] = DATATYPES[0]
-    params['apikey'] = APIKEY
+    # params['apikey'] = APIKEY
+    params['apikey'] = getKey()
 
     request_url = f"{BASE_URL}"
     response = requests.get(request_url, params=params)
@@ -284,13 +292,18 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
 
     return metaj, df
 
+def notmain():
+    print (APIKEY)
+    print(getKey())
+
 if __name__ == '__main__':
     # df = getmav_intraday('SQ')
     # print(df.head())
+    notmain()
 
-    dastart = "2019-01-11 11:30"
-    daend = "2019-01-14 18:40"
-    d = dt.datetime(2018, 12, 20)
-    x, ddf = getmav_intraday("SPY", start=dastart, end=daend, minutes='60min')
-    print(ddf.head(2))
-    print(ddf.tail(2))
+    # dastart = "2019-01-11 11:30"
+    # daend = "2019-01-14 18:40"
+    # d = dt.datetime(2018, 12, 20)
+    # x, ddf = getmav_intraday("SPY", start=dastart, end=daend, minutes='60min')
+    # print(ddf.head(2))
+    # print(ddf.tail(2))
