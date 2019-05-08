@@ -157,12 +157,19 @@ class FinPlot:
         nclose = dt.datetime(n.year, n.month, n.day, 16, 30)
 
         # Rule 1 Barchart will not return todays data till 16:30
+        # Rule 1a Barchart will not return yesterdays data after 12 till 1630
         tradeday = pd.Timestamp(start.year, start.month, start.day)
         todayday = pd.Timestamp(n.year, n.month, n.day)
+        y = todayday - pd.Timedelta(days=1)
+        y = pd.Timestamp(y.year, y.month, y.day, 11, 59)
         if tradeday == todayday and n < nclose and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
             violatedRules.append(
-                'Barchart will not return todays data till 16:30')
+                'Barchart free data will not return todays data till 16:30')
+        if end > y:
+            suggestedApis.remove('bc')
+            violatedRules.append(
+                'Barchart free data will not yesterdays data after 12 till today at  16:30')
 
         # Rule 2 No support any charts greater than 7 days prior till today
         if n > start:
