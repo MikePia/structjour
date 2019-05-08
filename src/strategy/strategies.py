@@ -6,6 +6,7 @@ Created on April 30, 2019
 @author: Mike Petersen
 '''
 import os
+import pickle
 import sqlite3
 from strategy.strat import TheStrategyObject
 
@@ -18,10 +19,13 @@ class Strategy:
     '''
 
 
-    def __init__(self, create=False, db='C:/python/E/structjour/src/strategy/t1.sqlite'):
+    def __init__(self, create=False, db='C:/trader/journal/structjour.sqlite'):
+
+        
+
 
         if not os.path.exists(db):
-            msg = 'No db listed-- do we recreate the default and add a setting?'
+            msg = 'No db listed-- do we recreate the default and add a setting?- or maybe pop and get the db address'
             raise ValueError(msg)
         self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()

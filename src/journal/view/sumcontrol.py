@@ -17,6 +17,7 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap
 
 import pandas as pd
 
+from journal.stock.utilities import ManageKeys
 from journal.view.summaryform import Ui_MainWindow
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.xlimage import XLImage
@@ -74,6 +75,8 @@ class SumControl(QMainWindow):
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
+        mk = ManageKeys(create=True)
+
 
         self.settings.setValue('runType', 'QT')
         now = None
@@ -139,6 +142,9 @@ class SumControl(QMainWindow):
     # =================================================================
     # ==================== Main Form  methods =========================
     # =================================================================
+
+    
+
 
     def strategyChanged(self, index):
         print('strat change', index)
@@ -785,6 +791,7 @@ class SumControl(QMainWindow):
             self.fui.outdirStatic.setChecked(True)
         else:
             self.fui.outdirDefault.setChecked(True)
+        self.setOutdir()
         fui.outdir.setText(self.settings.value('outdir'))
         state = self.settings.value('setToday')
         state = True if state == "true" else False
@@ -880,8 +887,9 @@ class SumControl(QMainWindow):
             self.fui.outdir.setFocusPolicy(Qt.TabFocus)
         else:
             self.settings.setValue('outdirPolicy', 'default')
+            opf = self.getDirectory()
 
-            outpathfile = os.path.join(self.getDirectory(), 'out')
+            outpathfile = os.path.join(opf, 'out') if opf else ''
             self.settings.setValue('outdir', 'out/')
             self.fui.outdir.setText('out/')
             self.fui.outdir.setToolTip(outpathfile)
@@ -919,7 +927,8 @@ class SumControl(QMainWindow):
         d = self.getDirectory()
 
         # What should turn red here????
-        if not os.path.exists(d):
+        if not d or not os.path.exists(d):
+            print(f'Cannot locate directory "{d}".')
             return
         fs = list()
         for f in os.listdir(d):

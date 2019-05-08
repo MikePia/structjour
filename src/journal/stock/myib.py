@@ -323,6 +323,8 @@ def isConnected():
     '''Call TestApp.isConnected and return result'''
     x = IbSettings()
     ibs = x.getIbSettings()
+    if not ibs:
+        return None
     host = ibs['host']
     port = ibs['port']
     clientId = ibs['id']

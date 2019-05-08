@@ -6,7 +6,6 @@ Created on Apr 1, 2019
 
 
 import os
-import pickle
 import sys
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
@@ -81,6 +80,9 @@ class runController:
         daDate = self.ui.dateEdit.date()
         self.settings.setValue('theDate', daDate)
         self.initialize()
+        if not self.indir:
+            print('What file is supposed to load?')
+            return
         jf = JournalFiles(indir=self.indir, outdir=self.outdir,
                       theDate=self.theDate, infile=self.infile,
                       inputType = self.inputtype, infile2=self.positions,
@@ -95,6 +97,9 @@ class runController:
     def runnit(self):
         print('gonna runnit gonna runnit')
         self.initialize()
+        if not self.indir:
+            print('What file is supposed to load?')
+            return
         jf = JournalFiles(indir=self.indir, outdir=self.outdir,
                       theDate=self.theDate, infile=self.infile,
                       inputType = self.inputtype, infile2=self.positions,

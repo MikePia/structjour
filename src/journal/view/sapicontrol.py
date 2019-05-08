@@ -3,18 +3,23 @@ import os
 import sys
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QDialog, QApplication
-from journal.view.stockapi import Ui_Dialog as SapiDlg
 from PyQt5.QtGui import QIntValidator
+from PyQt5.QtWidgets import QDialog, QApplication
+
+from journal.view.stockapi import Ui_Dialog as SapiDlg
+from journal.stock.utilities import ManageKeys
+
 
 class StockApi(QDialog):
     '''
     [APIPref, ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealPref]
+    The api keys are held in the database
     '''
     def __init__(self, settings):
         super().__init__()
 
         self.apiset = settings
+        self.mk = ManageKeys()
     
         ui = SapiDlg()
         ui.setupUi(self)
@@ -76,13 +81,13 @@ class StockApi(QDialog):
         val = self.apiset.value('bcCb', False, bool)
         self.ui.bcCb.setChecked(val)
         
-        val = self.apiset.value('bcKey', '')
+        val = self.mk.getKey('bc')
         self.ui.bcKey.setText(val)
 
         val = self.apiset.value('avCb', False, bool)
         self.ui.avCb.setChecked(val)
         
-        val = self.apiset.value('avKey', '')
+        val = self.mk.getKey('av')
         self.ui.avKey.setText(val)
 
         val = self.apiset.value('iexCb', False, bool)
@@ -150,7 +155,7 @@ class StockApi(QDialog):
 
     def setBcKey(self):
         val = self.ui.bcKey.text()
-        self.apiset.setValue('bcKey', val)
+        self.mk.updateKey('bc', val)
 
     def setAvCb(self, b):
         self.apiset.setValue('avCb', b)
@@ -158,7 +163,7 @@ class StockApi(QDialog):
 
     def setAvKey(self):
         val = self.ui.avKey.text()
-        self.apiset.setValue('avKey', val)
+        self.mk.updateKey('av', val)
 
     def setIexCb(self, b):
         self.apiset.setValue('iexCb', b)
