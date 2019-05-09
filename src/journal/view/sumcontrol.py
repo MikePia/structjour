@@ -835,6 +835,11 @@ class SumControl(QMainWindow):
 
     def closeit(self):
         self.w.close()
+        if self.ui.ibImport.isChecked():
+            self.ibDefault(True)
+        else:
+            self.ui.dasImport.setChecked(True)
+            self.dasDefault(True)
 
     def setDialogDate(self, val):
         print(val)
@@ -1100,6 +1105,15 @@ class SumControl(QMainWindow):
         sapi.exec()
 
     def stratBrowseDlg(self):
+    
+        apiset = QSettings('zero_substance/stockapi', 'structjour')
+        if not apiset.value('dbsqlite'):
+            j = self.settings.value('journal')
+            if not j:
+                print('Please set the location of the your journal directory.')
+                return
+            db = os.path.join(j, 'dbsqlite')
+            apiset.setValue('dbsqlite', db)
         stratB = StratControl()
         stratB.show()
         stratB.exec()

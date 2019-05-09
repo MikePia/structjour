@@ -130,6 +130,9 @@ class LayoutForms:
         will trigger the loading mechanism from tto to QT widgets
         '''
         name = self.sc.getSaveName()
+        if not os.path.exists(name):
+            print(f'Save file does not exist "{name}".')
+            return None
         with open(name, "rb") as f:
             test = pickle.load(f)
             if len(test) != 2:
@@ -417,7 +420,7 @@ class LayoutForms:
             wwloc = wloc
             if n.find(wwloc) > 0:
                 wwloc = ''
-            if uinfo and n.find(unifo) > 0:
+            if uinfo and n.find(uinfo) > 0:
                 uinfo = ''
             n = n + wwloc + uinfo + ext
         elif data:

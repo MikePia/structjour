@@ -8,6 +8,9 @@ Created on April 30, 2019
 import os
 import pickle
 import sqlite3
+
+from PyQt5.QtCore import QSettings
+
 from strategy.strat import TheStrategyObject
 
 # pylint: disable = C0103
@@ -19,14 +22,18 @@ class Strategy:
     '''
 
 
-    def __init__(self, create=False, db='C:/trader/journal/structjour.sqlite'):
-
-        
-
+    def __init__(self, create=False):
+        # if not db:
+        apiset = QSettings('zero_substance/stockapi', 'structjour')
+        db = apiset.value('dbsqlite')
+        if not db:
+            print('db value is not set')
+            return
 
         if not os.path.exists(db):
-            msg = 'No db listed-- do we recreate the default and add a setting?- or maybe pop and get the db address'
-            raise ValueError(msg)
+            msg = f'db file {db} is not found. '
+            print(msg)
+            return
         self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()
         if create:

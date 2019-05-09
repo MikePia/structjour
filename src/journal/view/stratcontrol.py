@@ -13,6 +13,7 @@ class StratControl(QDialog):
         super().__init__(parent=None)
         self.ui = Ui_Form()
         self.settings = QSettings('zero_substance', 'structjour')
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
         defimage = "C:/python/E/structjour/src/images/ZeroSubstanceCreation_220.png"
         if not os.path.exists(defimage):
             print('========== its not there', defimage)
@@ -206,6 +207,8 @@ class StratControl(QDialog):
 
     def loadStrategies(self):
         '''Load the strategy combo box from the db'''
+        if not self.apiset.value('dbsqlite'):
+            return
         
         strats = self.strat.getStrategies()
         self.ui.strategyCb.clear()
