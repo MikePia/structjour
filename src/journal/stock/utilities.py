@@ -6,11 +6,45 @@ Local utility functions shared by some stock modules and test code.
 @creation_date: 2019-01-17
 '''
 import os
+import random
 import datetime as dt
 import sqlite3
+import pandas as pd
 
 from PyQt5.QtCore import QSettings
 # pylint: disable = C0103
+
+def makeupEntries(df, minutes, fp):
+    start = df.iloc[0].index
+    end = df.iloc[-1].index
+    entries = []
+    for i in range(random.randint(0, 3)):
+        # Make up an entry time
+        delta = end - start
+        sec = delta.total_seconds()
+        earliest = sec//10
+        latest = sec-earliest
+        secs = random.randint(earliest, latest)
+        entry = start + pd.Timedelta(seconds=secs)
+
+        # Figure the candle index for our made up entry
+        diff = entry - start
+        candleindex = int(diff.total_seconds()/60//minutes)
+
+        #Get the time index of the candle
+        tix = df.iloc[candleindex].index
+
+        # Set a random buy or sell
+        side = 'B' if random.random() > .5 else 'S'
+
+        # Set a random price within the chosen candle
+        high = df.iloc[candleindex].high
+        low = df.iloc[candleindex].low
+        price = (random.random() * (high - low)) + low
+
+        entries.append([price, candleindex, side, tix])
+
+    return entries
 
 def getLastWorkDay(d=None):
     '''
@@ -161,12 +195,12 @@ class IbSettings:
 
     def setIbStuff(self):
         pref = self.preferences
+        self.ibPort = None
+        self.ibId = None
         if 'ib' in pref:
             ibreal = self.apiset.value('ibRealCb', False, bool)
             ibPaper = self.apiset.value('ibPaperCb', False, bool)
             ibpref = self.apiset.value('ibPref')
-            self.ibPort = None
-            self.ibId = None
             if ibreal:
                 self.ibPort = self.apiset.value('ibRealPort', 7496, int)
                 self.ibId = self.apiset.value('ibRealId', 7878, int)
