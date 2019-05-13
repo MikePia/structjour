@@ -21,8 +21,9 @@ APIKEY = getReg('barchart')['key']
 # https://marketdata.websol.barchart.com/getHistory.json?apikey={APIKEY}&symbol=AAPL&type=minutes&startDate=20181001&maxRecords=100&interval=5&order=asc&sessionFilter=EFK&splits=true&dividends=true&volume=sum&nearby=1&jerq=true
 
 def getApiKeyPickled():
-    '''Deprecated'''
-    '''Returns the key for the barchart API
+    '''
+    Deprecated
+    Returns the key for the barchart API
     '''
     return APIKEY
 

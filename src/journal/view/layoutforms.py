@@ -1,5 +1,5 @@
 '''
-Populate the Qt forms. Generally loyoutforms populates the trade summaries for QT and layoutsheets
+Populate the Qt forms. Generally layoutforms populates the trade summaries for QT and layoutsheets
 populates the form entries for excel.
 
 Created on April 14, 2019
@@ -250,7 +250,7 @@ class LayoutForms:
         self.ts. This data is trade information, read only and is used currently for chart
         generation. The data structure is: 
         [price, time, share, pl, diff, entryOrExit]. Share is positive for buy, negative for sell.
-        :params key: Trade name from the tradeList sidget
+        :params key: Trade name from the tradeList widget
         '''
         entries = self.entries[key]
         return entries

@@ -1,6 +1,6 @@
 import os
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox, QMainWindow, QDialog
+from PyQt5.QtWidgets import QApplication, QMenu, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QSettings, QUrl
 
@@ -8,7 +8,12 @@ from journal.xlimage import XLImage
 from journal.view.strategybrowser import Ui_Form
 from strategy.strategies import Strategy
 
+# pylint: disable = C0103
+
 class StratControl(QDialog):
+    '''
+    Control module for the ui created strategybrowser
+    '''
     def __init__(self):
         super().__init__(parent=None)
         self.ui = Ui_Form()
@@ -124,7 +129,7 @@ class StratControl(QDialog):
             pname = self.pasteToLabel(x, imageName)
             if pname != imageName:
                 if x.objectName() == 'chart1':
-                        self.strat.setImage1(key, imageName)
+                    self.strat.setImage1(key, imageName)
                 else:
                     self.strat.setImage2(key, imageName)
 

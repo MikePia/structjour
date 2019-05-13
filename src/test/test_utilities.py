@@ -200,7 +200,8 @@ def notmain():
     # t.removePickle()
     t = PickleSettings()
     # t.storeSettings()
-    t.initializeSettings()
+    # t.initializeSettings()
+    t.restoreSettings()
 
 def main():
     '''

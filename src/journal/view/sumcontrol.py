@@ -24,6 +24,7 @@ from journal.xlimage import XLImage
 from journal.stock.graphstuff import FinPlot
 from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
+from journal.view.ejcontrol import EJControl
 
 from strategy.strategies import Strategy
 
@@ -224,7 +225,7 @@ class SumControl(QMainWindow):
             print('No trade to get chart for')
             return
         fp = FinPlot()
-        fp.randomStyle = True
+        fp.randomStyle = False
         begin = qtime2pd(swidg.dateTime())
         end = qtime2pd(ewidg.dateTime())
         (dummy, rules, apilist) = fp.apiChooserList(begin, end, fp.api)
@@ -257,7 +258,7 @@ class SumControl(QMainWindow):
             L_or_S = 'B'
             if e[2] < 0:
                 L_or_S = 'S'
-            fpentries.append([e[0], candleindex, L_or_S])
+            fpentries.append([e[0], candleindex, L_or_S, etime])
 
         fp.entries = fpentries
 
@@ -1111,8 +1112,11 @@ class SumControl(QMainWindow):
             j = self.settings.value('journal')
             if not j:
                 print('Please set the location of the your journal directory.')
-                return
-            db = os.path.join(j, 'dbsqlite')
+                EJControl()
+                j = self.settings.value('journal')
+                if not j:
+                    return
+            db = os.path.join(j, 'structjour.sqlite')
             apiset.setValue('dbsqlite', db)
         stratB = StratControl()
         stratB.show()

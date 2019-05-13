@@ -29,7 +29,7 @@ EXAMPLES = {
     'api3': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=VPQRQR8VUQ8PFX5B',
     'api4': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&outputsize=full&apikey=VPQRQR8VUQ8PFX5B',
     'api5': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&apikey=VPQRQR8VUQ8PFX5B',
-    'web_site': 'https://www.alphavantage.co/documentation/#intraday'
+'web_site': 'https://www.alphavantage.co/documentation/#intraday'
     }
 FUNCTION = {'intraday':  'TIME_SERIES_INTRADAY',
             'daily': 'TIME_SERIES_DAILY',
