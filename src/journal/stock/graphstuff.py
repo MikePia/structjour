@@ -88,8 +88,10 @@ class FinPlot:
     '''
 
     def __init__(self, mplstyle='dark_background'):
-        self.style = mplstyle
-        self.randomStyle = True
+        # self.style = mplstyle
+        # self.style = 'seaborn-poster'
+        self.style = 'seaborn-whitegrid'
+        self.randomStyle = False
         self.interactive = False
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
 
@@ -160,13 +162,13 @@ class FinPlot:
         # Rule 1a Barchart will not return yesterdays data after 12 till 1630
         tradeday = pd.Timestamp(start.year, start.month, start.day)
         todayday = pd.Timestamp(n.year, n.month, n.day)
-        y = todayday - pd.Timedelta(days=1)
-        y = pd.Timestamp(y.year, y.month, y.day, 11, 59)
+        yday = todayday - pd.Timedelta(days=1)
+        y = pd.Timestamp(yday.year, yday.month, yday.day, 11, 59)
         if tradeday == todayday and n < nclose and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
             violatedRules.append(
                 'Barchart free data will not return todays data till 16:30')
-        if end > y:
+        if tradeday == yday and end > y and n < nclose and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
             violatedRules.append(
                 'Barchart free data will not yesterdays data after 12 till today at  16:30')
@@ -309,7 +311,7 @@ class FinPlot:
 
         # candle width is related to time as a percentage of a day
         width = (minutes*35)/(3600 * 24)
-        candlestick_ohlc(ax1, df_ohlc.values, width, colorup='g', alpha=.75)
+        candlestick_ohlc(ax1, df_ohlc.values, width, colorup='g', alpha=.99)
 
         for date, volume, dopen, close in zip(df_volume.date.values, df_volume.volume.values,
                                               df_ohlc.open.values, df_ohlc.close.values):
