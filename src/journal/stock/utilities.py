@@ -14,11 +14,13 @@ import pandas as pd
 from PyQt5.QtCore import QSettings
 # pylint: disable = C0103
 
-def makeupEntries(df, minutes, fp):
-    start = df.iloc[0].index
-    end = df.iloc[-1].index
+def makeupEntries(df, minutes):
+    start = df.index[0]
+    end = df.index[-1]
+    start = pd.Timestamp(start)
+    end = pd.Timestamp(end)
     entries = []
-    for i in range(random.randint(0, 3)):
+    for i in range(random.randint(0, 5)):
         # Make up an entry time
         delta = end - start
         sec = delta.total_seconds()
@@ -32,7 +34,7 @@ def makeupEntries(df, minutes, fp):
         candleindex = int(diff.total_seconds()/60//minutes)
 
         #Get the time index of the candle
-        tix = df.iloc[candleindex].index
+        tix = df.index[candleindex]
 
         # Set a random buy or sell
         side = 'B' if random.random() > .5 else 'S'
@@ -41,8 +43,9 @@ def makeupEntries(df, minutes, fp):
         high = df.iloc[candleindex].high
         low = df.iloc[candleindex].low
         price = (random.random() * (high - low)) + low
-
-        entries.append([price, candleindex, side, tix])
+        
+        # [price, candle, side, timindex, entry]
+        entries.append([price, candleindex, side, tix, entry])
 
     return entries
 
