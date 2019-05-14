@@ -5,6 +5,8 @@ Local utility functions shared by some stock modules and test code.
 
 @creation_date: 2019-01-17
 '''
+
+import numpy as np
 import os
 import random
 import datetime as dt
@@ -13,6 +15,43 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 # pylint: disable = C0103
+
+def vwap(df):
+    df['Cum_Vol'] = df['volume'].cumsum()
+    df['Cum_Vol_Price'] = (df['volume'] * (df['high'] + df['low'] + df['close'] ) /3).cumsum()
+    df['VWAP'] = df['Cum_Vol_Price'] / df['Cum_Vol']
+    return df['VWAP']
+
+def movingAverage(values, window, df):
+    '''
+    Creates a dictionary of moving averages based on a list of windows. Returns SMA for windows of
+    20 or less and EMA for windows greater than 20, and it throws in VWAP no extra charge
+    :values:
+    :return: the list of moving averages
+    '''
+    maDict = dict()
+    windows = list()
+    if not isinstance(window, list):
+        windows.append(window)
+    else:
+        windows = window
+
+    for ma in windows:
+        if ma <= 20:
+
+            weights = np.repeat(1.0, ma)/ma
+            smas = np.convolve(values, weights, 'valid')
+            maDict[ma] = smas
+            maDict[ma] = pd.DataFrame(maDict[ma])
+            maDict[ma].index = df.index[ma-1:]
+        else:
+            dataframe = pd.DataFrame(values)
+            dfema = df['close'].ewm(span=ma, adjust=False, min_periods=ma, ignore_na=True).mean()
+            maDict[ma] = dfema
+            maDict[ma].index = df.index
+    maDict['vwap'] = vwap(df)
+
+    return maDict
 
 def makeupEntries(df, minutes):
     start = df.index[0]
@@ -24,8 +63,8 @@ def makeupEntries(df, minutes):
         # Make up an entry time
         delta = end - start
         sec = delta.total_seconds()
-        earliest = sec//10
-        latest = sec-earliest
+        earliest = int(sec//10)
+        latest = int(sec-earliest)
         secs = random.randint(earliest, latest)
         entry = start + pd.Timedelta(seconds=secs)
 
@@ -34,7 +73,7 @@ def makeupEntries(df, minutes):
         candleindex = int(diff.total_seconds()/60//minutes)
 
         #Get the time index of the candle
-        tix = df.index[candleindex]
+        # tix = df.index[candleindex]
 
         # Set a random buy or sell
         side = 'B' if random.random() > .5 else 'S'
@@ -44,8 +83,8 @@ def makeupEntries(df, minutes):
         low = df.iloc[candleindex].low
         price = (random.random() * (high - low)) + low
         
-        # [price, candle, side, timindex, entry]
-        entries.append([price, candleindex, side, tix, entry])
+        # [price, candle, side, entry]
+        entries.append([price, candleindex, side, entry])
 
     return entries
 

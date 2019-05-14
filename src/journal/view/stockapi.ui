@@ -176,7 +176,7 @@
       <item>
        <widget class="QCheckBox" name="bcCb">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To use either Barchart or Alphavantage APIs get a free API key&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To use either Barchart or Alphavantage APIs get a free API key&lt;/p&gt;&lt;p&gt;Barchart data for the current day is available by 16:45.&lt;/p&gt;&lt;p&gt;Additionally yesterdays data after 12PM is unavailable during market hours. It also becames available by 16:45&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Barchart</string>

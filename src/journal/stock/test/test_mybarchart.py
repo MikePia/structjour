@@ -81,7 +81,7 @@ class TestMybarchart(unittest.TestCase):
         # edays=list()
         interval=5
         for start, end in dateArray:
-            x, df = bc.getbc_intraday('SQ', start=start, end=end, showUrl=True)
+            x, df, maList = bc.getbc_intraday('SQ', start=start, end=end, showUrl=True)
             if x['code'] == 666:
                 print('Abandon all hope of retrieving barchart data today.\n',
                       'You have run out of free queries until midnight')
@@ -131,11 +131,11 @@ class TestMybarchart(unittest.TestCase):
                 # self.assertEqual(df.index[-1], end2, msg)
 
         for start, end in dateArray2:
-            x, df = bc.getbc_intraday('SQ', start=start, end=end)
+            x, df, maList = bc.getbc_intraday('SQ', start=start, end=end)
             self.assertGreater(len(df), 0)
 
         for start, end in dateArray3:
-            x, df = bc.getbc_intraday('SQ', start=start, end=end)
+            x, df, maList = bc.getbc_intraday('SQ', start=start, end=end)
             # print(df)
             # print(len(df.index))
             print(x['message'])
@@ -146,7 +146,7 @@ class TestMybarchart(unittest.TestCase):
         intervals = [2, 6, 60, 15]
         start = getPrevTuesWed(pd.Timestamp.today())
         for interval in intervals:
-            dummy, df = bc.getbc_intraday("SQ", start=start, minutes=interval)
+            dummy, df, maList = bc.getbc_intraday("SQ", start=start, minutes=interval)
 
             # of a time string ---
             min0 = df.index[0]

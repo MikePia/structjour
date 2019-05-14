@@ -10,7 +10,7 @@ import datetime as dt
 import requests
 import pandas as pd
 from journal.stock.picklekey import getKey as getReg
-from journal.stock.utilities import ManageKeys, getLastWorkDay
+from journal.stock.utilities import ManageKeys, getLastWorkDay, movingAverage
 
 
 # pylint: disable = C0103, R0912, R0914, R0915
@@ -147,7 +147,12 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
     start = pd.to_datetime(start)
     startDay = start.strftime("%Y%m%d")
 
-    params = setParams(symbol, minutes, startDay)
+    # Get the maximum data in order to set the 200 MA on a 60 minute chart
+    fullstart = pd.Timestamp.today()
+    fullstart = fullstart - pd.Timedelta(days=40)
+    fullstart = fullstart.strftime("%Y%m%d")
+
+    params = setParams(symbol, minutes, fullstart)
 
 
     response = requests.get(BASE_URL, params=params)
@@ -188,6 +193,16 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
 
     df.set_index(df.timestamp, inplace=True)
     df.index.rename('date', inplace=True)
+    MAs = [9, 20, 50, 200]
+    maList = movingAverage(df.close, MAs, df)
+    MAs.append('vwap')
+    # for ma in MAs:
+    #     maList[ma] = movingAverage(df.close, ma)
+    #     maList[ma] = pd.DataFrame(maList[ma])
+    #     maList[ma].index = df.index[ma-1:]
+    #     print(type(maList[ma]))
+
+
 
     msg = ''
     if start.date() < df.index[0].date():
@@ -208,6 +223,8 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
         rstart = df.index[0]
         rend = df.index[-1]
         df = df.loc[df.index >= start]
+        for ma in MAs:
+            maList[ma] = maList[ma].loc[maList[ma].index >= start]
 
         lendf = len(df)
         if lendf == 0:
@@ -222,6 +239,11 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
 
     if end < df.index[-1]:
         df = df.loc[df.index <= end]
+        for ma in MAs:
+            maList[ma] = maList[ma].loc[maList[ma].index <= end]
+
+
+
         # If we just sliced off all our data. Set warning message
         lendf = len(df)
         if lendf == 0:
@@ -232,9 +254,13 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
             print(meta)
             return meta, df
 
+    # I expect this to fail at some point -- maybe for interval 60 and week old data. Test for it. 
+    # This code will not stand either through implementing user control over MAs. Its just good for today
+    assert len(df) == len(maList[MAs[0]]) == len(maList[MAs[1]]) == len(maList[MAs[2]]) == len(maList[MAs[3]]) == len(maList[MAs[4]])
+
     # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv 
     df = df[['open', 'high', 'low', 'close', 'volume']].copy(deep=True)
-    return meta, df
+    return meta, df, maList
 
 
 def main():
@@ -244,7 +270,7 @@ def main():
     end = '2019-02-28 15:30'
     start = pd.Timestamp('2019-02-27')
     minutes = 1
-    dummy, d = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
+    dummy, d, daMas = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
     print(len(d))
 
 def notmain():

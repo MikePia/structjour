@@ -287,7 +287,7 @@ class FinPlot:
         style.use(self.style)
 
         # Get the data from some stock api
-        dummy, df = (self.apiChooser())(
+        dummy, df, maList = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
         if df.empty:
             self.apiset.setValue('errorCode', str(dummy['code']))

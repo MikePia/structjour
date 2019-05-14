@@ -9,7 +9,13 @@ import pickle
 import types
 import unittest
 
+import pandas as pd
+
 from PyQt5.QtCore import QSettings
+
+from test.rtg import randomTradeGenerator2
+
+from journal.stock import mybarchart as bc
 
 from journal.stock import utilities as util
 # pylint: disable = C0103
@@ -86,6 +92,35 @@ class TestUtilities(unittest.TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         self.p = os.path.realpath(ddiirr)
+
+    def test_makeupEntries(self):
+        '''
+        Test the test utility makeupEntries. Specifically test that candle index matches the
+        integer candle index, test the price lies within the range of the candle and test the
+        entry time lies within candle interval.
+        '''
+        b = util.getPrevTuesWed(pd.Timestamp.today())
+        start = pd.Timestamp(b.year, b.month, b.day, 9, 32, 45)
+        end = pd.Timestamp(b.year, b.month, b.day, 11, 39, 46)
+        interval = 5
+        # print(start)
+        x, df, maList = bc.getbc_intraday('SQ', start=start, end=end, minutes=interval, showUrl=True)
+       
+        entries = util.makeupEntries(df, 5)
+        for e in entries:
+            cx = e[3]
+            self.assertEqual(df.index[e[1]], cx)
+            high = df.loc[cx].high
+            low = df.loc[cx].low
+            price = e[0]
+            self.assertGreaterEqual(price, low)
+            self.assertLessEqual(price, high)
+            etime = e[4]
+            nextcandle = cx + pd.Timedelta(minutes=5)
+            self.assertGreater(etime, cx)
+            self.assertLess(etime, nextcandle)
+
+
 
     def test_getLastWorkDay(self):
         '''run some local code'''
@@ -188,7 +223,8 @@ class TestUtilities(unittest.TestCase):
 
 def notmain():
     '''Run some local code'''
-    # t = TestUtilities()
+    t = TestUtilities()
+    t.test_makeupEntries()
     # t.test_getLastWorkDay()
     # t.test_setDB()
     # t.test_updateKey()
@@ -198,10 +234,10 @@ def notmain():
     # t.initializeSettings()
     # t.restoreSettings()
     # t.removePickle()
-    t = PickleSettings()
+    # t = PickleSettings()
     # t.storeSettings()
     # t.initializeSettings()
-    t.restoreSettings()
+    # t.restoreSettings()
 
 def main():
     '''
