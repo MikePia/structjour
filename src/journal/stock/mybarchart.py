@@ -196,28 +196,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
     MAs = [9, 20, 50, 200]
     maList = movingAverage(df.close, MAs, df)
     MAs.append('vwap')
-    # for ma in MAs:
-    #     maList[ma] = movingAverage(df.close, ma)
-    #     maList[ma] = pd.DataFrame(maList[ma])
-    #     maList[ma].index = df.index[ma-1:]
-    #     print(type(maList[ma]))
 
-
-
-    msg = ''
-    if start.date() < df.index[0].date():
-        msg = ' '.join(["\nWARNING: Requested start date is not included in response. ",
-                        "Did you request a weekend or holiday?",
-                        f"First timestamp: {df.index[0]}\n",
-                        f"Requested start of data: {start}\n"])
-        print(msg)
-
-    elif start.date() > df.index[0].date():
-        msg = "\nWARNING: Requested start date is after the barchart response. If the market is\n"
-        msg = msg + " still open? Barchart will retrieve today after the close and not before.\n"
-        msg = msg + f"First timestamp: {df.index[0]}\n"
-        msg = msg + f"Requested start of data: {start}\n"
-        print(msg)
 
     if start > df.index[0]:
         rstart = df.index[0]

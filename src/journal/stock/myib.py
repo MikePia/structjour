@@ -19,7 +19,7 @@ from ibapi.client import EClient
 from ibapi.common import TickerId
 from ibapi.contract import Contract
 
-from journal.stock.utilities import getLastWorkDay, IbSettings
+from journal.stock.utilities import getLastWorkDay, IbSettings, movingAverage
 
 
 # import time
@@ -259,6 +259,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     :params minutes: The length of the candle. Defaults to 1 minute
     :return (length, df):A DataFrame of the requested stuff and its length
     '''
+    print('We ar in IB')
     biz = getLastWorkDay()
     if not end:
         end = pd.Timestamp(biz.year, biz.month, biz.day, 16, 0)
@@ -268,15 +269,18 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     end = pd.Timestamp(end)
 
     dur = ''
-    if (end-start).days < 1:
-        if ((end-start).seconds//3600) > 8:
+    fullstart = pd.Timestamp.today()
+    fullstart = fullstart - pd.Timedelta(days=40)
+
+    if (end-fullstart).days < 1:
+        if ((end-fullstart).seconds//3600) > 8:
             dur = '1 D'
         else:
-            dur = f'{(end-start).seconds} S'
-    elif (end-start).days < 7:
-        dur = f'{(end-start).days + 1} D'
+            dur = f'{(end-fullstart).seconds} S'
+    elif (end-fullstart).days < 7:
+        dur = f'{(end-fullstart).days + 1} D'
     else:
-        dur = f'{(end-start).days} D'
+        dur = f'{(end-fullstart).days} D'
         print('Requests longer than 6 days are tentavely supported. (for now)')
         # return 0, pd.DataFrame([], [])
 
@@ -296,13 +300,8 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     df = ib.getHistorical(symb, end=end, dur=dur, interval=interval, exchange='NASDAQ')
     lendf = len(df)
     if lendf == 0:
-        return 0, df
+        return 0, df, None
 
-    # Normalize the date to our favorite format 
-    df.index = pd.to_datetime(df.index)
-    if start > df.index[0]:
-        print(start, "Cutting off from: ", df.index[0])
-        df = df.loc[df.index >= start]
     if resamp:
         srate = f'{origminutes}T'
         df_ohlc = df[['open']].resample(srate).first()
@@ -312,8 +311,21 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
 
+    # Normalize the date to our favorite format 
+    df.index = pd.to_datetime(df.index)
+
+    MAs = [9, 20, 50, 200]
+    maDict = movingAverage(df.close, MAs, df)
+    MAs.append('vwap')
+
+    if start > df.index[0]:
+        print(start, "Cutting off from: ", df.index[0])
+        df = df.loc[df.index >= start]
+        for ma in MAs:
+            maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
+
     ib.disconnect()
-    return len(df), df
+    return len(df), df, maDict
 
 
 

@@ -19,7 +19,7 @@ import time
 import requests
 import pandas as pd
 from journal.stock.picklekey import getKey as getPickledKey
-from journal.stock.utilities import ManageKeys
+from journal.stock.utilities import ManageKeys, movingAverage
 # import pickle
 
 BASE_URL = 'https://www.alphavantage.co/query?'
@@ -168,7 +168,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
          will return a weeks data. For now, we will enforce start and end as
          required parameters in order to require precision from user.
     '''
-
+    print('======= Called alpha =======')
     start = pd.to_datetime(start) if start else None
     end = pd.to_datetime(end) if end else None
     if not minutes:
@@ -247,7 +247,8 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     df.close = pd.to_numeric(df.close)
     df.volume = pd.to_numeric(df.volume)
 
-    # Alphavantage indexes the candle ends as a time index. IB, and others, index candle
+    # Alphavantage indexes the candle ends as a time index. The JSON times are backwards.
+    # I think that makes them off by one when processing forward. IB, and others, index candle
     # beginnings. To make the APIs harmonious, we will transalte the index time down by
     # one interval. I think the translation will always be the interval sent to mav. So
     # '1min' will translate down 1 minute etc. We saved the translation as a return
@@ -266,6 +267,11 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
 
+    MAs = [9, 20, 50, 200]
+    maDict = movingAverage(df.close, MAs, df)
+    MAs.append('vwap')
+
+
     # Trim the data to the requested time frame
     if start:
         # Remove preemarket hours from the start variable
@@ -275,6 +281,8 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             start = pd.Timestamp(start.year, start.month, start.day, 9, 30)
         if start > df.index[0]:
             df = df[df.index >= start]
+            for ma in MAs:
+                maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
             l = len(df)
             if l == 0:
                 print(
@@ -284,13 +292,18 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     if end:
         if end < df.index[-1]:
             df = df[df.index <= end]
+            for ma in MAs:
+                maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
             l = len(df)
             if l < 1:
                 print(
                     f"\nWARNING: you have sliced off all the data with the end date {end}")
-                return metaj, pd.DataFrame()
+                return metaj, pd.DataFrame(), maDict
+    # I expect this to fail soon- when this is called with no start or end
+    # This code will not stand either through implementing user control over MAs. Its just good for today
+    assert len(df) == len(maDict[MAs[0]]) == len(maDict[MAs[1]]) == len(maDict[MAs[2]]) == len(maDict[MAs[3]]) == len(maDict[MAs[4]])
 
-    return metaj, df
+    return metaj, df, maDict
 
 def notmain():
     print (APIKEY)
