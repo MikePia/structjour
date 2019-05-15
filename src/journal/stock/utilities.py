@@ -6,15 +6,46 @@ Local utility functions shared by some stock modules and test code.
 @creation_date: 2019-01-17
 '''
 
-import numpy as np
+import datetime as dt
+from collections import OrderedDict
 import os
 import random
-import datetime as dt
 import sqlite3
-import pandas as pd
 
+import numpy as np
+import pandas as pd
 from PyQt5.QtCore import QSettings
+
 # pylint: disable = C0103
+
+def getMAKeys():
+    cc1 = ['chart1ma1', 'chart1ma2', 'chart1ma3', 'chart1ma4', 'chart1vwap', 'chart1ma1spin',
+          'chart1ma2spin', 'chart1ma3spin', 'chart1ma4spin', 'chart1ma1color', 'chart1ma2color',
+          'chart1ma3color', 'chart1ma4color', 'chart1vwapcolor']
+    cc2 = ['chart2ma1', 'chart2ma2', 'chart2ma3', 'chart2ma4', 'chart2vwap', 'chart2ma1spin',
+          'chart2ma2spin', 'chart2ma3spin', 'chart2ma4spin', 'chart2ma1color', 'chart2ma2color',
+          'chart2ma3color', 'chart2ma4color', 'chart2vwapcolor']
+    cc3  =['chart3ma1', 'chart3ma2', 'chart3ma3', 'chart3ma4', 'chart3vwap', 'chart3ma1spin',
+          'chart3ma2spin', 'chart3ma3spin', 'chart3ma4spin', 'chart3ma1color', 'chart3ma2color',
+          'chart3ma3color', 'chart3ma4color', 'chart3vwapcolor']
+    return cc1, cc2, cc3
+
+def getMASettings():
+    chartSet = QSettings('zero_substance/chart', 'structjour')
+    mas = chartSet.value('getmas', list)
+    maDict = OrderedDict()
+    for ma in mas[0]:
+        maDict[ma[1]] = [ma[0], ma[2]]
+    vwap = []
+    if mas[1]:
+        vwap.append(['vwap', mas[1][1]])
+
+    return maDict, vwap
+            
+
+        
+            
+        
 
 def vwap(df):
     df['Cum_Vol'] = df['volume'].cumsum()
@@ -22,22 +53,23 @@ def vwap(df):
     df['VWAP'] = df['Cum_Vol_Price'] / df['Cum_Vol']
     return df['VWAP']
 
-def movingAverage(values, window, df):
+def movingAverage(values, df):
     '''
-    Creates a dictionary of moving averages based on a list of windows. Returns SMA for windows of
-    20 or less and EMA for windows greater than 20, and it throws in VWAP no extra charge
+    Creates a dictionary of moving averages based settings values. All window values in 
+    chartSettings will be processed. Returns a dict of MA: SMA for windows of 20 or less
+    and EMA for windows greater than 20, and it always process and returns VWAP.
     :values:
-    :return: the list of moving averages
+    :return: A tuple (maDict, vwap). Keys for maDict are the window val
     '''
-    maDict = dict()
+    mas = getMASettings()
     windows = list()
-    if not isinstance(window, list):
-        windows.append(window)
-    else:
-        windows = window
+    windows = list(mas[0].keys())
+
+
+    maDict = OrderedDict()
 
     for ma in windows:
-        if ma <= 20:
+        if ma > 20:
 
             weights = np.repeat(1.0, ma)/ma
             smas = np.convolve(values, weights, 'valid')
@@ -49,7 +81,9 @@ def movingAverage(values, window, df):
             dfema = df['close'].ewm(span=ma, adjust=False, min_periods=ma, ignore_na=True).mean()
             maDict[ma] = dfema
             maDict[ma].index = df.index
-    maDict['vwap'] = vwap(df)
+    if mas[1]:
+        maDict['vwap'] = vwap(df)
+
 
     return maDict
 
@@ -262,11 +296,13 @@ class IbSettings:
 
 
 def notmain():
-    mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\src\\test\\testdb.sqlite')
-    mk.updateKey('bc', '''That'll do pig''')
-    mk.updateKey('av', '''That'll do.''')
-    print(mk.getKey('bc'))
-    print(mk.getKey('av'))
+    # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\src\\test\\testdb.sqlite')
+    # mk.updateKey('bc', '''That'll do pig''')
+    # mk.updateKey('av', '''That'll do.''')
+    # print(mk.getKey('bc'))
+    # print(mk.getKey('av'))
+    print(getMASettings())
+    movingAverage(None, None, None)
 
 def localstuff():
     settings = QSettings('zero_substance', 'structjour') 
@@ -283,7 +319,5 @@ def localstuff():
     print()
 
 if __name__ == '__main__':
-    # notmain()
-    localstuff()
-
-
+    notmain()
+    # localstuff()

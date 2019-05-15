@@ -50,7 +50,7 @@ class TestMyiex(unittest.TestCase):
                      (beginDay, None),
                      (beginDay, endDay)]
         for start, end in dateArray:
-            x, df = iex.getiex_intraday('SQ', start=start, end=end)
+            x, df, noma = iex.getiex_intraday('SQ', start=start, end=end)
             self.assertGreater(len(df), 0)
 
 
@@ -59,7 +59,7 @@ class TestMyiex(unittest.TestCase):
                      (endDay, None),
                      (tomorrow, None )]
         for start, end in dateArray:
-            x, df = iex.getiex_intraday('SQ', start=start, end=end)
+            x, df, noma = iex.getiex_intraday('SQ', start=start, end=end)
             self.assertEqual(len(df), 0)
 
         # Test date formats
@@ -74,14 +74,14 @@ class TestMyiex(unittest.TestCase):
                      (startstamp, endstring)]
 
         for start, end in dateArray:
-            lendf, df = iex.getiex_intraday('SQ', start=start, end=end)
+            lendf, df, noma = iex.getiex_intraday('SQ', start=start, end=end)
             self.assertGreater(len(df), 0)
 
     def test_getiex_intraday_interval(self):
         '''Test the candle intvarls by subtracting strings processed into times'''
         intervals = [2, 6, 60, 15]
         for interval in intervals:
-            x, df = iex.getiex_intraday("SQ", minutes=interval)
+            x, df, noma = iex.getiex_intraday("SQ", minutes=interval)
 
             min0 = df.index[0]
             min1 = df.index[1]

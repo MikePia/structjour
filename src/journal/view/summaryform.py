@@ -1276,9 +1276,11 @@ class Ui_MainWindow(object):
         self.ibImport.setText(_translate("MainWindow", "IB import"))
         self.goBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#00aa00;\">Load the file shown in the file edit box.</span></p></body></html>"))
         self.goBtn.setText(_translate("MainWindow", "GO"))
-        self.loadBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#2d04fa;\">Load the saved file created from the file in the file name box.</span></p></body></html>"))
+        self.loadBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#2d04fa;\">Load the saved data.</span></p></body></html>"))
         self.loadBtn.setText(_translate("MainWindow", "Load"))
+        self.saveBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Save all current data</p></body></html>"))
         self.saveBtn.setText(_translate("MainWindow", "Save"))
+        self.exportBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Export data and graphs to an Excel file.</p></body></html>"))
         self.exportBtn.setText(_translate("MainWindow", "Export to Excel"))
         self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"

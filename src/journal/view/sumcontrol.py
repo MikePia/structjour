@@ -22,6 +22,7 @@ from journal.view.summaryform import Ui_MainWindow
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.xlimage import XLImage
 from journal.stock.graphstuff import FinPlot
+from journal.stock.utilities import getMAKeys
 from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
 from journal.view.ejcontrol import EJControl
@@ -198,8 +199,10 @@ class SumControl(QMainWindow):
     def loadImageFromFile(self, widg, name):
         if not os.path.exists(name):
             name = self.defaultImage
-        widg.setPixmap(QPixmap(name))
 
+        pixmap = QPixmap(name)
+        pixmap = pixmap.scaled(widg.width(), widg.height(), Qt.IgnoreAspectRatio)
+        widg.setPixmap(pixmap)
 
     def chartIntervalChanged(self, val, ckey):
         key = self.ui.tradeList.currentText()
@@ -224,6 +227,27 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trade to get chart for')
             return
+        chartSet = QSettings('zero_substance/chart', 'structjour')
+        makeys = getMAKeys()
+        makeys = makeys[0] if c == 'chart1' else makeys[1] if c == 'chart2' else makeys[2]
+        mas=list()
+        masl=list()
+        for i in range(0, 4):
+            val = chartSet.value(makeys[i], False, bool)
+            if val:
+                mas.append(['MA'+str(i+1), chartSet.value(makeys[i+5]), chartSet.value(makeys[i+9])])
+        val = chartSet.value(makeys[4], False, bool)
+        masl.append(mas)
+
+        if val:
+            masl.append(['VWAP', chartSet.value(makeys[13])])
+        else:
+            masl.append([])
+        print(masl)
+        assert len(masl) == 2
+        chartSet.setValue('getmas', masl)
+
+
         fp = FinPlot()
         fp.randomStyle = False
         begin = qtime2pd(swidg.dateTime())
@@ -276,6 +300,8 @@ class SumControl(QMainWindow):
             apiset = QSettings('zero_substance/stockapi', 'structjour')
             errorCode = apiset.value('errorCode')
             errorMessage = apiset.value('errorMessage')
+            if not errorMessage:
+                errorMessate = "Failed to retrieve data"
             if errorMessage:
                 mbox = QMessageBox()
                 msg = errorCode + '\n' + errorMessage

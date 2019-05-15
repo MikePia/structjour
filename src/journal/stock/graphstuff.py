@@ -10,15 +10,16 @@ import os
 import random
 import re
 
+import pandas as pd
+
 import matplotlib.dates as mdates
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-from matplotlib import style
-
-import pandas as pd
-
+from matplotlib import markers, style
+from matplotlib.ticker import FuncFormatter
 from mpl_finance import candlestick_ohlc
+
 from PyQt5.QtCore import QSettings
 
 from journal.stock import myalphavantage as mav
@@ -26,14 +27,7 @@ from journal.stock import mybarchart as bc
 from journal.stock import myib as ib
 from journal.stock import myiex as iex
 
-# import urllib
-# import datetime as dt
-# from journal.stock import myalphavantage as mav
-# from journal.stock import myiex as iex
-# import numpy as np
 # pylint: disable = C0103, W0603
-
-
 
 FILL = 2
 
@@ -88,12 +82,15 @@ class FinPlot:
     '''
 
     def __init__(self, mplstyle='dark_background'):
-        # self.style = mplstyle
-        # self.style = 'seaborn-poster'
-        self.style = 'seaborn-whitegrid'
-        self.randomStyle = False
-        self.interactive = False
+
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
+        self.chartSet = QSettings('zero_substance/chart', 'structjour')
+        self.style = self.chartSet.value('chart')
+        self.style = None if self.style == 'No style' else self.style
+        self.gridlines = self.getGridLines()
+        self.markercolorup = self.chartSet.value('markercolorup', 'g')
+        self.markercolordown = self.chartSet.value('markercolordown', 'r')
+        self.interactive = True
 
         # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
         p = self.apiset.value('APIPref')
@@ -101,7 +98,7 @@ class FinPlot:
             p = p.replace(' ', '')
             self.preferences = p.split(',')
         else:
-            self.preferences =  ['ib', 'bc', 'av', 'iex']
+            self.preferences = ['ib', 'bc', 'av', 'iex']
         self.api = self.preferences[0]
 
         self.ftype = '.png'
@@ -116,7 +113,48 @@ class FinPlot:
         self.entries = []
         self.exits = []
 
+    def getGridLines(self):
+        x = self.chartSet.value('gridh', False, bool)
+        y = self.chartSet.value('gridv', False, bool)
+        val = (True, 'both') if x and y else (True,'x') if x else (True,'y') if y else (None, None)
+        return val
 
+    def volFormat(self, vol, pos):
+        if vol < 1000:
+            return vol
+        elif vol < 1000000:
+            vol = vol/1000
+            vol = '{:0.1f}K'.format(vol)
+            return vol
+        elif vol < 1000000000:
+            vol = vol/1000000
+            vol = '{:0.1f}M'.format(vol)
+            return vol
+        elif vol < 1000000000000:
+            vol = vol/1000000000
+            vol = '{:0.1f}B'.format(vol)
+            return vol
+        else:
+            vol = vol/1000000000000
+            vol = '{:0.1f}Tr'.format(vol)
+            return vol
+
+    def setticks(self, interval, numcand):
+        '''utility for Formatter'''
+        major = []
+        if interval == 10:
+            major = [0, 20, 40]
+        elif interval < 3:
+            major = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+            if numcand > 60:
+                major = [0, 15, 30, 45]
+        elif interval < 10:
+            major = [0, 15, 30, 45]
+        elif interval < 20:
+            major = [0, 30]
+        else:
+            major = [0]
+        return major
 
     def matchFont(self, nm, default='arial$'):
         '''
@@ -253,7 +291,7 @@ class FinPlot:
 
         return begin, end
 
-    def setadjust(self, left=.12, bottom=.17, top=.88, right=.88):
+    def setadjust(self, left=.04, bottom=.14, top=.96, right=.89):
         '''
         Adjust the margins of the graph. Use self.interactive=True to find the correct settings
         '''
@@ -270,28 +308,27 @@ class FinPlot:
             to calling
         :params symbol: The stock ticker
         :params start: A datetime object or time string for the begining of the graph. The day must
-                     be within the last 7 days. This may change in the future.
+                    be within the last 7 days. This may change in the future.
         :params end: A datetime object or time string for the end of a graph. Defaults to whatever
-                     the call gets.
+                    the call gets.
         :params dtFormat: a strftime formt to display the dates on the x axis of the chart
         :parmas st: The matplot lib style for style.use(st). If fp.randomStyle is set,
-                     it overrides.
+                    it overrides.
         '''
 
         start = pd.Timestamp(start)
         end = pd.Timestamp(end)
+        if self.style:
+            style.use(self.style)
 
-        if self.randomStyle:
-            r = random.randint(0, len(style.available)-1)
-            self.style = style.available[r]
-        style.use(self.style)
-
-        # Get the data from some stock api
-        dummy, df, maList = (self.apiChooser())(
+        ################ Prepare data ##############
+        # Get the data and prepare the DtaFrames from some stock api
+        meta, df, maDict = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
         if df.empty:
-            self.apiset.setValue('errorCode', str(dummy['code']))
-            self.apiset.setValue('errorMessage', dummy['message'])
+            if not isinstance(meta, int):
+                self.apiset.setValue('errorCode', str(meta['code']))
+                self.apiset.setValue('errorMessage', meta['message'])
             return None
         df['date'] = df.index
 
@@ -299,113 +336,91 @@ class FinPlot:
 
         df_ohlc = df[['date', 'open', 'high', 'low', 'close']]
         df_volume = df[['date', 'volume']]
-
+        ################ End Prepare data ##############
+        ####### PLOT and Graph #######
+        colup = self.chartSet.value('colorup', 'g')
+        coldown = self.chartSet.value('colordown', 'r')
         ax1 = plt.subplot2grid((6, 1), (0, 0), rowspan=5, colspan=1)
+        ax1.grid(b=self.gridlines[0], which='major', axis=self.gridlines[1])
 
-        ttimes = start.strftime("%a %b %d %H:%M-->") + end.strftime('%H:%M')
-        plt.title(f'{symbol} {minutes} minute chart\n{self.style}, {ttimes}')
-
+        ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1,
+                               colspan=1, sharex=ax1)
         fig = plt.gcf()
-        ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1, colspan=1, sharex=ax1)
-        # plt.ylabel('Volume')
+        fig.subplots_adjust(hspace=0)
 
-        # candle width is related to time as a percentage of a day
+        # candle width is a percentage of a day
         width = (minutes*35)/(3600 * 24)
-        candlestick_ohlc(ax1, df_ohlc.values, width, colorup='g', alpha=.99)
+        candlestick_ohlc(ax1, df_ohlc.values, width, colorup=colup, colordown=coldown, alpha=.99)
 
         for date, volume, dopen, close in zip(df_volume.date.values, df_volume.volume.values,
                                               df_ohlc.open.values, df_ohlc.close.values):
-            color = 'g' if close > dopen else 'k' if close == dopen else 'r'
+            color = colup if close > dopen else 'k' if close == dopen else coldown
             ax2.bar(date, volume, width, color=color)
-
-        # Using the candle index to locate it. Consider using a time lookup to accomodate
-        # uniquenesses in different api results
-        markersize = 12 - ((len(df_ohlc)-25)/len(df_ohlc)/.18)
+        ####### END PLOT and Graph #######
+        ####### ENTRY MARKER STUFF #######
+        markersize = self.chartSet.value('markersize', 90)
+        edgec = self.chartSet.value('markeredgecolor', '#000000')
+        alpha = float(self.chartSet.value('markeralpha', 0.5))
         for entry in self.entries:
-            e = entry[0]
-            candle = entry[1]
-            if candle >= len(df_ohlc.date) or candle < 0:
+            e = entry[3]
+            if entry[1] < 0 or entry[1] > (len(df_ohlc)-1):
                 continue
+            x = df_ohlc.index[entry[1]]
+            y = entry[0]
             if entry[2] == 'B':
-                l = ax1.plot(df_ohlc.date[candle], e, marker='^', color='g', markersize=markersize)
-            elif entry[2] == 'S':
-                l = ax1.plot(df_ohlc.date[candle], e, marker='v', color='r', markersize=markersize)
+                facec = self.chartSet.value('markercolorup', 'g')
+                mark = '^'
+            else:
+                facec = self.chartSet.value('markercolordown', 'r')
+                mark = 'v'
+            l = ax1.scatter(x, y, color=facec, marker=markers.MarkerStyle(
+                marker=mark, fillstyle='full'), s=markersize, zorder=10)
+            l.set_edgecolor(edgec)
+            l.set_alpha(alpha)
+        ####### END MARKER STUFF #######
+        ##### TICKS-and ANNOTATIONS #####
 
-            plt.setp(l, markersize=markersize)
+        ax1.yaxis.tick_right()
+        ax2.yaxis.tick_right()
+        # ax1.grid(True, axis='y')
 
-        for ex in self.exits:
-            e = ex[0]
-            candle = ex[1]
-            # tix = ex[3]
-
-            plt.setp(l, markersize=markersize)
-
-        # fig = plt.Figure
-
-        # fdict = {'family': 'sans serif', 'color': 'darkred', 'size': 15}
-        plt.tick_params(axis='ax1', which='both', bottom=False, top=False, labelbottom=False)
-
+        plt.setp(ax1.get_xticklabels(), visible=False)
         for label in ax2.xaxis.get_ticklabels():
             label.set_rotation(-45)
         ax2.xaxis.set_major_formatter(mdates.DateFormatter(dtFormat))
-        ax2.xaxis.set_major_locator(mticker.MaxNLocator(10))
-        maxvol = df_volume.volume.max()
-        ax2.set_yticks([.5*maxvol, maxvol])
+        ax2.yaxis.set_major_formatter(FuncFormatter(self.volFormat))
+        plt.locator_params(axis='y', tight=True, nbins=2)
 
-        # print("=======", list(df_ohlc['close'])[-1])
+        numcand = ((end-start).total_seconds()/60)//minutes
+        ax2.xaxis.set_major_locator(mdates.MinuteLocator(
+            byminute=self.setticks(minutes, numcand)))
 
-        bbox_props = dict(boxstyle='round', fc='w', ec='k', lw=1)
-        ax1.annotate(f'{list(df_ohlc.close)[-1]}',
-                     (list(df_ohlc.date)[-1], list(df_ohlc.close)[-1]),
-                     xytext=(list(df_ohlc.date)
-                             [-1] + .5/24, list(df_ohlc.close)[-1]),
-                     bbox=bbox_props)
-        # , textcoords= 'axes fraction',arrowprops=dict(color='grey'))
+        idx = int(len(df_ohlc.date)*.39)
 
-        # fdict = {'family': 'serif', 'color': 'darkred', 'size': 15}
-        # ax1.text(df_ohlc.date[20], 340,'Animated Parrot Department', fontdict=fdict)
-        idx = int(len(df_ohlc.date)*.75)
-        ax1.text(df_ohlc.date[idx], df_ohlc.low.min(), 'ZeroSubstance',
-                 fontdict={'fontname': self.matchFont('onyx'), 'size': 32, 'color': '161616'})
+        ax1.annotate(f'{symbol} {minutes} minute', (df_ohlc.date[idx], df_ohlc.low.max()),
+                     xytext=(0.4, 0.85), textcoords='axes fraction', alpha=0.35, size=16)
+        ##### END TICKS-and ANNOTATIONS #####
+        ####### ma, ema and vwap #######
+        MA1 = 9
+        MA2 = 20
+        MA3 = 50
+        MA4 = 200
+        MA5 = 'vwap'
+        if maDict:
+            for ma in maDict:
+                ax1.plot(df_ohlc.date, maDict[ma], lw=1)
+        ##### Adjust margins and frame
+        top = df_ohlc.high.max()
+        bottom = df_ohlc.low.min()
+        margin=(top-bottom) * .08
+        ax1.set_ylim(bottom=bottom-margin, top=top+margin)
 
-        msg = f'{len(df.index)} candles, msize: {int(markersize)}, cwidth: {int(width*100000)}'
-        plt.xlabel(msg)
-        # plt.ylabel('Prices over here')
-
-        # plt.legend()
         ad = self.adjust
         plt.subplots_adjust(left=ad['left'], bottom=ad['bottom'], right=ad['right'],
-                            top=ad['top'], wspace=0.2, hspace=0.2)
+                            top=ad['top'], wspace=0.2, hspace=0)
 
-        # If the data is missing for a candle, the low registers as -1 and the chart boundaries
-        # go to 0 and the data is smushed at the top.
-        # It seems the iex data is on average much more sparse. So far with my test data, only iex
-        # requires this bit.  And it seemed to work the first day but its not working now.
-        # This stuff is moot right now-as the names don't include api... But this is a desparate
-        # attempt to use the iex intraday stuff inspite of its sparse data. It could minimally
-        # work so I'll leave it here unobtrusively for later work.
-        if save.find('iex') > 0:
-            if df_ohlc.low.min() == -1:
-                margin = .08
-                lows = df_ohlc.low.values
-                lows = sorted(lows)
-                # print(lows[0], lows[1], lows[-2], lows[-1])
-                actuallow = -1
-                actualhigh = df_ohlc.high.max()
-                for low in lows:
-                    if low > -1:
-                        actuallow = low
-                        break
-                diff = actualhigh - actuallow
-                plt.gca().set_autoscale_on(False)
-                plt.ylim(bottom=actuallow - (diff*margin))
-                plt.ylim(top=actualhigh+(diff*margin))
-                plt.gca().set_adjustable('box')
-                # print(save, '\nylimit is ', plt.ylim())
-
-        # fig=plt.gcf()
-        if self.interactive:
-            plt.savefig('out/figure_1.png')
+        if self.chartSet.value('interactive', False):
+            # plt.savefig('out/figure_1.png')
             plt.show()
         count = 1
         saveorig = save

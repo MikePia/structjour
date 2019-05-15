@@ -267,9 +267,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
 
-    MAs = [9, 20, 50, 200]
-    maDict = movingAverage(df.close, MAs, df)
-    MAs.append('vwap')
+    maDict = movingAverage(df.close, df)
 
 
     # Trim the data to the requested time frame
@@ -281,7 +279,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             start = pd.Timestamp(start.year, start.month, start.day, 9, 30)
         if start > df.index[0]:
             df = df[df.index >= start]
-            for ma in MAs:
+            for ma in maDict:
                 maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
             l = len(df)
             if l == 0:
@@ -292,7 +290,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     if end:
         if end < df.index[-1]:
             df = df[df.index <= end]
-            for ma in MAs:
+            for ma in maDict:
                 maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
             l = len(df)
             if l < 1:
@@ -301,7 +299,8 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
                 return metaj, pd.DataFrame(), maDict
     # I expect this to fail soon- when this is called with no start or end
     # This code will not stand either through implementing user control over MAs. Its just good for today
-    assert len(df) == len(maDict[MAs[0]]) == len(maDict[MAs[1]]) == len(maDict[MAs[2]]) == len(maDict[MAs[3]]) == len(maDict[MAs[4]])
+    for key in maDict:
+        assert len(df) == len(maDict[key])
 
     return metaj, df, maDict
 

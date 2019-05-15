@@ -193,17 +193,15 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
 
     df.set_index(df.timestamp, inplace=True)
     df.index.rename('date', inplace=True)
-    MAs = [9, 20, 50, 200]
-    maList = movingAverage(df.close, MAs, df)
-    MAs.append('vwap')
+    maDict = movingAverage(df.close, df)
 
 
     if start > df.index[0]:
         rstart = df.index[0]
         rend = df.index[-1]
         df = df.loc[df.index >= start]
-        for ma in MAs:
-            maList[ma] = maList[ma].loc[maList[ma].index >= start]
+        for ma in maDict:
+            maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
 
         lendf = len(df)
         if lendf == 0:
@@ -218,8 +216,8 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
 
     if end < df.index[-1]:
         df = df.loc[df.index <= end]
-        for ma in MAs:
-            maList[ma] = maList[ma].loc[maList[ma].index <= end]
+        for ma in maDict:
+            maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
 
 
 
@@ -235,11 +233,12 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
 
     # I expect this to fail at some point -- maybe for interval 60 and week old data. Test for it. 
     # This code will not stand either through implementing user control over MAs. Its just good for today
-    assert len(df) == len(maList[MAs[0]]) == len(maList[MAs[1]]) == len(maList[MAs[2]]) == len(maList[MAs[3]]) == len(maList[MAs[4]])
+    for key in maDict:
+        assert len(df) == len(maDict[key])
 
     # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv 
     df = df[['open', 'high', 'low', 'close', 'volume']].copy(deep=True)
-    return meta, df, maList
+    return meta, df, maDict
 
 
 def main():

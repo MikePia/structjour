@@ -96,7 +96,7 @@ class TestMyib(unittest.TestCase):
 
             # Each of these should get results every time,beginning times are either before 9:31 or
             # between 9:30 (short days won't produce failures)
-            l, df = ib.getib_intraday("SQ", start=start, end=end,
+            l, df, maDict = ib.getib_intraday("SQ", start=start, end=end,
                                             minutes=minutes, showUrl=True)
             if l == 0:
                 continue
@@ -148,5 +148,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

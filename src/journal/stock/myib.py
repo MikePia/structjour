@@ -314,15 +314,15 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     # Normalize the date to our favorite format 
     df.index = pd.to_datetime(df.index)
 
-    MAs = [9, 20, 50, 200]
-    maDict = movingAverage(df.close, MAs, df)
-    MAs.append('vwap')
+    maDict = movingAverage(df.close, df)
 
     if start > df.index[0]:
         print(start, "Cutting off from: ", df.index[0])
         df = df.loc[df.index >= start]
-        for ma in MAs:
+        for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
+    for key in maDict:
+        assert len(df) == len(maDict[key])
 
     ib.disconnect()
     return len(df), df, maDict

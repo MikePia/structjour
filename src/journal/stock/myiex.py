@@ -81,6 +81,7 @@ def getiex_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     :raise: ValueError if start and end day are different.
     :raise: Exception if the API return's status is not 200
     '''
+    print('Were in iex')
     startday = endday = None
     if start:
         start = pd.Timestamp(start)
@@ -105,7 +106,7 @@ def getiex_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         df = df[['open', 'high', 'low', 'close', 'volume']].copy(deep=True)
 
     # HACK, reurning a tuple to have the same method signature as the others-- some redesign comin
-    return len(df), df
+    return len(df), df, None
 
 # TODO combine these two methods on this page
 
@@ -282,7 +283,7 @@ def main():
 
     start = '2018-12-31 11:30'
     end = '2018-12-31 16:05'
-    dummy, df = getiex_intraday('AAPL', start, end, minutes=1, showUrl=True)
+    dummy, df, noma = getiex_intraday('AAPL', start, end, minutes=1, showUrl=True)
     print(df)
 
 
