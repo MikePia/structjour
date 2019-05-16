@@ -154,14 +154,23 @@ class SumControl(QMainWindow):
         if not text:
             return
         strat = Strategy()
-        strats = [x[1] for x in strat.getStrategies()]
+        allstrats = strat.getStrategies()
+        
+        strats = [x[1] for x in allstrats]
         if not text in strats:
             msg = f'Would you like to add the strategy {text} to the database?'
             ok = QMessageBox.question(self, 'New strategy', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ok == QMessageBox.Yes:
                 print('yes clicked.')
             else:
-                text = ''
+                key = self.ui.tradeList.currentText()
+                self.lf.setStrategy(key, text)
+                index = self.ui.strategy.findText(text)
+                if not index:
+                    self.ui.strategy.addItem(text)
+                    self.ui.strategy.setCurrentText(text)
+    
+
             self.loadStrategies(text)
         
         key = self.ui.tradeList.currentText()
@@ -502,20 +511,35 @@ class SumControl(QMainWindow):
         :strat: THe currently stored strat for this trade
         '''
         strats = Strategy()
-        stratlist = [x[1] for x in strats.getStrategies()]
-        if strat and not strat in stratlist:
-            strats.addStrategy(strat)
-            stratlist = [x[1] for x in strats.getStrategies()]
+        stratlist = [x[1] for x in strats.getPreferred()]
+        # if strat and not strat in stratlist:
+        #     strats.addStrategy(strat)
+        #     stratlist = [x[1] for x in strats.getPreferred()]
         self.ui.strategy.clear()
         self.ui.strategy.addItem('')
         for s in stratlist:
             self.ui.strategy.addItem(s)
-            if strat:
-                index = self.ui.strategy.findText(strat)
-                self.ui.strategy.setCurrentIndex(index)
+        if strat:
+            index = self.ui.strategy.findText(strat)
+            self.ui.strategy.setCurrentIndex(index)
 
-        key = self.ui.tradeList.currentText()        
-        self.lf.setStrategy(key, strat)
+        key = self.ui.tradeList.currentText()
+        if self.lf and strat:
+            if not key:
+                print('I believe this is the right place for the code ')
+                return
+            self.lf.setStrategy(key, strat)
+        if not self.ui.strategy.currentText():
+            if strat:
+                self.ui.strategy.setCurrentText(strat)
+                self.lf.setStrategy(key, strat)
+            else:
+                val = self.lf.getStrategy(key)
+                if val and val != strat:
+                    self.ui.strategy.setCurrentText(val)
+                    self.lf.setStrategy(key, val)
+
+            
 
     def setChartTimes(self):
         '''
@@ -1147,6 +1171,8 @@ class SumControl(QMainWindow):
         stratB = StratControl()
         stratB.show()
         stratB.exec()
+        print('back from strat browse')
+        self.loadStrategies(None)
 
 
 

@@ -242,7 +242,7 @@ class LayoutForms:
         self.sc.loadImageFromFile(self.sc.ui.chart1, ipathfilename1)
         self.sc.loadImageFromFile(self.sc.ui.chart2, ipathfilename2)
         self.sc.loadImageFromFile(self.sc.ui.chart3, ipathfilename3)
-        print('never were here')
+        # print('never were here')
 
     def getEntries(self, key):
         '''
@@ -400,6 +400,10 @@ class LayoutForms:
     def setStrategy(self, key, val):
         '''Sets tto strategy to val'''
         self.ts[key][self.rc.strat] = val
+    
+    def getStrategy(self, key):
+        val = self.ts[key][self.rc.strat].unique()[0]
+        return val
 
     def getImageName(self, key, wloc, uinfo=''):
         '''

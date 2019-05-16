@@ -173,10 +173,15 @@ class StratControl(QDialog):
 
     def loadStrategy(self, key):
         strat = self.strat.getStrategy(key)
-        check = True if strat[1] == 1 else False
-        self.ui.preferred.setChecked(check)
+        if strat:
+            check = True if strat[1] == 1 else False
+            if check:
+                self.ui.preferred.setChecked(True)
+            else:
+                self.ui.notPreferred.setChecked(True)
         desc = self.strat.getDescription(key)
-        self.ui.strategyNotes.setText(desc[1])
+        if desc:
+            self.ui.strategyNotes.setText(desc[1])
         self.setWindowTitle('Strategy Browser')
 
         image1 = self.strat.getImage1(key)
@@ -219,10 +224,10 @@ class StratControl(QDialog):
         self.ui.strategyCb.clear()
         for row in strats:
             self.ui.strategyCb.addItem(row[1])
-            if row[3] == 1:
-                self.ui.preferred.setChecked(True)
-            else:
-                self.ui.notPreferred.setChecked(True)
+            # if row[3] == 1:
+            #     self.ui.preferred.setChecked(True)
+            # else:
+            #     self.ui.notPreferred.setChecked(True)
 
 
     def addStrategy(self):

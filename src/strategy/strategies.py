@@ -133,12 +133,24 @@ class Strategy:
         '''Remove the strategy entry matched by name'''
         cursor = self.conn.execute('''
             DELETE FROM strategy WHERE name = ?''', (name,))
+        if cursor:
+            self.conn.commit()
         return cursor.fetchone()
 
     def setPreferred(self, name, pref):
         x = self.cur.execute('''UPDATE strategy
             SET preferred = ?
             WHERE name = ?''', (0, name))
+        self.conn.commit()
+    
+    def getPreferred(self, pref=1):
+        '''
+        Returns all strategies marked  preferred by default. Set pref to 0 to get all
+        non-preferred strats.
+        '''
+        x = self.cur.execute('''SELECT * FROM strategy WHERE preferred = ?''', (pref,))
+        return x.fetchall()
+    
     def getId(self, name):
         cursor = self.conn.execute('''
             select id from strategy 
@@ -170,6 +182,8 @@ class Strategy:
 	            WHERE name = ?''', (name,))
         elif sid:
             cursor = self.conn.execute('SELECT * FROM strategy WHERE id = ?', (sid,))
+        else:
+            return None
         return cursor.fetchone()
 
     def getDescription(self, name):

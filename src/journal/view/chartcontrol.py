@@ -57,6 +57,7 @@ class ChartControl(QDialog):
         self.ui.colorUp.textChanged.connect(self.setColorUp)
         self.ui.colorDown.textChanged.connect(self.setColorDown)
         self.ui.interactive.clicked.connect(self.setInteractive)
+        self.ui.showLegend.clicked.connect(self.setLegend)
 
         self.ui.chart1MA1.clicked.connect(self.setChart1MA1)
         self.ui.chart1MA1Spin.valueChanged.connect(self.setChart1MA1Spin)
@@ -299,6 +300,9 @@ class ChartControl(QDialog):
         else:
             widg.setText(f'{val} SMA')
 
+    def setLegend(self, val):
+        self.chartSet.setValue('showlegend', val)
+
     def setInteractive(self, val):
         self.chartSet.setValue('interactive', val)
 
@@ -351,6 +355,7 @@ class ChartControl(QDialog):
                 'colorup': self.ui.colorUp,
                 'colordown': self.ui.colorDown,
                 'interactive': self.ui.interactive,
+                'showlegend': self.ui.showLegend,
                 'chart1ma1': self.ui.chart1MA1,
                 'chart1ma2': self.ui.chart1MA2,
                 'chart1ma3': self.ui.chart1MA3,
