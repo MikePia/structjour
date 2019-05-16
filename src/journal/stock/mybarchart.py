@@ -193,7 +193,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
 
     df.set_index(df.timestamp, inplace=True)
     df.index.rename('date', inplace=True)
-    maDict = movingAverage(df.close, df)
+    maDict = movingAverage(df.close, df, start)
 
 
     if start > df.index[0]:

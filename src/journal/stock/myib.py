@@ -314,7 +314,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     # Normalize the date to our favorite format 
     df.index = pd.to_datetime(df.index)
 
-    maDict = movingAverage(df.close, df)
+    maDict = movingAverage(df.close, df, end)
 
     if start > df.index[0]:
         print(start, "Cutting off from: ", df.index[0])

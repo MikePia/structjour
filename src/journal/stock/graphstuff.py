@@ -26,6 +26,7 @@ from journal.stock import myalphavantage as mav
 from journal.stock import mybarchart as bc
 from journal.stock import myib as ib
 from journal.stock import myiex as iex
+from journal.stock.utilities import getMASettings
 
 # pylint: disable = C0103, W0603
 
@@ -90,7 +91,8 @@ class FinPlot:
         self.gridlines = self.getGridLines()
         self.markercolorup = self.chartSet.value('markercolorup', 'g')
         self.markercolordown = self.chartSet.value('markercolordown', 'r')
-        self.interactive = True
+        self.interactive = self.chartSet.value('interactive', False, bool)
+        self.legend = self.chartSet.value('showlegend', False, bool)
 
         # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
         p = self.apiset.value('APIPref')
@@ -114,8 +116,8 @@ class FinPlot:
         self.exits = []
 
     def getGridLines(self):
-        x = self.chartSet.value('gridh', False, bool)
-        y = self.chartSet.value('gridv', False, bool)
+        y = self.chartSet.value('gridh', False, bool)
+        x = self.chartSet.value('gridv', False, bool)
         val = (True, 'both') if x and y else (True,'x') if x else (True,'y') if y else (None, None)
         return val
 
@@ -387,6 +389,7 @@ class FinPlot:
         plt.setp(ax1.get_xticklabels(), visible=False)
         for label in ax2.xaxis.get_ticklabels():
             label.set_rotation(-45)
+            label.set_fontsize(8)
         ax2.xaxis.set_major_formatter(mdates.DateFormatter(dtFormat))
         ax2.yaxis.set_major_formatter(FuncFormatter(self.volFormat))
         plt.locator_params(axis='y', tight=True, nbins=2)
@@ -407,19 +410,25 @@ class FinPlot:
         MA4 = 200
         MA5 = 'vwap'
         if maDict:
-            for ma in maDict:
-                ax1.plot(df_ohlc.date, maDict[ma], lw=1)
+            maSetDict = getMASettings()
+            for ma in maSetDict[0]:
+                ax1.plot(df_ohlc.date, maDict[ma], lw=1, color=maSetDict[0][ma][1], label=f'{ma}MA')
+            if 'vwap' in maDict.keys():
+                ax1.plot(df_ohlc.date, maDict['vwap'], lw=1, color=maSetDict[1][0][1], label='VWAP')
+        if self.legend:
+            leg = ax1.legend()
+            leg.get_frame().set_alpha(0.35)
         ##### Adjust margins and frame
         top = df_ohlc.high.max()
         bottom = df_ohlc.low.min()
         margin=(top-bottom) * .08
-        ax1.set_ylim(bottom=bottom-margin, top=top+margin)
+        ax1.set_ylim(bottom=bottom-margin, top=top+(margin*2))
 
         ad = self.adjust
         plt.subplots_adjust(left=ad['left'], bottom=ad['bottom'], right=ad['right'],
                             top=ad['top'], wspace=0.2, hspace=0)
 
-        if self.chartSet.value('interactive', False):
+        if not self.chartSet.value('interactive', False):
             # plt.savefig('out/figure_1.png')
             plt.show()
         count = 1

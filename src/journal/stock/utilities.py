@@ -41,19 +41,27 @@ def getMASettings():
         vwap.append(['vwap', mas[1][1]])
 
     return maDict, vwap
-            
 
-        
-            
-        
+def vwap(df, bd=None):
+    '''
+    I believe the standard version of vwap begins at open and does not include previous MA stuff.
+    I retrieved the algo from an SO post. Thankyou for that
 
-def vwap(df):
-    df['Cum_Vol'] = df['volume'].cumsum()
-    df['Cum_Vol_Price'] = (df['volume'] * (df['high'] + df['low'] + df['close'] ) /3).cumsum()
-    df['VWAP'] = df['Cum_Vol_Price'] / df['Cum_Vol']
-    return df['VWAP']
+    '''
+    if not bd:
+        bd = pd.Timestamp.today().date()
+    begin = pd.Timestamp(bd.year, bd.month, bd.day, 9, 30, 0)
 
-def movingAverage(values, df):
+    dfv = df.copy(deep=True)
+    if begin > df.index[0]:
+        dfv = dfv.loc[dfv.index >= begin]
+
+    dfv['Cum_Vol'] = dfv['volume'].cumsum()
+    dfv['Cum_Vol_Price'] = (dfv['volume'] * (dfv['high'] + dfv['low'] + dfv['close'] ) /3).cumsum()
+    dfv['VWAP'] = dfv['Cum_Vol_Price'] / dfv['Cum_Vol']
+    return dfv['VWAP']
+
+def movingAverage(values, df, beginDay=None):
     '''
     Creates a dictionary of moving averages based settings values. All window values in 
     chartSettings will be processed. Returns a dict of MA: SMA for windows of 20 or less
@@ -82,7 +90,7 @@ def movingAverage(values, df):
             maDict[ma] = dfema
             maDict[ma].index = df.index
     if mas[1]:
-        maDict['vwap'] = vwap(df)
+        maDict['vwap'] = vwap(df, beginDay)
 
 
     return maDict

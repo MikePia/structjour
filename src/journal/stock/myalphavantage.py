@@ -267,7 +267,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
 
-    maDict = movingAverage(df.close, df)
+    maDict = movingAverage(df.close, df, start)
 
 
     # Trim the data to the requested time frame
