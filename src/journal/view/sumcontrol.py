@@ -23,8 +23,10 @@ from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.xlimage import XLImage
 from journal.stock.graphstuff import FinPlot
 from journal.stock.utilities import getMAKeys
+
 from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
+from journal.view.dailycontrol import DailyControl
 from journal.view.ejcontrol import EJControl
 
 from strategy.strategies import Strategy
@@ -117,8 +119,12 @@ class SumControl(QMainWindow):
         self.ui.chart2Interval.editingFinished.connect(self.chart2IntervalChanged)
         self.ui.chart3Interval.editingFinished.connect(self.chart3IntervalChanged)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
+        
+
         self.ui.saveBtn.pressed.connect(self.saveTradeObject)
         self.ui.strategy.currentIndexChanged.connect(self.strategyChanged)
+
+        self.ui.dailySum.pressed.connect(self.showDaily)
 
         v = QDoubleValidator()
         self.ui.lost.setValidator(v)
@@ -146,6 +152,13 @@ class SumControl(QMainWindow):
     # =================================================================
 
     
+    def showDaily(self):
+        if not self.lf or self.lf.df is None:
+            print('The input file is not loaded')
+            return
+        self.dControl = DailyControl()
+        self.dControl.runDialog(self.lf.df, self.lf.ts)
+        self.dControl.show()
 
 
     def strategyChanged(self, index):
@@ -176,6 +189,8 @@ class SumControl(QMainWindow):
         key = self.ui.tradeList.currentText()
         self.lf.setStrategy(key, text)
             
+
+
 
     def saveTradeObject(self):
         if not self.lf:
