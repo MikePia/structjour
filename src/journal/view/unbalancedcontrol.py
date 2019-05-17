@@ -174,5 +174,6 @@ if __name__ == '__main__':
         sys.exit(app.exec_())
     dff = pd.read_csv(fn)
     print('gotta create swingTrade data type here to run this thing seperately')
-    # w.runDialog(dff, 'APPL', -1000)
+    w.runDialog(dff, 'APPL', -1000, None)
+    w.show()
     sys.exit(app.exec_())

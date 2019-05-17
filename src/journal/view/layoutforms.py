@@ -14,6 +14,8 @@ import pickle
 import numpy as np
 import pandas as pd
 
+from PyQt5.QtCore import QSettings
+
 from journal.view.sumcontrol import qtime2pd
 
 from journal.definetrades import FinReqCol
@@ -30,12 +32,15 @@ class LayoutForms:
     the trade form for each trade.
     '''
 
-    def __init__(self, sc, jf):
+    def __init__(self, sc, jf, df):
         '''
         Initialize the obect and create a Widget dictionary using the same keys as the keys to the
         tto object to populate the data.
         '''
         self.jf = jf
+        self.df = df
+        if self.df is not None:
+            self.pickleitnow()
         self.ts = dict()
         self.entries = dict()
         rc = SumReqFields()
@@ -119,10 +124,40 @@ class LayoutForms:
         self.imageNames = None
         self.sc.loadLayoutForms(self)
 
+    def getDF(self):
+        return self.df
+
+    def pickleitnow(self):
+        name = f'.trades{self.jf.theDate.strftime(self.jf.dayformat)}.zst'
+        fname = os.path.join(self.jf.outdir, name)
+        print()
+        with open(fname, "wb") as f:
+            pickle.dump(self.df, f)
+        settings = QSettings('zero_substance', 'structjour')
+        settings.setValue('stored_trades', fname)
+
     def saveTheTradeObject(self, name):
         '''pickle tto list'''
+        assert self.ts
+        assert self.entries
+        
+        # if not self.df is None:
+        #     self.reloadit()
+
+        settings = QSettings('zero_substance', 'structjour')
+        dfname = settings.value('stored_trades')
+        df = None
+        if dfname:
+            with open(dfname, "rb") as f:
+                df = pickle.load(f)
+        if df is None and self.df:
+            df = self.df
+        if df is None:
+            print('Failed to locate the trades information. Pickle FAILED')
+        self.df = df
+
         with open(name, "wb") as f:
-            pickle.dump((self.ts, self.entries), f)
+            pickle.dump((self.ts, self.entries, df), f)
 
     def loadSavedFile(self):
         '''
@@ -135,11 +170,15 @@ class LayoutForms:
             return None
         with open(name, "rb") as f:
             test = pickle.load(f)
-            if len(test) != 2:
-                print('Save is in the wrong format. Save it again to correct it')
+            if len(test) == 2:
+                print('Save is in the wrong format. Save and load it again to correct it')
+                (self.ts, self.entries) = test
                 # self.ts = test
+            elif len(test) != 3:
+                print('Something is wrong with this file')
                 return
-            (self.ts, self.entries) = test
+            else:
+                (self.ts, self.entries, self.df) = test
             print()
 
         print('load up the trade names now')
@@ -152,6 +191,34 @@ class LayoutForms:
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
         return tradeSummaries
+
+    def reloadit(self):
+        from journal.statement import Statement_DAS as Ticket
+        from journal.statement import Statement_IBActivity
+        from journal.pandasutil import InputDataFrame
+        
+        infile = self.jf.inpathfile
+        if not os.path.exists(infile):
+            print("There is a problem. Unable to fully save this file.")
+            return None
+        if self.jf.inputType == 'IB_HTML':
+            statement = Statement_IBActivity(self.jf)
+            df = statement.getTrades_IBActivity(self.jf.inpathfile)
+        elif  self.jf.inputType == 'DAS':
+            tkt = Ticket(self.jf)
+            df, self.jf = tkt.getTrades()
+        # trades = pd.read_csv(self.jf.inpathfile)
+        else:
+            #Temporary
+            print('Opening a non standard file name in DAS')
+            tkt = Ticket(self.jf)
+            df, self.jf = tkt.getTrades()
+
+        idf = InputDataFrame()
+        trades,  success = idf.processInputFile(df, self.jf.theDate, self.jf)
+        self.df = trades
+        if not success:
+            return
 
     def imageData(self, ldf):
         '''

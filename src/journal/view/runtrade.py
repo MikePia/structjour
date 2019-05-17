@@ -90,8 +90,10 @@ class runController:
 
 
 
-        lf = LayoutForms(self.sc, jf)
+        lf = LayoutForms(self.sc, jf, None)
         lf.loadSavedFile()
+        if lf.df is None:
+            print('Did not load up correctly. Try pressing Go, Load, Save')
         
 
     def runnit(self):
@@ -131,7 +133,7 @@ class runController:
         # images and Trade Summaries.
         margin = 25
 
-        lf = LayoutForms(self.sc, jf)
+        lf = LayoutForms(self.sc, jf, dframe)
         tradeSummaries = lf.runSummaries(ldf)
 
 

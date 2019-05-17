@@ -6,7 +6,10 @@ Created on Apr 17, 2019
 #pylint: disable = C0301, C0103
 
 class StyledHTML:
-    '''A template for sylted html-no external file'''
+    '''
+    A template for styled html-no external file. Currently-it turned into specific.
+    See if I can make it general.
+    '''
     def __init__(self, style, body, replacementList):
         '''Initialze with all the elements needed
         :params style: The css

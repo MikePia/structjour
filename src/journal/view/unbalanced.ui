@@ -38,6 +38,9 @@
            <height>180</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You can probably avoid this dialog. It comes up when you hold shares overnight and the information is not in the input file. If the input file is a DAS trades window export, export also the positions window from DAS to positions.csv in your output folder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="styleSheet">
           <string notr="true">p,
         li {
