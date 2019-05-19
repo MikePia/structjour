@@ -49,7 +49,9 @@ def vwap(df, bd=None):
 
     '''
     if not bd:
-        bd = pd.Timestamp.today().date()
+        # If no day is given, use the end day in df
+        bd = df.index[-1]
+        bd = pd.Timestamp(bd.year, bd.month, bd.day)
     begin = pd.Timestamp(bd.year, bd.month, bd.day, 9, 30, 0)
 
     dfv = df.copy(deep=True)
@@ -83,7 +85,10 @@ def movingAverage(values, df, beginDay=None):
             smas = np.convolve(values, weights, 'valid')
             maDict[ma] = smas
             maDict[ma] = pd.DataFrame(maDict[ma])
-            maDict[ma].index = df.index[ma-1:]
+            try:
+                maDict[ma].index = df.index[ma-1:]
+            except ValueError:
+                del maDict[ma]
         else:
             dataframe = pd.DataFrame(values)
             dfema = df['close'].ewm(span=ma, adjust=False, min_periods=ma, ignore_na=True).mean()
@@ -141,7 +146,12 @@ def getLastWorkDay(d=None):
     if now.weekday() > 4:
         # deltDays = now.weekday() - 4
         # Just todauy TODO
-        deltDays = now.weekday() - 3
+        # if now.weekday() == 5:
+        #     bizday = bizday -dt.timedelta(days=1)
+        # elif now.weekday() == 6:
+        #     bizday = bizday -dt.timedelta(days=2)
+
+        deltDays = now.weekday() - 4
     bizday = now - dt.timedelta(deltDays)
     return bizday
 

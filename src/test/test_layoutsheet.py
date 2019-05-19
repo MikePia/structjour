@@ -20,6 +20,8 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl import load_workbook
 
+from PyQt5.QtCore import QSettings
+
 from journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS
@@ -56,6 +58,9 @@ class TestLayoutSheet(TestCase):
 
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
+
+        settings = QSettings('zero_substance', 'structjour')
+        settings.setValue('runtype', 'CONSOLE')
 
         self.dadata = deque(
             [[-4000], [3923, -750], [], [600, 241, 50], [-169],
@@ -579,7 +584,7 @@ class TestLayoutSheet(TestCase):
 
 
             trades, jf = Statement_DAS(jf).getTrades()
-            trades success = InputDataFrame().processInputFile(trades)
+            trades, success = InputDataFrame().processInputFile(trades)
             inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
 
             # Process the openpyxl excel object using the output file DataFrame. Insert
@@ -620,6 +625,8 @@ class TestLayoutSheet(TestCase):
                 anchor = (1, loc[0])
                 # print(anchor)
                 for col in trade:
+                    if col in['clean']:
+                        continue
 
                     # Get the cell
                     if isinstance(srf.tfcolumns[col][0], list):
@@ -647,6 +654,14 @@ class TestLayoutSheet(TestCase):
                         # print(wsval, '<------->', tval)
                         self.assertAlmostEqual(wsval, tval)
 
+                    # Time vals
+                    elif isinstance(tval, (pd.Timestamp, dt.datetime, np.datetime64)):
+                        wsval = pd.Timestamp(wsval)
+                        tval = pd.Timestamp(tval)
+                        self.assertGreaterEqual((wsval-tval).total_seconds(), -.01)
+                        self.assertLessEqual((wsval-tval).total_seconds(), .01)
+
+
                     # Test everything else
                     else:
                         # print(wsval, '<------->', tval)
@@ -661,8 +676,8 @@ def notmain():
     # ttt.test_createWorkbook()
     # ttt.test_styleTopwithnothin()
     # ttt.test_populateMistakeForm()
-    ttt.test_populateDailySummaryForm()
-    # ttt.test_runSummaries()
+    # ttt.test_populateDailySummaryForm()
+    ttt.test_runSummaries()
 
 def main():
     '''Run unittests cl style'''

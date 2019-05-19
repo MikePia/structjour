@@ -300,7 +300,8 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     # I expect this to fail soon- when this is called with no start or end
     # This code will not stand either through implementing user control over MAs. Its just good for today
     for key in maDict:
-        assert len(df) == len(maDict[key])
+        if len(df) != len(maDict[key]):
+            del maDict[key]
 
     return metaj, df, maDict
 

@@ -224,7 +224,7 @@ class TestApp(TestWrapper, TestClient):
         # self.reqHistoricalData(18002, ContractSamples.ContFut(), timeStr,
         #                        "1 Y", "1 month", "TRADES", 0, 1, False, []);
         # queryTime = DateTime.Now.AddMonths(-6).ToString("yyyyMMdd HH:mm:ss");
-        self.reqHistoricalData(4002, contract, timeStr, dur,
+        self.reqHistoricalData(port, contract, timeStr, dur,
                                interval, "TRADES", AFTERHOURS, 1, False, [])
         # client.reqHistoricalData(4002, ContractSamples.EuropeanStock(), queryTime,
         #                          "10 D", "1 min", "TRADES", 1, 1, false, null);
@@ -269,19 +269,18 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     end = pd.Timestamp(end)
 
     dur = ''
-    fullstart = pd.Timestamp.today()
-    fullstart = fullstart - pd.Timedelta(days=40)
+    fullstart = end
+    fullstart = fullstart - pd.Timedelta(days=5)
 
     if (end-fullstart).days < 1:
         if ((end-fullstart).seconds//3600) > 8:
-            dur = '1 D'
+            dur = '2 D'
         else:
             dur = f'{(end-fullstart).seconds} S'
     elif (end-fullstart).days < 7:
         dur = f'{(end-fullstart).days + 1} D'
     else:
         dur = f'{(end-fullstart).days} D'
-        print('Requests longer than 6 days are tentavely supported. (for now)')
         # return 0, pd.DataFrame([], [])
 
     # if the end = 9:31 and dur = 3 minutes, ib will retrieve a start of the preceding day @ 15:58
@@ -322,7 +321,16 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
     for key in maDict:
-        assert len(df) == len(maDict[key])
+        # VWAP is a reference that begins at market open. If the open trade precedes VWAP
+        # we will exclude it from the chart. Other possibilities: give VWAP a start time or
+        # pick an arbitrary premarket time to begin it. The former would be havoc to implement
+        # the latter probably better but inaccurate; would not reflect what the trader was using
+        # Better suggestions?
+        if key == 'vwap':
+            if df.index[0] < maDict['vwap'].index[0]:
+                del maDict['vwap']
+        else:
+            assert len(df) == len(maDict[key])
 
     ib.disconnect()
     return len(df), df, maDict
@@ -349,10 +357,10 @@ def isConnected():
 
 def main():
     '''test run'''
-    start = dt.datetime(2019, 1, 15, 9, 19)
-    end = dt.datetime(2019, 1, 15, 15, 5)
-    minutes = '1 min'
-    x, ddf = getib_intraday('SQ', start, end, minutes)
+    start = dt.datetime(2019, 5, 15, 9, 19)
+    end = dt.datetime(2019, 5, 15, 15, 5)
+    minutes = 1
+    x, ddf, maDict = getib_intraday('SQ', start, end, minutes)
     print(x, ddf.tail(3))
 
 def notmain():
@@ -361,6 +369,6 @@ def notmain():
 
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()
     

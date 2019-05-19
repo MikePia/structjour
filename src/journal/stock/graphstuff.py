@@ -285,7 +285,7 @@ class FinPlot:
         mclose = dt.datetime(endday.year, endday.month, endday.day, 16, 0)
 
         begin = mopen if begin <= orbu else begin
-        end = mclose if end >= endday else end
+        end = mclose if end >= mclose else end
 
         # Trim pre and post market times  XXXX Leave
         # begin = mopen if mopen > begin else begin
@@ -412,6 +412,8 @@ class FinPlot:
         if maDict:
             maSetDict = getMASettings()
             for ma in maSetDict[0]:
+                if not ma in maDict.keys():
+                    continue
                 ax1.plot(df_ohlc.date, maDict[ma], lw=1, color=maSetDict[0][ma][1], label=f'{ma}MA')
             if 'vwap' in maDict.keys():
                 ax1.plot(df_ohlc.date, maDict['vwap'], lw=1, color=maSetDict[1][0][1], label='VWAP')
@@ -428,7 +430,7 @@ class FinPlot:
         plt.subplots_adjust(left=ad['left'], bottom=ad['bottom'], right=ad['right'],
                             top=ad['top'], wspace=0.2, hspace=0)
 
-        if not self.chartSet.value('interactive', False):
+        if self.chartSet.value('interactive', False, bool):
             # plt.savefig('out/figure_1.png')
             plt.show()
         count = 1

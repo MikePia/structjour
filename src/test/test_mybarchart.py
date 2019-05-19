@@ -52,6 +52,7 @@ class TestMybarchart(unittest.TestCase):
         # def test_getbc_intraday(self):
         now = dt.datetime.today()
         nowbiz = util.getLastWorkDay()          # We want to retrieve a day with data for testing here
+        bizclose = pd.Timestamp(nowbiz.year, nowbiz.month, nowbiz.day, 16, 0)
         tomorrow = now + dt.timedelta(1)
         y = now - dt.timedelta(1)
         ymorn = dt.datetime(y.year, y.month, y.day, 7, 30)
@@ -89,8 +90,10 @@ class TestMybarchart(unittest.TestCase):
             
             if not start or start.date() == now.date():
                 # Retrieveing todays will retrieve butkis until the magictime
-                magictime = pd.Timestamp(now.year, now.month, now.day, 16, 30)
-                if now.time() < magictime.time():
+                mt = util.getLastWorkDay()
+
+                magictime = pd.Timestamp(mt.year, mt.month, mt.day, 16, 30)
+                if now < magictime:
                     msg = 'This query should be empty because barchart does not retrieve todays'
                     msg += 'data till after close. If its not empty, either we are in the cracks.'
                     msg += '(wait a minute), or something is wrong (probably with the code).'
@@ -109,9 +112,11 @@ class TestMybarchart(unittest.TestCase):
                     self.assertLess(df.index[0].isoweekday(), 6, "Is it a holiday? Go party now!")
             if not start:
                 start = now
-            if start and end and start > end:
+            if start and end and start > end or start > bizclose:
                 assert df.empty
                 continue
+
+            
 
             s = pd.Timestamp(start.year, start.month, start.day, 9, 29)
             e = pd.Timestamp(start.year, start.month, start.day, 16, 1)

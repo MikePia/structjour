@@ -168,14 +168,14 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
             and response.text.startswith('You have reached')):
         print('WARNING: API max queries:\n', response.text)
         meta = {'code': 666, 'message': response.text}
-        return meta, pd.DataFrame()
+        return meta, pd.DataFrame(), None
 
 
     result = response.json()
     if not result['results']:
         print('WARNING: Failed to retrieve any data. Barchart sends the following greeting:')
         print(result['status'])
-        return result['status'], pd.DataFrame()
+        return result['status'], pd.DataFrame(), None
 
 
     keys = list(result.keys())
@@ -211,7 +211,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
             print(msg)
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
-            return meta, df
+            return meta, df, maDict
 
 
     if end < df.index[-1]:
@@ -224,12 +224,12 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
         # If we just sliced off all our data. Set warning message
         lendf = len(df)
         if lendf == 0:
-            msg = msg + '\nWARNING: all data has been removed.'
+            msg =  '\nWARNING: all data has been removed.'
             msg = msg + f'\nThe Requested end was({end}).'
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
             print(meta)
-            return meta, df
+            return meta, df, maDict
 
     # I expect this to fail at some point -- maybe for interval 60 and week old data. Test for it. 
     # This code will not stand either through implementing user control over MAs. Its just good for today

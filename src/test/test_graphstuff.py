@@ -54,7 +54,7 @@ class TestGraphstuff(unittest.TestCase):
             fp.api = api
             result = fp.apiChooserList(start, end, api)
             if result[0]:
-                dummy, df = fp.apiChooser()(symbol, start=start, end=end,
+                dummy, df, maDict = fp.apiChooser()(symbol, start=start, end=end,
                                             minutes=minutes, showUrl=True)
                 self.assertEqual(len(df.columns), 5,
                                  f"Failed to retrieve data with the {fp.api} api.")
@@ -218,21 +218,21 @@ class TestGraphstuff(unittest.TestCase):
         interval2 = 60
         # tests dependent on interval -- setting to 1
         for i in range(1, 10):
-            s, e = fp.setTimeFrame(odate, cdate, interval)
-            s2, e2 = fp.setTimeFrame(odate, cdate, interval2)
-            s3, e3 = fp.setTimeFrame(early, late, interval)
+            begin1, end1 = fp.setTimeFrame(odate, cdate, interval)
+            begin2, end2 = fp.setTimeFrame(odate, cdate, interval2)
+            begin3, end3 = fp.setTimeFrame(early, late, interval)
             if odate < opening:
-                self.assertEqual(s, opening)
-                self.assertEqual(s2, opening)
+                self.assertEqual(begin1, opening)
+                self.assertEqual(begin2, opening)
             else:
-                delt = odate - s
-                delt2 = odate - s2
+                delt = odate - begin1
+                delt2 = odate - begin2
                 self.assertLess(delt.seconds, 3600)
                 self.assertLess(delt2.seconds, 3600 * 3.51)
             if early < opening:
-                self.assertEqual(s3, opening)
+                self.assertEqual(begin3, opening)
             if late > closing:
-                self.assertEqual(e3, closing)
+                self.assertEqual(end3, closing)
             mins = 40
             odate = odate + dt.timedelta(0, mins * 60)
             cdate = cdate - dt.timedelta(0, mins * 60)
@@ -260,9 +260,9 @@ def notmain():
     t = TestGraphstuff()
     # t.test_apiChooser()
     # t.test_dummyName()
-    t.test_graph_candlestick()
+    # t.test_graph_candlestick()
     # print(getLastWorkDay(dt.datetime(2019, 1, 22)))
-    # t.test_setTimeFrame()
+    t.test_setTimeFrame()
 
 
 if __name__ == '__main__':

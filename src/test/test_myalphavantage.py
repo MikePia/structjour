@@ -54,7 +54,7 @@ class TestMyalphavantage(unittest.TestCase):
 
             # Each of these should get results every time,beginning times are either before 9:31 or
             # between 9:30 (short days won't produce failures)
-            dummy, df = mav.getmav_intraday("SQ", start=start, end=end,
+            dummy, df, maDict = mav.getmav_intraday("SQ", start=start, end=end,
                                             minutes=minutes, showUrl=True)
 
             print("Requested...", start, end)
@@ -150,12 +150,13 @@ class TestMyalphavantage(unittest.TestCase):
 
 def main():
     '''test discovery is not working in vscode. Use this for debugging. Then run cl python -m unittest discovery'''
-    f = TestMyalphavantage()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
-            if isinstance(attr, types.MethodType):
-                attr()
+    unittest.main()
+    # f = TestMyalphavantage()
+    # for name in dir(f):
+    #     if name.startswith('test'):
+    #         attr = getattr(f, name)
+    #         if isinstance(attr, types.MethodType):
+    #             attr()
 
 
 
