@@ -187,11 +187,15 @@ class LayoutForms:
         for key in self.ts:
             self.sc.ui.tradeList.addItem(key)
             tradeSummaries.append(self.ts[key])
+        try:
+            self.sc.dControl.runDialog(self.df, self.ts)
+        except AttributeError as e:
+            print(e)
 
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
         return tradeSummaries
-
+ 
     def reloadit(self):
         from journal.statement import Statement_DAS as Ticket
         from journal.statement import Statement_IBActivity

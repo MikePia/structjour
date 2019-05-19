@@ -1,4 +1,5 @@
 '''
+A Pandas data model for qt model/view. 
 From ellyansic's answer on SO 
 Created on Apr 16, 2019
 @author: tbd'''
@@ -41,14 +42,12 @@ class PandasModel(QAbstractTableModel):
 
         val = self._df.iloc[index.row(), index.column()]
         try:
-            val = float(val)
-            if val % 1 != 0:
-                val = '${:.03f}'.format(val)
-        except ValueError:
-            val = str(val)
-        except TypeError as e:
-            print(e)
-            val = str(val)
+            v = float(val)
+            if str(val).find('.') > -1:
+                val = '${:.02f}'.format(v)
+        except (ValueError, TypeError):
+            pass
+        val = str(val)
 
         return QtCore.QVariant(val)
 
