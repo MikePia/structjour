@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'unbalanced.ui'
+# Form implementation generated from reading ui file '.\unbalanced.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.1
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -189,6 +188,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Unbalanced shares."))
+        self.explain.setToolTip(_translate("Dialog", "<html><head/><body><p>You can probably avoid this dialog. It comes up when you hold shares overnight and the information is not in the input file. If the input file is a DAS trades window export, export also the positions window from DAS to positions.csv in your output folder.</p></body></html>"))
         self.explain.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -201,9 +201,10 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Unbalanced Shares"))
         self.unbalShares.setText(_translate("Dialog", "0"))
         self.label_2.setText(_translate("Dialog", "Held Before statement"))
+        self.unbalBefore.setToolTip(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:16pt;\">Enter shares held before statement. </span><span style=\" font-size:16pt; color:#05b80b;\">Then press enter.</span></p></body></html>"))
         self.unbalBefore.setText(_translate("Dialog", "0"))
         self.label_3.setText(_translate("Dialog", "Held After statement"))
+        self.unbalAfter.setToolTip(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:16pt;\">Enter shares held after statement. </span><span style=\" font-size:16pt; color:#05b80b;\">Then press enter</span><span style=\" font-size:16pt;\">.</span></p></body></html>"))
         self.unbalAfter.setText(_translate("Dialog", "0"))
         self.okBtn.setText(_translate("Dialog", "OK"))
-
 

@@ -44,7 +44,10 @@ class PandasModel(QAbstractTableModel):
         try:
             v = float(val)
             if str(val).find('.') > -1:
-                val = '${:.02f}'.format(v)
+                if v >= 0:
+                    val = '${:.02f}'.format(v)
+                else:
+                    val = '(${:.02f})'.format(v).replace('-', '')
         except (ValueError, TypeError):
             pass
         val = str(val)

@@ -192,6 +192,9 @@ font: 14pt &quot;Arial Narrow&quot;;</string>
                  <property name="focusPolicy">
                   <enum>Qt::StrongFocus</enum>
                  </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;Enter shares held before statement. &lt;/span&gt;&lt;span style=&quot; font-size:16pt; color:#05b80b;&quot;&gt;Then press enter.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>0</string>
                  </property>
@@ -221,6 +224,9 @@ font: 14pt &quot;Arial Narrow&quot;;</string>
                  </property>
                  <property name="focusPolicy">
                   <enum>Qt::StrongFocus</enum>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;Enter shares held after statement. &lt;/span&gt;&lt;span style=&quot; font-size:16pt; color:#05b80b;&quot;&gt;Then press enter&lt;/span&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string>0</string>
