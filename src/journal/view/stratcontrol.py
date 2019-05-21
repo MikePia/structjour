@@ -233,7 +233,7 @@ class StratControl(QDialog):
     def addStrategy(self):
         addthis = self.ui.strategyAdd.text()
         if addthis:
-            self.strat.addStrategy(addthis)
+            self.strat.addStrategy(addthis) 
             self.loadStrategies()
             ix = self.ui.strategyCb.findText(addthis)
             self.ui.strategyCb.setCurrentIndex(ix)

@@ -1,13 +1,16 @@
 import os
 import random
+import sqlite3.test.transactions
 import sys
 from collections import OrderedDict
+from journal.view.ejcontrol import EJControl
+
 
 import numpy as np
 import pandas as pd
 from PyQt5.QtWidgets import QApplication, QDialog, QWidget, QAbstractItemView
 from PyQt5.QtGui import QIntValidator, QStandardItemModel, QStandardItem, QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSettings
 
 from journal.view.dailyform import  Ui_Form as DailyForm
 from journal.view.dfmodel import PandasModel
@@ -26,12 +29,90 @@ def fc(val):
     return val
 
 class DailyControl(QWidget):
-    def __init__(self):
+    def __init__(self, daDate=None):
         super().__init__(parent=None)
         self.ui = DailyForm()
         self.ui.setupUi(self)
+        self.ui.dailyNotes.textChanged.connect(self.dNotesChanged)
+        self.date = daDate
+
+    def createTable(self):
+        # self.dropTable()
+
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+
+        cur.execute('''
+            CREATE TABLE if not exists "daily_notes" (
+                	"date"	INTEGER,
+                	"note"	TEXT,
+                	PRIMARY KEY("date"))''')
+        conn.commit()
+
+    def dropTable(self):
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+
+        cur.execute('''DROP TABLE IF EXISTS daily_notes''')
+        conn.commit()
+
+
+    def commitNote(self):
+        if not self.date:
+            print('Cannot save without a date')
+            return
+        d = self.date.strftime('%Y%m%d')
+        d = int(d)
+        note = self.ui.dailyNotes.toPlainText()
+
+        exist = self.getNote()
+            
+
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        if exist:
+            cur.execute('''UPDATE daily_notes
+                SET note = ? 
+                WHERE date = ?''', (note, d))
+
+        else:
+            cur.execute('''INSERT INTO daily_notes (date, note)
+                    VALUES(?,?)''',
+                    (d, note))
+        conn.commit()
+
+    def getNote(self):
+        if not self.date:
+            print('Cannot retrieve a not without a date')
+            return
+        d = self.date.strftime('%Y%m%d')
+        d = int(d)
+
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+
+        cur.execute('''SELECT * from daily_notes where date = ?''', (d,))
+        cursor = cur.fetchone()
+        if cursor:
+            return cursor[1]
+        return cursor
+
+    def populateNotes(self):
+        note = self.getNote()
+        if note:
+            self.ui.dailyNotes.setText(note)
+
+
+    def dNotesChanged(self):
+        print(self.ui.dailyNotes.toPlainText())
+        self.setWindowTitle('Daily Summary ... text edited')
+        
 
     def runDialog(self, df, tradeSum=None):
+        if self.date == None:
+            if 'Date' in df.columns:
+                self.date = df.Date[0]
+
         self.ts = tradeSum
         self.modelT = PandasModel(df)
         self.ui.tradeTable.setModel(self.modelT)
@@ -46,7 +127,42 @@ class DailyControl(QWidget):
         self.ui.dailyStatTab.setModel(self.modelS)
         self.ui.dailyStatTab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.populateS()
+        self.setWindowTitle('Daily Summary ... text edited')
+
+        self.ui.dailyNotes.clicked.connect(self.saveNotes)
+
+
+        apiset = QSettings('zero_substance/stockapi', 'structjour')
+
+    
+
+        self.db = apiset.value('dbsqlite')
+        if not self.db:
+            j = self.settings.value('journal')
+            if not j:
+                print('Please set the location of the your journal directory.')
+                EJControl()
+                j = self.settings.value('journal')
+                if not j:
+                    return
+            self.db = os.path.join(j, 'structjour.sqlite')
+            apiset.setValue('dbsqlite', self.db)
+
+
+        self.createTable()
+        self.populateNotes()
+
+        d = df.index[0]
+        print()
+        self.setWindowTitle('Daily Summary')
       
+    def saveNotes(self, event):
+        print('Here ..... .....', event)
+        desc = self.ui.dailyNotes.toPlainText()
+        self.commitNote()
+
+        self.setWindowTitle('Daily Summary')
+
 
     def populateS(self):
         '''
@@ -179,9 +295,6 @@ class DailyControl(QWidget):
         self.ui.dailyStatTab.resizeColumnToContents(1)
         print()
 
-        
-    
-       
 
     def populateM(self):
         cell = QStandardItem('Mistake Summary')
@@ -224,8 +337,6 @@ class DailyControl(QWidget):
         self.ui.mstkForm.resizeColumnToContents(1)
         self.ui.mstkForm.resizeColumnToContents(2)
         print()
-
-
 
 
 from journal.thetradeobject import SumReqFields
@@ -272,33 +383,28 @@ class MistakeSummaryQ:
         }
 
 
-        # Excel formulas belong in the mstkval and mstknote columns. The srf.tfcolumns bit
-        # are the target addresses for the Excel formula. The cell translation
-        # takes place when we create and populate the Workbook.
-        formulas = dict()
-        srf = SumReqFields()
-        for i in range(numTrades):
+        # # Excel formulas belong in the mstkval and mstknote columns. The srf.tfcolumns bit
+        # # are the target addresses for the Excel formula. The cell translation
+        # # takes place when we create and populate the Workbook.
+        # formulas = dict()
+        # srf = SumReqFields()
+        # for i in range(numTrades):
 
-            tp = "tpl" + str(i+1)
-            formulas[tp] = ['={0}', srf.tfcolumns[srf.pl][0][0]]
-            p = "pl" + str(i + 1)
-            formulas[p] = ['={0}', srf.tfcolumns[srf.mstkval][0][0]]
-            m = "mistake" + str(i + 1)
-            formulas[m] = ['={0}', srf.tfcolumns[srf.mstknote][0][0]]
+        #     tp = "tpl" + str(i+1)
+        #     formulas[tp] = ['={0}', srf.tfcolumns[srf.pl][0][0]]
+        #     p = "pl" + str(i + 1)
+        #     formulas[p] = ['={0}', srf.tfcolumns[srf.mstkval][0][0]]
+        #     m = "mistake" + str(i + 1)
+        #     formulas[m] = ['={0}', srf.tfcolumns[srf.mstknote][0][0]]
 
         self.dailySummaryFields = dailySummaryFields
-
-
-
-
-
-
 
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    w = DailyControl()
+    d = pd.Timestamp(2030, 6, 6)
+    w = DailyControl(daDate=d)
     fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'
     if not os.path.exists(fn):
         sys.exit(app.exec_())
