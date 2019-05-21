@@ -12,7 +12,7 @@ from journal.stock.utilities import ManageKeys
 
 class StockApi(QDialog):
     '''
-    [APIPref, ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealPref]
+    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, iexCb, APIPref]
     The api keys are held in the database
     '''
     def __init__(self, settings):
@@ -102,22 +102,18 @@ class StockApi(QDialog):
 
     def setIbRealPort(self):
         text = self.ui.ibRealPort.text()
-        print('real', text)
         self.apiset.setValue('ibRealPort', text)
 
     def setIbRealId(self):
         text = self.ui.ibRealId.text()
-        print('real', text)
         self.apiset.setValue('ibRealId', text)
 
     def setIbPaperId(self):
         text = self.ui.ibPaperId.text()
-        print('real', text)
         self.apiset.setValue('ibPaperId', text)
 
     def setIbPaperPort(self):
         text = self.ui.ibPaperPort.text()
-        print('real', text)
         self.apiset.setValue('ibPaperPort', text)
 
     def okPressed(self):
@@ -131,8 +127,6 @@ class StockApi(QDialog):
     
 
     def ibClicked(self, b):
-        print('real clicked')
-        self.apiset.setValue('ibRealPref', b)
         self.apiset.setValue('ibRealCb', b)
         if b:
             self.apiset.setValue('ibPaperCb', not b)
@@ -140,9 +134,7 @@ class StockApi(QDialog):
         self.sortIt('ib')
 
     def ibPaperclicked(self, b):
-        print('paper clicked')
         # self.ui.ibPaperCb.setChecked(b)
-        self.apiset.setValue('ibRealPref', not b)
         self.apiset.setValue('ibPaperCb', b)
         if b:
             self.apiset.setValue('ibRealCb', not b)
@@ -182,6 +174,7 @@ class StockApi(QDialog):
                 newul = newul[:-2]
                 ul = newul
         self.apiset.setValue('APIPref', ul)
+        self.ui.APIPref.setText(ul)
         return ul, ulist
 
     def sortIt(self, last):

@@ -271,6 +271,9 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     dur = ''
     fullstart = end
     fullstart = fullstart - pd.Timedelta(days=5)
+    if start < fullstart:
+        delt = end-start
+        fullstart = end-delt
 
     if (end-fullstart).days < 1:
         if ((end-fullstart).seconds//3600) > 8:
@@ -301,6 +304,8 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     if lendf == 0:
         return 0, df, None
 
+    # Normalize the date to our favorite format 
+    df.index = pd.to_datetime(df.index)
     if resamp:
         srate = f'{origminutes}T'
         df_ohlc = df[['open']].resample(srate).first()
@@ -310,8 +315,6 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
 
-    # Normalize the date to our favorite format 
-    df.index = pd.to_datetime(df.index)
 
     maDict = movingAverage(df.close, df, end)
 

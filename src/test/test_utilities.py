@@ -109,16 +109,15 @@ class TestUtilities(unittest.TestCase):
         entries = util.makeupEntries(df, 5)
         for e in entries:
             cx = e[3]
-            self.assertEqual(df.index[e[1]], cx)
-            high = df.loc[cx].high
-            low = df.loc[cx].low
+            candleindex = df.index[e[1]]
+            delt = cx - candleindex
+            assert delt.total_seconds()//60 <= interval
+            # self.assertEqual(df.index[e[1]], cx)
+            high = df.iloc[e[1]].high
+            low = df.iloc[e[1]].low
             price = e[0]
             self.assertGreaterEqual(price, low)
             self.assertLessEqual(price, high)
-            etime = e[4]
-            nextcandle = cx + pd.Timedelta(minutes=5)
-            self.assertGreater(etime, cx)
-            self.assertLess(etime, nextcandle)
 
 
 

@@ -22,7 +22,7 @@ class XLImage:
     '''Handle image stuff'''
 
 #     20.238095238095237
-    def __init__(self, default='data/defaultImage.png', heightInCells=20, pixPerCell=19.3):
+    def __init__(self, default='C:/python/E/structjour/src/data/defaultImage.png', heightInCells=20, pixPerCell=19.3):
         '''
         Create the XLImage, set the name and the size image here.
         :params default: Location of a default image to use
@@ -33,6 +33,8 @@ class XLImage:
                             determined (by me) to be about 19.3.
 
         '''
+        if not os.path.exists(default):
+            raise ValueError
         self.defaultImage = default
         self.numCells = heightInCells
         self.pixPerCell = pixPerCell

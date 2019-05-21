@@ -1,5 +1,5 @@
 # Structjour -- a daily trade review helper
-# Copyright (C) 2019 Mike Petersen
+# Copyright (C) 2019 Zero Substance Trading
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -44,6 +44,7 @@ class ChartControl(QDialog):
         ui = ChartDlg()
         ui.setupUi(self)
         self.ui = ui
+        self.widgDict = None
         self.loadStyles()
 
         self.ui.styleCb.currentTextChanged.connect(self.setStyle)
@@ -56,8 +57,8 @@ class ChartControl(QDialog):
         self.ui.markerSize.valueChanged.connect(self.setMarkerSize)
         self.ui.colorUp.textChanged.connect(self.setColorUp)
         self.ui.colorDown.textChanged.connect(self.setColorDown)
-        self.ui.interactive.clicked.connect(self.setInteractive)
-        self.ui.showLegend.clicked.connect(self.setLegend)
+        self.ui.interactiveCb.clicked.connect(self.setInteractive)
+        self.ui.showLegendCb.clicked.connect(self.setLegend)
 
         self.ui.chart1MA1.clicked.connect(self.setChart1MA1)
         self.ui.chart1MA1Spin.valueChanged.connect(self.setChart1MA1Spin)
@@ -354,8 +355,8 @@ class ChartControl(QDialog):
                 'markersize': self.ui.markerSize,
                 'colorup': self.ui.colorUp,
                 'colordown': self.ui.colorDown,
-                'interactive': self.ui.interactive,
-                'showlegend': self.ui.showLegend,
+                'interactive': self.ui.interactiveCb,
+                'showlegend': self.ui.showLegendCb,
                 'chart1ma1': self.ui.chart1MA1,
                 'chart1ma2': self.ui.chart1MA2,
                 'chart1ma3': self.ui.chart1MA3,
@@ -413,8 +414,7 @@ class ChartControl(QDialog):
             elif isinstance(widg, QComboBox):
                 index = widg.findText(val)
                 widg.setCurrentIndex(index)
-        #Set the MA labels TODO NEXT after the connect stuff
-
+        self.widgdict = widgdict
 
 
 

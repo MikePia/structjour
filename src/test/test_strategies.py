@@ -15,7 +15,7 @@ class TestStrategy(TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
         self.somestrats = ['ABCD', 'Bull Flag', 'Fallen Angel', 'VWAP Support', 'VWAP Reversal']
-        self.strat = Strategy(db='C:/python/E/structjour/src/test/testdb.sqlite')
+        self.strat = Strategy(create=True, testdb='C:/python/E/structjour/src/test/testdb.sqlite')
 
     def test_removeLink(self):
         strat = self.strat
@@ -252,6 +252,8 @@ class TestStrategy(TestCase):
         self.assertGreater(len(d[1]), 100)
 
 
+def main():
+    unittest.main()
 
 def notmain():
     t = TestStrategy()
@@ -269,5 +271,6 @@ def notmain():
     t.test_removeLink()
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    main()
     

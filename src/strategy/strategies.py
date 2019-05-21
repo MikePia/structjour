@@ -1,5 +1,5 @@
 # Structjour -- a daily trade review helper
-# Copyright (C) 2019 Mike Petersen
+# Copyright (C) 2019 Zero Substance Trading
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,18 +37,19 @@ class Strategy:
     '''
 
 
-    def __init__(self, create=False):
+    def __init__(self, create=False, testdb=None):
         # if not db:
         apiset = QSettings('zero_substance/stockapi', 'structjour')
         db = apiset.value('dbsqlite')
+        db = db if not testdb else testdb
         if not db:
             print('db value is not set')
             return
 
-        if not os.path.exists(db):
-            msg = f'db file {db} is not found. '
-            print(msg)
-            return
+        # if not os.path.exists(db):
+        #     msg = f'db file {db} is not found. '
+        #     print(msg)
+        #     return
         self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()
         if create:
@@ -266,20 +267,20 @@ class Strategy:
 
     def createTables(self):
         self.cur.execute('''
-        CREATE TABLE strategy (
+        CREATE TABLE if not exists strategy (
 	        id	INTEGER PRIMARY KEY AUTOINCREMENT,
             name	text UNIQUE,
             short_name	text,
             preferred	INTEGER DEFAULT 1);''')
 
         self.cur.execute('''
-        CREATE TABLE source (
+        CREATE TABLE if not exists source (
             id integer PRIMARY KEY,
             datasource text
         );''')
 
         self.cur.execute('''
-        CREATE TABLE description (
+        CREATE TABLE  if not exists description (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             description text,
             source_id integer,
@@ -289,7 +290,7 @@ class Strategy:
         );''')
 
         self.cur.execute('''
-        CREATE TABLE images (
+        CREATE TABLE  if not exists images (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE,
             widget	INTEGER CHECK(widget="chart1" OR widget="chart2"),
@@ -298,7 +299,7 @@ class Strategy:
         );''')
 
         self.cur.execute('''
-        CREATE TABLE links (
+        CREATE TABLE  if not exists links (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             link text,
             strategy_id integer,

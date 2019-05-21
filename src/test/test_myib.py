@@ -113,16 +113,17 @@ class TestMyib(unittest.TestCase):
 
 
             # If the requested start time is before 9:30, start should be 9:30
+            # This is no longer true. IB retrieves pre and post
             d = df.index[0]
-            expected = dt.datetime(d.year, d.month, d.day, 9, 30)
+            # expected = dt.datetime(d.year, d.month, d.day, 9, 30)
 
-            # With resampled data, the alignment could be up to a candle interval away
-            if start < expected:
-                delt = expected - d if expected > d else d - expected
-                self.assertLessEqual(delt.total_seconds(), minutes * 60)
-            else:
+            # # With resampled data, the alignment could be up to a candle interval away,
+            # if start < expected:
+            #     delt = expected - d if expected > d else d - expected
+            #     self.assertLessEqual(delt.total_seconds(), minutes * 60)
+            # else:
                 # The start should be within the amount of the candle length
-                # if d != start:
+            if d != start:
                 delt = pd.Timedelta(minutes=minutes)
                 delt2 = d - start if d > start else start - d
                 self.assertLessEqual(delt2, delt)

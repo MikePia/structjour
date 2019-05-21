@@ -133,10 +133,12 @@ class TestGraphstuff(unittest.TestCase):
             print()
             return
 
-        meta, df = ib.getib_intraday(symbol, start, end, minutes)
+        meta, df, maDict = ib.getib_intraday(symbol, start, end, minutes)
         entries = []
         exits = []
         for i in range(random.randint(2, 9)):
+            if len(df) < 2:
+                break
             candle = random.randint(0, len(df)-1)
             high = df.iloc[candle].high
             low = df.iloc[candle].low
