@@ -669,7 +669,7 @@ class SumControl(QMainWindow):
         '''
         # Set the targ, targDiff and rr widgets
         if not self.lf:
-            print('No trade for which to provide a target price')
+            # print('No trade for which to provide a target price')
             return
         diff = 0
         try:
@@ -696,7 +696,7 @@ class SumControl(QMainWindow):
         call rrCalc
         '''
         if not self.lf:
-            print('No trade for which to provide a stop price')
+            # print('No trade for which to provide a stop price')
             return
         diff = 0
         try:

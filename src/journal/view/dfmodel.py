@@ -11,7 +11,7 @@ from PyQt5.QtCore import QAbstractTableModel
 
 class PandasModel(QAbstractTableModel):
     '''
-    A gift from Stack. Seems to work very well
+    A gift from Stack. Seems to work well
     '''
     def __init__(self, df = pd.DataFrame(), parent=None): 
         QAbstractTableModel.__init__(self, parent=parent)
