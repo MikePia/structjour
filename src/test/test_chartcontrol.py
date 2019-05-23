@@ -148,13 +148,11 @@ class TestChartCtrl(TestCase):
                     self.chartSet.setValue(key, testVal)
                 self.assertEqual(widg.isChecked(), testVal, key)
                 self.assertEqual(widg.isChecked(), self.chartSet.value(key, False, bool), key)
-                print()
             elif isinstance(widg, QSpinBox):
                 QTest.keyClick(widg, Qt.Key_A, Qt.ControlModifier)
                 QTest.keyClicks(widg, str(testVal))
                 self.assertEqual(int(testVal), widg.value())
                 self.assertEqual(widg.value(), self.chartSet.value(key, 4, int))
-                print()
             elif isinstance(widg, QComboBox):
                 # Skipping this. Interaction w Combox has many variables. 
                 pass

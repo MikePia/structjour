@@ -8,24 +8,17 @@ Created on Apr 1, 2019
 import os
 import sys
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox
-from PyQt5.QtCore import QDate, QDateTime
-
 import pandas as pd
+from PyQt5.QtCore import QDate, QDateTime
+from PyQt5.QtWidgets import QApplication
 
+from journal.definetrades import DefineTrades
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS as Ticket
 from journal.statement import Statement_IBActivity
-from journal.definetrades import DefineTrades
-from journal.tradestyle import TradeFormat
-from journal.dailysumforms import MistakeSummary
 from journal.view.layoutforms import LayoutForms
-
-
-
-from journalfiles import JournalFiles
 from journal.view.sumcontrol import SumControl, qtime2pd
-from journal.view.summaryform import Ui_MainWindow
+from journalfiles import JournalFiles
 
 # pylint: disable = C0103
 
@@ -43,13 +36,13 @@ class runController:
 
         self.initialize()
 
-
-        # Defining this one connection here. Its different than all the others
-        
         self.ui.goBtn.pressed.connect(self.runnit)
         self.ui.loadBtn.pressed.connect(self.loadit)
-
+        
     def initialize(self):
+        '''
+        Initialize the inputs and outs
+        '''
         ### Might blitz thes lines if JournalFiles gets an overhaul. For ease of transaiton
         ### We keep JournalFiles till its allworks into the Qt run
         self.settings = self.sc.settings
@@ -76,6 +69,9 @@ class runController:
         print(self.inpathfile)
 
     def loadit(self):
+        '''
+        Load saved objects
+        '''
         print('gonna loadit gonna loadit')
         daDate = self.ui.dateEdit.date()
         self.settings.setValue('theDate', daDate)
@@ -83,29 +79,27 @@ class runController:
         if not self.indir:
             print('What file is supposed to load?')
             return
-        jf = JournalFiles(indir=self.indir, outdir=self.outdir,
-                      theDate=self.theDate, infile=self.infile,
-                      inputType = self.inputtype, infile2=self.positions,
-                      mydevel=True)
-
-
+        jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
+                          infile=self.infile, inputType=self.inputtype, infile2=self.positions,
+                          mydevel=True)
 
         lf = LayoutForms(self.sc, jf, None)
         lf.loadSavedFile()
         if lf.df is None:
             print('Did not load up correctly. Try pressing Go, Load, Save')
-        
 
     def runnit(self):
+        '''
+        Load an initial input file and process it.
+        '''
         print('gonna runnit gonna runnit')
         self.initialize()
         if not self.indir:
             print('What file is supposed to load?')
             return
-        jf = JournalFiles(indir=self.indir, outdir=self.outdir,
-                      theDate=self.theDate, infile=self.infile,
-                      inputType = self.inputtype, infile2=self.positions,
-                      mydevel=True)
+        jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
+                          infile=self.infile, inputType=self.inputtype, infile2=self.positions,
+                          mydevel=True)
 
         if self.inputtype == 'IB_HTML':
             jf.inputType = 'IB_HTML'
@@ -122,14 +116,13 @@ class runController:
             df, jf = tkt.getTrades()
 
         idf = InputDataFrame()
-        trades,  success = idf.processInputFile(df, jf.theDate, jf)
+        trades, success = idf.processInputFile(df, jf.theDate, jf)
         if not success:
             return
 
         tu = DefineTrades(self.inputtype)
         inputlen, dframe, ldf = tu.processOutputDframe(trades)
 
-        # Process the openpyxl excel object using the output file DataFrame. Insert
         # images and Trade Summaries.
         margin = 25
 

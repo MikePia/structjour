@@ -162,7 +162,6 @@ class SumControl(QMainWindow):
 
 
     def strategyChanged(self, index):
-        print('strat change', index)
         text = self.ui.strategy.currentText()
         if not text:
             return
@@ -197,10 +196,6 @@ class SumControl(QMainWindow):
             print('Nothing to save')
             return
         outpathfile = self.getSaveName()
-        if os.path.exists(outpathfile):
-            print('Should probably pop up here and warn user they are overwriting a save.')
-        print(outpathfile)
-        print()
 
         self.lf.saveTheTradeObject(outpathfile)
         self.ui.infileEdit.setStyleSheet('color: blue;')
@@ -267,7 +262,6 @@ class SumControl(QMainWindow):
             masl.append(['VWAP', chartSet.value(makeys[13])])
         else:
             masl.append([])
-        print(masl)
         assert len(masl) == 2
         chartSet.setValue('getmas', masl)
 
@@ -423,7 +417,6 @@ class SumControl(QMainWindow):
             p, nname = os.path.split(pname)
             if nname != name:
                 data = self.lf.getChartData(key, x.objectName())
-                print()
                 data[0] = nname
                 self.lf.setChartData(key, data, x.objectName())
             xn = x.objectName()
@@ -457,7 +450,6 @@ class SumControl(QMainWindow):
             return
         key = self.ui.tradeList.currentText()
         text = self.ui.explain.toPlainText()
-        print(text)
         self.lf.setExplain(key, text)
 
     def setNotes(self):
@@ -466,7 +458,6 @@ class SumControl(QMainWindow):
             return
         key = self.ui.tradeList.currentText()
         text = self.ui.notes.toPlainText()
-        print(text)
         self.lf.setNotes(key, text)
 
     def setMstkVal(self, val):
@@ -514,9 +505,7 @@ class SumControl(QMainWindow):
         :Prerequisites: loadLayoutForm must be called before the box is used
         '''
         if not key:
-            print('No Val')
             return
-        print(key)
         self.lf.populateTradeSumForms(key)
 
     def loadStrategies(self, strat):
@@ -591,12 +580,10 @@ class SumControl(QMainWindow):
         #     w[1].setDateTime(finish)
 
     def dasDefault(self, b):
-        print('DAS', b)
         self.settings.setValue('inputType', 'DAS')
         self.setFormDate()
 
     def ibDefault(self, b):
-        print('ib', b)
         self.settings.setValue('inputType', 'IB_HTML')
         self.setFormDate()
 
@@ -682,7 +669,7 @@ class SumControl(QMainWindow):
         '''
         # Set the targ, targDiff and rr widgets
         if not self.lf:
-            print('No trade to for which to provide a target price')
+            print('No trade for which to provide a target price')
             return
         diff = 0
         try:
@@ -709,7 +696,7 @@ class SumControl(QMainWindow):
         call rrCalc
         '''
         if not self.lf:
-            print('No trade to for which to provide a stop price')
+            print('No trade for which to provide a stop price')
             return
         diff = 0
         try:
@@ -752,8 +739,6 @@ class SumControl(QMainWindow):
         except ValueError:
             self.ui.rr.setText('')
             return
-
-        print(ftarg, fstop)
 
         dval = abs(ftarg/fstop)
 
@@ -908,7 +893,6 @@ class SumControl(QMainWindow):
             self.dasDefault(True)
 
     def setDialogDate(self, val):
-        print(val)
         self.settings.setValue('theDate', val)
         self.setJournalDir()
         self.setTheScheme(self.settings.value('scheme'))
@@ -933,7 +917,6 @@ class SumControl(QMainWindow):
         '''
         Stores the radio checkbox setting to set the date to today on opening the program
         '''
-        print(val)
         assert isinstance(val, bool)
         # val = True if val =="true" else False
         self.settings.setValue('setToday', val)
@@ -1186,7 +1169,6 @@ class SumControl(QMainWindow):
         stratB = StratControl()
         stratB.show()
         stratB.exec()
-        print('back from strat browse')
         self.loadStrategies(None)
 
 

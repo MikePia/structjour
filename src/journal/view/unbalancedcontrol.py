@@ -9,7 +9,7 @@ Created on April 12, 2019
 import os
 import sys
 import pandas as pd
-from PyQt5.QtWidgets import QApplication, QDialog, QLCDNumber
+from PyQt5.QtWidgets import QApplication, QDialog
 from PyQt5.QtGui import QIntValidator
 
 from journal.view.unbalanced import Ui_Dialog

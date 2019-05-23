@@ -130,7 +130,6 @@ class LayoutForms:
     def pickleitnow(self):
         name = f'.trades{self.jf.theDate.strftime(self.jf.dayformat)}.zst'
         fname = os.path.join(self.jf.outdir, name)
-        print()
         with open(fname, "wb") as f:
             pickle.dump(self.df, f)
         settings = QSettings('zero_substance', 'structjour')
@@ -179,7 +178,6 @@ class LayoutForms:
                 return
             else:
                 (self.ts, self.entries, self.df) = test
-            print()
 
         print('load up the trade names now')
         tradeSummaries = []
@@ -302,7 +300,6 @@ class LayoutForms:
         self.sc.loadStrategies(strat)
         
         self.sc.setChartTimes()
-        print(self.sc.ui.chart1Name.text())
         iname1 = self.sc.ui.chart1Name.text()
         iname2 = self.sc.ui.chart2Name.text()
         iname3 = self.sc.ui.chart3Name.text()
@@ -387,7 +384,6 @@ class LayoutForms:
 
         print(tto['Time1'], type(tto['Time1']))
         # self.sc.ui.time1
-        print()
 
     def setTargVals(self, key, targ, diff, rr):
         '''Store the values affected by a change in the target value'''
@@ -398,7 +394,6 @@ class LayoutForms:
         tto[rc.targdiff] = diff
         if rr:
             tto[rc.rr] = rr
-        print()
 
     def setStopVals(self, key, stop, diff, rr, maxloss):
         '''

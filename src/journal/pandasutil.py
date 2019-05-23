@@ -311,10 +311,8 @@ class InputDataFrame:
                     msg += 'to continue. Would you like to continue?\n'
                     ok = QMessageBox.question(ubc, 'ShareBalance', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if ok == QMessageBox.Yes:
-                        print('Yes clicked.')
                         ubc = Ubc()
                     else:
-                        print('No clicked.')
                         return None, False
                 else:
                     keepTrying = False

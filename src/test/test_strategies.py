@@ -180,7 +180,6 @@ class TestStrategy(TestCase):
         slist = [s[1] for s in strats]
         for s in self.somestrats:
             self.assertIn(s, slist)
-        print()
 
     def test_getDescription(self):
         strat = self.strat

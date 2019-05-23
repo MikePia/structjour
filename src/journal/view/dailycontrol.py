@@ -1,19 +1,42 @@
+# Structjour -- a daily trade review helper
+# Copyright (C) 2019 Zero Substance Trading
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+'''
+Controller for dailyform
+
+Created on April 8, 2019
+
+@author: Mike Petersen
+'''
+
 import os
-import random
 import sqlite3.test.transactions
 import sys
 from collections import OrderedDict
-from journal.view.ejcontrol import EJControl
-
 
 import numpy as np
 import pandas as pd
-from PyQt5.QtWidgets import QApplication, QDialog, QWidget, QAbstractItemView
-from PyQt5.QtGui import QIntValidator, QStandardItemModel, QStandardItem, QFont
-from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtCore import QSettings, Qt
+from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget
 
-from journal.view.dailyform import  Ui_Form as DailyForm
+from journal.thetradeobject import SumReqFields
+from journal.view.dailyform import Ui_Form as DailyForm
 from journal.view.dfmodel import PandasModel
+from journal.view.ejcontrol import EJControl
 
 # pylint: disable = C0103, W0201
 
@@ -29,15 +52,20 @@ def fc(val):
     return val
 
 class DailyControl(QWidget):
+    '''
+    Controller for the daily summary form. The form includes a user notes saved in db, 2 daily
+    summary forms and processed input file showing the days transactions. The daily summaryies
+    are driven by data and are not saved.
+    '''
     def __init__(self, daDate=None):
         super().__init__(parent=None)
         self.ui = DailyForm()
         self.ui.setupUi(self)
-        self.ui.dailyNotes.textChanged.connect(self.dNotesChanged)
+
         self.date = daDate
 
     def createTable(self):
-        # self.dropTable()
+        '''create db table'''
 
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -50,14 +78,15 @@ class DailyControl(QWidget):
         conn.commit()
 
     def dropTable(self):
+        '''Drop db table daily_notes'''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
 
         cur.execute('''DROP TABLE IF EXISTS daily_notes''')
         conn.commit()
 
-
     def commitNote(self):
+        '''Save or update the db file for the notes field.'''
         if not self.date:
             print('Cannot save without a date')
             return
@@ -66,7 +95,6 @@ class DailyControl(QWidget):
         note = self.ui.dailyNotes.toPlainText()
 
         exist = self.getNote()
-            
 
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -77,11 +105,14 @@ class DailyControl(QWidget):
 
         else:
             cur.execute('''INSERT INTO daily_notes (date, note)
-                    VALUES(?,?)''',
-                    (d, note))
+                        VALUES(?,?)''', (d, note))
         conn.commit()
 
     def getNote(self):
+        '''
+        Retrieve the notes field for the db entry for the date associated with this object. The
+        date can be given as an argument or retrieved from the df argument for runDialog.
+        '''
         if not self.date:
             print('Cannot retrieve a not without a date')
             return
@@ -98,18 +129,22 @@ class DailyControl(QWidget):
         return cursor
 
     def populateNotes(self):
+        '''
+        Get a saved note for this object
+        '''
         note = self.getNote()
         if note:
             self.ui.dailyNotes.setText(note)
 
-
     def dNotesChanged(self):
-        print(self.ui.dailyNotes.toPlainText())
+        ''' daily notes field changed. Set the edited flag. '''
         self.setWindowTitle('Daily Summary ... text edited')
-        
-
+    
     def runDialog(self, df, tradeSum=None):
-        if self.date == None:
+        '''
+        Top level script for this form. Populate the widgets.
+        '''
+        if not self.date:
             if 'Date' in df.columns:
                 self.date = df.Date[0]
 
@@ -130,12 +165,9 @@ class DailyControl(QWidget):
         self.setWindowTitle('Daily Summary ... text edited')
 
         self.ui.dailyNotes.clicked.connect(self.saveNotes)
-
+        self.ui.dailyNotes.textChanged.connect(self.dNotesChanged)
 
         apiset = QSettings('zero_substance/stockapi', 'structjour')
-
-    
-
         self.db = apiset.value('dbsqlite')
         if not self.db:
             j = self.settings.value('journal')
@@ -152,20 +184,19 @@ class DailyControl(QWidget):
         self.createTable()
         self.populateNotes()
 
-        d = df.index[0]
-        print()
         self.setWindowTitle('Daily Summary')
-      
+
     def saveNotes(self, event):
-        print('Here ..... .....', event)
-        desc = self.ui.dailyNotes.toPlainText()
+        '''
+        Connected method from a context menu for the dailyNotes widget.
+        '''
         self.commitNote()
 
         self.setWindowTitle('Daily Summary')
 
-
     def populateS(self):
         '''
+        Create and populate the daily summary form as a tableView
         '''
 
         cell = QStandardItem('Daily P / L Summary')
@@ -293,10 +324,11 @@ class DailyControl(QWidget):
         self.ui.dailyStatTab.setSpan(0, 0, 1, 3)
         self.ui.dailyStatTab.setRowHeight(0, 50)
         self.ui.dailyStatTab.resizeColumnToContents(1)
-        print()
-
 
     def populateM(self):
+        '''
+        Create and populate the daily mistakes form as a TableView.
+        '''
         cell = QStandardItem('Mistake Summary')
         cell.setTextAlignment(Qt.AlignCenter)
         cell.setFont(QFont('Arial Rounded MT Bold', pointSize=24))
@@ -325,86 +357,24 @@ class DailyControl(QWidget):
                 if mVal and isinstance(mVal, (np.floating, float)):
                     mVal = fc(mVal)
                 row.append(QStandardItem(mVal))
-                
+
                 row.append(QStandardItem(self.ts[trade]['MstkNote'].unique()[0]))
                 self.modelM.appendRow(row)
         q = QStandardItem('')
-        row = [q, q, QStandardItem(fc(totalpl)), q]
+        row = [q, QStandardItem(fc(totalpl)), q, q]
         self.modelM.appendRow(row)
 
         self.ui.mstkForm.setSpan(0, 0, 1, 4)
         self.ui.mstkForm.setRowHeight(0, 50)
         self.ui.mstkForm.resizeColumnToContents(1)
         self.ui.mstkForm.resizeColumnToContents(2)
-        print()
-
-
-from journal.thetradeobject import SumReqFields
-# pylint: disable = C0103
-
-
-class MistakeSummaryQ:
-    '''
-    Creation of these tables in Qt and excel has completely diverged
-    TODO Figure a way to unify the excel and qt table stuff for the mistake and daily summary. Or
-    at least to use a combined data structure for creating them. Or maybe its not worth it. The 
-    coordinates and data are different. For now I continue thie diverged stuff.
-    '''
-
-    def __init__(self, numTrades, anchor=(1, 1)):
-
-        # Create the data structure to create a styled shape for the Daily Summary Form
-        # 'key':[rng, style, value] 
-        dailySummaryFields = {
-            'title': [[(0, 0), (0, 3)], 'titleStyle', "Daily P / L Summary"],
-            'headlivetot': [(1, 0), 'normStyle', "Live Total"],
-            'livetot': [(1, 1), 'normalNumber'],
-            'livetotnote': [(1, 2), 'normStyle'],
-
-            'headsimtot': [(2, 0),  'normStyle', "Sim Total"],
-            'simtot': [(2, 1), 'normalNumber'],
-            'simtotnote': [(2, 2), 'normStyle'],
-
-            'headhighest': [(3, 0), 'normStyle', "Highest Profit"],
-            'highest': [(3, 1), 'normalNumber'],
-            'highestnote': [(3, 2), 'normStyle'],
-
-            'headlowest': [ (4, 0), 'normStyle', "Largest Loss"],
-            'lowest': [(4, 1), 'normalNumber'],
-            'lowestnote': [(4, 2), 'normStyle'],
-
-            'headavgwin': [ (5, 0), 'normStyle', "Average Win"],
-            'avgwin': [(5, 1), 'normalNumber'],
-            'avgwinnote': [(5, 2), 'normStyle'],
-
-            'headavgloss': [ (6, 0), 'normStyle', "Average Loss"],
-            'avgloss': [(6, 1), 'normalNumber'],
-            'avglossnote': [(6, 2), 'normStyle'],
-        }
-
-
-        # # Excel formulas belong in the mstkval and mstknote columns. The srf.tfcolumns bit
-        # # are the target addresses for the Excel formula. The cell translation
-        # # takes place when we create and populate the Workbook.
-        # formulas = dict()
-        # srf = SumReqFields()
-        # for i in range(numTrades):
-
-        #     tp = "tpl" + str(i+1)
-        #     formulas[tp] = ['={0}', srf.tfcolumns[srf.pl][0][0]]
-        #     p = "pl" + str(i + 1)
-        #     formulas[p] = ['={0}', srf.tfcolumns[srf.mstkval][0][0]]
-        #     m = "mistake" + str(i + 1)
-        #     formulas[m] = ['={0}', srf.tfcolumns[srf.mstknote][0][0]]
-
-        self.dailySummaryFields = dailySummaryFields
 
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    d = pd.Timestamp(2030, 6, 6)
-    w = DailyControl(daDate=d)
+    d1 = pd.Timestamp(2030, 6, 6)
+    w = DailyControl(daDate=d1)
     fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'
     if not os.path.exists(fn):
         sys.exit(app.exec_())

@@ -126,7 +126,6 @@ class TestUtilities(unittest.TestCase):
         now = dt.datetime.today()
         fmt = "%a, %B %d"
         
-        print()
         for i in range(7):
             d = now - dt.timedelta(i)
             dd = util.getLastWorkDay(d)
@@ -170,7 +169,6 @@ class TestUtilities(unittest.TestCase):
         print(apiset.allKeys())
         print(settings.allKeys())
         # self.assertTrue(os)
-        print()
 
     def test_updateKey(self):
         t = PickleSettings()

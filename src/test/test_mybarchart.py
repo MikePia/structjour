@@ -152,6 +152,9 @@ class TestMybarchart(unittest.TestCase):
         start = getPrevTuesWed(pd.Timestamp.today())
         for interval in intervals:
             dummy, df, maList = bc.getbc_intraday("SQ", start=start, minutes=interval)
+            if len(df) < 1:
+                print('Failed to retrieve data from barchart:', start)
+                continue
 
             # of a time string ---
             min0 = df.index[0]
@@ -161,19 +164,20 @@ class TestMybarchart(unittest.TestCase):
 
 
 def main():
-    '''test discovery is not working in vscode. Use this code for debugging.
-    Then run cl python -m unittest discovery'''
-    f = TestMybarchart()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
+    unittest.main()
+    # '''test discovery is not working in vscode. Use this code for debugging.
+    # Then run cl python -m unittest discovery'''
+    # f = TestMybarchart()
+    # for name in dir(f):
+    #     if name.startswith('test'):
+    #         attr = getattr(f, name)
 
-            class B():
-                def a(self):
-                    pass
-            b = B()
-            if isinstance(attr, type(b.a)):
-                attr()
+    #         class B():
+    #             def a(self):
+    #                 pass
+    #         b = B()
+    #         if isinstance(attr, type(b.a)):
+    #             attr()
 
 
 def notmain():

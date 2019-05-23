@@ -341,7 +341,6 @@ class Statement_IBActivity:
             else:
                 assert isinstance(df.Mult.iloc[0], str)
                 df = df[df.Mult == '1'].copy()
-            print('Retrieved open positions from tblOpenPositions')
         else:
             # The Long Open Positions table heirarchical and  pd cannot correctly parse it.
             # Instead we'll get the headers and rows with our favorite soup
@@ -362,7 +361,6 @@ class Statement_IBActivity:
                         # print(tddivs[0].text)
                         row = [r.text for r in tddivs]
                         tdlist.append(row)
-            print('Retrieved open positions from From tblLongOpenPositions')
             df = pd.DataFrame(data=tdlist, columns=headers)
 
             # Seems dangerous -- using bs4 in LongOpenPosition we get string columns Mult == '1'
@@ -524,7 +522,6 @@ class Statement_IBActivity:
 
         df = self.filterTrades_IBActivity(df[0])
         df['Account'] = account
-        print('fkna')
         df = self.figurePL_IBActivity(df, soup=soup)
         df = self.normColumns_IBActivity(df)
 

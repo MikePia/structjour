@@ -334,7 +334,6 @@ def localstuff():
     for k in apikeys:
         apival.append(apiset.value(k))
 
-    print()
 
 if __name__ == '__main__':
     notmain()
