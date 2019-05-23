@@ -15,8 +15,32 @@ import sqlite3
 import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QUrl, QDate, QDateTime, Qt
+
 
 # pylint: disable = C0103
+
+def qtime2pd(qdt):
+    '''Return a pandas Timestamp from a QDateTime'''
+    if isinstance(qdt, QDateTime):
+        d = pd.Timestamp(qdt.date().year(),
+                         qdt.date().month(),
+                         qdt.date().day(),
+                         qdt.time().hour(),
+                         qdt.time().minute(),
+                         qdt.time().second())
+    elif isinstance(qdt, QDate):
+        d = pd.Timestamp(qdt.year(),
+                         qdt.month(),
+                         qdt.day())
+    else:
+        return qdt
+    return d
+
+def pd2qtime(pdt):
+    '''Return a QDateTime from a time objet of Timestamp'''
+    pdt = pd.Timestamp(pdt)
+    return QDateTime(pdt.year, pdt.month, pdt.day, pdt. hour, pdt.minute, pdt.second)
 
 def getMAKeys():
     cc1 = ['chart1ma1', 'chart1ma2', 'chart1ma3', 'chart1ma4', 'chart1vwap', 'chart1ma1spin',

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>728</width>
-    <height>417</height>
+    <width>555</width>
+    <height>575</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,48 +17,13 @@
    <iconset>
     <normaloff>../../images/ZSLogo.png</normaloff>../../images/ZSLogo.png</iconset>
   </property>
-  <widget class="QPushButton" name="okBtn">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>520</x>
-     <y>40</y>
-     <width>93</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
-   </property>
-   <property name="text">
-    <string>OK</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="theDateCbox">
-   <property name="geometry">
-    <rect>
-     <x>520</x>
-     <y>360</y>
-     <width>201</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::TabFocus</enum>
-   </property>
-   <property name="text">
-    <string>Set today when program opens.</string>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>42</y>
+     <x>31</x>
+     <y>44</y>
      <width>458</width>
-     <height>344</height>
+     <height>473</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -167,6 +132,13 @@
      </layout>
     </item>
     <item>
+     <widget class="QLabel" name="dasInfileLbl">
+      <property name="text">
+       <string>C:/traders/journal/_2019_January_0114_Monday/trades.csv</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
        <widget class="QPushButton" name="dasInfile2Btn">
@@ -194,6 +166,13 @@
      </layout>
     </item>
     <item>
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>C:/traders/journal/_2019_January_0114_Monday/positions.csv</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout_5">
       <item>
        <widget class="QPushButton" name="ibInfileBtn">
@@ -216,6 +195,13 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>C:/traders/journal/_2019_January_0114_Monday/Activity_20190104.html</string>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -256,6 +242,13 @@
      </layout>
     </item>
     <item>
+     <widget class="QLabel" name="outdirLbl">
+      <property name="text">
+       <string>C:/traders/journal/_2019_January_0114_Monday/out/</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QLabel" name="explainDateLbl">
       <property name="text">
        <string>Date will be used to locate daily directories and set dates if missing (DAS trade)</string>
@@ -286,6 +279,46 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Date will be used to locate the desired directories for input files. It wil also be used if the input files are missing dates. This is the case for the DAS trades export file, aka trades.csv.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="theDateCbox">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+        <property name="text">
+         <string>Set today when program opens.</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <item>
+       <widget class="QPushButton" name="okBtn">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>OK</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>228</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </item>
