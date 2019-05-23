@@ -93,10 +93,8 @@ class TestDailyCtrl(TestCase):
         self.df = dframe
         self.apiset.setValue('dbsqlite', self.testdb)
 
-
     def tearDown(self):
         self.apiset.setValue('dbsqlite', self.realdb)
-
 
     def test_createTable(self):
         cur = self.conn.cursor()
@@ -146,8 +144,51 @@ class TestDailyCtrl(TestCase):
         xnote = dc.getNote()
         self.assertEqual(updatenote, xnote)
 
+    def test_getnote(self):
+        daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(daDate)
+        dc.runDialog(self.df, tradeSum = self.ts)
+        dc.dropTable()
+        dc.createTable()
+        note = '''Twas all hallow's  eve and all throug the grove
+                  jabberwock trounced his thro boro-dove'''
+        dc.ui.dailyNotes.setText(note)
+        dc.commitNote()
+        xnote = dc.getNote()
+        self.assertEqual(note, xnote)
 
+    def test_populateNotes(self):
+        daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(daDate)
+        dc.runDialog(self.df, tradeSum = self.ts)
+        dc.dropTable()
+        dc.createTable()
+        dc.populateNotes()
+        note = '''Twas all hallow's  eve and all throug the grove
+                  jabberwock trounced his thro boro-dove'''
+        dc.setNote(note)
+        widgnote = dc.ui.dailyNotes.toPlainText()
+        self.assertTrue(not widgnote)
+        dc.populateNotes()
+        widgnote = dc.ui.dailyNotes.toPlainText()
+        self.assertEqual(widgnote, note)
 
+    def test_populateS(self):
+        daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(daDate)
+        dc.runDialog(self.df, tradeSum = self.ts)
+        headers = ['Daily P / L Summary', 'Live Total', 'Sim Total', 'Highest Profit',
+                   'Largest Loss', 'Average Win', 'Average Loss']
+        for i, head in enumerate(headers):
+            self.assertEqual(dc.modelS.item(i, 0).text(), head)
+
+    def test_populateM(self):
+        daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(daDate)
+        dc.runDialog(self.df, tradeSum = self.ts)
+        headers = ['Name', 'P / L', 'Lost P/L', 'Mistake or pertinent feature of trade']
+        for i, head in enumerate(headers):
+            self.assertEqual(dc.modelM.item(1, i).text(), head)
 
 def main():
     unittest.main()

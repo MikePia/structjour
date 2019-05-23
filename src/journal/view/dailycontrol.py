@@ -86,13 +86,38 @@ class DailyControl(QWidget):
         conn.commit()
 
     def commitNote(self):
-        '''Save or update the db file for the notes field.'''
+        '''Save or update the db file for the notes field. This commits the text in the dailyNotes widget.
+        Use setNote for a vanilla db commit'''
         if not self.date:
             print('Cannot save without a date')
             return
         d = self.date.strftime('%Y%m%d')
         d = int(d)
         note = self.ui.dailyNotes.toPlainText()
+
+        exist = self.getNote()
+
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        if exist:
+            cur.execute('''UPDATE daily_notes
+                SET note = ? 
+                WHERE date = ?''', (note, d))
+
+        else:
+            cur.execute('''INSERT INTO daily_notes (date, note)
+                        VALUES(?,?)''', (d, note))
+        conn.commit()
+
+    def setNote(self, note):
+        '''
+        Commit or update the dailyNotes db table with self.date and note
+        '''
+        if not self.date:
+            print('Cannot save without a date')
+            return
+        d = self.date.strftime('%Y%m%d')
+        d = int(d)
 
         exist = self.getNote()
 
@@ -133,8 +158,9 @@ class DailyControl(QWidget):
         Get a saved note for this object
         '''
         note = self.getNote()
-        if note:
-            self.ui.dailyNotes.setText(note)
+        if not note:
+            note = ''
+        self.ui.dailyNotes.setText(note)
 
     def dNotesChanged(self):
         ''' daily notes field changed. Set the edited flag. '''
@@ -360,8 +386,7 @@ class DailyControl(QWidget):
 
                 row.append(QStandardItem(self.ts[trade]['MstkNote'].unique()[0]))
                 self.modelM.appendRow(row)
-        q = QStandardItem('')
-        row = [q, QStandardItem(fc(totalpl)), q, q]
+        row = [QStandardItem(''), QStandardItem(fc(totalpl)), QStandardItem(''), QStandardItem('')]
         self.modelM.appendRow(row)
 
         self.ui.mstkForm.setSpan(0, 0, 1, 4)
