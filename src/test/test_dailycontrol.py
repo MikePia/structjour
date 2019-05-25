@@ -191,6 +191,13 @@ class TestDailyCtrl(TestCase):
         for i, head in enumerate(list(dc.modelT._df.columns)):
             self.assertEqual(head, dc.modelT.headerData(i, Qt.Horizontal))
 
+    def test_populateM(self):
+        daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(daDate)
+        dc.runDialog(self.df, tradeSum = self.ts)
+        headers = ['Name', 'P / L', 'Lost P/L', 'Mistake or pertinent feature of trade']
+        for i, head in enumerate(headers):
+            self.assertEqual(dc.modelM.item(1, i).text(), head)
 
 def main():
     unittest.main()
