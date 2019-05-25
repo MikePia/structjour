@@ -144,14 +144,10 @@ class MistakeSummary:
     def dailySumStyle(self, ws, tf, anchor=(1, 1)):
         '''
         Create the shape and populate the daily Summary Form
-        :params:ws: The openpyxl Worksheet object
-        :parmas:tf: The TradeFormat object. It holds the styles used.
-        :params:listOfTrade: A python list of DataFrames, each one a trade with multiple tickets
-        :params:anchor: The location of the top left corner of the form
-        TODO: This is probably better placed in layoutSheet -- similar to
-              LayoutSheet.populateMistakeForm() and using the Trade Summaries object instead of the
-              trades object... may do that later, but now-- I'm going to finish this version --
-              momentum and all.
+        :params ws: The openpyxl Worksheet object
+        :parmas tf: The TradeFormat object. It holds the styles used.
+        :params listOfTrade: A python list of DataFrames, each one a trade with multiple tickets
+        :params anchor: The location of the top left corner of the form
         '''
 
         # Alter the anchor to place this form below the (dynamically sized) Mistake form
