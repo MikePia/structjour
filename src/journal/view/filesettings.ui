@@ -166,7 +166,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QLabel" name="label_3">
+     <widget class="QLabel" name="dasInfile2Lbl">
       <property name="text">
        <string>C:/traders/journal/_2019_January_0114_Monday/positions.csv</string>
       </property>
@@ -197,7 +197,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QLabel" name="label_4">
+     <widget class="QLabel" name="ibInfileLbl">
       <property name="text">
        <string>C:/traders/journal/_2019_January_0114_Monday/Activity_20190104.html</string>
       </property>

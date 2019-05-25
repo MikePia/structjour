@@ -107,6 +107,8 @@ class SumControl(QMainWindow):
 
         self.ui.dailySum.pressed.connect(self.showDaily)
 
+        self.ui.exportBtn.pressed.connect(self.exportExcel)
+
         v = QDoubleValidator()
         self.ui.lost.setValidator(v)
         self.ui.targ.setValidator(v)
@@ -132,6 +134,9 @@ class SumControl(QMainWindow):
     # ==================== Main Form  methods =========================
     # =================================================================
 
+
+    def exportExcel(self):
+        self.lf.exportExcel()
     
     def showDaily(self):
         if not self.lf or self.lf.df is None:
@@ -700,6 +705,7 @@ class SumControl(QMainWindow):
             if lost or clean:
                 # Note these widgets are only set if the user has not edited either widget. This is
                 # the only place they are 'auto set'
+                lost = - abs(lost)
                 lost = '{:.02f}'.format(lost)
                 self.ui.lost.setText(str(lost))
                 self.ui.sumNote.setText(note)
@@ -807,6 +813,15 @@ class SumControl(QMainWindow):
         the current settings (QSetting), define the dialog actions, and store the new settings.
         '''
         w = FileSetCtrl(self.settings)
+        print('the modal dialog waits to call')
+        if not self.lf:
+            print('No trades loaded')
+            return
+        if self.ui.ibImport.isChecked():
+            self.ibDefault(True)
+        else:
+            self.fui.dasImport.setChecked(True)
+            self.dasDefault(True)
 
     def stockAPIDlg(self):
         '''Fire up the stock Api settings dialog'''

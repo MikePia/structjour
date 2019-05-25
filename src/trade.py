@@ -101,7 +101,7 @@ def run(infile='trades.csv', outdir=None, theDate=None, indir=None, infile2=None
 
 
 if __name__ == '__main__':
-    theD = '2019-05-16'
+    theD = '2019-02-13'
     # inf = 'trades.1116_messedUpTradeSummary10.csv'
     # inf = 'ActivityStatement.20190321.html'
     # theD = None

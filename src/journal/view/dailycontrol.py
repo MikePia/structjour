@@ -218,18 +218,15 @@ class DailyControl(QWidget):
         '''
         self.commitNote()
 
-        self.setWindowTitle('Daily Summary')
-
-    def populateS(self):
+        self.setWindowTitle('Daily Summary')   
+    
+    def gatherDSumData(self, ts=None):
+        '''Put together inot a dictionary the data for populating the Daily Summary
+        :ts: TradeSummary dictionary. If called without running runDialog, this must be provided
+             If this is called from within the dialog, leave it blank. 
         '''
-        Create and populate the daily summary form as a tableView
-        '''
-
-        cell = QStandardItem('Daily P / L Summary')
-        cell.setTextAlignment(Qt.AlignCenter)
-        cell.setFont(QFont('Arial Rounded MT Bold', pointSize=24))
-        row = [cell]
-        self.modelS.appendRow(row)
+        if ts:
+            self.ts = ts
         srf = SumReqFields()
         liveWins = list()
         liveLosses = list()
@@ -335,6 +332,24 @@ class DailyControl(QWidget):
                 simLosses)]) / (len(liveLosses) + len(simLosses)))
         dailySumData['avglossnote'] = "X {} =  (${:.2f})".format(
             len(liveLosses) + len(simLosses), abs(sum([sum(liveLosses), sum(simLosses)])))
+        return dailySumData
+
+
+
+
+
+
+    def populateS(self):
+        '''
+        Create and populate the daily summary form as a tableView
+        '''
+        cell = QStandardItem('Daily P / L Summary')
+        cell.setTextAlignment(Qt.AlignCenter)
+        cell.setFont(QFont('Arial Rounded MT Bold', pointSize=24))
+        row = [cell]
+        self.modelS.appendRow(row)
+
+        dailySumData = self.gatherDSumData()
 
 
         ro1 = [QStandardItem('Live Total'), QStandardItem(str(dailySumData['livetot'])), QStandardItem(dailySumData['livetotnote'])]

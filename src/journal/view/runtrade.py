@@ -20,6 +20,8 @@ from journal.view.layoutforms import LayoutForms
 from journal.view.sumcontrol import SumControl, qtime2pd
 from journalfiles import JournalFiles
 
+from journal.layoutsheet import LayoutSheet
+
 # pylint: disable = C0103
 
 
@@ -122,12 +124,16 @@ class runController:
 
         tu = DefineTrades(self.inputtype)
         inputlen, dframe, ldf = tu.processOutputDframe(trades)
+        self.inputlen = inputlen
 
         # images and Trade Summaries.
         margin = 25
 
         lf = LayoutForms(self.sc, jf, dframe)
         tradeSummaries = lf.runSummaries(ldf)
+        # self.ldf = ldf
+        # self.dframe = dframe
+
 
 
 if __name__ == '__main__':

@@ -57,6 +57,8 @@ class LayoutSheet:
         self.spacing = spacing
         self.DSFAnchor = None
 
+
+    
     def imageData(self, df, ldf, ft="png"):
         '''
         Gather the image names and determine the locations in the Excel doc to place them. Excel

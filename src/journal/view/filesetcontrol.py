@@ -35,11 +35,21 @@ class FileSetCtrl(QDialog):
         fui = FileSettingsDlg()
         fui.setupUi(self)
         self.fui = fui
+
         fui.journal.setText(self.settings.value('journal'))
+        self.setJournalDir()
+
         fui.scheme.setText(self.settings.value('scheme'))
+        self.setScheme()
+
         fui.dasInfile.setText(self.settings.value('dasInfile'))
+        self.setDASInfile()
+
         fui.dasInfile2.setText(self.settings.value('dasInfile2'))
+        self.setDASInfile2()
+
         fui.ibInfile.setText(self.settings.value('ibInfile'))
+        self.setIBInfile()
 
         if self.settings.value('outdirPolicy') == 'static':
             self.fui.outdirStatic.setChecked(True)
@@ -58,23 +68,23 @@ class FileSetCtrl(QDialog):
 
         # Define actions.
         fui.journalBtn.pressed.connect(self.setJournalDlg)
-        fui.journal.returnPressed.connect(self.setJournalDir)
+        fui.journal.textChanged.connect(self.setJournalDir)
 
         fui.schemeBtn.pressed.connect(self.setSchemeDefault)
-        fui.scheme.returnPressed.connect(self.setScheme)
+        fui.scheme.textChanged.connect(self.setScheme)
 
-        fui.dasInfileBtn.pressed.connect(self.setDASInfileName)
-        fui.dasInfile.returnPressed.connect(self.setDASInfile)
+        fui.dasInfileBtn.pressed.connect(self.setDASInfile)
+        fui.dasInfile.textChanged.connect(self.setDASInfile)
 
-        fui.dasInfile2Btn.pressed.connect(self.setDASInfile2Name)
-        fui.dasInfile2.returnPressed.connect(self.setDASInfile2)
+        fui.dasInfile2Btn.pressed.connect(self.setDASInfile2)
+        fui.dasInfile2.textChanged.connect(self.setDASInfile2)
 
         fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
-        fui.ibInfile.returnPressed.connect(self.setIBInfile)
+        fui.ibInfile.textChanged.connect(self.setIBInfile)
 
-        fui.outdirDefault.clicked.connect(self.setOutdir)
+        fui.outdirDefault.clicked.connect(self.setOutdirDefault)
         fui.outdirStatic.clicked.connect(self.setOutdir)
-        fui.outdir.returnPressed.connect(self.setOutdir)
+        fui.outdir.textChanged.connect(self.setOutdir)
 
         fui.theDateCbox.clicked.connect(self.setTodayBool)
         fui.theDateBtn.pressed.connect(self.setToday)
@@ -88,12 +98,10 @@ class FileSetCtrl(QDialog):
         self.exec()
 
     def closeit(self):
+        # What needs to be done is in SumControl  -- check either ibImport or dasImport
+        print ('This is broken')
         self.close()
-        if self.ui.ibImport.isChecked():
-            self.ibDefault(True)
-        else:
-            self.ui.dasImport.setChecked(True)
-            self.dasDefault(True)
+        
 
     def setDialogDate(self, val):
         self.settings.setValue('theDate', val)
@@ -127,35 +135,31 @@ class FileSetCtrl(QDialog):
     def setOutdirDefault(self):
         indir = self.getDirectory()
         odd = os.path.join(indir, 'out/')
-        self.fui.outdir.setText(odd)
+        self.fui.outdirLbl.setText(odd)
         self.settings.setValue('outdir', odd)
+        self.fui.outdir.setText('out/')
         self.fui.outdir.setFocusPolicy(Qt.NoFocus)
+        self.settings.setValue('outdirPolicy', 'default')
 
     def setOutdir(self):
         '''
         Call only when file settings dialog (self.fui) is active.
         '''
+        if self.fui.outdirDefault.isChecked():
+            self.setOutdirDefault()
+            return
+        self.fui.outdir.setFocusPolicy(Qt.ClickFocus)
+        # self.fui.outdir.setFocusPolicy(Qt.TabFocus)
         outdir = self.fui.outdir.text()
-        outpathfile = ''
-        if self.fui.outdirStatic.isChecked():
-            self.settings.setValue('outdirPolicy', 'static')
-            outpathfile = self.fui.outdir.text()
-            self.settings.setValue('outdir', outpathfile)
-            self.fui.outdir.setFocusPolicy(Qt.TabFocus)
-        else:
-            self.settings.setValue('outdirPolicy', 'default')
-            opf = self.getDirectory()
+        outdirpath = os.path.abspath(outdir)
+        self.settings.setValue('outdirPolicy', 'static')
+        self.settings.setValue('outdir', outdir)
+        self.fui.outdirLbl.setText(outdirpath)
 
-            outpathfile = os.path.join(opf, 'out') if opf else ''
-            self.settings.setValue('outdir', 'out/')
-            self.fui.outdir.setText('out/')
-            self.fui.outdir.setToolTip(outpathfile)
-            self.fui.outdir.setFocusPolicy(Qt.NoFocus)
-
-        if os.path.exists(outpathfile):
-            self.fui.outdir.setStyleSheet("color: green;")
+        if os.path.exists(outdirpath):
+            self.fui.outdirLbl.setStyleSheet("color: green;")
         else:
-            self.fui.outdir.setStyleSheet("color: red;")
+            self.fui.outdirLbl.setStyleSheet("color: red;")
 
     def setIBInfileName(self):
         '''
@@ -173,6 +177,13 @@ class FileSetCtrl(QDialog):
         '''
         sedit = self.fui.ibInfile.text()
         sglob = os.path.split(sedit)[1]
+        self.fui.ibInfile.setStyleSheet("color: black;")
+        if not sglob:
+            
+            self.fui.ibInfileLbl.setText(self.getDirectory())
+            self.fui.ibInfileLbl.setStyleSheet("color: red;")
+            self.fui.ibInfile.setStyleSheet("color: red;")
+            return
         if sglob and sedit and sedit == sglob:
             self.settings.setValue('ibInfile', sglob)
         elif sglob and sedit and len(sedit) > len(sglob):
@@ -181,11 +192,14 @@ class FileSetCtrl(QDialog):
                 self.fui.ibInfile.setText(sset)
                 return
         rgx = re.sub('{\*}', '.*', sglob)
+        rgx = rgx + '$'
         d = self.getDirectory()
 
         # What should turn red here????
         if not d or not os.path.exists(d):
             print(f'Cannot locate directory "{d}".')
+            self.fui.ibInfileLbl.setText(sedit)
+            self.fui.ibInfileLbl.setStyleSheet("color: red;")
             return
         fs = list()
         for f in os.listdir(d):
@@ -207,12 +221,12 @@ class FileSetCtrl(QDialog):
             fname = fs[0]
         else:
             fname = sglob
-        fname = os.path.join(d, fname)
-        if not os.path.exists(fname):
-            self.fui.ibInfile.setStyleSheet("color: red;")
+        fpathname = os.path.join(d, fname)
+        if not os.path.exists(fpathname):
+            self.fui.ibInfileLbl.setStyleSheet("color: red;")
         else:
-            self.fui.ibInfile.setStyleSheet("color: green;")
-        self.fui.ibInfile.setText(fname)
+            self.fui.ibInfileLbl.setStyleSheet("color: green;")
+        self.fui.ibInfileLbl.setText(fpathname)
         self.settings.setValue('ibInfile', sglob)
 
     def setDASInfile2Name(self):
@@ -227,62 +241,28 @@ class FileSetCtrl(QDialog):
         '''
         Call only when file settings dialog (self.fui) is active.
         '''
-        inpath = self.getDirectory()
-        if not inpath:
-            return
-        infile2 = self.fui.dasInfile2.text()
-        infile2 = os.path.split(infile2)[1]
-        self.settings.setValue('dasInfile2', infile2)
-
-        self.fui.scheme.setStyleSheet("color: black;")
-        inpathfile = os.path.join(inpath, infile2)
-        if not os.path.exists(inpathfile):
-            self.fui.dasInfile2.setStyleSheet("color: red;")
+        fname = self.fui.dasInfile2.text()
+        dasInfile2Lbl = os.path.join(self.getDirectory(), fname)
+        self.fui.dasInfile2Btn.setText(dasInfile2Lbl)
+        if os.path.exists(dasInfile2Lbl):
+            self.fui.dasInfile2Lbl.setStyleSheet("color: green;")
         else:
-            self.fui.dasInfile2.setStyleSheet("color: green;")
-        self.fui.dasInfile2.setText(inpathfile)
-
-    def setDASInfileName(self):
-        '''
-        Call only when file settings dialog (self.fui) is active.
-        '''
-        fname = self.settings.value('dasInfile')
-        self.fui.dasInfile.setText(fname)
-        self.fui.dasInfile.setStyleSheet("color: black;")
+            self.fui.dasInfile2Lbl.setStyleSheet("color: red;")
+        self.settings.setValue('dasInfile2', fname)
 
     def setDASInfile(self):
         '''
         Call only when file settings dialog (self.fui) is active.
         '''
-        scheme = self.settings.value('scheme')
-        journal = self.settings.value('journal')
-        infile = self.fui.dasInfile.text()
-        infile = os.path.split(infile)[1]
-        self.settings.setValue('dasInfile', infile)
-        if not scheme or not journal or not infile:
-            return
+        fname = self.fui.dasInfile.text()
+        dasInfileLbl = os.path.join(self.getDirectory(), fname)
+        self.fui.dasInfileLbl.setText(dasInfileLbl)
+        if os.path.exists(dasInfileLbl):
+            self.fui.dasInfileLbl.setStyleSheet("color: green;")
+        else: 
+            self.fui.dasInfileLbl.setStyleSheet("color: red;")
+        self.settings.setValue('dasInfile', fname)
 
-        d = self.settings.value('theDate')
-        if isinstance(d, (QDate, QDateTime)):
-            d = qtime2pd(d)
-        Year = d.year
-        month = d.strftime('%m')
-        MONTH = d.strftime('%B')
-        day = d.strftime('%d')
-        DAY = d.strftime('%A')
-        try:
-            schemeFmt = scheme.format(
-                Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
-            self.fui.scheme.setStyleSheet("color: black;")
-        except KeyError:
-            return
-        inpathfile = os.path.join(journal, schemeFmt)
-        inpathfile = os.path.join(inpathfile, infile)
-        if not os.path.exists(inpathfile):
-            self.fui.dasInfile.setStyleSheet("color: red;")
-        else:
-            self.fui.dasInfile.setStyleSheet("color: green;")
-        self.fui.dasInfile.setText(inpathfile)
 
     def setTheScheme(self, scheme):
         '''
@@ -303,12 +283,19 @@ class FileSetCtrl(QDialog):
         try:
             schemeFmt = scheme.format(
                 Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
-            self.fui.scheme.setStyleSheet("color: black;")
+            # self.fui.scheme.setStyleSheet("color: black;")
         except (KeyError, ValueError):
-            self.fui.scheme.setStyleSheet("color: red;")
+            # self.fui.scheme.setStyleSheet("color: red;")
             schemeFmt = scheme
 
+        indir = self.fui.journal.text()
+        schemeFmt = os.path.join(indir, schemeFmt)
         self.fui.schemeLbl.setText(schemeFmt)
+        if os.path.exists(schemeFmt):
+            self.fui.schemeLbl.setStyleSheet("color: green;")
+        else:
+            self.fui.schemeLbl.setStyleSheet("color: red;")
+
         self.fui.scheme.setText(scheme)
         self.settings.setValue('scheme', scheme)
 

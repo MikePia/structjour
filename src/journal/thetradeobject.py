@@ -697,7 +697,6 @@ class TheTradeObject:
             self.TheTrade['chart'+ str(i+1) + 'End'] = finish
             self.TheTrade['chart'+ str(i+1) + 'Interval'] = di
 
-
     def __setTarget(self):
         '''Interview the user for the target. targdiff is handled as a formula elsewhere'''
         target = 0
@@ -824,7 +823,8 @@ class TheTradeObject:
                 self.TheTrade[self.srf.mstknote] = "Exceeded Stop Loss!"
 
     def __blandSpaceInMstkNote(self):
-        self.TheTrade[self.srf.mstknote] = "Final note"
+        pass
+        # self.TheTrade[self.srf.mstknote] = "Final note"
 
     def __setExplainNotes(self):
         # self.TheTrade[self.srf.explain] = "Technical description of the trade"
