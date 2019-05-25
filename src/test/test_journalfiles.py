@@ -1,3 +1,20 @@
+# Structjour -- a daily trade review helper
+# Copyright (C) 2019 Zero Substance Trading
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 '''
 Created on Aug 30, 2018
 
@@ -73,7 +90,7 @@ class TestJF(unittest.TestCase):
         self.assertEqual(os.path.realpath(os.path.join('data/', f)), os.path.realpath(
             jf.inpathfile), "Structjour failed to correctly set the input file")
 
-    def testDevelDefaultCreate(self):
+    def test_DevelDefaultCreate(self):
         '''
         Tests the default creation if its Monday to Friday.  Tests the previus Friday's date
         using param theDate otherwise. This will fail if you neglected to export the trades file
@@ -234,7 +251,8 @@ def main():
 def notmain():
     '''Run some local code'''
     t = TestJF()
-    t.test_DefaultCreate()
+    # t.test_DefaultCreate()
+    t.test_DevelDefaultCreate()
 
 def clstyle():
     '''Run unittests cl style. Can debug'''
@@ -242,6 +260,6 @@ def clstyle():
     unittest.main()
 
 if __name__ == "__main__":
-    # notmain()
+    notmain()
     # main()
-    clstyle()
+    # clstyle()

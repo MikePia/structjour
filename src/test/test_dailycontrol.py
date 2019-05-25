@@ -29,6 +29,7 @@ from  unittest import TestCase
 
 import pandas as pd
 import sqlite3
+from PyQt5 import QtWebEngineWidgets
 from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
 
 from PyQt5.QtTest import QTest

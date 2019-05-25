@@ -1,3 +1,20 @@
+# Structjour -- a daily trade review helper
+# Copyright (C) 2019 Zero Substance Trading
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 '''
 @author: Mike Petersen
 
@@ -149,7 +166,7 @@ class TestMybarchart(unittest.TestCase):
     def test_getbc_intraday_interval(self):
         '''Test the candle intvarls by subtracting strings processed into times'''
         intervals = [2, 6, 60, 15]
-        start = getPrevTuesWed(pd.Timestamp.today())
+        start = getPrevTuesWed(pd.Timestamp.today().date())
         for interval in intervals:
             dummy, df, maList = bc.getbc_intraday("SQ", start=start, minutes=interval)
             if len(df) < 1:
@@ -160,7 +177,7 @@ class TestMybarchart(unittest.TestCase):
             min0 = df.index[0]
             min1 = df.index[1]
 
-            self.assertEqual((min1-min0).seconds, interval*60)
+            self.assertEqual((min1-min0).total_seconds(), interval*60)
 
 
 def main():
@@ -183,10 +200,11 @@ def main():
 def notmain():
     '''Run some local stuff'''
     f = TestMybarchart()
-    f.test_getbc_intraday()
+    # f.test_getbc_intraday()
+    f.test_getbc_intraday_interval()
     # f.test_getbc_intraday_interval()
 
 
 if __name__ == '__main__':
-    main()
-    # notmain()
+    # main()
+    notmain()

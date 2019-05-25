@@ -1,3 +1,19 @@
+# Structjour -- a daily trade review helper
+# Copyright (C) 2019 Zero Substance Trading
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
 Some barchart calls beginning (and ending now) with getHistory. Note that the docs show SOAP code
 to run this in python but as of 12/29/18 the suds module (suds not suds-py3) does not work on my
@@ -234,6 +250,8 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
     # I expect this to fail at some point -- maybe for interval 60 and week old data. Test for it. 
     # This code will not stand either through implementing user control over MAs. Its just good for today
     for key in maDict:
+        if key == 'vwap':
+            continue
         assert len(df) == len(maDict[key])
 
     # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv 
