@@ -10,10 +10,8 @@ Created on April 14, 2019
 import datetime as dt
 import os
 import pickle
-from PIL import Image as PILImage
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Font, colors
-from openpyxl import Workbook
 
 import numpy as np
 import pandas as pd
@@ -29,7 +27,6 @@ from journal.tradestyle import c as tcell
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
 from journal.view.dailycontrol import DailyControl
-from journal.xlimage import XLImage
 
 
 from journal.tradestyle import TradeFormat
@@ -58,6 +55,7 @@ class LayoutForms:
         self.entries = dict()
         rc = SumReqFields()
         self.timeFormat = '%H:%M:%S'
+        self.topMargin = 25             # For use in Excel export
 
         self.sc = sc
         self.tradeSummaries = None
@@ -154,8 +152,7 @@ class LayoutForms:
                 print(ex)
                 print()
                 print("Failed to create file {0}.{1}".format(saveName, ex))
-                print(
-                    "Images from the clipboard were saved  in {0}".format(jf.outdir))
+                print("Images from the clipboard were saved  in {0}".format(jf.outdir))
                 (nm, ext) = os.path.splitext(jf.outpathfile)
                 saveName = "{0}({1}){2}".format(nm, count, ext)
                 print("Will try to save as {0}".format(saveName))
@@ -166,16 +163,17 @@ class LayoutForms:
                         "Failed to create file {0}".format(saveName)))
                 continue
             except Exception as ex:
-                print(ex)
+                print(ex.__class__, ex)
             break
 
-    def populateDailySummaryForm(self, mistake, ws, anchor):
+    def populateXLDailySummaryForm(self, mistake, ws, anchor):
         '''
-        Populate the daily Summary Form. The PL values are retrieved from TheTradeList. The static
-        labels are set earlier. This method sets some statistics and notes for things like
-        regarding average winners/losers etc.
-        :params listOfTrade: A python list of the Summary Trade DataFrame, aka TheTrade, each one
-                             is a single row DataFrame containg all the data for trade summaries.
+        For the export to excel daily summary forms.
+        Populate the daily Summary Form. The values are retrieved from self.ts via the
+        DailyControl dialog object-without calling runDialog. The static labels are set earlier
+        at the creation of the form shape/style. This method sets some statistics and notes for
+        things like  average winners/losers etc.
+
         :params mistke:
         :params ws: The openpyxl Worksheet object
         :raise Value Error: When pl is misformatted and cannot be used.
@@ -184,28 +182,21 @@ class LayoutForms:
         dc = DailyControl()
         dailySumData = dc.gatherDSumData(self.ts)
         anchor = (anchor[0], anchor[1] + mistake.numTrades + 5)
-        self.DSFAnchor = anchor
         for key in dailySumData.keys():
             rng = mistake.dailySummaryFields[key][0]
             if isinstance(rng, list):
                 rng = rng[0]
             ws[tcell(rng, anchor=anchor)] = dailySumData[key]
 
-    def populateMistakeForm(self, mistake, ws, imageLocation):
+    def populateXLMistakeForm(self, mistake, ws, imageLocation):
         '''
+        For the export to excel the mistake summary form.
         Populate the dynamic parts of mistake summaries. That includes fomulas with references to
-        tradeSummaries and hyperlinks to the same. The anchor info for the tradeSummaries cell translation is in
-        imageLocation and the specific location of the transaltions is in the mistakeFields. Th
-        return hyperlinks in the tradeSummaries forms are also translated here.
-        The form and the static content are already created presumably in the ws in the arguments.
-        Either way we create the info into the given ws.
-        :Programming note: MistakeSummaries form is not a one-place creation because of the hard-
-                           coded stuff in this method. With some careful work, it could be. It
-                           would involve placing all the data we need for the hyperlinks (other
-                           than cell transation), in the mistakeFields or in the formula dict.
-                           blwntffczmlz
-        :params tradeSummaries: A dataframe containing the the trade summaries info, one line per
-                                trade.
+        tradeSummaries and hyperlinks to the same. The cell location for the links to tradeSummaries
+        requires then anchor information in imageLocation and the specific cell within
+        tradeSummaries found in mistakeFields. The return hyperlinks in the tradeSummaries forms are
+        also translated here.
+
         :parmas mistake: A dataframe containing the info to populate the mistake summary form.
         :params ws: The openpyxl worksheet object.
         :parmas imageLocation: A list containing the locations in the worksheet for each of the
@@ -231,8 +222,7 @@ class LayoutForms:
             ws[targetcell].hyperlink = (link)
             ws[targetcell].font = Font(color=colors.WHITE, size=16, underline="double")
 
-        # Populate the pl (loss) fields and the mistake fields. These are all simple formulas
-        # like =B31
+        # Populate the pl (loss) fields and the mistake fields. These are all formulas like =B31
         tokens = ["tpl", "pl", "mistake"]
         for token in tokens:
             for i in range(len(self.ts)):
@@ -251,29 +241,27 @@ class LayoutForms:
                 # print("ws[{0}]='{1}'".format(cell, formula))
                 ws[cell] = formula
 
-    def placeImages(self, imageLocation, ldf, jf, ws, tf):
+    def placeImages(self, imageLocation, ws, tf):
         '''
         '''
 
         # tradeSummaries = list()
-        XL = XLImage()
         srf = SumReqFields()
         settings = QSettings('zero_substance', 'structjour')
 
         # response = askUser("Would you like to enter strategy names, targets and stops?   ")
 
-        for loc, tradekey in zip(imageLocation, self.ts):
-            tto = self.ts[tradekey]
+        for loc in imageLocation:
+            # tto = self.ts[tradekey]
             fname = loc[1][0]
             if not os.path.exists(fname):
-                print (fname)
+                print(fname)
                 outdir = settings.value('outdir')
                 fname = os.path.join(outdir, fname)
                 if not os.path.exists(fname):
                     continue
             img = Image(fname)
 
-            # Hidden here is the location to place the chart on the page.
             if img:
                 col = srf.maxcol() + 1
                 col = tcell((col, 1))[0]
@@ -281,20 +269,26 @@ class LayoutForms:
                 ws.add_image(img, cellname)
 
             #Put together the trade summary info for each trade and interview the trader
-
+        
             #Place the format shapes/styles in the worksheet
             tf.formatTrade(ws, srf, anchor=(1, loc[0]))
+    
+    def populateXLDailyFormulas(self, imageLocation, ws):
+        srf = SumReqFields()
+        for loc, tradekey in zip(imageLocation, self.ts):
+            tto = self.ts[tradekey]
 
             #populate the trade information
-            for key in srf.tfcolumns.keys():
-                print(key)
-                print(srf.tfcolumns[key][0])
+            for key in srf.tfcolumns:
+                # print(key)
+                # print(srf.tfcolumns[key][0])
                 cell = srf.tfcolumns[key][0]
                 if isinstance(cell, list):
                     cell = cell[0]
                 tradeval = tto[key].unique()[0]
 
-                print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval, tcell(cell, anchor=(1, loc[0]))))
+                # print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell,
+                # tradeval, tcell(cell, anchor=(1, loc[0]))))
 
                 # Put some formulas in each trade Summary
                 if key in srf.tfformulas:
@@ -314,10 +308,9 @@ class LayoutForms:
 
                 ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
 
-        # print("Done with interview")
-        return 
+        return
 
-    def imageDataFromQt(self, df, ldf, ft="png"):
+    def imageDataFromQt(self, df, ldf):
         '''
         Gather the image names and determine the locations in the Excel doc to place them. Excel
         has a few things at top followed by trade summaries, charts and tables for each trade.
@@ -326,7 +319,6 @@ class LayoutForms:
         :params df: The DataFrame representing the input file plus some stuff added in
                     processOutputFile
         :params ldf: A list of dataFrames. Each encapsulates a trade.
-        :parmas ft: Image filetype extension. (NOT USED)
         :return (Imagelocation, df): ImageLocation contains information about the excel document
                     locations of trade summaries and image locations. The dataFrame df is the
                     outline used to create the workbook, ImageLocation will be used to stye it
@@ -346,7 +338,7 @@ class LayoutForms:
         newdf = DataFrameUtil.createDf(df, self.topMargin)
 
         df = newdf.append(df, ignore_index=True)
- 
+
         imageLocation = list()
         count = 0
         imageNames = dict()
@@ -360,9 +352,9 @@ class LayoutForms:
             key = key.split(' ')
             newkey = 'Trade ' + key[0]
             imageNames[newkey] = images
-            
+
         for tdf in ldf:
-            theKey=tdf[frq.tix].unique()[-1]
+            theKey = tdf[frq.tix].unique()[-1]
             imageName = imageNames[theKey]
 
             # Holds location, deprected name, image name, trade start time, trade duration as delta
@@ -379,7 +371,9 @@ class LayoutForms:
         return imageLocation, df
 
     def exportExcel(self):
-        self.topMargin = 25
+        '''
+        Export to excel the trade tables, trade summaries, and daily forms
+        '''
 
         # Create the space in dframe to add the summary information for each trade.
         # Then create the Workbook.
@@ -403,10 +397,12 @@ class LayoutForms:
         mistake.dailySumStyle(ws, tf, mstkAnchor)
 
         # tradeSummaries = ls.runSummaries(imageLocation, ldf, self.jf, ws, tf)
-        self.placeImages(imageLocation, ldf, self.jf, ws, tf)
+        self.placeImages(imageLocation, ws, tf)
+        self.populateXLDailyFormulas(imageLocation, ws)
+        
 
-        self.populateMistakeForm(mistake, ws, imageLocation)
-        self.populateDailySummaryForm(mistake, ws, mstkAnchor)
+        self.populateXLMistakeForm(mistake, ws, imageLocation)
+        self.populateXLDailySummaryForm(mistake, ws, mstkAnchor)
 
 
         self.save(wb, self.jf)
@@ -428,7 +424,7 @@ class LayoutForms:
         '''pickle tto list'''
         assert self.ts
         assert self.entries
-        
+
         # if not self.df is None:
         #     self.reloadit()
 
@@ -482,12 +478,12 @@ class LayoutForms:
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
         return tradeSummaries
- 
+
     def reloadit(self):
         from journal.statement import Statement_DAS as Ticket
         from journal.statement import Statement_IBActivity
         from journal.pandasutil import InputDataFrame
-        
+
         infile = self.jf.inpathfile
         if not os.path.exists(infile):
             print("There is a problem. Unable to fully save this file.")
@@ -506,7 +502,7 @@ class LayoutForms:
             df, self.jf = tkt.getTrades()
 
         idf = InputDataFrame()
-        trades,  success = idf.processInputFile(df, self.jf.theDate, self.jf)
+        trades, success = idf.processInputFile(df, self.jf.theDate, self.jf)
         self.df = trades
         if not success:
             return
@@ -588,7 +584,7 @@ class LayoutForms:
 
         strat = tto['Strategy'].unique()[0]
         self.sc.loadStrategies(strat)
-        
+
         self.sc.setChartTimes()
         iname1 = self.sc.ui.chart1Name.text()
         iname2 = self.sc.ui.chart2Name.text()
@@ -606,7 +602,7 @@ class LayoutForms:
         '''
         The entries are pickled seperately in the dict self.entries. It uses parallel keys to
         self.ts. This data is trade information, read only and is used currently for chart
-        generation. The data structure is: 
+        generation. The data structure is:
         [price, time, share, pl, diff, entryOrExit]. Share is positive for buy, negative for sell.
         :params key: Trade name from the tradeList widget
         '''
@@ -756,7 +752,7 @@ class LayoutForms:
     def setStrategy(self, key, val):
         '''Sets tto strategy to val'''
         self.ts[key][self.rc.strat] = val
-    
+
     def getStrategy(self, key):
         val = self.ts[key][self.rc.strat].unique()[0]
         return val
@@ -816,7 +812,6 @@ class LayoutForms:
             # Just in case the name is missing
             b = pd.Timestamp(data[1])
             e = pd.Timestamp(data[2])
-            
 
             delt = e - b
             bstring = b.strftime('%H%M%S')
