@@ -63,6 +63,18 @@ class DailyControl(QWidget):
         self.ui.setupUi(self)
 
         self.date = daDate
+        apiset = QSettings('zero_substance/stockapi', 'structjour')
+        self.db = apiset.value('dbsqlite')
+        if not self.db:
+            j = self.settings.value('journal')
+            if not j:
+                print('Please set the location of the your journal directory.')
+                EJControl()
+                j = self.settings.value('journal')
+                if not j:
+                    return
+            self.db = os.path.join(j, 'structjour.sqlite')
+            apiset.setValue('dbsqlite', self.db)
 
     def createTable(self):
         '''create db table'''
@@ -193,18 +205,6 @@ class DailyControl(QWidget):
         self.ui.dailyNotes.clicked.connect(self.saveNotes)
         self.ui.dailyNotes.textChanged.connect(self.dNotesChanged)
 
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
-        self.db = apiset.value('dbsqlite')
-        if not self.db:
-            j = self.settings.value('journal')
-            if not j:
-                print('Please set the location of the your journal directory.')
-                EJControl()
-                j = self.settings.value('journal')
-                if not j:
-                    return
-            self.db = os.path.join(j, 'structjour.sqlite')
-            apiset.setValue('dbsqlite', self.db)
 
 
         self.createTable()

@@ -146,6 +146,7 @@ class runController:
         margin = 25
 
         lf = LayoutForms(self.sc, jf, dframe)
+        lf.pickleitnow()
         tradeSummaries = lf.runSummaries(ldf)
         # self.ldf = ldf
         # self.dframe = dframe
@@ -154,12 +155,11 @@ class runController:
 
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
+
+    # Paths used in summaryform.ui rely on cwd .
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     w = SumControl()
-    # formUi = Ui_MainWindow()
-    # formUi.setupUi(w)
-    # sc = SumControl(formUi)
     rc = runController(w)
     w.show()
     sys.exit(app.exec_())

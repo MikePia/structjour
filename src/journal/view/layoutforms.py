@@ -26,6 +26,8 @@ Created on April 14, 2019
 import datetime as dt
 import os
 import pickle
+from PIL import Image as PILImage
+
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Font, colors
 
@@ -43,6 +45,7 @@ from journal.tradestyle import c as tcell
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
 from journal.view.dailycontrol import DailyControl
+from journal.xlimage import XLImage
 
 
 from journal.tradestyle import TradeFormat
@@ -182,6 +185,15 @@ class LayoutForms:
                 print(ex.__class__, ex)
             break
 
+    def populateXLDailyNote(self, ws):
+        cell = (1, 6)
+        cell = tcell(cell)
+        dc = DailyControl(self.jf.theDate)
+        note = dc.getNote()
+        if note:
+            ws[cell] = note
+    
+    
     def populateXLDailySummaryForm(self, mistake, ws, anchor):
         '''
         For the export to excel daily summary forms.
@@ -225,7 +237,7 @@ class LayoutForms:
             key = "name" + str(i+1)
             cell = mistake.mistakeFields[key][0][0]
             cell = tcell(cell, anchor=mistake.anchor)
-            targetcell = (1, iloc[0])
+            targetcell = (1, iloc[0][0][1])
             targetcell = tcell(targetcell)
             cellval = "{0} {1} {2}".format(i+1, tsum.Name.unique()[0], tsum.Account.unique()[0])
             link = "#{}!{}".format(ws.title, targetcell)
@@ -251,7 +263,7 @@ class LayoutForms:
             #     print(cell)
                 formula = mistake.formulas[key][0]
                 targetcell = mistake.formulas[key][1]
-                targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0]))
+                targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0][0][1]))
                 formula = formula.format(targetcell)
 
                 # print("ws[{0}]='{1}'".format(cell, formula))
@@ -262,6 +274,7 @@ class LayoutForms:
         '''
 
         # tradeSummaries = list()
+        CELLS = 20 #trial and error here
         srf = SumReqFields()
         settings = QSettings('zero_substance', 'structjour')
 
@@ -269,25 +282,36 @@ class LayoutForms:
 
         for loc in imageLocation:
             # tto = self.ts[tradekey]
-            fname = loc[1][0]
-            if not os.path.exists(fname):
-                print(fname)
-                outdir = settings.value('outdir')
-                fname = os.path.join(outdir, fname)
-                if not os.path.exists(fname):
-                    continue
-            img = Image(fname)
-
-            if img:
-                col = srf.maxcol() + 1
-                col = tcell((col, 1))[0]
-                cellname = col + str(loc[0])
-                ws.add_image(img, cellname)
-
-            #Put together the trade summary info for each trade and interview the trader
-        
+            # fname = loc[1][0] if loc[1] else ''
             #Place the format shapes/styles in the worksheet
-            tf.formatTrade(ws, srf, anchor=(1, loc[0]))
+            tf.formatTrade(ws, srf, anchor=(1, loc[0][0][1]))
+            for iloc, fn in zip(loc[0], loc[1]):
+                print(fn)
+                if not os.path.exists(fn):
+                    print(fn)
+                    continue
+                    # outdir = settings.value('outdir')
+                    # fname = os.path.join(outdir, fname)
+                    # if not os.path.exists(fname):
+                    #     continue
+
+                img = PILImage.open(fn)
+                xl = XLImage()
+                newSize = xl.adjustSizeByHeight(img.size, CELLS)
+                img = img.resize(newSize, PILImage.ANTIALIAS)
+                img.save(fn, 'png')
+                img = Image(fn)
+
+
+                if img:
+                    col = srf.maxcol() + 1
+                    col = tcell((col, 1))[0]
+                    cellname = col + str(iloc[1])
+                    cellname = tcell(iloc)
+                    ws.add_image(img, cellname)
+
+                #Put together the trade summary info for each trade and interview the trader
+        
     
     def populateXLDailyFormulas(self, imageLocation, ws):
         srf = SumReqFields()
@@ -309,7 +333,7 @@ class LayoutForms:
                 # Put some formulas in each trade Summary
                 if key in srf.tfformulas:
 
-                    anchor = (1, loc[0])
+                    anchor = (1, loc[0][0][1])
                     formula = srf.tfformulas[key][0]
                     args = []
                     for c in srf.tfformulas[key][1:]:
@@ -322,23 +346,21 @@ class LayoutForms:
                     tradeval = pd.Timestamp(tradeval)
 
 
-                ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
+                ws[tcell(cell, anchor=(1, loc[0][0][1]))] = tradeval
 
         return
 
     def imageDataFromQt(self, df, ldf):
         '''
-        Gather the image names and determine the locations in the Excel doc to place them. Excel
-        has a few things at top followed by trade summaries, charts and tables for each trade.
-        Return with the image name/location data structure. The structure can be used for the Excel
-        DataFrame-- to navigate summary form locations and just for the names
+        Gather the image names and determine the locations in the Excel doc to place them. Create
+        the empty rows in the df as we determine the image locations.
         :params df: The DataFrame representing the input file plus some stuff added in
                     processOutputFile
         :params ldf: A list of dataFrames. Each encapsulates a trade.
         :return (Imagelocation, df): ImageLocation contains information about the excel document
                     locations of trade summaries and image locations. The dataFrame df is the
-                    outline used to create the workbook, ImageLocation will be used to stye it
-                    and fill in the stuff.
+                    outline used to create the workbook. This method has increased its row size to
+                    its finished size.
         '''
         # Add rows and append each trade, leaving space for an image. Create a list of
         # names and row numbers to place images within the excel file (imageLocation
@@ -350,6 +372,11 @@ class LayoutForms:
         sumSize = srf.maxrow() + 5
         summarySize = sumSize
         spacing = 3
+
+        # Image column location
+        c1col = 13
+        c2col = 1
+        c3col = 9
         frq = FinReqCol()
         newdf = DataFrameUtil.createDf(df, self.topMargin)
 
@@ -364,7 +391,8 @@ class LayoutForms:
             charts = ['chart1', 'chart2', 'chart3']
             for chart in charts:
                 if chart in keys:
-                    images.append(self.ts[key][chart].unique()[0])
+                    if os.path.exists(self.ts[key][chart].unique()[0]):
+                        images.append(self.ts[key][chart].unique()[0])
             key = key.split(' ')
             newkey = 'Trade ' + key[0]
             imageNames[newkey] = images
@@ -372,9 +400,20 @@ class LayoutForms:
         for tdf in ldf:
             theKey = tdf[frq.tix].unique()[-1]
             imageName = imageNames[theKey]
+            xtraimage = 0
+            if len(imageName) > 1:
+                xtraimage = 21
+            ilocs = []
+            #Need 1 entry even if there are no images
+            ilocs.append((c1col, len(tdf) + len(df) + spacing))
+            for i in range(0, len(imageName)):
+                if i == 1:
+                    ilocs.append((c2col, len(tdf) + len(df) + spacing + 20))
+                elif i == 2:
+                    ilocs.append((c3col, len(tdf) + len(df) + spacing + 20))
 
-            # Holds location, deprected name, image name, trade start time, trade duration as delta
-            imageLocation.append([len(tdf) + len(df) + spacing,
+            # Holds image locations,image names, image name, trade start time, trade duration as delta
+            imageLocation.append([ilocs,
                                   imageName,
                                   tdf.Start.unique()[-1],
                                   tdf.Duration.unique()[-1]])
@@ -383,7 +422,7 @@ class LayoutForms:
 
             # Append the mini trade table then add rows to fit the tradeSummary form
             df = df.append(tdf, ignore_index=True)
-            df = DataFrameUtil.addRows(df, summarySize)
+            df = DataFrameUtil.addRows(df, summarySize + xtraimage)
         return imageLocation, df
 
     def exportExcel(self):
@@ -419,6 +458,7 @@ class LayoutForms:
 
         self.populateXLMistakeForm(mistake, ws, imageLocation)
         self.populateXLDailySummaryForm(mistake, ws, mstkAnchor)
+        self.populateXLDailyNote(ws)
 
 
         self.save(wb, self.jf)
@@ -479,6 +519,10 @@ class LayoutForms:
                 return
             else:
                 (self.ts, self.entries, self.df) = test
+                # name = 'C:/trader/journal/_201905_May/_0522_Wednesday/out/.trades_0522_Wednesday.zst'
+                # with open(name, "rb") as f:
+                #     test = pickle.load(f)
+                #     self.df = test
 
         print('load up the trade names now')
         tradeSummaries = []

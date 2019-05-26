@@ -16,8 +16,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 '''
-Integration test of structjour. Especially tests on Overnight holds. I plan to bareak the current
-behavior but not before this version is tested more completely.
+This is an integration test. Maybe it doesn't belong in the unit tests. Its slow and cumbersome
+Integration test of structjour. Especially tests on Overnight holds. Its valuable because it uses
+real data as input. Other tests a random trade generator.
 
 @created_on Feb 2, 2019
 
@@ -26,6 +27,7 @@ behavior but not before this version is tested more completely.
 import os
 from unittest import TestCase
 from unittest.mock import patch
+import unittest
 from collections import deque
 import re
 
@@ -230,8 +232,11 @@ class TestStructjour(TestCase):
                 self.assertGreater(len(x), 0)
                 # print('passed')
 
+def main():
+    unittest.main()
 
 if __name__ == '__main__':
     # pylint: disable = E1120
-    ttt = TestStructjour()
-    ttt.test_run()
+    # ttt = TestStructjour()
+    # ttt.test_run()
+    main()

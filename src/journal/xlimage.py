@@ -39,7 +39,7 @@ class XLImage:
     '''Handle image stuff'''
 
 #     20.238095238095237
-    def __init__(self, default='C:/python/E/structjour/src/data/defaultImage.png', heightInCells=20, pixPerCell=19.3):
+    def __init__(self, default='../../images/ZeroSubstanceCreation_500x334.png', heightInCells=20, pixPerCell=19.3):
         '''
         Create the XLImage, set the name and the size image here.
         :params default: Location of a default image to use
@@ -51,7 +51,11 @@ class XLImage:
 
         '''
         if not os.path.exists(default):
-            raise ValueError
+            ddiirr = os.path.dirname(__file__)
+            os.chdir(os.path.realpath(ddiirr))
+            os.chdir(os.path.realpath('../'))
+            if not os.path.exists(default):
+                print('Cannot locate default image', default)
         self.defaultImage = default
         self.numCells = heightInCells
         self.pixPerCell = pixPerCell
@@ -63,7 +67,6 @@ class XLImage:
         Adjust size to keep the aspect ratio the same as determined by self.numCells and
         self.pixPerCell
         '''
-        #TODO Make some contraption to adjust the size by the user.
         w, h = sz
         cells = cells if cells else self.numCells
         newHeight = cells * self.pixPerCell
@@ -80,7 +83,6 @@ class XLImage:
     def getPilImageNoDramaForReal(self, name):
         '''
         '''
-
         #Setting  a default size for this method-- this should go in pref somehow
         img = None
         try:
@@ -235,6 +237,12 @@ class XLImage:
         :params outdir: The location to save to.
         :return: A tuple (newFileName, extension)
         '''
+        import re
+        def resub(s):
+            '''Callable for re.sub. I am sure there is very cool concise re thing to do this but wtf.'''
+            digit = s.string[s.span()[0]+1:s.span()[1]-1]
+            digit = str((int(digit)+1))
+            return '(' + digit + ')'
 
         orig = orig.replace(":", "-")
         x = os.path.splitext(orig)
@@ -243,12 +251,17 @@ class XLImage:
         self.name = newName
 
         newName = os.path.join(os.path.normpath(outdir), newName)
-        count = 0
+        # count = 0
         while True:
-            count += 1
+            # count += 1
             if os.path.exists(newName):
+
+        
                 nn, ext = os.path.splitext(newName)
-                newName = '{}_({}){}'.format(nn, + count, ext)
+                nn2 = re.sub('\\((-?\\d+)\\)', resub, nn)
+                if nn2 == nn:
+                    nn2 = nn2 + '(1)'
+                newName = '{}{}'.format(nn2, ext)
             else:
                 break
 
