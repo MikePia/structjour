@@ -381,9 +381,10 @@ class FinPlot:
         alpha = float(self.chartSet.value('markeralpha', 0.5))
         for entry in self.entries:
             e = entry[3]
-            if entry[1] < 0 or entry[1] > (len(df_ohlc)-1):
+            candleIndex = int((e -df_ohlc.index[0]).total_seconds()/60//minutes)
+            if candleIndex < 0 or candleIndex > (len(df_ohlc)-1):
                 continue
-            x = df_ohlc.index[entry[1]]
+            x = df_ohlc.index[candleIndex]
             y = entry[0]
             if entry[2] == 'B':
                 facec = self.chartSet.value('markercolorup', 'g')
