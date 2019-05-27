@@ -48,6 +48,8 @@ from bs4 import BeautifulSoup, __version__ as bs4v
 from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
 
+from journalfiles import JournalFiles
+
 print ('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)
 print('Beautiful Soup ' + bs4v)
@@ -253,18 +255,19 @@ class Statement_IBActivity:
         '''
         if url:
             soup = BeautifulSoup(readit(url), 'html.parser')
-        positions = self.getPositions(None, soup)
+        positions = self.getPositions(soup)
         tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblTransactions'))
-        account = getId_IBActivity(soup)
+        # account = getId_IBActivity(soup)
         assert len(tbldivs) == 1
         tableTag = tbldivs[0].find("table")
         df = pd.read_html(str(tableTag))
         assert len(df) == 1
-        df = filterTrades_IBActivity(df[0])
+        # df = self.filterTrades_IBActivity(df[0])
+        df = df[0]
         curPositions = list()
         for s in df.Symbol.unique():
-            if s in positions.Symbol.unique():
-                daybal = float(positions[positions.Symbol == s].Quantity)
+            if s in positions.Symb.unique():
+                daybal = float(positions[positions.Symb == s].Shares)
             else:
                 daybal = 0
             if daybal != 0:
@@ -391,11 +394,6 @@ class Statement_IBActivity:
         df = df.rename(columns={'Symbol': 'Symb', 'Quantity': 'Shares'})
         
         return df
-        
-
-        
-
-
 
     def filterTrades_IBActivity(self, df):
         newtrades = pd.DataFrame()
@@ -417,7 +415,7 @@ class Statement_IBActivity:
         rc = ReqCol()
         if 'PL' not in df.columns:
             df['PL'] = 0
-        df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PL', 'Code']].copy()
+        df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'bal', 'Account', 'Proceeds', 'Comm/Fee', 'PL', 'Code']].copy()
 
         df['Date'] = df['Date/Time']
         df[rc.side] = ''
@@ -453,74 +451,115 @@ class Statement_IBActivity:
         return df
 
 
-    def figurePL_IBActivity(self, df, soup=None, url=None):
+    # def figurePL_IBActivity(self, df, soup=None, url=None):
+    #     df = df.copy()
+    #     df['bal'] = 0
+    #     df['PL'] = 0.0
+    #     df['avg'] = 0.0
+    #     df['mkt'] = 0.0
+    #     # df = df[['Symbol', 'Date/Time', 'Quantity', 'bal', 'T. Price', 'Comm/Fee', 'Realized P/L', 'PL', 'avg', 'Code', 'Proceeds', 'mkt' ]].copy()
+
+    #     newtrade = pd.DataFrame(columns = df.columns)
+    #     # unbal = self.getUnbal_IBActivity(soup=soup, url=url)
+    #     for s in df['Symbol'].unique():
+    #         tdf = df[(df.Symbol == s)].copy()
+    #         bal = costSum = comSum = total = 0.0
+
+    #         firsttrade = True
+    #         avg = 0
+    #         txPL = 0.0
+    #         for count, (i, row) in enumerate(tdf.iterrows()):
+    #             PL = 0.0
+    #             symb, qty, price, comm,  rpl, code = list(row[['Symbol',  'Quantity', 'T. Price', 'Comm/Fee', 'Realized P/L', 'Code',]])
+    #             code = 'O' if 'O' in code else 'C' if 'C' in code else ''
+    #             # this is bound to tringger-- I want to see it when it does
+    #             assert code
+    #             try:
+    #                 qty = int(qty) if qty else 0
+    #                 price = float(price) if price else 0.0
+    #                 rpl = float(rpl) if rpl else 0.0
+    #                 comm = float(comm) if comm else 0.0
+
+    #             except ValueError:
+    #                 msg = f'Bad Value in {row} found in {__file__}'
+    #                 raise ValueError(msg)
+                    
+    #             comSum = comSum + comm
+
+    #             if 'C' in tdf.iloc[0].Code:
+    #                 if 'C' in row['Code']:
+    #                     mkt = qty * price
+    #                     PL = rpl - comSum + txPL
+    #                     txPL = 0.0
+    #                 elif 'O' in row['Code']:
+    #                     txPL = txPL + rpl
+
+    #             elif 'O' in tdf.iloc[0].Code:
+
+    #                 bal = bal + qty
+    #                 mkt = qty * price
+    #                 costSum = costSum + mkt
+    #                 if firsttrade:
+    #                     avg = price
+    #                 if code == 'O':
+    #                     txPL = txPL + rpl
+    #                     if bal != 0:
+    #                         avg = costSum/bal
+    #                 elif code == 'C':
+    #                     PL = (avg - price) * qty
+    #                     txPL = 0
+    #                     total = total + PL
+    #             else:
+    #                 print('hmmm what have we here?')
+
+
+    #             tdf.at[i, 'bal'] = bal
+    #             tdf.at[i, 'PL'] = PL
+    #             tdf.at[i, 'avg'] = avg
+    #             tdf.at[i, 'mkt'] = mkt
+
+    #             newtrade = newtrade.append(tdf.loc[i])
+
+    #             if bal == 0:
+    #                 firsttrade = True
+    #             else:
+    #                 firsttrade = False
+
+
+    #     return newtrade
+
+    def getPL(self, df, soup=None, url=None):
         df = df.copy()
         df['bal'] = 0
         df['PL'] = 0.0
-        df['avg'] = 0.0
-        df['mkt'] = 0.0
-        # df = df[['Symbol', 'Date/Time', 'Quantity', 'bal', 'T. Price', 'Comm/Fee', 'Realized P/L', 'PL', 'avg', 'Code', 'Proceeds', 'mkt' ]].copy()
+        df = df[['Symbol', 'Date/Time', 'Account', 'Quantity', 'bal', 'T. Price', 'Comm/Fee', 'Realized P/L', 'PL',  'Code', 'Proceeds']].copy()
 
         newtrade = pd.DataFrame(columns = df.columns)
-        # unbal = self.getUnbal_IBActivity(soup=soup, url=url)
         for s in df['Symbol'].unique():
             tdf = df[(df.Symbol == s)].copy()
-            bal = costSum = comSum = total = 0.0
+            bal = 0.0
 
-            firsttrade = True
-            avg = 0
             for count, (i, row) in enumerate(tdf.iterrows()):
                 PL = 0.0
-                symb, qty, price, comm,  rpl, code = list(row[['Symbol',  'Quantity', 'T. Price', 'Comm/Fee', 'Realized P/L', 'Code',]])
+                symb, qty, comm,  rpl, code = list(row[['Symbol',  'Quantity',  'Comm/Fee', 'Realized P/L', 'Code',]])
                 code = 'O' if 'O' in code else 'C' if 'C' in code else ''
-                # this is bound to tringger-- I want to see it when it does
                 assert code
                 try:
                     qty = int(qty) if qty else 0
-                    price = float(price) if price else 0.0
                     rpl = float(rpl) if rpl else 0.0
                     comm = float(comm) if comm else 0.0
 
                 except ValueError:
                     msg = f'Bad Value in {row} found in {__file__}'
                     raise ValueError(msg)
-                    
-                comSum = comSum + comm
 
-                if 'C' in tdf.iloc[0].Code:
-                    if 'C' in row['Code']:
-                        mkt = qty * price
-                        PL = rpl - comSum
-
-                elif 'O' in tdf.iloc[0].Code:
-
-                    bal = bal + qty
-                    mkt = qty * price
-                    costSum = costSum + mkt
-                    if firsttrade:
-                        avg = price
-                    if code == 'O':
-                        if bal != 0:
-                            avg = costSum/bal
-                    elif code == 'C':
-                        PL = (avg - price) * qty
-                        total = total + PL
-                else:
-                    print('hmmm what have we here?')
-
-
+                bal = bal + qty
                 tdf.at[i, 'bal'] = bal
-                tdf.at[i, 'PL'] = PL
-                tdf.at[i, 'avg'] = avg
-                tdf.at[i, 'mkt'] = mkt
+                tdf.at[i, 'PL'] = rpl - comm
 
                 newtrade = newtrade.append(tdf.loc[i])
 
-                firsttrade = False
-
-
         return newtrade
-
 
     def getTrades_IBActivity(self, url):
         '''
@@ -539,7 +578,7 @@ class Statement_IBActivity:
 
         df = self.filterTrades_IBActivity(df[0])
         df['Account'] = account
-        df = self.figurePL_IBActivity(df, soup=soup)
+        df = self.getPL(df, soup=soup)
         df = self.normColumns_IBActivity(df)
 
         return df
@@ -707,16 +746,17 @@ def getTrades_csv(infile):
 def runActivity():
     # url = 'http://localhost/DailyTradeReport.20180914.html'
     # filen= 'C:/xampp/htdocs/DailyTradeReport.20180914.html'
-    indir = 'C:/trader/journal/_201903_March/_0301_Friday/'
+    indir = 'C:/trader/journal/_201905_May/_0524_Friday/'
     # infile = 'DailyTradeReport.20190301.html'
 
 
-    infile= 'ActivityStatement.20190301.html'
+    infile= 'ActivityStatement.20190524.html'
     inpathfile = os.path.join(indir, infile)
     # print(inpathfile)
     assert os.path.exists(inpathfile)
+    ibs = Statement_IBActivity(None)
 
-    df = getTrades_IBActivity(inpathfile)
+    df = ibs.getTrades_IBActivity(inpathfile)
     return df
 
 def runCSV():
@@ -732,18 +772,28 @@ def runCSV():
 
 
 def main():
-    df = runCSV()
-    print(df)
-    df = runActivity()
-    print(df)
+    indir = 'C:/trader/journal/_201905_May/_0521_Tuesday/'
+    infile= 'ActivityStatement.20190521.html'
+    indir = 'C:/trader/journal/_201905_May/_0520_Monday/'
+    infile= 'ActivityStatement.20190520.html'
+    # indir = 'C:/trader/journal/_201905_May/_0522_Wednesday/'
+    # infile= 'ActivityStatement.20190522.html'
+    # indir = 'C:/trader/journal/_201905_May/_0523_Thursday/'
+    # infile= 'ActivityStatement.20190523.html'
+    # indir = 'C:/trader/journal/_201905_May/_0524_Friday/'
+    # infile= 'ActivityStatement.20190524.html'
+    inpathfile = os.path.join(indir, infile)
 
-    # df = filter_IBWebTradesTable(df[0])
-    # print(df)
+    ibs = Statement_IBActivity(inpathfile)
+    x = ibs.getUnbal_IBActivity(url=inpathfile)
+    print(x)
 
-def notmain():
-    t = Test_Statements()
-    t.test_getPositionsIB()
+# def notmain():
+    # t = Test_Statements()
+    # t.test_getPositionsIB()
 
 if __name__ == '__main__':
     # main()
-    notmain()
+    # notmain()
+    x = runActivity()
+    print(x)
