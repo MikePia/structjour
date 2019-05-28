@@ -23,7 +23,7 @@ Created on April 8, 2019
 @author: Mike Petersen
 '''
 
-
+import datetime as dt
 from fractions import Fraction
 import os
 import re
@@ -368,6 +368,17 @@ class SumControl(QMainWindow):
     def mousePressEvent(self, event):
         print('mouse Press', (event.x(), event.y()))
 
+    def getChartWidgets(self, c):
+        if c not in ['chart1', 'chart2', 'chart3']:
+            return None
+        if c == 'chart1':
+            widgs = [self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval, self.ui.chart1Name]
+        elif c == 'chart2':
+            widgs = [self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval, self.ui.chart2Name]
+        if c == 'chart3':
+            widgs = [self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval, self.ui.chart3Name]
+        return widgs
+        
     def loadImage1(self, x, event):
         '''
         A signal from ClickLabel
@@ -384,11 +395,13 @@ class SumControl(QMainWindow):
         print('loadIm1ge1', x.objectName(), event.pos(), event.globalPos())
         img = x
         cmenu = QMenu(img)
+        key = self.ui.tradeList.currentText()
 
         pi1 = cmenu.addAction("psych 1")
         pi2 = cmenu.addAction("fractal 2")
         pi3 = cmenu.addAction("starry night 3")
         pi4 = cmenu.addAction("Paste from clipboard")
+        pi5 = cmenu.addAction("Browse for chart")
 
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
@@ -406,7 +419,6 @@ class SumControl(QMainWindow):
             x.setPixmap(QPixmap(fn))
         if action == pi4:
             name = ''
-            key = self.ui.tradeList.currentText()
             if self.lf:
 
                 name = self.lf.getImageName(key, x.objectName())
@@ -429,6 +441,39 @@ class SumControl(QMainWindow):
                 self.ui.chart2Name.setText(nname)
             if xn == 'chart3':
                 self.ui.chart3Name.setText(nname)
+        elif action == pi5:
+            outpolicy = self.settings.value('outdirPolicy')
+            outdir = ''
+            if outpolicy == 'default':
+                outdir = self.getDirectory() + 'out/'
+            else:
+                outdir = self.settings.value('outdir')
+            tnum = 'Trade' + key.split(' ')[0] + '*'
+            path = QFileDialog.getOpenFileName(self, "Select Chart", outdir, f'Image Files(*.png *.jpg *.bmp);;"Trade num ({tnum})')
+            if path[0]:
+                pixmap = QPixmap(path[0])
+                pixmap = pixmap.scaled(x.width(), x.height(), Qt.IgnoreAspectRatio)
+                x.setPixmap(pixmap)
+                d = self.settings.value('theDate')
+
+                data = verifyNameInfo(d, path[0])
+                widgs = self.getChartWidgets(x.objectName())
+                if data[0]:
+                    data[1].insert(0, path[0])
+                    data = data[1]
+                    widgs[0].setDateTime(pd2qtime(data[1]))
+                    widgs[1].setDateTime(pd2qtime(data[2]))
+                    widgs[2].setValue(data[3])
+                else:
+                    data = [path[0], widgs[0].date(), widgs[1].date(), widgs[2].value()]
+                
+
+                self.lf.setChartData(key, data, x.objectName())
+                # p, fname = os.path.split(pname)
+                widgs[3].setText(path[0])
+
+
+
 
     def pasteToLabel(self, widg, name):
         '''
@@ -550,37 +595,30 @@ class SumControl(QMainWindow):
 
     def setChartTimes(self):
         '''
-        Sets the begin and end times from the trade object data
+        Sets the begin and end times from the trade object data or leave it alone
         '''
         key = self.ui.tradeList.currentText()
         c1 = self.lf.getChartData(key, 'chart1')
 
-        self.ui.chart1Name.setText(c1[0])
-        self.ui.chart1Start.setDateTime(pd2qtime(c1[1]))
-        self.ui.chart1End.setDateTime(pd2qtime(c1[2]))
-        self.ui.chart1Interval.setValue(c1[3])
+        if c1:
+            self.ui.chart1Name.setText(c1[0])
+            self.ui.chart1Start.setDateTime(pd2qtime(c1[1]))
+            self.ui.chart1End.setDateTime(pd2qtime(c1[2]))
+            self.ui.chart1Interval.setValue(c1[3])
 
         c2 = self.lf.getChartData(key, 'chart2')
-
-        self.ui.chart2Name.setText(c2[0])
-        self.ui.chart2Start.setDateTime(pd2qtime(c2[1]))
-        self.ui.chart2End.setDateTime(pd2qtime(c2[2]))
-        self.ui.chart2Interval.setValue(c2[3])
+        if c2:
+            self.ui.chart2Name.setText(c2[0])
+            self.ui.chart2Start.setDateTime(pd2qtime(c2[1]))
+            self.ui.chart2End.setDateTime(pd2qtime(c2[2]))
+            self.ui.chart2Interval.setValue(c2[3])
 
         c3 = self.lf.getChartData(key, 'chart3')
-
-        self.ui.chart3Name.setText(c3[0])
-        self.ui.chart3Start.setDateTime(pd2qtime(c3[1]))
-        self.ui.chart3End.setDateTime(pd2qtime(c3[2]))
-        self.ui.chart3Interval.setValue(c3[3])
-        # , self.ui.chart1End),
-        #           (self.ui.chart2Start, self.ui.chart2End),
-        #           (self.ui.chart3Start, self.ui.chart3End)]
-        # fp = FinPlot()
-        # # for w, interval in zip(wlist, l):
-        #     start, finish = fp.setTimeFrame(begin, end, interval)
-        #     w[0].setDateTime(start)
-        #     w[1].setDateTime(finish)
+        if c3:
+            self.ui.chart3Name.setText(c3[0])
+            self.ui.chart3Start.setDateTime(pd2qtime(c3[1]))
+            self.ui.chart3End.setDateTime(pd2qtime(c3[2]))
+            self.ui.chart3Interval.setValue(c3[3])
 
     def dasDefault(self, b):
         self.settings.setValue('inputType', 'DAS')
@@ -864,9 +902,60 @@ class SumControl(QMainWindow):
         stratB.exec()
         self.loadStrategies(None)
 
+def verifyNameInfo(daDate, s):
+    '''
+    Test if the chart filename passes this very specific test to verify it has the info required
+    in the expected format. No harm no foul if it fails.
+    :daDate: The date the chart represents. That info is not in the filename.
+    :s: A chart filename.
+    :return: (True, [begin, end, interval]) if it passed or (False, []) otherwise.
+    '''
+    if isinstance(daDate, (QDateTime, QDate)):
+        daDate = qtime2pd(daDate)
+    if not isinstance(daDate, (pd.Timestamp, dt.datetime)):
+        return False, []
+    daDate = pd.Timestamp(daDate)
+    s = os.path.split(s)[1]
+    s = s.split('_')
+    if s[0].startswith('Trade') and len(s) > 6:
+        if s[2].lower() in ['long', 'short'] and s[5] == 'days' and len(s[3]) == 6:
+            tsplit = s[6].split('.')
+            if len(tsplit) == 3 and s[7].find('min') >=0:
+                try:
+                    int(s[3])
+                    int(s[4])
+                    int(tsplit[0])
+                    int(tsplit[1])
+                    int(tsplit[2])
+                    int(s[7].split('min')[0])
+
+                except ValueError:
+                    return False, []
+                begin = s[3]
+                hour = begin[:2]
+                minute = begin[2:4]
+                second = begin[-2:]
+                d = daDate
+                start = pd.Timestamp(d.year, d.month, d.day, int(hour), int(minute), int(second))
+                days = s[4]
+                delt = pd.Timedelta(days=int(days),
+                                    hours=int(tsplit[0]),
+                                    minutes=int(tsplit[1]),
+                                    seconds=int(tsplit[2]))
+                end = start + delt
+                interval = int(s[7].split('min')[0])
+                
+                return True, [start, end, interval]
+    return False, []
+
 
 
 if __name__ == '__main__':
+
+    # s = 'Trade1_SE_Short_093123_0_days_00.35.37_1min.png'
+    # stng = QSettings('zero_substance', 'structjour')
+    # ddate = pd.Timestamp('2019-05-24')
+    # verifyNameInfo(ddate, s)
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
