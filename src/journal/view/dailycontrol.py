@@ -376,13 +376,14 @@ class DailyControl(QWidget):
         row = [cell]
         self.modelM.appendRow(row)
         row = []
-        for d in ['Name', 'P / L', 'Lost P/L', 'Mistake or pertinent feature of trade']:
+        for d in ['Name', 'P / L', 'Lost Plays', 'Mistake or pertinent feature of trade']:
             cell = QStandardItem(d)
             cell.setFont(QFont('Arial Narrow', pointSize=16, weight=63))
             row.append(cell)
         self.modelM.appendRow(row)
 
-        totalpl = 0
+        totalpl = 0.0
+        totalPlays = 0.0
         if self.ts:
             for trade in self.ts:
                 row = []
@@ -395,13 +396,14 @@ class DailyControl(QWidget):
                 row.append(QStandardItem(pl))
 
                 mVal = self.ts[trade]['MstkVal'].unique()[0]
+                totalPlays = mVal + totalPlays
                 if mVal and isinstance(mVal, (np.floating, float)):
                     mVal = fc(mVal)
                 row.append(QStandardItem(mVal))
 
                 row.append(QStandardItem(self.ts[trade]['MstkNote'].unique()[0]))
                 self.modelM.appendRow(row)
-        row = [QStandardItem(''), QStandardItem(fc(totalpl)), QStandardItem(''), QStandardItem('')]
+        row = [QStandardItem(''), QStandardItem(fc(totalpl)), QStandardItem(fc(totalPlays)), QStandardItem('')]
         self.modelM.appendRow(row)
 
         self.ui.mstkForm.setSpan(0, 0, 1, 4)

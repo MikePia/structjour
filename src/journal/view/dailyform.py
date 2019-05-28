@@ -113,6 +113,7 @@ class Ui_Form(object):
 "</style></head><body style=\" font-family:\'Arial Narrow\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
         self.dailyNotes.setPlaceholderText(_translate("Form", "Notes for daily summary"))
+        self.mstkForm.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:12pt; color:#0000ff;\">The mistake/pertinent feature note is populated from the erroror/summarized field in the trade summaries. The lost plays is populated from the Amt Lost field.</span></p></body></html>"))
         self.label_3.setText(_translate("Form", "Trade Table"))
 
 from journal.view.mytextedit import MyTextEdit

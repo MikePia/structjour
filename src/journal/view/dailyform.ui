@@ -83,6 +83,9 @@ p, li { white-space: pre-wrap; }
          <pointsize>10</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#0000ff;&quot;&gt;The mistake/pertinent feature note is populated from the erroror/summarized field in the trade summaries. The lost plays is populated from the Amt Lost field.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="styleSheet">
         <string notr="true">background-color: rgba(148, 148, 148, 248);
 color: rgb(255, 255, 255);
