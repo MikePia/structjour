@@ -350,24 +350,41 @@ class LayoutForms:
 
         return
 
-    def imageDataFromQt(self, df, ldf):
-        '''
-        Gather the image names and determine the locations in the Excel doc to place them. Create
-        the empty rows in the df as we determine the image locations.
-        :params df: The DataFrame representing the input file plus some stuff added in
-                    processOutputFile
-        :params ldf: A list of dataFrames. Each encapsulates a trade.
-        :return (Imagelocation, df): ImageLocation contains information about the excel document
-                    locations of trade summaries and image locations. The dataFrame df is the
-                    outline used to create the workbook. This method has increased its row size to
-                    its finished size.
-        '''
-        # Add rows and append each trade, leaving space for an image. Create a list of
-        # names and row numbers to place images within the excel file (imageLocation
-        # data structure).
+    def getImageNamesFromTS(self):
+        '''Gathers specific image names as stored in self.ts[tradekey][chartkey]'''
+        count = 0
+        imageNames = dict()
+        for key in self.ts:
+            images = []
+            keys = self.ts[key].keys()
+            charts = ['chart1', 'chart2', 'chart3']
+            for chart in charts:
+                if chart in keys:
+                    if os.path.exists(self.ts[key][chart].unique()[0]):
+                        images.append(self.ts[key][chart].unique()[0])
+            key = key.split(' ')
+            newkey = 'Trade ' + key[0]
+            imageNames[newkey] = images
+        return imageNames
 
-        # Number of rows between trade summaries
 
+    def layoutExcelData(self, df, ldf, imageNames):
+        '''
+        1) Determine the locations in the Excel doc to place trade summaries, trade tables and
+            images.
+        2) Create the empty rows and place the trade tables in the df according to the locations.
+        :params df: We requre the df as  a whole because we are adding rows to it.
+        :params ldf: A list of dataframes, each a trade, each one is placed into our new skeletal
+                     layout for excel
+        :return (Imagelocation, df): ImageLocation contains
+                                [ [list of image location],   # up to 3 per trade
+                                  [list of image names],      # up to 3 per trade
+                                  Start time,
+                                  trade dur,
+                                ]
+        '''
+
+        imageLocation = list()
         srf = SumReqFields()
         sumSize = srf.maxrow() + 5
         summarySize = sumSize
@@ -382,25 +399,10 @@ class LayoutForms:
 
         df = newdf.append(df, ignore_index=True)
 
-        imageLocation = list()
-        count = 0
-        imageNames = dict()
-        for key in self.ts:
-            images = []
-            keys = self.ts[key].keys()
-            charts = ['chart1', 'chart2', 'chart3']
-            for chart in charts:
-                if chart in keys:
-                    if os.path.exists(self.ts[key][chart].unique()[0]):
-                        images.append(self.ts[key][chart].unique()[0])
-            key = key.split(' ')
-            newkey = 'Trade ' + key[0]
-            imageNames[newkey] = images
-
         for tdf in ldf:
             theKey = tdf[frq.tix].unique()[-1]
             imageName = imageNames[theKey]
-            xtraimage = 0
+            xtraimage = 0                       # The amount of space to add for a second/third image
             if len(imageName) > 1:
                 xtraimage = 21
             ilocs = []
@@ -417,8 +419,6 @@ class LayoutForms:
                                   imageName,
                                   tdf.Start.unique()[-1],
                                   tdf.Duration.unique()[-1]])
-            # print(count, imageName, len(imageLocation), len(tdf) + len(df) + 3)
-            count = count + 1
 
             # Append the mini trade table then add rows to fit the tradeSummary form
             df = df.append(tdf, ignore_index=True)
@@ -439,7 +439,8 @@ class LayoutForms:
 
         ls = LayoutSheet(self.topMargin, len(self.df))
         # ldf = list(self.ts.values())
-        imageLocation, dframe = self.imageDataFromQt(self.df, ldf)
+        imageNames = self.getImageNamesFromTS()
+        imageLocation, dframe = self.layoutExcelData(self.df, ldf, imageNames)
         wb, ws, nt = ls.createWorkbook(dframe)
 
         tf = TradeFormat(wb)
@@ -465,16 +466,17 @@ class LayoutForms:
         print("Processing complete. Saved {}".format(self.jf.outpathfile))
         # return jf
 
-    def getDF(self):
-        return self.df
-
-    def pickleitnow(self):
+    def getStoredTradeName(self):
+        '''The name for the pickled trades table for the current, active statement. '''
         name = f'.trades{self.jf.theDate.strftime(self.jf.dayformat)}.zst'
         fname = os.path.join(self.jf.outdir, name)
+        return fname
+
+
+    def pickleitnow(self):
+        fname = self.getStoredTradeName()
         with open(fname, "wb") as f:
             pickle.dump(self.df, f)
-        settings = QSettings('zero_substance', 'structjour')
-        settings.setValue('stored_trades', fname)
 
     def saveTheTradeObject(self, name):
         '''pickle tto list'''
@@ -484,17 +486,17 @@ class LayoutForms:
         # if not self.df is None:
         #     self.reloadit()
 
-        settings = QSettings('zero_substance', 'structjour')
-        dfname = settings.value('stored_trades')
         df = None
-        if dfname:
+        dfname = self.getStoredTradeName()
+        if dfname and os.path.exists(dfname):
             with open(dfname, "rb") as f:
                 df = pickle.load(f)
-        if df is None and self.df:
-            df = self.df
-        if df is None:
+        if df is not None and self.df is None:
+            self.df = df
+        if self.df is None:
             print('Failed to locate the trades information. Pickle FAILED')
-        self.df = df
+            return
+
 
         with open(name, "wb") as f:
             pickle.dump((self.ts, self.entries, df), f)
@@ -569,8 +571,12 @@ class LayoutForms:
 
     def imageData(self, ldf):
         '''
-        Create generic image names. Structjour will use this to create specific names that include
-        interval info. Up to three images can be saved for each trade.
+        Create generic image names, one for each trade. The start and dur are the first and last
+        entries. This is called in the inital loading of a file. More specific names will be used
+        for created charts.
+        :ldf: A list of DataFrames slices from the input dataframe, each includes the transactions
+                for a single trade.
+        :return: A list of the generic images, one per trade.
         '''
 
         frq = FinReqCol()
@@ -868,18 +874,20 @@ class LayoutForms:
         '''
         name = key.replace(' ', '_')
         data = self.getChartData(key, wloc)
-        if data:
-            # Just in case the name is missing
-            b = pd.Timestamp(data[1])
-            e = pd.Timestamp(data[2])
+        
+        if not data:
+            raise ValueError('Raise the error to call attention to programming deficit')
 
-            delt = e - b
-            bstring = b.strftime('%H%M%S')
-            estring = delt.__str__().replace(':', '.')
-            istring = str(data[3]) + 'min'
-            n = 'Trade{}_{}_{}_{}.png'.format(
-                name, bstring, estring, istring)
-            n = n.replace(' ', '_')
+        b = pd.Timestamp(data[1])
+        e = pd.Timestamp(data[2])
+
+        delt = e - b
+        bstring = b.strftime('%H%M%S')
+        estring = delt.__str__().replace(':', '.')
+        istring = str(data[3]) + 'min'
+        n = 'Trade{}_{}_{}_{}.png'.format(
+            name, bstring, estring, istring)
+        n = n.replace(' ', '_')
         if data[0] != n:
             data[0] = n
             self.setChartData(key, data, wloc)
