@@ -75,10 +75,14 @@ class FileSetCtrl(QDialog):
 
         if self.settings.value('outdirPolicy') == 'static':
             self.fui.outdirStatic.setChecked(True)
+            outdir = self.settings.value('outdir')
+            self.fui.outdir.setText(outdir)
         else:
+            self.fui.outdir.setText('out/')
             self.fui.outdirDefault.setChecked(True)
+            self.setOutdirDefault()
         self.setOutdir()
-        fui.outdir.setText(self.settings.value('outdir'))
+        # fui.outdir.setText(self.settings.value('outdir'))
         state = self.settings.value('setToday')
         state = True if state == "true" else False
         fui.theDateCbox.setChecked(state)
@@ -158,10 +162,17 @@ class FileSetCtrl(QDialog):
         indir = self.getDirectory()
         odd = os.path.join(indir, 'out/')
         self.fui.outdirLbl.setText(odd)
+        if os.path.exists(odd):
+            self.fui.outdirLbl.setStyleSheet('color: green')
+        else:
+            self.fui.outdirLbl.setStyleSheet('color: green')
+
+
         self.settings.setValue('outdir', odd)
         self.fui.outdir.setText('out/')
         self.fui.outdir.setFocusPolicy(Qt.NoFocus)
         self.settings.setValue('outdirPolicy', 'default')
+
 
     def setOutdir(self):
         '''
@@ -175,7 +186,7 @@ class FileSetCtrl(QDialog):
         outdir = self.fui.outdir.text()
         outdirpath = os.path.abspath(outdir)
         self.settings.setValue('outdirPolicy', 'static')
-        self.settings.setValue('outdir', outdir)
+        self.settings.setValue('outdir', outdirpath)
         self.fui.outdirLbl.setText(outdirpath)
 
         if os.path.exists(outdirpath):

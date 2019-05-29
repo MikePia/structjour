@@ -34,20 +34,19 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap
 
 import pandas as pd
 
-from journal.stock.utilities import ManageKeys, getMAKeys, qtime2pd, pd2qtime
-from journal.view.summaryform import Ui_MainWindow
+from journal.view.filesetcontrol import FileSetCtrl
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
-from journal.xlimage import XLImage
-from journal.stock.graphstuff import FinPlot
-from journal.stock.utilities import getMAKeys
-
+from journal.view.ejcontrol import EJControl
+from journal.view.dailycontrol import DailyControl
 from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
-from journal.view.dailycontrol import DailyControl
-from journal.view.ejcontrol import EJControl
-from journal.view.filesetcontrol import FileSetCtrl
+from journal.view.summaryform import Ui_MainWindow
+from journal.stock.graphstuff import FinPlot
+from journal.stock.utilities import ManageKeys, getMAKeys, qtime2pd, pd2qtime
+from journal.xlimage import XLImage
 
 from strategy.strategies import Strategy
+
 
 # pylint: disable = C0103
 
@@ -533,6 +532,8 @@ class SumControl(QMainWindow):
         val = self.ui.lost.text()
         note = self.ui.sumNote.toPlainText()
         key = self.ui.tradeList.currentText()
+        if note:
+            self.lf.setClean(key, False)
         if not val:
             if not note:
                 self.lf.setClean(key, True)
@@ -850,13 +851,13 @@ class SumControl(QMainWindow):
         return inpath
 
     def getOutdir(self):
-        op = self.settings.value('outdirPolicy')
-        if op == 'static':
-            return self.settings.value('outdir')
-        outdir = os.path.join(self.getDirectory(), 'out/')
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-        return outdir
+        # op = self.settings.value('outdirPolicy')
+        # if op == 'static':
+        return self.settings.value('outdir')
+        # outdir = os.path.join(self.getDirectory(), 'out/')
+        # if not os.path.exists(outdir):
+        #     os.mkdir(outdir)
+        # return outdir
 
     # =================================================================
     # ==================== File setting dialog  methods ===============
@@ -961,4 +962,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = SumControl()
     win.show()
+    print(win.getOutdir())
     sys.exit(app.exec_())
