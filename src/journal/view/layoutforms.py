@@ -467,13 +467,20 @@ class LayoutForms:
         # return jf
 
     def getStoredTradeName(self):
-        '''The name for the pickled trades table for the current, active statement. '''
+        '''
+        The name for the pickled transaction based trades table for the current, active statement.
+        {outdir}/.{infile}.zst
+        '''
         name = f'.trades{self.jf.theDate.strftime(self.jf.dayformat)}.zst'
         fname = os.path.join(self.jf.outdir, name)
         return fname
 
 
     def pickleitnow(self):
+        '''
+        Store the transaction based Dataframe as (getStoredTradeName()) for the input file just
+        after it was loaded from file.
+        '''
         fname = self.getStoredTradeName()
         with open(fname, "wb") as f:
             pickle.dump(self.df, f)
@@ -482,9 +489,6 @@ class LayoutForms:
         '''pickle tto list'''
         assert self.ts
         assert self.entries
-
-        # if not self.df is None:
-        #     self.reloadit()
 
         df = None
         dfname = self.getStoredTradeName()
@@ -540,34 +544,6 @@ class LayoutForms:
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
         return tradeSummaries
-
-    def reloadit(self):
-        from journal.statement import Statement_DAS as Ticket
-        from journal.statement import Statement_IBActivity
-        from journal.pandasutil import InputDataFrame
-
-        infile = self.jf.inpathfile
-        if not os.path.exists(infile):
-            print("There is a problem. Unable to fully save this file.")
-            return None
-        if self.jf.inputType == 'IB_HTML':
-            statement = Statement_IBActivity(self.jf)
-            df = statement.getTrades_IBActivity(self.jf.inpathfile)
-        elif  self.jf.inputType == 'DAS':
-            tkt = Ticket(self.jf)
-            df, self.jf = tkt.getTrades()
-        # trades = pd.read_csv(self.jf.inpathfile)
-        else:
-            #Temporary
-            print('Opening a non standard file name in DAS')
-            tkt = Ticket(self.jf)
-            df, self.jf = tkt.getTrades()
-
-        idf = InputDataFrame()
-        trades, success = idf.processInputFile(df, self.jf.theDate, self.jf)
-        self.df = trades
-        if not success:
-            return
 
     def imageData(self, ldf):
         '''
@@ -628,9 +604,7 @@ class LayoutForms:
     def populateTradeSumForms(self, key):
         '''
         Use the widget dictionary (self.wd) and tto to populate the form. The images and related
-        widgets are handled seperately.
-        :Programming Note: Maybe handle the image together with everything else. All the relate
-        widgets have entries and keys in tto. Cleaner. Easier to maintain. Back burner 4/27/19
+        widgets are handled seperately in sc.setChartWidgets(). Then images loaded
         '''
 
         tto = self.ts[key]
@@ -651,7 +625,7 @@ class LayoutForms:
         strat = tto['Strategy'].unique()[0]
         self.sc.loadStrategies(strat)
 
-        self.sc.setChartTimes()
+        self.sc.setChartWidgets()
         iname1 = self.sc.ui.chart1Name.text()
         iname2 = self.sc.ui.chart2Name.text()
         iname3 = self.sc.ui.chart3Name.text()

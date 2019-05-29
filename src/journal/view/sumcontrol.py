@@ -162,7 +162,6 @@ class SumControl(QMainWindow):
         self.dControl.runDialog(self.lf.df, self.lf.ts)
         self.dControl.show()
 
-
     def strategyChanged(self, index):
         text = self.ui.strategy.currentText()
         if not text:
@@ -189,9 +188,6 @@ class SumControl(QMainWindow):
         
         key = self.ui.tradeList.currentText()
         self.lf.setStrategy(key, text)
-            
-
-
 
     def saveTradeObject(self):
         if not self.lf:
@@ -201,7 +197,6 @@ class SumControl(QMainWindow):
 
         self.lf.saveTheTradeObject(outpathfile)
         self.ui.infileEdit.setStyleSheet('color: blue;')
-
 
     def getSaveName(self):
         '''
@@ -242,7 +237,6 @@ class SumControl(QMainWindow):
     def chart3IntervalChanged(self):
         val = self.ui.chart3Interval.value()
         self.chartIntervalChanged(val, 'chart3')
-
 
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
         if not self.lf:
@@ -471,9 +465,6 @@ class SumControl(QMainWindow):
                 # p, fname = os.path.split(pname)
                 widgs[3].setText(path[0])
 
-
-
-
     def pasteToLabel(self, widg, name):
         '''
         Rather than paste, we call a method that saves the clipboard to a file, then we open it with QPixmap
@@ -592,11 +583,9 @@ class SumControl(QMainWindow):
                     self.ui.strategy.setCurrentText(val)
                     self.lf.setStrategy(key, val)
 
-            
-
-    def setChartTimes(self):
+    def setChartWidgets(self):
         '''
-        Sets the begin and end times from the trade object data or leave it alone
+        Sets the begin, end, interval and text widgets for each chart if data found
         '''
         key = self.ui.tradeList.currentText()
         c1 = self.lf.getChartData(key, 'chart1')
@@ -631,10 +620,9 @@ class SumControl(QMainWindow):
 
     def setFormDate(self):
         '''
-        Callback when dateEdit is changed. Gather the settings and locate whate input files exist.
+        Callback when dateEdit is changed. Gather the settings and locate what input files exist.
         Enable/disable radio buttons to choose IB or DAS. Load up the filename in the lineEdit.
-        If it exists, green. If not red. If the directory doesn't exist, set blank. If both files
-        are available choose DAS (for now--That will be a setting configured in filesettings)
+        If it exists, green. If not red. If the directory doesn't exist, set blank. 
         ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir]
         '''
         daDate = self.ui.dateEdit.date()
@@ -692,7 +680,6 @@ class SumControl(QMainWindow):
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
             self.ui.goBtn.setStyleSheet('color:black')
-
 
     def getInfile(self):
         # TODO Need a choosing mechanism for DAS or IB
