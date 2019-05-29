@@ -396,7 +396,7 @@ class SumControl(QMainWindow):
         pi2 = cmenu.addAction("fractal 2")
         pi3 = cmenu.addAction("starry night 3")
         pi4 = cmenu.addAction("Paste from clipboard")
-        pi5 = cmenu.addAction("Browse for chart")
+        browsePic = cmenu.addAction("Browse for chart")
 
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
@@ -436,15 +436,19 @@ class SumControl(QMainWindow):
                 self.ui.chart2Name.setText(nname)
             if xn == 'chart3':
                 self.ui.chart3Name.setText(nname)
-        elif action == pi5:
-            outpolicy = self.settings.value('outdirPolicy')
-            outdir = ''
-            if outpolicy == 'default':
-                outdir = self.getDirectory() + 'out/'
-            else:
-                outdir = self.settings.value('outdir')
+        elif action == browsePic:
+            if not self.lf:
+                print('No trade to chart')
+                return
+            outdir = self.getOutdir()
             tnum = 'Trade' + key.split(' ')[0] + '*'
-            path = QFileDialog.getOpenFileName(self, "Select Chart", outdir, f'Image Files(*.png *.jpg *.bmp);;"Trade num ({tnum})')
+
+            filter = self.settings.value('bfilterpref', 0)
+            
+            selectedfilter = f'Trade num ({tnum})' if filter else 'Image Files(*.png *.jpg *.bmp)'
+            path = QFileDialog.getOpenFileName(self, "Select Chart", outdir, f'Image Files(*.png *.jpg *.bmp);;Trade num ({tnum})', selectedfilter)
+            filter = 1 if path[1].startswith('Trade num') else 0
+            self.settings.setValue('bfilterpref', filter)
             if path[0]:
                 pixmap = QPixmap(path[0])
                 pixmap = pixmap.scaled(x.width(), x.height(), Qt.IgnoreAspectRatio)
@@ -840,13 +844,7 @@ class SumControl(QMainWindow):
         return inpath
 
     def getOutdir(self):
-        # op = self.settings.value('outdirPolicy')
-        # if op == 'static':
-        return self.settings.value('outdir')
-        # outdir = os.path.join(self.getDirectory(), 'out/')
-        # if not os.path.exists(outdir):
-        #     os.mkdir(outdir)
-        # return outdir
+        return self.settings.value('outdir', '')
 
     # =================================================================
     # ==================== File setting dialog  methods ===============
