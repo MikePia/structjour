@@ -107,7 +107,7 @@ class TradeFormat(object):
         '''
         Create named styles. Register them with the Workbook wb, and add them to self.styles, a
         dict with named style title as a key.
-        :params wb: The openpysl Workbook object to register styes into
+        :params wb: The openpyxl Workbook object to register styes into
         :params a: A safe place to store the anchor  in self.tradeAnchor. Overridable with every
         method and function that can use an achor to translate the location in the Workbook.
         '''

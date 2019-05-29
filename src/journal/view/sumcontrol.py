@@ -37,6 +37,7 @@ import pandas as pd
 from journal.view.filesetcontrol import FileSetCtrl
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.view.ejcontrol import EJControl
+from journal.view.exportexcel import ExportToExcel
 from journal.view.dailycontrol import DailyControl
 from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
@@ -152,7 +153,8 @@ class SumControl(QMainWindow):
 
 
     def exportExcel(self):
-        self.lf.exportExcel()
+        excel = ExportToExcel(self.lf.ts, self.lf.jf, self.lf.df)
+        excel.exportExcel()
     
     def showDaily(self):
         if not self.lf or self.lf.df is None:
@@ -356,7 +358,7 @@ class SumControl(QMainWindow):
             self.lf.timeFormat = '%H:%M:%S'
         print(self.lf.timeFormat)
         key = self.ui.tradeList.currentText()
-        self.lf.reloadTimes(key)
+        self.lf.toggleTimeFormat(key)
 
     def mousePressEvent(self, event):
         print('mouse Press', (event.x(), event.y()))

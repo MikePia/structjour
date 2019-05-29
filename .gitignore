@@ -12,6 +12,7 @@ out/
 .pydev*
 *.sqlite
 .vscode
+*.code*
 doodles
 *.sql
 *.sql*
