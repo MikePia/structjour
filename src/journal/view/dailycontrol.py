@@ -395,9 +395,10 @@ class DailyControl(QWidget):
                     pl = fc(pl)
                 row.append(QStandardItem(pl))
 
+
                 mVal = self.ts[trade]['MstkVal'].unique()[0]
-                totalPlays = mVal + totalPlays
                 if mVal and isinstance(mVal, (np.floating, float)):
+                    totalPlays = mVal + totalPlays
                     mVal = fc(mVal)
                 row.append(QStandardItem(mVal))
 
