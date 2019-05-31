@@ -36,8 +36,6 @@ from journal.view.layoutforms import LayoutForms
 from journal.view.sumcontrol import SumControl, qtime2pd
 from journalfiles import JournalFiles
 
-from journal.layoutsheet import LayoutSheet
-
 # pylint: disable = C0103
 
 
@@ -56,7 +54,7 @@ class runController:
 
         self.ui.goBtn.pressed.connect(self.runnit)
         self.ui.loadBtn.pressed.connect(self.loadit)
-        
+
     def initialize(self):
         '''
         Initialize the inputs and outs
