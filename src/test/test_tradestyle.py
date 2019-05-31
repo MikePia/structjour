@@ -48,8 +48,8 @@ class TestTradeFormat(TestCase):
     def test_TradeFormatAddNamedStyle(self):
         '''
         Test the object formation and the creation of the styles in __init__ and addNamedStyle for
-        the Workbook. Specifically test that the named style is created in the workbook and is
-        still there when you close it and open it.
+        the Workbook. Specifically test that the named style is created and stored in the workbook
+        (still there when you close it and open it.)
         '''
 
         wb = Workbook()

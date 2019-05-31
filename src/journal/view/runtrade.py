@@ -147,7 +147,7 @@ class runController:
 
         lf = LayoutForms(self.sc, jf, dframe)
         lf.pickleitnow()
-        tradeSummaries = lf.runSummaries(ldf)
+        tradeSummaries = lf.runTtoSummaries(ldf)
         # self.ldf = ldf
         # self.dframe = dframe
 

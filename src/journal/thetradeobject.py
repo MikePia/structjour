@@ -26,6 +26,7 @@ created: September 1, 2018
 import os
 import datetime as dt
 
+import numpy as np
 import pandas as pd
 
 from journal.definetrades import FinReqCol
@@ -847,6 +848,68 @@ class TheTradeObject:
         # self.TheTrade[self.srf.explain] = "Technical description of the trade"
         # self.TheTrade[self.srf.notes] = "Evaluation of the trade"
         pass
+
+def imageData(ldf):
+    '''
+    Create generic image names, one for each trade. The start and dur are the first and last
+    entries. This is called in the inital loading of a file. More specific names will be used
+    for created charts.
+    :ldf: A list of DataFrames slices from the input dataframe, each includes the transactions
+            for a single trade.
+    :return: A list of the generic images, one per trade.
+    '''
+
+    frq = FinReqCol()
+    imageNames = list()
+    for tdf in ldf:
+        dur = tdf[frq.dur].unique()[-1]
+        if isinstance(dur, (pd.Timedelta, np.timedelta64)):
+            dur = pd.Timedelta(dur).__str__()
+        dur = dur.replace(' ', '_')
+        imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
+                                                    tdf[frq.name].unique()[-1].replace(' ', '-'),
+                                                    tdf[frq.start].unique()[-1], dur, 'png')
+        imageName = imageName.replace(':', '')
+        imageNames.append(imageName)
+    return imageNames
+
+def runSummaries(ldf):
+    '''
+    This script creates the tto object for each trade in the input file and appends it to a
+    list It also creates a generic name for assoiated images. That name will be altered for
+    speific images that may be created via the stock api or added by the user. Finally the
+    sript creates the tradeList key and adds it to the tradeList widget. The key is used to
+    retrieve the tto data from the tradeList widget currentText selection.
+    :params ldf: A list of DataFrames. Each df is a complete trade from initial purchace or
+                hold to 0 shares or hold.
+    '''
+
+    tradeSummaries = list()
+
+    srf = SumReqFields()
+    initialImageNames = imageData(ldf)
+    assert len(ldf) == len(initialImageNames)
+    # self.sc.ui.tradeList.clear()
+    ts = dict()
+    entries = dict()
+    for i, (imageName, tdf) in enumerate(zip(initialImageNames, ldf)):
+
+        tto = TheTradeObject(tdf, False, srf)
+        tto.runSummary(imageName)
+        tradeSummaries.append(tto.TheTrade)
+        # for key in self.wd.keys():
+        #     print(key, tto.TheTrade[key].unique()[0])
+        tkey = f'{i+1} {tto.TheTrade[srf.name].unique()[0]}'
+        ts[tkey] = tto.TheTrade
+        entries[tkey] = tto.entries
+        # self.sc.ui.tradeList.addItem(tkey)
+
+    # self.tradeSummaries = tradeSummaries
+    return tradeSummaries, ts, entries, initialImageNames
+
+
+
+
 
 
 def notmain():

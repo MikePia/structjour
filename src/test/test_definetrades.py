@@ -400,10 +400,10 @@ def notmain():
     for i in range(100):
         t = TestDefineTrades()
         # t.test_addStartTime()
-        t.test_addTradeIndex()
+        # t.test_addTradeIndex()
     
         # t.test_addTradeDuration()
-        # t.test_addSummaryPL()
+        t.test_addSummaryPL()
         # t.test_addTradePL()
         # t.test_writeShareBalance()
     

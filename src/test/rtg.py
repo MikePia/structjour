@@ -31,6 +31,9 @@ from unittest import TestCase
 
 import pandas as pd
 
+from journal.definetrades import FinReqCol, DefineTrades
+from journal.thetradeobject import runSummaries
+
 # pylint: disable = C0103
 
 def getSide(firsttrade=False):
@@ -84,6 +87,7 @@ def getPL():
 def getTicker(exclude=None):
     '''
     Get a random ticker symbol
+    :exclude: A list of tickers to exclude from consideration.  
     '''
     tickers = ['SQ', 'AAPL', 'TSLA', 'ROKU', 'NVDA', 'NUGT', 'MSFT', 'CAG', 'ACRS', 'FRED', 'PCG',
                'AMD', 'GE', 'NIO', 'AMRN', 'FIVE', 'BABA', 'BPTH', 'Z', ]
@@ -135,6 +139,7 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     numTrades = getNumTrades(maxt=10)
     trade = list()
     prevBal = 0
+    price = 99.99
     long = True
     theSum = None
     duration = ''
@@ -142,6 +147,8 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     account = getAccount()
     # account = 'U000000'
     ticker = getTicker(exclude=exclude)
+    name=''
+    daDate = pd.Timestamp(start.year, start.month, start.day)
 
     twoholds = True
     for i in range(numTrades):
@@ -175,14 +182,14 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
                 if side == 'HOLD-':
                     qty = -qty
                 start = nexttime
-                trade.append([tradenum, start, nowtime, ticker, side+'B', qty, qty,
-                              account, pl, theSum, duration])
+                trade.append([tradenum, start, nowtime, ticker, side+'B', price, qty, qty,
+                              account, pl, theSum, name, daDate, duration])
                 sumtotal = sumtotal + pl
                 prevBal = qty
             else:
                 qty = -qty if side == 'S' else qty
-                trade.append([tradenum, start, nowtime, ticker, side, 0, 0,
-                              account, pl, theSum, duration])
+                trade.append([tradenum, start, nowtime, ticker, side, price, 0, 0,
+                              account, pl, theSum, name, daDate, duration])
                 sumtotal = sumtotal + pl
                 prevBal = 0
                 # nowtime = nexttime
@@ -190,8 +197,8 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
         elif i == numTrades -1:
             side = 'S' if prevBal >= 0 else 'B'
             pl = getPL() # if not side.startswith('HOLD') else 0
-            trade.append([tradenum, start, nowtime, ticker, side, -prevBal, 0,
-                          account, pl, theSum, duration])
+            trade.append([tradenum, start, nowtime, ticker, side, price, -prevBal, 0,
+                          account, pl, theSum, name, daDate, duration])
             sumtotal = sumtotal + pl
             prevBal = 0
             break
@@ -200,8 +207,8 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
             qty = random.randint(1, 500)
             qty = -qty if (side == 'S' or side == 'HOLD-B') else qty
 
-            trade.append([tradenum, start, nowtime, ticker, side, qty, prevBal+qty,
-                          account, pl, theSum, duration])
+            trade.append([tradenum, start, nowtime, ticker, side, price,  qty, prevBal+qty,
+                          account, pl, theSum, name, daDate, duration])
             sumtotal = sumtotal + pl
             prevBal = prevBal+qty
             if prevBal == 0:
@@ -210,17 +217,65 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
                 break
 
         nowtime = nexttime
+        price = price + .03
     duration = nowtime - start
-    trade[-1][10] = duration
-    trade[-1][9] = sumtotal
+
+    # Hey programmer. If you edit the columns, adjust or fix these columns or make it more general
+    name = '{} {}'.format(ticker, 'Long' if trade[0][4].find('B') >=0 else 'Short')
+    trade[-1][10] = sumtotal
+    trade[-1][11] = name
+    trade[-1][13] = duration
     if pdbool:
-        trade = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Qty',
-                                                  'Balance', 'Account', 'P / L', 'Sum', 'Duration'])
-        if not isclose(trade['P / L'].sum(), trade.loc[trade.index[-1]].Sum, abs_tol=1e-7):
-            print(trade['P / L'].sum(), ' != ', trade.loc[trade.index[-1]].Sum)
+        tradedf = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty',
+                                                  'Balance', 'Account', 'P / L', 'Sum', 'Name', 'Date', 'Duration'])
+        if not isclose(tradedf['P / L'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
+            print(tradedf['P / L'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
             print()
         
-    return trade, latest
+    return tradedf, latest
+
+def getRandomTradeDF(numTrades=None, start='2018-06-06 09:30:00'):
+    '''
+    Creates a statment for testing purposes in the form of a processed input statment. Initialze fields
+    to test their creaion in the program.
+    :numTrades: The number of trades in the statemnt
+    :start: The earliest possible trade start time.
+    '''
+
+    trades = list()
+    if numTrades == None:
+        numTrades = random.randint(1,10)
+    start = pd.Timestamp(start)
+    df = pd.DataFrame()
+    exclude = []
+    for i in range(numTrades):
+        tdf, start = randomTradeGenerator2(i+1, earliest=start,
+                                            pdbool=True, exclude=exclude)
+        df = df.append(tdf)
+        exclude.append(tdf.Symb.unique()[0])
+
+    df.reset_index(drop=True, inplace=True)
+    return df
+
+def getLdf():
+    '''
+    Get a random version of ldf (a list of dataframes each one has all the transactions from one
+    trade)
+    '''
+
+    df = getRandomTradeDF()
+    tu = DefineTrades()
+    ldf = tu.getTradeList(df)
+    return ldf
+
+
+def getTradeSummaries():
+    '''
+    Gets random trade version of tradeSummaries, ts (the dict form of the same), entries, and
+    initialImagenames.
+    '''
+    print('Its really the end of the worlda s anyone ever knew it. hitler won. Congratulations establishment')
+    return runSummaries(getLdf())
 
 class Test_RandomTradeGen(TestCase):
     '''
@@ -277,8 +332,11 @@ class Test_RandomTradeGen(TestCase):
 
 def notmain():
     '''Run some local code'''
-    for i in range(5000):
-        randomTradeGenerator2(5, pdbool=True)
+    for i in range(0, 10):
+        tradeSummaries, ts, entries, initialImageNames = getTradeSummaries()
+        print(initialImageNames)
+    
+    # print(getRandomTradeDF())
 
 if __name__ == '__main__':
     notmain()

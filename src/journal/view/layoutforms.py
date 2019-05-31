@@ -40,7 +40,7 @@ from journal.view.sumcontrol import qtime2pd
 
 from journal.dfutil import DataFrameUtil
 from journal.definetrades import FinReqCol, DefineTrades
-from journal.thetradeobject import SumReqFields, TheTradeObject
+from journal.thetradeobject import SumReqFields, TheTradeObject, runSummaries
 from journal.tradestyle import c as tcell
 from journal.layoutsheet import LayoutSheet
 from journal.dailysumforms import MistakeSummary
@@ -235,31 +235,9 @@ class LayoutForms:
         # It might be good to use the dict self.ts instead
         return tradeSummaries
 
-    def imageData(self, ldf):
-        '''
-        Create generic image names, one for each trade. The start and dur are the first and last
-        entries. This is called in the inital loading of a file. More specific names will be used
-        for created charts.
-        :ldf: A list of DataFrames slices from the input dataframe, each includes the transactions
-                for a single trade.
-        :return: A list of the generic images, one per trade.
-        '''
+    
 
-        frq = FinReqCol()
-        imageNames = list()
-        for tdf in ldf:
-            dur = tdf[frq.dur].unique()[-1]
-            if isinstance(dur, pd.Timedelta):
-                dur = dur.__str__()
-            dur = dur.replace(' ', '_')
-            imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
-                                                     tdf[frq.name].unique()[-1].replace(' ', '-'),
-                                                     tdf[frq.start].unique()[-1], dur, 'png')
-            imageName = imageName.replace(':', '')
-            imageNames.append(imageName)
-        return imageNames
-
-    def runSummaries(self, ldf):
+    def runTtoSummaries(self, ldf):
         '''
         This script creates the tto object for each trade in the input file and appends it to a
         list It also creates a generic name for assoiated images. That name will be altered for
@@ -270,26 +248,18 @@ class LayoutForms:
                     hold to 0 shares or hold.
         '''
 
-        tradeSummaries = list()
-
-        srf = SumReqFields()
-        self.imageNames = self.imageData(ldf)
-        assert len(ldf) == len(self.imageNames)
+        newtradeSummaries, newts, newentries, initialImageNames = runSummaries(ldf)
+        assert len(ldf) == len(initialImageNames)
         self.sc.ui.tradeList.clear()
-        for i, (imageName, tdf) in enumerate(zip(self.imageNames, ldf)):
 
-            tto = TheTradeObject(tdf, False, srf)
-            tto.runSummary(imageName)
-            tradeSummaries.append(tto.TheTrade)
-            # for key in self.wd.keys():
-            #     print(key, tto.TheTrade[key].unique()[0])
-            tkey = f'{i+1} {tto.TheTrade[srf.name].unique()[0]}'
-            self.ts[tkey] = tto.TheTrade
-            self.entries[tkey] = tto.entries
+        self.imageNames = initialImageNames
+        self.ts = newts
+        self.entries = newentries
+        for tkey in newts:
             self.sc.ui.tradeList.addItem(tkey)
+        self.tradeSummaries = newtradeSummaries
 
-        self.tradeSummaries = tradeSummaries
-        return tradeSummaries
+        return self.tradeSummaries
 
     def populateTradeSumForms(self, key):
         '''

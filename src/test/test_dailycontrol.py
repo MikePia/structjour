@@ -90,7 +90,7 @@ class TestDailyCtrl(TestCase):
         lf = LayoutForms(sc, jf, dframe)
 
 
-        tradeSummaries = lf.runSummaries(ldf)
+        tradeSummaries = lf.runTtoSummaries(ldf)
         self.ts = lf.ts
         self.df = dframe
         self.apiset.setValue('dbsqlite', self.testdb)
