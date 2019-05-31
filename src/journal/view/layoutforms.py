@@ -26,32 +26,16 @@ Created on April 14, 2019
 import datetime as dt
 import os
 import pickle
-from PIL import Image as PILImage
 
 from openpyxl.drawing.image import Image
-from openpyxl.styles import Font, colors
 
 import numpy as np
 import pandas as pd
 
-from PyQt5.QtCore import QSettings
-
 from journal.view.sumcontrol import qtime2pd
 
-from journal.dfutil import DataFrameUtil
-from journal.definetrades import FinReqCol, DefineTrades
-from journal.thetradeobject import SumReqFields, TheTradeObject, runSummaries
-from journal.tradestyle import c as tcell
-from journal.layoutsheet import LayoutSheet
-from journal.dailysumforms import MistakeSummary
-from journal.view.dailycontrol import DailyControl
-from journal.xlimage import XLImage
+from journal.thetradeobject import SumReqFields, runSummaries
 
-
-from journal.tradestyle import TradeFormat
-
-
-# from journal.view.sumcontrol import SumControl
 # pylint: disable=C0103, C1801
 
 
@@ -215,10 +199,6 @@ class LayoutForms:
                 return
             else:
                 (self.ts, self.entries, self.df) = test
-                # name = 'C:/trader/journal/_201905_May/_0522_Wednesday/out/.trades_0522_Wednesday.zst'
-                # with open(name, "rb") as f:
-                #     test = pickle.load(f)
-                #     self.df = test
 
         print('load up the trade names now')
         tradeSummaries = []
@@ -234,8 +214,6 @@ class LayoutForms:
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
         return tradeSummaries
-
-    
 
     def runTtoSummaries(self, ldf):
         '''
@@ -417,7 +395,8 @@ class LayoutForms:
 
     def setClean(self, key, b):
         '''
-        Set set tto.clean to b
+        Set clean in self.ts to b. The clean value is used to determine if there is user input
+        to maintain in the mistake note/mistake val.
         :params key: The current trade name is the key found in the tradeList Combo box
         :params b: bool
         '''
@@ -425,7 +404,7 @@ class LayoutForms:
 
     def setMstkVals(self, key, val, note):
         '''
-        Set tto mstkval and mstknote to given values
+        Set mstkval and mstknote in self.ts
         :params key: The current trade name is the key found in the tradeList Combo box
         :params val: Float, The value for the 'lost' widget
         :params note: The value for the sumNotes widget
@@ -435,7 +414,7 @@ class LayoutForms:
 
     def setExplain(self, key, val):
         '''
-        Set tto explain to val
+        Set explain in self.ts
         :params key: The current trade name is the key found in the tradeList Combo box
         :params val: The value for the explain widget
         '''
@@ -443,17 +422,18 @@ class LayoutForms:
 
     def setNotes(self, key, val):
         '''
-        Set tto notes to val
+        Set notes in self.ts
         :params key: The current trade name is the key found in the tradeList Combo box
         :params val: The value for the notes widget
         '''
         self.ts[key][self.rc.notes] = val
 
     def setStrategy(self, key, val):
-        '''Sets tto strategy to val'''
+        '''Sets strategy in self.ts to val'''
         self.ts[key][self.rc.strat] = val
 
     def getStrategy(self, key):
+        '''Retrieves the current strategy from self.ts'''
         val = self.ts[key][self.rc.strat].unique()[0]
         return val
 
@@ -508,7 +488,7 @@ class LayoutForms:
         '''
         name = key.replace(' ', '_')
         data = self.getChartData(key, wloc)
-        
+
         if not data:
             raise ValueError('Raise the error to call attention to programming deficit')
 

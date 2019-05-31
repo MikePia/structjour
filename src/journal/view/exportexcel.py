@@ -174,9 +174,10 @@ class ExportToExcel:
                 # print("ws[{0}]='{1}'".format(cell, formula))
                 ws[cell] = formula
 
-    def placeImages(self, imageLocation, ws, tf):
+    def placeImagesAndSumStyles(self, imageLocation, ws, tf):
         '''
-        A helper method for export to excel. Place thie images in the openpyxl ws objectg
+        A helper method for export to excel. Place images and the tradesummary stylesin the
+        openpyxl ws object
         '''
 
         # tradeSummaries = list()
@@ -196,13 +197,9 @@ class ExportToExcel:
                 img.save(fn, 'png')
                 img = Image(fn)
                 if img:
-                    # col = srf.maxcol() + 1
-                    # col = tcell((col, 1))[0]
-                    # cellname = col + str(iloc[1])
                     cellname = tcell(iloc)
                     ws.add_image(img, cellname)
 
-                #Put together the trade summary info for each trade and interview the trader
 
     def populateXLDailyFormulas(self, imageLocation, ws):
         '''
@@ -323,18 +320,22 @@ class ExportToExcel:
         # Then create the Workbook.
         settings = QSettings('zero_substance', 'structjour')
         val = settings.value('inputType')
+
+        # Get a list of Trades from self.df
         tu = DefineTrades(val)
         ldf = tu.getTradeList(self.df)
 
-        ls = LayoutSheet(self.topMargin, len(self.df))
-        # ldf = list(self.ts.values())
+        # Lay out a dataframe with space for charts
         imageNames = self.getImageNamesFromTS()
         imageLocation, dframe = self.layoutExcelData(self.df, ldf, imageNames)
+        assert len(ldf) == len(imageLocation)
+
+        # Create an openpyxl wb from the dataframe
+        ls = LayoutSheet(self.topMargin, len(self.df))
         wb, ws, nt = ls.createWorkbook(dframe)
 
         tf = TradeFormat(wb)
         ls.styleTop(ws, len(nt.columns), tf)
-        assert len(ldf) == len(imageLocation)
 
         mstkAnchor = (len(dframe.columns) + 2, 1)
         mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
@@ -342,7 +343,7 @@ class ExportToExcel:
         mistake.dailySumStyle(ws, tf, mstkAnchor)
 
         # tradeSummaries = ls.runSummaries(imageLocation, ldf, self.jf, ws, tf)
-        self.placeImages(imageLocation, ws, tf)
+        self.placeImagesAndSumStyles(imageLocation, ws, tf)
         self.populateXLDailyFormulas(imageLocation, ws)
 
         self.populateXLMistakeForm(mistake, ws, imageLocation)

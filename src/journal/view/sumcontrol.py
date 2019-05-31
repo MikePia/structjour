@@ -28,14 +28,13 @@ from fractions import Fraction
 import os
 import re
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QFileDialog, QMessageBox, QMenu
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 from PyQt5.QtGui import QDoubleValidator, QPixmap
 
 import pandas as pd
 
 from journal.view.filesetcontrol import FileSetCtrl
-from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.view.ejcontrol import EJControl
 from journal.view.exportexcel import ExportToExcel
 from journal.view.dailycontrol import DailyControl
@@ -43,13 +42,13 @@ from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
 from journal.view.summaryform import Ui_MainWindow
 from journal.stock.graphstuff import FinPlot
-from journal.stock.utilities import ManageKeys, getMAKeys, qtime2pd, pd2qtime
+from journal.stock.utilities import getMAKeys, qtime2pd, pd2qtime
 from journal.xlimage import XLImage
 
 from strategy.strategies import Strategy
 
 
-# pylint: disable = C0103
+# pylint: disable = C0103, W0612, W0613, R0904, R0912, R0914, R0915
 
 
 
@@ -77,8 +76,6 @@ class SumControl(QMainWindow):
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
-        mk = ManageKeys(create=True)
-
 
         self.settings.setValue('runType', 'QT')
         now = None
@@ -117,7 +114,6 @@ class SumControl(QMainWindow):
         self.ui.chart2Interval.editingFinished.connect(self.chart2IntervalChanged)
         self.ui.chart3Interval.editingFinished.connect(self.chart3IntervalChanged)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
-        
 
         self.ui.saveBtn.pressed.connect(self.saveTradeObject)
         self.ui.strategy.currentIndexChanged.connect(self.strategyChanged)
@@ -140,7 +136,6 @@ class SumControl(QMainWindow):
         theDate = self.settings.value('theDate', d)
         self.ui.dateEdit.setDate(theDate)
         self.setFormDate()
-        # self.ui.infileEdit.setText(self.getInfile())
 
         # These are trade related widgets and won't remain here. These are callback handlers from
         # edit boxes-- calling them manually here.
@@ -153,28 +148,32 @@ class SumControl(QMainWindow):
 
 
     def exportExcel(self):
+        ''' Signal callback when the exportBtn is pressed. Initiates an export to excel.'''
         excel = ExportToExcel(self.lf.ts, self.lf.jf, self.lf.df)
         excel.exportExcel()
-    
+
     def showDaily(self):
+        '''Display the DailyControl form'''
         if not self.lf or self.lf.df is None:
             print('The input file is not loaded')
             return
-        self.dControl = DailyControl()
-        self.dControl.runDialog(self.lf.df, self.lf.ts)
-        self.dControl.show()
+        dControl = DailyControl()
+        dControl.runDialog(self.lf.df, self.lf.ts)
+        dControl.show()
 
     def strategyChanged(self, index):
+        '''Signal callback when user chooses a strtegy in the strategy combo box'''
         text = self.ui.strategy.currentText()
         if not text:
             return
         strat = Strategy()
         allstrats = strat.getStrategies()
-        
+
         strats = [x[1] for x in allstrats]
         if not text in strats:
             msg = f'Would you like to add the strategy {text} to the database?'
-            ok = QMessageBox.question(self, 'New strategy', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            ok = QMessageBox.question(self, 'New strategy', msg,
+                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ok == QMessageBox.Yes:
                 print('yes clicked.')
             else:
@@ -184,14 +183,13 @@ class SumControl(QMainWindow):
                 if not index:
                     self.ui.strategy.addItem(text)
                     self.ui.strategy.setCurrentText(text)
-    
-
             self.loadStrategies(text)
-        
+
         key = self.ui.tradeList.currentText()
         self.lf.setStrategy(key, text)
 
     def saveTradeObject(self):
+        '''Signal call back from saveBtn. Initiates saving the data.'''
         if not self.lf:
             print('Nothing to save')
             return
@@ -215,6 +213,10 @@ class SumControl(QMainWindow):
         return outpathfile
 
     def loadImageFromFile(self, widg, name):
+        '''
+        Load the image named name into the QLable widget widg. Loads a default image if name does
+        not exist. Used to initialize the form.
+        '''
         if not os.path.exists(name):
             name = self.defaultImage
 
@@ -223,36 +225,50 @@ class SumControl(QMainWindow):
         widg.setPixmap(pixmap)
 
     def chartIntervalChanged(self, val, ckey):
+        '''Implementation for signals from interval widgets'''
         key = self.ui.tradeList.currentText()
         data = self.lf.getChartData(key, ckey)
         data[3] = val
         self.lf.setChartData(key, data, ckey)
 
     def chart1IntervalChanged(self):
+        '''Signal call back for chart1Interval widget'''
         val = self.ui.chart1Interval.value()
         self.chartIntervalChanged(val, 'chart1')
 
     def chart2IntervalChanged(self):
+        '''Signal call back for chart2Interval widget'''
         val = self.ui.chart2Interval.value()
         self.chartIntervalChanged(val, 'chart2')
 
     def chart3IntervalChanged(self):
+        '''Signal call back for chart3Interval widget'''
         val = self.ui.chart3Interval.value()
         self.chartIntervalChanged(val, 'chart3')
 
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
+        '''
+        Implment the chart retrieval for one of chart1, chart2, or chart3
+        :swidg: The start widget for c
+        :ewidg: The end widget for c
+        :iwidg: The interval widget for c
+        :nwidg: The name widget for c
+        :widg: The QLabel widget for c
+        :c: A string, one of 'chart1, chart2 or chart3'
+        '''
         if not self.lf:
             print('No trade to get chart for')
-            return
+            return None
         chartSet = QSettings('zero_substance/chart', 'structjour')
         makeys = getMAKeys()
         makeys = makeys[0] if c == 'chart1' else makeys[1] if c == 'chart2' else makeys[2]
-        mas=list()
-        masl=list()
+        mas = list()
+        masl = list()
         for i in range(0, 4):
             val = chartSet.value(makeys[i], False, bool)
             if val:
-                mas.append(['MA'+str(i+1), chartSet.value(makeys[i+5]), chartSet.value(makeys[i+9])])
+                mas.append(['MA'+str(i+1), chartSet.value(makeys[i+5]),
+                            chartSet.value(makeys[i+9])])
         val = chartSet.value(makeys[4], False, bool)
         masl.append(mas)
 
@@ -272,8 +288,8 @@ class SumControl(QMainWindow):
         if apilist:
             fp.api = apilist[0]
         else:
-            print('Another fn pop dialog?. Or pop the dialog here. Please choose a stock api to use. Select stockapi from the file meny.')
-            return
+            print('Please choose a stock api to use. Select stockapi from the file meny.')
+            return None
         interval = iwidg.value()
         # name = nwidg.text()
         key = self.ui.tradeList.currentText()
@@ -283,16 +299,12 @@ class SumControl(QMainWindow):
 
         pname = os.path.join(outdir, name)
 
-        Long = False
-        
         entries = self.lf.getEntries(key)
         fpentries = list()
         for e in entries:
             etime = e[1]
             diff = etime - begin if (etime > begin) else (begin-etime)
 
-            #TODO  Current API all intervals are in minutes. Fix this limitation -- Have to deal
-            # with  skipping null after hours data
             candleindex = int(diff.total_seconds()/60//interval)
             candleindex = -candleindex if etime < begin else candleindex
             L_or_S = 'B'
@@ -312,35 +324,36 @@ class SumControl(QMainWindow):
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
             return pname
-        else:
-            apiset = QSettings('zero_substance/stockapi', 'structjour')
-            errorCode = apiset.value('errorCode')
-            errorMessage = apiset.value('errorMessage')
-            if not errorMessage:
-                errorMessate = "Failed to retrieve data"
-            if errorMessage:
-                mbox = QMessageBox()
-                msg = errorCode + '\n' + errorMessage
-                mbox.setText(msg)
-                mbox.exec()
-                apiset.setValue('code', '')
-                apiset.setValue('message', '')
+
+        apiset = QSettings('zero_substance/stockapi', 'structjour')
+        errorCode = apiset.value('errorCode')
+        errorMessage = apiset.value('errorMessage')
+        if errorMessage:
+            mbox = QMessageBox()
+            msg = errorCode + '\n' + errorMessage
+            mbox.setText(msg)
+            mbox.exec()
+            apiset.setValue('code', '')
+            apiset.setValue('message', '')
 
         return None
 
     def chartMagic1(self):
+        '''Update button was pressed for chart1. We will get a chart using a stock api'''
         pname = self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
                                self.ui.chart1Name, self.ui.chart1, 'chart1')
         if pname:
             self.settings.setValue('chart1', pname)
 
     def chartMagic2(self):
+        '''Update button was pressed for chart2. We will get a chart using a stock api'''
         pname = self.chartMage(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
                                self.ui.chart2Name, self.ui.chart2, 'chart2')
         if pname:
             self.settings.setValue('chart2', pname)
 
     def chartMagic3(self):
+        '''Update button was pressed for chart3. We will get a chart using a stock api'''
         pname = self.chartMage(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
                                self.ui.chart3Name, self.ui.chart3, 'chart3')
         if pname:
@@ -361,19 +374,27 @@ class SumControl(QMainWindow):
         self.lf.toggleTimeFormat(key)
 
     def mousePressEvent(self, event):
+        '''Overridden'''
         print('mouse Press', (event.x(), event.y()))
 
     def getChartWidgets(self, c):
+        '''
+        Get the associated widgets for c one of chart1, chart2 or chart3. That includes the widgets
+        for start, end, interval and name.
+        '''
         if c not in ['chart1', 'chart2', 'chart3']:
             return None
         if c == 'chart1':
-            widgs = [self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval, self.ui.chart1Name]
+            widgs = [self.ui.chart1Start, self.ui.chart1End,
+                     self.ui.chart1Interval, self.ui.chart1Name]
         elif c == 'chart2':
-            widgs = [self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval, self.ui.chart2Name]
+            widgs = [self.ui.chart2Start, self.ui.chart2End,
+                     self.ui.chart2Interval, self.ui.chart2Name]
         if c == 'chart3':
-            widgs = [self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval, self.ui.chart3Name]
+            widgs = [self.ui.chart3Start, self.ui.chart3End,
+                     self.ui.chart3Interval, self.ui.chart3Name]
         return widgs
-        
+
     def loadImage1(self, x, event):
         '''
         A signal from ClickLabel
@@ -445,7 +466,9 @@ class SumControl(QMainWindow):
 
             filt = self.settings.value('bfilterpref', 0)
             selectedfilter = f'Trade num ({tnum})' if filt else 'Image Files(*.png *.jpg *.bmp)'
-            path = QFileDialog.getOpenFileName(self, "Select Chart", outdir, f'Image Files(*.png *.jpg *.bmp);;Trade num ({tnum})', selectedfilter)
+            path = QFileDialog.getOpenFileName(self, "Select Chart", outdir,
+                                               f'Image Files(*.png *.jpg *.bmp);;Trade num ({tnum})',
+                                               selectedfilter)
             filt = 1 if path[1].startswith('Trade num') else 0
             self.settings.setValue('bfilterpref', filt)
 
@@ -465,16 +488,18 @@ class SumControl(QMainWindow):
                     widgs[2].setValue(data[3])
                 else:
                     data = [path[0], widgs[0].date(), widgs[1].date(), widgs[2].value()]
-                
 
                 self.lf.setChartData(key, data, x.objectName())
                 # p, fname = os.path.split(pname)
                 widgs[3].setText(path[0])
 
     def pasteToLabel(self, widg, name):
-        '''
-        Rather than paste, we call a method that saves the clipboard to a file, then we open it with QPixmap
-        '''
+        '''Set the given name, to the  QLabel widg. Rather than actually paste, we open the an
+        image file as a Qpixmap and set it to the QLabel.
+        :widg: A QLabel. It must be one of chart1, chart2 or chart3.
+        :name: The name of an image file.
+        :return: The name that was set
+         '''
         xlimg = XLImage()
         img, pname = xlimg.getPilImageNoDramaForReal(name)
         if not img:
@@ -482,13 +507,14 @@ class SumControl(QMainWindow):
             msg = pname + " Failed to get an image. Please select and copy an image."
             mbox.setText(msg)
             mbox.exec()
-            return
+            return None
 
         pixmap = QPixmap(pname)
         widg.setPixmap(pixmap)
         return pname
 
     def setExplain(self):
+        '''Update self.lf from the explain widget'''
         if not self.lf:
             print('No trades are loaded. Nothing to explain')
             return
@@ -497,6 +523,7 @@ class SumControl(QMainWindow):
         self.lf.setExplain(key, text)
 
     def setNotes(self):
+        '''Update self.lf from the notes widget'''
         if not self.lf:
             print('No trades are loaded nothing to analyze.')
             return
@@ -517,12 +544,13 @@ class SumControl(QMainWindow):
             val = 0.0
         else:
             self.lf.setClean(key, False)
-        if val == '-' or val == '':
+        if val in ('-', ''):
             return
         fval = float(val)
         self.lf.setMstkVals(key, fval, note)
 
     def setMstkNote(self):
+        # TODO bug? setting stopLoss
         if not self.lf:
             print('No trades are loaded. Nothing to summarize.')
             return
@@ -540,6 +568,7 @@ class SumControl(QMainWindow):
         self.lf.setMstkVals(key, fval, note)
 
     def loadLayoutForms(self, lf):
+        '''Add the layoutForms object to self'''
         self.lf = lf
 
     def loadTrade(self, key):
@@ -617,10 +646,12 @@ class SumControl(QMainWindow):
             self.ui.chart3Interval.setValue(c3[3])
 
     def dasDefault(self, b):
+        '''Set the self.settings value for input type to DAS'''
         self.settings.setValue('inputType', 'DAS')
         self.setFormDate()
 
     def ibDefault(self, b):
+        '''Set the self.settings value for input type to IB'''
         self.settings.setValue('inputType', 'IB_HTML')
         self.setFormDate()
 
@@ -628,7 +659,7 @@ class SumControl(QMainWindow):
         '''
         Callback when dateEdit is changed. Gather the settings and locate what input files exist.
         Enable/disable radio buttons to choose IB or DAS. Load up the filename in the lineEdit.
-        If it exists, green. If not red. If the directory doesn't exist, set blank. 
+        If it exists, green. If not red. If the directory doesn't exist, set blank.
         ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir]
         '''
         daDate = self.ui.dateEdit.date()
@@ -686,14 +717,14 @@ class SumControl(QMainWindow):
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
             self.ui.goBtn.setStyleSheet('color:black')
-        
+
         if self.settings.value('outdirPolicy') == 'default':
             outdir = self.getDirectory()
             outdir = os.path.join(outdir, 'out/')
             self.settings.setValue('outdir', outdir)
 
     def getInfile(self):
-        # TODO Need a choosing mechanism for DAS or IB
+        '''Currently unused. If that changes, look for errors'''
         d = self.getDirectory()
         infile = self.settings.value('dasInfile')
         if not d or not infile:
@@ -776,10 +807,10 @@ class SumControl(QMainWindow):
             fstop = float(slDiff)
             if fstop == 0 or ftarg == 0:
                 self.ui.rr.setText('')
-                return
+                return ''
         except ValueError:
             self.ui.rr.setText('')
-            return
+            return ''
 
         dval = abs(ftarg/fstop)
 
@@ -803,7 +834,7 @@ class SumControl(QMainWindow):
             slDiff = float(slDiff)
             shares = int(shares)
         except ValueError:
-            return
+            return 0.0
         if 'long' in self.ui.tradeList.currentText().lower():
             assert shares > 0
             if slDiff >= 0:
@@ -826,6 +857,11 @@ class SumControl(QMainWindow):
     # =================================================================
 
     def getDirectory(self):
+        '''
+        Get the location of the current input directory. This should correspond to the values
+        found in selected date, input file type, journal location and the scheme (from the
+        filesettings dlg)
+        '''
 
         scheme = self.settings.value('scheme')
         journal = self.settings.value('journal')
@@ -849,6 +885,7 @@ class SumControl(QMainWindow):
         return inpath
 
     def getOutdir(self):
+        '''Return the location of outdir as found in self.settings'''
         return self.settings.value('outdir', '')
 
     # =================================================================
@@ -868,7 +905,7 @@ class SumControl(QMainWindow):
         if self.ui.ibImport.isChecked():
             self.ibDefault(True)
         else:
-            self.fui.dasImport.setChecked(True)
+            self.ui.dasImport.setChecked(True)
             self.dasDefault(True)
 
     def stockAPIDlg(self):
@@ -878,7 +915,8 @@ class SumControl(QMainWindow):
         sapi.exec()
 
     def stratBrowseDlg(self):
-    
+        '''Show the strategy dialog'''
+
         apiset = QSettings('zero_substance/stockapi', 'structjour')
         if not apiset.value('dbsqlite'):
             j = self.settings.value('journal')
@@ -913,7 +951,7 @@ def verifyNameInfo(daDate, s):
     if s[0].startswith('Trade') and len(s) > 6:
         if s[2].lower() in ['long', 'short'] and s[5] == 'days' and len(s[3]) == 6:
             tsplit = s[6].split('.')
-            if len(tsplit) == 3 and s[7].find('min') >=0:
+            if len(tsplit) == 3 and s[7].find('min') >= 0:
                 try:
                     int(s[3])
                     int(s[4])
@@ -937,7 +975,7 @@ def verifyNameInfo(daDate, s):
                                     seconds=int(tsplit[2]))
                 end = start + delt
                 interval = int(s[7].split('min')[0])
-                
+
                 return True, [start, end, interval]
     return False, []
 
