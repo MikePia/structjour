@@ -266,74 +266,26 @@ def getLdf():
     df = getRandomTradeDF()
     tu = DefineTrades()
     ldf = tu.getTradeList(df)
-    return ldf
+    return ldf, df
 
 
-def getTradeSummaries():
+def getRandGenTradeStuff():
     '''
     Gets random trade version of tradeSummaries, ts (the dict form of the same), entries, and
-    initialImagenames.
+    initialImagenames and ldf. tradeSummaries and ts are redundant (list and dict). df and ldf are
+    redundant (dataframe and list of sub-dataframe). They are used at different points in the 
+    program. They are all made available to test all parts.
     '''
-    print('Its really the end of the worlda s anyone ever knew it. hitler won. Congratulations establishment')
-    return runSummaries(getLdf())
-
-class Test_RandomTradeGen(TestCase):
-    '''
-    Run all of structjour with a collection of input files and test the outcome. These
-    are tests of a utility for testing. Not part of the main testing suite. Some of the other
-    tests will run similar code with these tests.
-    '''
-
-    def __init__(self, *args, **kwargs):
-        super(Test_RandomTradeGen, self).__init__(*args, **kwargs)
-
-    def test_randomTradeGenerator(self):
-        '''
-        Test the randomtradeGenerator. Demonstrates how to aggregate trades and tests the output.
-        Specifically test that each trade increments Time forward and ends with a 0 balance.
-        :Usage: To conglomerate trades use the exclude parameter and reset the index of the
-        conglomerated file. EVentually alter this and test the dates to limits and multiple days
-        '''
-        earliest = pd.Timestamp('2018-06-06 09:30:00')
-        delt = pd.Timedelta(minutes=1)
-        df = pd.DataFrame()
-        exclude = []
-        numTrades = 4     # Number of trades to aggregate into single statement
-        for i in range(numTrades):
-            tdf, earliest = randomTradeGenerator2(i+1, earliest=earliest,
-                                                  pdbool=True, exclude=exclude)
-            exclude.append(tdf.iloc[0].Symb)
-            df = df.append(tdf)
-            earliest = earliest + delt
-            lastd = None
-            thisd = None
-            xl = tdf.index[-1]
-            for j, row in tdf.iterrows():
-                if j != xl:
-                    self.assertNotEqual(tdf.at[j, 'Balance'], 0)
-                else:
-                    self.assertEqual(tdf.at[j, 'Balance'], 0)
-                thisd = row.Time
-                if lastd:
-                    if lastd > thisd:
-                        print(thisd, lastd, thisd-lastd, thisd > lastd)
-                        print('SSSSSTTTTTOOOOOPPPPP NNNNNOOOOOWWWWWW ')
-                        print(df)
-                        self.assertGreater(thisd, lastd)
-
-                lastd = thisd
-
-            # df.reset_index(drop=True, inplace=True)
-            # df = df.sort_values(['Symb', 'Account', 'Time'])
-            # print(df)
-
-
+    ldf, df = getLdf()
+    tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
+    return tradeSummaries, ts, entries, initialImageNames, df, ldf
 
 
 def notmain():
     '''Run some local code'''
     for i in range(0, 10):
-        tradeSummaries, ts, entries, initialImageNames = getTradeSummaries()
+        tradeSummaries, ts, entries, initialImageNames, df, ldf = getRandGenTradeStuff()
+        
         print(initialImageNames)
     
     # print(getRandomTradeDF())

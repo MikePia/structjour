@@ -116,19 +116,18 @@ class ExportToExcel:
         dailySumData = dc.gatherDSumData(self.ts)
         anchor = (anchor[0], anchor[1] + mistake.numTrades + 5)
         for key in dailySumData.keys():
-            rng = mistake.dailySummaryFields[key][0]
-            if isinstance(rng, list):
-                rng = rng[0]
-            ws[tcell(rng, anchor=anchor)] = dailySumData[key]
+            cell = mistake.dailySummaryFields[key][0]
+            if isinstance(cell, list):
+                cell = cell[0]
+            ws[tcell(cell, anchor=anchor)] = dailySumData[key]
 
     def populateXLMistakeForm(self, mistake, ws, imageLocation):
         '''
-        For the export to excel the mistake summary form.
-        Populate the dynamic parts of mistake summaries. That includes fomulas with references to
-        tradeSummaries and hyperlinks to the same. The cell location for the links to tradeSummaries
-        requires then anchor information in imageLocation and the specific cell within
-        tradeSummaries found in mistakeFields. The return hyperlinks in the tradeSummaries forms are
-        also translated here.
+        For the export to excel the mistake summary form. Populate the dynamic parts of mistake
+        summaries. That includes fomulas and hyperlinks with references to tradeSummaries and
+        hyperlinks to back. The cell location for the links to tradeSummaries requires then
+        anchor information in imageLocation and the specific cell within tradeSummaries found in
+        mistakeFields. The return hyperlinks in the tradeSummaries forms are also translated here.
 
         :parmas mistake: A dataframe containing the info to populate the mistake summary form.
         :params ws: The openpyxl worksheet object.
@@ -203,7 +202,7 @@ class ExportToExcel:
 
     def populateXLDailyFormulas(self, imageLocation, ws):
         '''
-        Helper method for export to excel. Populate the excel fromulas in the daily summary forms.
+        Helper method for export to excel. Populate the excel formulas in the daily summary forms.
         The formulas are in self.ts and the information to transalte cell location is in
         imageLocation
         '''

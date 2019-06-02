@@ -151,7 +151,7 @@ class DailyControl(QWidget):
         date can be given as an argument or retrieved from the df argument for runDialog.
         '''
         if not self.date:
-            print('Cannot retrieve a not without a date')
+            print('Cannot retrieve a note without a date')
             return
         d = self.date.strftime('%Y%m%d')
         d = int(d)

@@ -28,10 +28,9 @@ from journal.thetradeobject import SumReqFields
 
 class MistakeSummary:
     '''
-    An Excel Form. Coordinates are excel coordinates with a translation anchor.
-    This class will handle the named styles, location, headers and excel formulas. All of the data
-    in the form is either header or formula. The user class is responsible for the cell translation
-    coordinates in the formulas.
+    Two excel Forms, mistake and dailysummary. Coordinates are excel coordinates with a translation
+    anchor. This class will handle the named styles, location, headers and excel formulas. The user
+    of this class is responsible for the cell translation coordinates in the formulas.
     '''
 
     def __init__(self, numTrades, anchor=(1, 1)):
@@ -76,6 +75,7 @@ class MistakeSummary:
         }
 
         # Dynamically add rows to mistakeFields
+        # for name, trade pl, lost pl, mistake note (n, tpl, pl, m)
         for i in range(numTrades):
             n = "name" + str(i + 1)
             tp = "tpl" + str(i + 1)
@@ -119,7 +119,7 @@ class MistakeSummary:
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
         '''
         Create the shape and stye for the Mistake summary form, populate the static values.
-        The rest is done in layoutsheet including formulas (with cell translation) and the
+        The rest is done elsewhere including formulas (with cell translation) and the
         names, each with a hyperinks to the Trade Summary form.
         :params ws: The openpyx worksheet object
         :params tf: The TradeFormat object which has the styles
