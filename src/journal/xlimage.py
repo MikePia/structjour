@@ -39,7 +39,7 @@ class XLImage:
     '''Handle image stuff'''
 
 #     20.238095238095237
-    def __init__(self, default='../../images/ZeroSubstanceCreation_500x334.png', heightInCells=20, pixPerCell=19.3):
+    def __init__(self, default='images/ZeroSubstanceCreation_500x334.png', heightInCells=20, pixPerCell=19.3):
         '''
         Create the XLImage, set the name and the size image here.
         :params default: Location of a default image to use
