@@ -554,17 +554,22 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trades are loaded. Nothing to summarize.')
             return
-        val = self.ui.lost.text()
+        lostval = self.ui.lost.text()
         note = self.ui.sumNote.toPlainText()
         key = self.ui.tradeList.currentText()
+        stopval = self.ui.stop.text()
         if note:
             self.lf.setClean(key, False)
-        if not val:
+        if not lostval:
             if not note:
                 self.lf.setClean(key, True)
-                self.stopLoss(val)
+                self.stopLoss(stopval)
             val = '0.0'
-        fval = float(val)
+        
+        try:
+            fval = float(lostval)
+        except ValueError:
+            fval = None
         self.lf.setMstkVals(key, fval, note)
 
     def loadLayoutForms(self, lf):
