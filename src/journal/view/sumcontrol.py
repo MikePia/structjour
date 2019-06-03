@@ -157,9 +157,14 @@ class SumControl(QMainWindow):
         if not self.lf or self.lf.df is None:
             print('The input file is not loaded')
             return
-        dControl = DailyControl()
-        dControl.runDialog(self.lf.df, self.lf.ts)
-        dControl.show()
+
+        # Some programming weirdness here. This dialog was working, then it stopped working. From
+        # SO, a modeless dialog needs to be called as self.dialog rather than just dialog. Kind of
+        # makes sense and adding self fixed the behavior but does not explain why it used to work.
+        self.dControl = DailyControl()
+        self.dControl.setModal(False)
+        self.dControl.runDialog(self.lf.df, self.lf.ts)
+        self.dControl.show()
 
     def strategyChanged(self, index):
         '''Signal callback when user chooses a strtegy in the strategy combo box'''

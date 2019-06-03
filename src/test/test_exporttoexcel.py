@@ -125,8 +125,6 @@ class Test_ExportToExcel(TestCase):
             self.assertIsInstance(wb.active[cell].value, str)
             self.assertIsInstance(wb.active[cell2].value, str)
 
-    
-
 class Test_ExportToExcel_MistakeData(TestCase):
     '''
     Test the forms data. Elaborate setup. Kind of eloborate tests. It Aint TDD

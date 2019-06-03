@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget, QDialog
 
 from journal.thetradeobject import SumReqFields
 from journal.view.dailyform import Ui_Form as DailyForm
@@ -51,7 +51,7 @@ def fc(val):
 
     return val
 
-class DailyControl(QWidget):
+class DailyControl(QDialog):
     '''
     Controller for the daily summary form. The form includes a user notes saved in db, 2 daily
     summary forms and processed input file showing the days transactions. The daily summaryies
@@ -350,6 +350,8 @@ class DailyControl(QWidget):
         self.modelS.appendRow(row)
 
         dailySumData = self.gatherDSumData()
+        if not dailySumData:
+            return
 
 
         ro1 = [QStandardItem('Live Total'), QStandardItem(str(dailySumData['livetot'])), QStandardItem(dailySumData['livetotnote'])]
@@ -416,13 +418,15 @@ if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
-    d1 = pd.Timestamp(2030, 6, 6)
-    w = DailyControl(daDate=d1)
     fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'
     if not os.path.exists(fn):
         sys.exit(app.exec_())
     dff = pd.read_csv(fn)
-    print('gotta create swingTrade data type here to run this thing seperately')
+
+    d1 = pd.Timestamp(2030, 6, 6)
+    
+    w = DailyControl(daDate=d1)
     w.runDialog(dff)
     w.show()
+    
     sys.exit(app.exec_())
