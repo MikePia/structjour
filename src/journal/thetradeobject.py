@@ -862,13 +862,12 @@ def imageData(ldf):
     frq = FinReqCol()
     imageNames = list()
     for tdf in ldf:
-        dur = tdf[frq.dur].unique()[-1]
-        if isinstance(dur, (pd.Timedelta, np.timedelta64)):
-            dur = pd.Timedelta(dur).__str__()
-        dur = dur.replace(' ', '_')
-        imageName = '{0}_{1}_{2}_{3}.{4}'.format(tdf[frq.tix].unique()[-1].replace(' ', ''),
-                                                    tdf[frq.name].unique()[-1].replace(' ', '-'),
-                                                    tdf[frq.start].unique()[-1], dur, 'png')
+        tindex = tdf[frq.tix].unique()[-1].replace(' ', '')
+        name = tdf[frq.name].unique()[-1].replace(' ', '_')
+        begin = pd.Timestamp(tdf[frq.start].unique()[-1]).strftime('%H%M%S')
+        dur = pd.Timedelta(tdf[frq.dur].unique()[-1]).__str__().replace(':', '').replace(' ', '_')
+
+        imageName = '{0}_{1}_{2}_{3}.{4}'.format(tindex, name, begin, dur, 'png')
         imageName = imageName.replace(':', '')
         imageNames.append(imageName)
     return imageNames

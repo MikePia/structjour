@@ -464,10 +464,6 @@ class LayoutForms:
 
             begin = qtime2pd(b)
             end = qtime2pd(e)
-            # begin = pd.Timestamp(b.date().year(), b.date().month(), b.date().day(),
-            #                      b.time().hour(), b.time().minute(), b.time().second())
-            # end = pd.Timestamp(e.date().year(), e.date().month(), e.date().day(),
-            #                    e.time().hour(), e.time().minute(), e.time().second())
             delt = end - begin
             bstring = begin.strftime('%H%M%S')
             estring = delt.__str__().replace(':', '.')

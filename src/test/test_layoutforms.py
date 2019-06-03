@@ -24,6 +24,7 @@ Created on June 1, 2019
 '''
 
 from collections import deque
+import datetime as dt
 import os
 import random
 import sys
@@ -38,18 +39,144 @@ import pandas as pd
 from journal.view.layoutforms import LayoutForms
 from journal.view.sumcontrol import SumControl
 from journalfiles import JournalFiles
-from test.rtg import getRandGenTradeStuff, getRandomFuture
+from test.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
 
 from PyQt5.QtWidgets import QApplication
 
 
 app = QApplication(sys.argv)
 
+class Test_LayoutForms(TestCase):
+    '''
+    Test the methods that are not related to storing to self.ts
+    '''
+
+    def __init__(self, *args, **kwargs):
+        '''
+        When we initialze the object, ensure that we always run from src as the cwd
+        '''
+        super(Test_LayoutForms, self).__init__(*args, **kwargs)
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+
+
+    def setUp(self):
+        theDate = pd.Timestamp('2008-06-06')
+        jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
+        tradeS, ts, entries, imageNames, df, ldf = getRandGenTradeStuff()
+        # ldf, df = getLdf()
+
+
+
+        sc = SumControl()
+        theDate = pd.Timestamp('2008-06-06')
+        jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
+        self.lf = LayoutForms(sc, jf, df)
+        self.lf.ts = ts
+        self.lf.entries = entries
+
+    def test_getImageName(self):
+        '''
+        Create a name for a pasted image. Asserts that all the right parts are in the
+        expected places.
+        '''
+        print(self.lf.ts.keys())
+        for key in self.lf.ts:
+            n = self.lf.getImageName(key, 'chart1')
+            # print (n)
+            tindex, symb, side, start, numday, x, end, widg = n.split('_');
+            start = pd.Timestamp('20190101 ' + start).time()
+            numday = int(numday)
+            end = pd.Timestamp('20190101 ' + end).time()
+
+            self.assertTrue(tindex.startswith('Trade'))
+            self.assertTrue(key.find(symb) >  0)
+            self.assertTrue(side in ['Long', 'Short'])
+            self.assertIsInstance(start, dt.time)
+
+            self.assertIsInstance(numday, int)
+            self.assertIsInstance(end, dt.time)
+            self.assertIn('chart1', widg)
+
+
+
+
+    def test_getImageNameX(self):
+        '''Create a name for an API retrieved chart. lf.getChartData uses self.ts[key]'''
+        print(self.lf.ts.keys())
+        for key in self.lf.ts:
+            n = self.lf.getImageNameX(key, 'chart1')
+            tindex, symb, side, start, numday, x, end, interval = n.split('_')
+
+            print (n)
+            
+            start = pd.Timestamp('20190101 ' + start).time()
+            numday = int(numday)
+            end = end.replace('.', '')
+            end = pd.Timestamp('20190101 ' + end).time()
+            interval = interval.split('.')[0]
+
+            self.assertTrue(tindex.startswith('Trade'))
+            self.assertTrue(key.find(symb) >  0)
+            self.assertTrue(side in ['Long', 'Short'])
+            self.assertIsInstance(start, dt.time)
+
+            self.assertIsInstance(numday, int)
+            self.assertIsInstance(end, dt.time)
+            # self.assertIn('chart1', widg)
+        pass
+
+
+    def test_loadSavedFile(self):
+        '''TODO: Place all this default/static in filesettings and simplify this to a single setting
+            {sc.getOutdir}.{sc.ui.infileEdit.text().zst}
+            (static: settings-outdir
+            default: getDirectory()/out/)
+        '''
+        pass
+    def test_populateTradeSumForms(self):
+        '''Populates the sc widgets. Depends on self.ts, sc'''
+        pass
+
+
+    def test_toggleTimeFormat(self):
+        '''Used by sc to toggle the time with date and time in trade summary entries widgets
+        (called from sc). Values from self.ts are reformatted into widgets. 
+        Depends on sc and self.ts'''
+        pass
+
+    
+    def test_runTtoSummaries(self):
+        '''Nearly top level script called from runtrade.runnit-- fefactored most of it -- moved
+        Creates TradeSummaries which will become self.ts dict.'''
+        pass
+
+    def test_getStoredTradeName(self):
+        '''The name for the pickled DataFrame for the active statement. {outdir}/.{infile}.zst
+        Depends on self.jf for theDate and dayformat'''
+        pass
+
+    def test_pickleitnow(self):
+        '''Called when loading from input file, store the DataFrame object. Depends on the processed
+        input df'''
+        pass
+    def test_saveTheTradeObject(self):
+        '''
+                self.ts
+        self.entries
+        settings: stored_trades for default DataFrame
+            self.df for other DataFrame
+        '''
+        pass
+
+
+
+
+
+
 class Test_LayoutForms_ts_data(TestCase):
     '''
-    Test the ExportToExcel Object. Generally use this class for less elaborate setups and
-    Test_ExportToExcel_MistakeData for more elaborate setups (Hyperinks and stuff requiring
-    coordinated data)
+    Test the methods that save to self.ts in LayoutForms
     '''
 
     def __init__(self, *args, **kwargs):
