@@ -247,7 +247,7 @@ stick with it you can get around the brick walls in your life.'''
             '''People often say motivation doesn't last. Well neither does bathing--that's why wee recommend it daily.'''
         ])
         quotes.append([
-            "Buddha", "On Imact", "Guatama Buddha, sage",
+            "Buddha", "On Impact", "Guatama Buddha, sage",
             '''To keep the body in good health is a duty ... otherwise we shall not be able to
 keep our mind strong and clear.'''
         ])
@@ -373,8 +373,9 @@ if they don't have the last one, don't even bother with the first two.'''
         num = randint(0, len(self.df)-1)
 #         print (len(self.df), num)
         qt = self.df.loc[num]
+        quote = qt['quote'].replace('\n', ' ')
         ret = "{0}, {1}\n{2}\n\t\t-{3}".format(
-            qt['name'], qt['on'], qt['quote'], qt['who'])
+            qt['name'], qt['on'], quote, qt['who'])
 
         return ret
 
