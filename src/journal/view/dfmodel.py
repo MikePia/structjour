@@ -86,9 +86,13 @@ class PandasModel(QAbstractTableModel):
         return True
 
     def rowCount(self, parent=QtCore.QModelIndex()): 
+        if self._df is None:
+            return 0
         return len(self._df.index)
 
-    def columnCount(self, parent=QtCore.QModelIndex()): 
+    def columnCount(self, parent=QtCore.QModelIndex()):
+        if self._df is None:
+            return 0
         return len(self._df.columns)
 
     def sort(self, column, order):
