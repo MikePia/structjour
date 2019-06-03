@@ -212,9 +212,13 @@ class SumControl(QMainWindow):
         infile = self.ui.infileEdit.text()
         p, infile = os.path.split(infile)
 
-        outf, ext = os.path.splitext(infile)
-        outf = "." + outf + '.zst'
-        outpathfile = os.path.join(outdir, outf)
+        savename, ext = os.path.splitext(infile)
+        d = self.settings.value('theDate')
+        d = qtime2pd(d)
+        d = pd.Timestamp(d)
+
+        savename = f'''.{savename}{d.strftime('%A_%m%d')}.zst'''
+        outpathfile = os.path.join(outdir, savename)
         return outpathfile
 
     def loadImageFromFile(self, widg, name):

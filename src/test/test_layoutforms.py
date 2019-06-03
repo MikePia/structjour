@@ -62,7 +62,7 @@ class Test_LayoutForms(TestCase):
 
     def setUp(self):
         theDate = pd.Timestamp('2008-06-06')
-        jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
+        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
         tradeS, ts, entries, imageNames, df, ldf = getRandGenTradeStuff()
         # ldf, df = getLdf()
 
@@ -70,8 +70,8 @@ class Test_LayoutForms(TestCase):
 
         sc = SumControl()
         theDate = pd.Timestamp('2008-06-06')
-        jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
-        self.lf = LayoutForms(sc, jf, df)
+        # jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
+        self.lf = LayoutForms(sc, self.jf, df)
         self.lf.ts = ts
         self.lf.entries = entries
 
@@ -133,6 +133,8 @@ class Test_LayoutForms(TestCase):
             (static: settings-outdir
             default: getDirectory()/out/)
         '''
+        name = self.lf.sc.getSaveName()
+        print()
         pass
     def test_populateTradeSumForms(self):
         '''Populates the sc widgets. Depends on self.ts, sc'''
