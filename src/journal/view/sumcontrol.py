@@ -34,6 +34,8 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap
 
 import pandas as pd
 
+from inspiration.inspire import Inspire
+from journal.view.chartcontrol import ChartControl
 from journal.view.filesetcontrol import FileSetCtrl
 from journal.view.ejcontrol import EJControl
 from journal.view.exportexcel import ExportToExcel
@@ -93,6 +95,10 @@ class SumControl(QMainWindow):
             elif intype == 'IB_HTML':
                 self.ui.ibImport.setChecked(True)
 
+        # Minimal implementation
+        inspire = Inspire()
+        quote = inspire.getrandom().replace("\t", "        ")
+        self.ui.inspireQuote.setText(quote)
         # Create connections for widgets on this form
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
@@ -130,6 +136,7 @@ class SumControl(QMainWindow):
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
         self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
         self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
+        self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
 
         # Set the file related widgets
         d = pd.Timestamp.today()
@@ -603,6 +610,9 @@ class SumControl(QMainWindow):
         in the db, then add it too. Call lf.setStrategy to update the tto
         :strat: THe currently stored strat for this trade
         '''
+        if not self.lf:
+            print('Cannot load strategies right now')
+            return
         strats = Strategy()
         stratlist = [x[1] for x in strats.getPreferred()]
         # if strat and not strat in stratlist:
@@ -946,6 +956,11 @@ class SumControl(QMainWindow):
         stratB.show()
         stratB.exec()
         self.loadStrategies(None)
+
+    def chartSetDlg(self):
+        chartsettings = QSettings('zero_substance/chart', 'structjour')
+        self.chartDlg = ChartControl(chartsettings)
+
 
 def verifyNameInfo(daDate, s):
     '''

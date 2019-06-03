@@ -96,16 +96,16 @@ class Ui_MainWindow(object):
         self.exportBtn.setObjectName("exportBtn")
         self.verticalLayout.addWidget(self.exportBtn)
         self.horizontalLayout_4.addLayout(self.verticalLayout)
-        self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
+        self.inspireQuote = QtWidgets.QTextBrowser(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
-        self.textBrowser.setSizePolicy(sizePolicy)
-        self.textBrowser.setMinimumSize(QtCore.QSize(450, 80))
-        self.textBrowser.setMaximumSize(QtCore.QSize(16777215, 80))
-        self.textBrowser.setObjectName("textBrowser")
-        self.horizontalLayout_4.addWidget(self.textBrowser)
+        sizePolicy.setHeightForWidth(self.inspireQuote.sizePolicy().hasHeightForWidth())
+        self.inspireQuote.setSizePolicy(sizePolicy)
+        self.inspireQuote.setMinimumSize(QtCore.QSize(450, 80))
+        self.inspireQuote.setMaximumSize(QtCore.QSize(16777215, 80))
+        self.inspireQuote.setObjectName("inspireQuote")
+        self.horizontalLayout_4.addWidget(self.inspireQuote)
         self.horizontalLayout_7.addLayout(self.horizontalLayout_4)
         self.dailySum = QtWidgets.QPushButton(self.centralwidget)
         self.dailySum.setObjectName("dailySum")
@@ -1243,7 +1243,7 @@ class Ui_MainWindow(object):
         self.saveBtn.setText(_translate("MainWindow", "Save"))
         self.exportBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Export data and graphs to an Excel file.</p></body></html>"))
         self.exportBtn.setText(_translate("MainWindow", "Export to Excel"))
-        self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+        self.inspireQuote.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"

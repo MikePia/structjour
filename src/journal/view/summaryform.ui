@@ -164,7 +164,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QTextBrowser" name="textBrowser">
+           <widget class="QTextBrowser" name="inspireQuote">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
               <horstretch>0</horstretch>
