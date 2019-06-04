@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-import datetime
+import datetime as dt
 import os
 from openpyxl import load_workbook
 
@@ -29,7 +29,7 @@ import pandas as pd
 
 
 class DisReqCol(object):
-    def __init__(self, thedate=datetime.date.today()):
+    def __init__(self, thedate=dt.date.today()):
         self.thedate = thedate
         rcvals = ["Date", "Time", "Long/Short", "Ticker", "Entry Price", "Account Balance", "Position",
                   "Stop Loss", "Target", "Average Exit", "P / L", "Strategy", "Trade Notes"]
@@ -73,6 +73,35 @@ class DisReqCol(object):
         self.rc = rc
         self.tfcolumns = tfcolumns
 
+def doctorTheTrade(newdf, daDate):
+    '''
+    Fix up the time entries to contain the dates as Timestamps
+    '''
+    for i in range(0, 8):
+        key = 'Time' + str(i+1)
+        if newdf[key].any():
+            val = newdf[key].unique()[0]
+            if isinstance(val, str):
+                datestring = daDate.strftime('%Y-%m-%d ')
+                if len(val) == 8 or len(val.split(':')) == 3:
+                    d = pd.Timestamp(datestring + val)
+                    newdf[key] = d
+                else:
+                    raise ValueError('Unrecognized timestring:', val)
+            elif isinstance(val, dt.time):
+                timestring = val.strftime('%H:%M:%S')
+                newdf[key] = pd.Timestamp(datestring + timestring)
+            elif isinstance(val, pd.Timestamp):
+                pass
+            else:
+                msg = 'Unexpected type: ' + str(type(val))
+                raise ValueError(msg)
+        else:
+            pass
+            # print(newdf[key].unique())
+            # print(len(newdf[key].unique()))
+
+    return newdf
 
 def loadTradeSummaries(loc, trades):
     '''
@@ -96,6 +125,7 @@ def loadTradeSummaries(loc, trades):
                 cell = cell[0]
             cell = tcell(cell, anchor=(1, rowNum))
             newdf.iloc[-1][reqCol[key]] = trades[cell].value
+       
         ldf.append(newdf)
     return ldf
 
@@ -165,8 +195,8 @@ def getWeekCount(theDate):
     Week 2 will begin on Monday the 10th.
     :params:theDate: the date to test. A timedate.date object
     '''
-    startMonth = datetime.date(theDate.year, theDate.month, 1)
-    delt = datetime.timedelta(1)
+    startMonth = dt.date(theDate.year, theDate.month, 1)
+    delt = dt.timedelta(1)
     weekCount = 1
     startCounting = False
     while startMonth <= theDate:
@@ -191,9 +221,9 @@ def getDevelDailyJournalList(prefix, begin):
     thelist = list()
     # prefix=prefix
     weekCount = getWeekCount(begin)
-    now = datetime.date.today()
+    now = dt.date.today()
     theDate = begin
-    delt = datetime.timedelta(1)
+    delt = dt.timedelta(1)
     oldmonth = theDate.month
 
     while now >= theDate:
@@ -219,6 +249,59 @@ def getDevelDailyJournalList(prefix, begin):
         theDate = theDate+delt
 
     return thelist
+
+def getTradeSummary(fname, daDate):
+    wb = load_workbook(fname)
+    ws = wb.active
+    tradeLoc = getTradeSummaryFormLocations(ws)
+    ldf = loadTradeSummaries(tradeLoc, ws)
+    for tdf in ldf:
+        tdf = doctorTheTrade(tdf, daDate) 
+    return ldf
+
+
+def getTradeTable(fname, daDate):
+    wb = load_workbook(fname)
+    ws = wb.active
+    
+    data = list()
+    columns = list()
+    start = False
+    tot1 = False
+    collen = 0
+    for row in ws.iter_rows():
+        val = row[0].value
+        darow = list()
+        if val and val == 'Tindex':
+            start = True
+            print('And so it starts')
+            for cval in row:
+                if cval.value == None:
+                    collen = len(columns)
+                    break
+                columns.append(cval.value)
+        elif start:
+            if row[0].value and row[0].value.startswith('Trade'):
+                for i in range(0, collen):
+                    darow.append(row[i].value)
+                data.append(darow)
+            else:
+                for i in range(0, collen):
+                    darow.append(row[i].value)
+                data.append(darow)
+                tot1 = True
+                start = False
+        elif tot1:
+            for i in range(0, collen):
+                    darow.append(row[i].value)
+            data.append(darow)
+            break
+    dframe = pd.DataFrame(data=data, columns=columns)
+    return dframe
+    
+
+                
+
 
 
 def registerTrades(tsList, wb):
@@ -344,7 +427,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
 
-    begin = datetime.date(2018, 10, 15)
+    begin = dt.date(2018, 10, 15)
     prefix = "C:/trader/journal/"
     flist = getDevelDailyJournalList(prefix, begin)
     registerTrades(flist, wb)
@@ -362,7 +445,7 @@ if __name__ == '__main__':
 #     print("Does not exist", disPath)
 #     quit(0)
 
-# begin=datetime.date(2018, 10, 15)
+# begin=dt.date(2018, 10, 15)
 # prefix="C:/trader/journal/"
 # flist = getDevelDailyJournalList(prefix, begin)
 # for x in flist :
