@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget, QDialog
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget, QDialog, QMessageBox
 
 from journal.thetradeobject import SumReqFields
 from journal.view.dailyform import Ui_Form as DailyForm
@@ -51,7 +51,17 @@ def fc(val):
 
     return val
 
-class DailyControl(QDialog):
+class QDialogWClose(QDialog):
+   def closeEvent(self, event):
+    print("X is clicked")
+    t = self.windowTitle()
+    if t.find('text edited') > 0:
+        msg = 'Daily notes contents has changed. Would you like to save it?\n'
+        ok = QMessageBox.question(self, 'Save Notes?', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if ok == QMessageBox.Yes:
+            self.commitNote()
+
+class DailyControl(QDialogWClose):
     '''
     Controller for the daily summary form. The form includes a user notes saved in db, 2 daily
     summary forms and processed input file showing the days transactions. The daily summaryies
