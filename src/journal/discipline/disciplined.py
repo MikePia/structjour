@@ -106,18 +106,20 @@ def doctorTheTrade(newdf, daDate):
 def loadTradeSummaries(loc, trades):
     '''
     Load up each trade summary in the excel doc into a 1 row DataFrame, return a list
-    of these DataFrames
+    of these DataFrames. The addresses are supplied by srf plus the loc object that has the
+    anchors.
     :params:loc: A list of the rows within the excel doc on which to find the trade summaries
     :return: A list of 1-row DataFrames Each trade is on one row from each of the trade summay forms
     '''
 
     ldf = list()
+    ts = dict()
     srf = SumReqFields()
     reqCol = srf.rc
     newdf = pd.DataFrame(columns=reqCol.values())
     colFormat = srf.tfcolumns
 
-    for rowNum in loc:
+    for i, rowNum in enumerate(loc):
         newdf = DataFrameUtil.createDf(newdf, 1)
         for key in reqCol.keys():
             cell = colFormat[reqCol[key]][0]
@@ -125,9 +127,11 @@ def loadTradeSummaries(loc, trades):
                 cell = cell[0]
             cell = tcell(cell, anchor=(1, rowNum))
             newdf.iloc[-1][reqCol[key]] = trades[cell].value
-       
+
+        tradekey = str(i+1) + ' ' +  newdf.iloc[0].Name
+        ts[tradekey] = newdf
         ldf.append(newdf)
-    return ldf
+    return ldf, ts
 
 
 def getTradeSummaryFormLocations(ws):
@@ -250,15 +254,63 @@ def getDevelDailyJournalList(prefix, begin):
 
     return thelist
 
+def recreateFPEntries(ts):
+    fpentries = dict()
+    entry = list()
+    for key in ts:
+        entry = list()
+        for i in range(1,9):
+            price = side = dtime = None
+            entrykey = 'Entry' + str(i)
+            exitkey = 'Exit' + str(i)
+            sharekey = 'EShare' + str(i)
+            timekey = 'Time' + str(i)
+
+            if ts[key][entrykey].any():
+                price = ts[key][entrykey].item()
+            elif ts[key][exitkey].item():
+                price = ts[key][exitkey].item()
+
+            if ts[key][sharekey].item():
+                side = 'B' if ts[key][sharekey].item() > 0 else 'S'
+
+            if ts[key][timekey].item():
+                dtime = ts[key][timekey].item()
+            if price == None and side == None and dtime == None:
+                break
+            entry.append([price, 'deprecated', side, dtime])
+        print()
+        fpentries[key] = entry
+    return fpentries
+
 def getTradeSummary(fname, daDate):
     wb = load_workbook(fname)
     ws = wb.active
     tradeLoc = getTradeSummaryFormLocations(ws)
-    ldf = loadTradeSummaries(tradeLoc, ws)
+    ldf, ts = loadTradeSummaries(tradeLoc, ws)
+    fpentries = recreateFPEntries(ts)
     for tdf in ldf:
         tdf = doctorTheTrade(tdf, daDate) 
-    return ldf
+    return ldf, ts, fpentries
 
+def doctorThetable(df, daDate):
+    '''Add a Date field if its missing'''
+
+    if 'Date' not in df.columns:
+        d = daDate
+        for i, row in df.iterrows():
+            if not row.Time:
+                break
+            t = row.Time
+            assert isinstance(t, str)
+            datestring = daDate.strftime('%Y-%m-%d ')
+            if len(t) == 8 and len(t.split(':')) == 3:
+                newd = pd.Timestamp(datestring + t)
+                df.at[i, 'Date'] = newd
+            else:
+                raise ValueError('Unrecognized timestring:', t)
+
+    return df
 
 def getTradeTable(fname, daDate):
     wb = load_workbook(fname)
@@ -269,8 +321,24 @@ def getTradeTable(fname, daDate):
     start = False
     tot1 = False
     collen = 0
+    notes = None
+    gotsomething = False
+    gotitforsure = False
     for row in ws.iter_rows():
         val = row[0].value
+
+        # This should get the first item above the table if there is only one and the second item
+        # if there are two above the table. IOW, this should get the quote or the notes-if they
+        # exist- with a preference for the notes.
+        if not start and not tot1:
+            if not gotsomething and val != 'Tindex':
+                if val:
+                    notes = val
+                    gotsomething = True
+            elif val and gotitforsure == False and val != 'Tindex':
+                notes = val
+                gotitforsure = True
+
         darow = list()
         if val and val == 'Tindex':
             start = True
@@ -297,7 +365,8 @@ def getTradeTable(fname, daDate):
             data.append(darow)
             break
     dframe = pd.DataFrame(data=data, columns=columns)
-    return dframe
+    dframe = doctorThetable(dframe, daDate)
+    return dframe, notes
     
 
                 
@@ -312,7 +381,8 @@ def registerTrades(tsList, wb):
 
         tradeLocation = getTradeSummaryFormLocations(trades)
 
-        ldf = loadTradeSummaries(tradeLocation, trades)
+        ldf, ts = loadTradeSummaries(tradeLocation, trades)
+        
         drc = DisReqCol(theDate)
 
         tlog = wb["Trade Log"]

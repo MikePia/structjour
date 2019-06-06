@@ -292,14 +292,15 @@ class LayoutForms:
         :params ckey: The widget name of the clickLabel will be one of 'chart1', 'chart2', or
                     'chart3'
         '''
+        from PyQt5.QtCore import QDate
 
         assert ckey in ('chart1', 'chart2', 'chart3')
         tto = self.ts[key]
         name = tto[ckey].unique()[0]
         begin = tto[ckey + 'Start'].unique()[0]
         end = tto[ckey + 'End'].unique()[0]
-        if not isinstance(begin, (pd.Timestamp, dt.datetime, np.datetime64)) or (
-                not isinstance(end, (pd.Timestamp, dt.datetime, np.datetime64))):
+        if not isinstance(begin, (pd.Timestamp, dt.datetime, np.datetime64, QDate)) or (
+                not isinstance(end, (pd.Timestamp, dt.datetime, np.datetime64, QDate))):
             print('WARNING: date type is not standard', type(begin))
             return None
 
@@ -483,8 +484,8 @@ class LayoutForms:
         name = key.replace(' ', '_')
         data = self.getChartData(key, wloc)
 
-        if not data:
-            raise ValueError('Raise the error to call attention to programming deficit')
+        # if not data:
+        #     raise ValueError('Raise the error to call attention to programming deficit')
 
         b = pd.Timestamp(data[1])
         e = pd.Timestamp(data[2])

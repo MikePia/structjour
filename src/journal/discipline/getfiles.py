@@ -58,11 +58,28 @@ class manageSavedStuff:
         savename = f'''.{infile}{theDate.strftime('%A_%m%d')}.zst'''
         return savename
 
-    def loadXlFileAsTS(self, sumList):
+    def loadEverything(self, xlname, key):
+        ldf, ts, fpentries = getTradeSummary(xlname, key)
+        dframe, notes = getTradeTable(xlname, key)
+        return ldf, ts, fpentries, dframe, notes
 
-        ldfs = list()
-        dframes = list()
-        dailynotes = list()
+    def pickleADay(self, infile):
+        '''Save one day'''
+        pass
+
+    def pickleEmAll(self):
+        'Utility to save a bunch of days'
+        pass
+
+    def loadXlFileAsTS(self, sumList):
+        from journal.thetradeobject import TheTradeObject, SumReqFields
+
+        ldflist = list()
+        dframelist = list()
+        dailynoteslist = list()
+        fpentrieslist = list()
+        tslist = list()
+        srf = SumReqFields()
         for key in sumList:
             outdirfrmt = self.frmt + 'out/'
             outdir = key.strftime(outdirfrmt)
@@ -73,21 +90,28 @@ class manageSavedStuff:
                     if not objs[2]:
                         print('load it up', key)
                         for xl in objs[1]:
+
                             xlname = os.path.join(outdir, xl)
-                            ldf = getTradeSummary(xlname, key)
-                            ldfs.append(ldf)
-                            dframe = getTradeTable(xlname, key)
-                            dframes.append(dframe)
+                            ldf, ts, fpentries, dframe, notes = self.loadEverything(xlname, key)
+                            print('completed', xlname, key)
+                            print(notes)
                             print()
-                # print(key.strftime('%m-%d'), objs)
-        return ldfs
+
+                            ldflist.append(ldf)
+                            tslist.append(ts)
+                            fpentrieslist.append(fpentries)
+                            dailynoteslist.append(notes)
+                            dframelist.append(dframe)
+
+        return ldflist, tslist, dailynoteslist, fpentrieslist, dframelist
 
         print()
         print()
 
     def gatherDailySumList(self, begin):
         '''
-        Gets a dictionary of all input file and all saved files associated with each input file
+        Gets a dictionary of all input file and all saved files associated with each input file.
+        Relies on the structjour file layout implemented using the 'scheme' and 'journal' settings.
         :begin: Earliest input file day
         '''
         if not  os.path.exists(self.basedir):
