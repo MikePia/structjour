@@ -315,18 +315,41 @@ class SumControl(QMainWindow):
 
         pname = os.path.join(outdir, name)
 
+        # Programming note. Resolution?. Fix up entries here for use in placing markers on graphs.
+        # Leaving the original entries created in theTradeObject.runSummaries but
+        # this stuff seems out of place here
+        # In tto, entries includes all the stuff in the entries in the Summary form
+        # Not sure I need all that but ... Not sure I don't- leaving it for now
+        # Also the candle index is worthless here because we just have to recalculate
+        # to account for differences in data from different stock APIs.
+        # But this data structure is the one we are using (argument for rewriting tto.__setEntries and
+        # blitzing the need for this)
         entries = self.lf.getEntries(key)
         fpentries = list()
-        for e in entries:
-            etime = e[1]
-            diff = etime - begin if (etime > begin) else (begin-etime)
+        if entries and  len(entries[0]) == 6:
+            # TODO-- implemented partial resolution to above. New files get the new entries,
+            # old ones are converted here, same as it ever was, but a path to upgrading is in queue
+            # Deprecated version in place to accomodate my personal old files. -- Try to upgrade
+            # all then blitz this. To upgrade the the new version, either load it from the file
+            # (Go button) or load it from the saved excel file (no button yet). Loading from the
+            # saved file (load button) Will load whatever it already has. Need a saved file
+            # management dialog showing all avalialbe input files, along with their associated
+            # qt python object files and exported excel files
+            for e in entries:
+                etime = e[1]
+                diff = etime - begin if (etime > begin) else (begin-etime)
 
-            candleindex = int(diff.total_seconds()/60//interval)
-            candleindex = -candleindex if etime < begin else candleindex
-            L_or_S = 'B'
-            if e[2] < 0:
-                L_or_S = 'S'
+                candleindex = int(diff.total_seconds()/60//interval)
+                candleindex = -candleindex if etime < begin else candleindex
+                L_or_S = 'B'
+                if e[2] < 0:
+                    L_or_S = 'S'
+            
             fpentries.append([e[0], candleindex, L_or_S, etime])
+        else:
+            if entries:
+                assert len(entries[0]) == 4
+            fpentries = entries
 
         fp.entries = fpentries
 

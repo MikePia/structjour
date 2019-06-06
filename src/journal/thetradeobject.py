@@ -593,13 +593,14 @@ class TheTradeObject:
 
     def __setEntries(self, imageName=None):
         '''
-        This method places data into the trade summary from entries, exits, time of
-        transaction, number of shares, and the difference between price of this
-        transaction and the 1st entry (or over night hold entry).  The strategy I
-        adopted for overnight hold is not ideal. Keep brainstorming for alternitives.
-        The logic tree to make entries/exits is convoluted.
+        This method places data into the trade summary from entries, exits, time of transaction,
+        number of shares, and the difference between price of this transaction and the 1st entry
+        (or over night hold entry).  This method also creates the entries object (will be dict
+        eventually) and saves it, not in the dataFrame but as self.entries to be gathered into
+        a dict using parallel keys to lf.ts.
         '''
         entries = list()
+        fpentries = list()
         # exits = list()
         long = False
         entry1 = 0
@@ -649,7 +650,10 @@ class TheTradeObject:
             else:
                 diff = price - entry1
 
+            fpentries.append([price, 'deprecated', row[frc.side], dtime])
+
             if long:
+                    # entries.append(price, cindex, L_or_S,  dtime)
                 if (row[frc.side]).startswith('B') or (row[frc.side]).lower().startswith("hold+"):
                     entries.append([price, dtime, shares, 0, diff, "Entry"])
                 else:
@@ -663,7 +667,7 @@ class TheTradeObject:
 
         # Store this bit seperately for use in chart creation. Avoid having to re-constitute the details. We will
         # add these to a dictionary in LayoutForms using the same key as lf.ts
-        self.entries = entries
+        self.entries = fpentries
 
         if len(entries) > 8:
             more = len(entries) - 8
