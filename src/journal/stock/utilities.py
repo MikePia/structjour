@@ -55,6 +55,8 @@ def qtime2pd(qdt):
 
 def pd2qtime(pdt):
     '''Return a QDateTime from a time objet of Timestamp'''
+    if isinstance(pdt, (QDate, QDateTime)):
+        return QDateTime(pdt)
     pdt = pd.Timestamp(pdt)
     return QDateTime(pdt.year, pdt.month, pdt.day, pdt. hour, pdt.minute, pdt.second)
 
