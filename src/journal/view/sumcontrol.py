@@ -883,12 +883,12 @@ class SumControl(QMainWindow):
         except ValueError:
             return 0.0
         if 'long' in self.ui.tradeList.currentText().lower():
-            assert shares > 0
+            assert shares >= 0
             if slDiff >= 0:
                 self.ui.maxLoss.setText('')
                 return 0.0
         elif 'short' in self.ui.tradeList.currentText().lower():
-            assert shares < 0
+            assert shares <= 0
             if slDiff <= 0:
                 self.ui.maxLoss.setText('')
                 return 0.0

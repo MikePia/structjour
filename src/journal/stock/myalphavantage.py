@@ -179,10 +179,9 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     :params minutes: An int for the candle time, 5 minute, 15 minute etc. If minutes is not one of
         Alphavantage's accepted times, we will resample.
 
-    :returns: A DataFrame of minute indexed by time with columns open, high, low
+    :returns: (status, df, maDict) The DataFrame has minute data indexed by time with columns open, high, low
          low, close, volume and indexed by pd timestamp. If not specified, this
-         will return a weeks data. For now, we will enforce start and end as
-         required parameters in order to require precision from user.
+         will return a weeks data. 
     '''
     print('======= Called alpha =======')
     start = pd.to_datetime(start) if start else None
@@ -233,7 +232,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             time.sleep(60)
             return getmav_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
         # This tells us we have exceeded the limit and gives the premium link. AARRGH. Yahoo come back
-        return None
+        return None, None, None
 
     dataJson = result[keys[1]]
 
@@ -246,10 +245,13 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
 
     if end:
         if end < df.index[0]:
-            print('WARNING: You have requested data that is unavailable:')
-            print(
-                f'Your end date ({end}) is before the earliest first date ({df.index[0]}).')
-            return None, pd.DataFrame()
+            msg = 'WARNING: You have requested data that is unavailable:'
+            msg = msg + f'\Your end date ({end}) is before the earliest first date ({df.index[0]}).'
+            print(msg)
+            metaj['code'] = 666
+            metaj['message'] = msg
+            
+            return metaj, pd.DataFrame(), None
 
     df.rename(columns={'1. open': 'open',
                        '2. high': 'high',
@@ -286,7 +288,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     maDict = movingAverage(df.close, df, start)
 
 
-    # Trim the data to the requested time frame
+    # Trim the data to the requested time frame. If we slice it all off set status message and return
     if start:
         # Remove preemarket hours from the start variable
         starttime = start.time()
@@ -299,9 +301,11 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
                 maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
             l = len(df)
             if l == 0:
-                print(
-                    f"\nWARNING: you have sliced off all the data with the start date {start}")
-                return metaj, pd.DataFrame()
+                msg = f"\nWARNING: you have sliced off all the data with the end date {start}"
+                print(msg)
+                metaj['code'] = 666
+                metaj['message'] = msg
+                return metaj, pd.DataFrame(), maDict
 
     if end:
         if end < df.index[-1]:
@@ -310,8 +314,10 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
                 maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
             l = len(df)
             if l < 1:
-                print(
-                    f"\nWARNING: you have sliced off all the data with the end date {end}")
+                msg = f"\nWARNING: you have sliced off all the data with the end date {end}"
+                print(msg)
+                metaj['code'] = 666
+                metaj['message'] = msg
                 return metaj, pd.DataFrame(), maDict
     # I expect this to fail soon- when this is called with no start or end
     # This code will not stand either through implementing user control over MAs. Its just good for today

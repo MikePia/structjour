@@ -275,7 +275,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     :params minutes: The length of the candle. Defaults to 1 minute
     :return (length, df):A DataFrame of the requested stuff and its length
     '''
-    print('We ar in IB')
+    print('***** IB *****')
     biz = getLastWorkDay()
     if not end:
         end = pd.Timestamp(biz.year, biz.month, biz.day, 16, 0)
@@ -337,6 +337,9 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     if start > df.index[0]:
         print(start, "Cutting off from: ", df.index[0])
         df = df.loc[df.index >= start]
+        if not df.high.any():
+            print('WARNING: All data has been removed')
+            return 0, pd.DataFrame(), None
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
     for key in maDict:
