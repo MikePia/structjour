@@ -73,22 +73,26 @@ class DisReqCol(object):
         self.rc = rc
         self.tfcolumns = tfcolumns
 
-def doctorTheTrade(newdf, daDate):
+def doctorTheTrade(newdf, daDate, ts,  fname):
     '''
-    Fix up the time entries to contain the dates as Timestamps
+    Fix up the time entries to contain the dates as Timestamps and charts entries. Plan not to try
+    to deal with the whole excel related files. The specs for which images go where are non-
+    existent as near as I can tell and I really hate dealing with MS files directly. Instead, load
+    up images as saved in the directory by trade index names if found for 1 chart and place strings
+    in chart2 and chart3
     '''
     for i in range(0, 8):
         key = 'Time' + str(i+1)
         if newdf[key].any():
             val = newdf[key].unique()[0]
+            datestring = daDate.strftime('%Y-%m-%d ')
             if isinstance(val, str):
-                datestring = daDate.strftime('%Y-%m-%d ')
                 if len(val) == 8 or len(val.split(':')) == 3:
                     d = pd.Timestamp(datestring + val)
                     newdf[key] = d
                 else:
                     raise ValueError('Unrecognized timestring:', val)
-            elif isinstance(val, dt.time):
+            elif isinstance(val, (dt.datetime, dt.time)):
                 timestring = val.strftime('%H:%M:%S')
                 newdf[key] = pd.Timestamp(datestring + timestring)
             elif isinstance(val, pd.Timestamp):
@@ -100,7 +104,33 @@ def doctorTheTrade(newdf, daDate):
             pass
             # print(newdf[key].unique())
             # print(len(newdf[key].unique()))
-
+    outdir, n = os.path.split(fname)
+    for key in ts:
+        tto = ts[key]
+        thechart = None
+        if not os.path.exists(outdir):
+            break
+        filelist = os.listdir(outdir)
+        for fn in filelist:
+            num = key.split(' ')[0]
+            tradekey = f'trade{num}_'
+            if tradekey in fn.lower():
+                '''We have to bring the fromat into the the 2019s and add the keys we now use'''
+                thechart = os.path.join(outdir, fn)
+                now = pd.Timestamp.today()
+                ts[key]['chart1'] = fn
+                ts[key]['chart1Start'] = now
+                ts[key]['chart2Start'] = now
+                ts[key]['chart3Start'] = now
+                ts[key]['chart1End'] = now
+                ts[key]['chart2End'] = now
+                ts[key]['chart3End'] = now
+                ts[key]['chart1Interval'] = 1
+                ts[key]['chart2Interval'] = 5
+                ts[key]['chart3Interval'] = 15
+                ts[key]['chart2'] = 'The animated parrot chart'
+                ts[key]['chart3'] = 'The animated parrot complaint deptment chart'
+                break
     return newdf
 
 def loadTradeSummaries(loc, trades):
@@ -279,7 +309,6 @@ def recreateFPEntries(ts):
             if price == None and side == None and dtime == None:
                 break
             entry.append([price, 'deprecated', side, dtime])
-        print()
         fpentries[key] = entry
     return fpentries
 
@@ -290,7 +319,7 @@ def getTradeSummary(fname, daDate):
     ldf, ts = loadTradeSummaries(tradeLoc, ws)
     fpentries = recreateFPEntries(ts)
     for tdf in ldf:
-        tdf = doctorTheTrade(tdf, daDate) 
+        tdf = doctorTheTrade(tdf, daDate, ts, fname) 
     return ldf, ts, fpentries
 
 def doctorThetable(df, daDate):
@@ -342,7 +371,6 @@ def getTradeTable(fname, daDate):
         darow = list()
         if val and val == 'Tindex':
             start = True
-            print('And so it starts')
             for cval in row:
                 if cval.value == None:
                     collen = len(columns)
@@ -367,15 +395,10 @@ def getTradeTable(fname, daDate):
     dframe = pd.DataFrame(data=data, columns=columns)
     dframe = doctorThetable(dframe, daDate)
     return dframe, notes
-    
-
-                
-
-
 
 def registerTrades(tsList, wb):
     for fname, theDate in tsList:
-        print(fname, theDate)
+        # print(fname, theDate)
         wb2 = load_workbook(fname)
         trades = wb2["Sheet"]
 

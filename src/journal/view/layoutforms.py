@@ -154,6 +154,9 @@ class LayoutForms:
         after it was loaded from file.
         '''
         fname = self.getStoredTradeName()
+        d, name = os.path.split(fname)
+        if not os.path.exists(d):
+            os.makedirs(d)
         with open(fname, "wb") as f:
             pickle.dump(self.df, f)
 
@@ -172,10 +175,13 @@ class LayoutForms:
         if self.df is None:
             print('Failed to locate the trades information. Pickle FAILED')
             return
+        if df is not None and self.df is not None:
+            if not pd.DataFrame.equals(df, self.df):
+                raise ValueError("DataFrames differ. A temporatry programming exception to see if and when this happens")
 
 
         with open(name, "wb") as f:
-            pickle.dump((self.ts, self.entries, df), f)
+            pickle.dump((self.ts, self.entries, self.df), f)
 
     def loadSavedFile(self):
         '''

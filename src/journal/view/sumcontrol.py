@@ -504,9 +504,9 @@ class SumControl(QMainWindow):
             tnum = 'Trade' + key.split(' ')[0] + '*'
 
             filt = self.settings.value('bfilterpref', 0)
-            selectedfilter = f'Trade num ({tnum})' if filt else 'Image Files(*.png *.jpg *.bmp)'
+            selectedfilter = f'Trade num ({tnum})' if filt else 'Image Files(*.png *.jpg *.jpeg *.bmp)'
             path = QFileDialog.getOpenFileName(self, "Select Chart", outdir,
-                                               f'Image Files(*.png *.jpg *.bmp);;Trade num ({tnum})',
+                                               f'Image Files(*.png *.jpg *.jpeg *.bmp);;Trade num ({tnum})',
                                                selectedfilter)
             filt = 1 if path[1].startswith('Trade num') else 0
             self.settings.setValue('bfilterpref', filt)
@@ -929,6 +929,8 @@ class SumControl(QMainWindow):
         except KeyError:
             return None
         inpath = os.path.join(journal, schemeFmt)
+        if self.settings.value('outdirPolicy') == 'default':
+            self.settings.setValue('outdir', os.path.join(inpath, 'out/'))
         return inpath
 
     def getOutdir(self):

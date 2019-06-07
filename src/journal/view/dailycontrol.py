@@ -107,7 +107,7 @@ class DailyControl(QDialogWClose):
         cur.execute('''DROP TABLE IF EXISTS daily_notes''')
         conn.commit()
 
-    def commitNote(self):
+    def commitNote(self, note=None):
         '''Save or update the db file for the notes field. This commits the text in the dailyNotes widget.
         Use setNote for a vanilla db commit'''
         if not self.date:
@@ -115,7 +115,8 @@ class DailyControl(QDialogWClose):
             return
         d = self.date.strftime('%Y%m%d')
         d = int(d)
-        note = self.ui.dailyNotes.toPlainText()
+        if not note:
+            note = self.ui.dailyNotes.toPlainText()
 
         exist = self.getNote()
 

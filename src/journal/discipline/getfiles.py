@@ -1,12 +1,19 @@
 import os
+import pickle
 import re
+import sys
+
 import pandas as pd
 
 from PyQt5.QtCore import QSettings
+from PyQt5.QtWidgets import QApplication
 
 from journal.discipline.disciplined import getTradeSummary, getTradeTable
+from journal.view.dailycontrol import DailyControl
 
 # pylint: disable = C0103
+
+app = QApplication(sys.argv)
 
 class manageSavedStuff:
     '''
@@ -63,13 +70,25 @@ class manageSavedStuff:
         dframe, notes = getTradeTable(xlname, key)
         return ldf, ts, fpentries, dframe, notes
 
-    def pickleADay(self, infile):
-        '''Save one day'''
-        pass
+    def pickleADay(self, ts, entries, df, fname, note, key):
+        '''Pickle ts, entries and df. Save note to the db'''
+        d, fname = os.path.split(fname)
+        if not os.path.exists(d):
+            os.mkdir(d)
+        fname, x = os.path.splitext(fname)
+        fname = f'.{fname}.zst'
+        fname = os.path.join(d, fname)
+        with open(fname, "wb") as f:
+            pickle.dump((ts, entries, df), f)
 
-    def pickleEmAll(self):
+        dc = DailyControl(key)
+        dc.commitNote(note)
+
+    def pickleEmAll(self, tslist, fpentries, dframelist, fnameslist, dailynoteslist, keylist):
         'Utility to save a bunch of days'
-        pass
+        for ts, entries, df, fname, note, key in zip(tslist, fpentries, dframelist, fnameslist, dailynoteslist, keylist):
+            self.pickleADay(ts, entries, df, fname, note, key)
+
 
     def loadXlFileAsTS(self, sumList):
         from journal.thetradeobject import TheTradeObject, SumReqFields
@@ -79,6 +98,8 @@ class manageSavedStuff:
         dailynoteslist = list()
         fpentrieslist = list()
         tslist = list()
+        fnameslist = list()
+        keylist = list()
         srf = SumReqFields()
         for key in sumList:
             outdirfrmt = self.frmt + 'out/'
@@ -88,25 +109,22 @@ class manageSavedStuff:
                 for xlfile in objs[1]:
                     # print(xlfile)
                     if not objs[2]:
-                        print('load it up', key)
                         for xl in objs[1]:
+                            print(xlfile)
 
                             xlname = os.path.join(outdir, xl)
                             ldf, ts, fpentries, dframe, notes = self.loadEverything(xlname, key)
-                            print('completed', xlname, key)
-                            print(notes)
-                            print()
 
                             ldflist.append(ldf)
                             tslist.append(ts)
                             fpentrieslist.append(fpentries)
                             dailynoteslist.append(notes)
                             dframelist.append(dframe)
+                            fnameslist.append(xlname)
+                            keylist.append(key)
+        self.pickleEmAll(tslist, fpentrieslist, dframelist, fnameslist, dailynoteslist, keylist)
 
-        return ldflist, tslist, dailynoteslist, fpentrieslist, dframelist
-
-        print()
-        print()
+        return ldflist, tslist, dailynoteslist, fpentrieslist, dframelist, fnameslist, keylist
 
     def gatherDailySumList(self, begin):
         '''
@@ -163,10 +181,8 @@ def main():
 
     t = manageSavedStuff(settings)
     l = t.gatherDailySumList(begin)
-    ldfs = t.loadXlFileAsTS(l)
+    everything = t.loadXlFileAsTS(l)
     # df = get
-    print(l)
-    print()
 
 # os.listdir()
 
