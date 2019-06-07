@@ -279,6 +279,8 @@ class LayoutForms:
         self.sc.loadImageFromFile(self.sc.ui.chart2, ipathfilename2)
         self.sc.loadImageFromFile(self.sc.ui.chart3, ipathfilename3)
         # print('never were here')
+        self.sc.diffTarget(self.sc.ui.targ.text())
+        self.sc.stopLoss(self.sc.ui.stop.text())
 
     def getEntries(self, key):
         '''
