@@ -111,7 +111,7 @@ def floatValue(test, includezero=False):
     return True, addme
 
 def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
-                          pdbool=False, exclude=None):
+                          pdbool=True, exclude=None):
     '''
     Creates a list of transacations to make up a trade. Uses columns for tradenum, start, time,
     side, qty and balance. The PL is not worked out to coincide with shares or price; will work
@@ -128,6 +128,7 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     :params earliest: Transaction progress in time with earliest as the easliest possible trade
                        except for before HOLDs.
     :params pdbool: Setting to True will cause the return to be a DataFrame instead of an array.
+                    Deprecated. Changed to allways return a dataframe
     :params exclude: A list of symbols to exclude as candidates for this trade
     :return pd.DataFrame:  DataFrame or list of transactions making up a single trade.
     '''
@@ -225,12 +226,12 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     trade[-1][10] = sumtotal
     trade[-1][11] = name
     trade[-1][13] = duration
-    if pdbool:
-        tradedf = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty',
-                                                  'Balance', 'Account', 'P / L', 'Sum', 'Name', 'Date', 'Duration'])
-        if not isclose(tradedf['P / L'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
-            print(tradedf['P / L'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
-            print()
+    # if pdbool:
+    tradedf = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty',
+                                                'Balance', 'Account', 'P / L', 'Sum', 'Name', 'Date', 'Duration'])
+    if not isclose(tradedf['P / L'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
+        print(tradedf['P / L'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
+        print()
         
     return tradedf, latest
 
