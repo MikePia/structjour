@@ -776,6 +776,8 @@ class SumControl(QMainWindow):
             return
 
         self.ui.infileEdit.setText(infile)
+
+        statusstring = ''
         if os.path.exists(infile):
             self.ui.infileEdit.setStyleSheet('color: green;')
             self.ui.goBtn.setStyleSheet('color:green')
@@ -784,14 +786,32 @@ class SumControl(QMainWindow):
             savename = self.getSaveName()
             if os.path.exists(savename):
                 self.ui.infileEdit.setStyleSheet('color: blue;')
+                tm = os.path.getmtime(savename)
+                modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
+                statusstring = f'[{os.path.split(savename)[1]} ({modstring})]   '
+                print('got one\n     ', statusstring)
                 self.ui.loadBtn.setStyleSheet('color: blue;')
             else:
                 self.ui.loadBtn.setStyleSheet('color: black;')
+            d, xlname = os.path.split(savename)
+            xlname = os.path.splitext(xlname)[0] 
+            xlname = xlname[1:] + '.xlsx'
+            xlname = os.path.join(d, xlname)
+            if os.path.exists(xlname):
+                tm = os.path.getmtime(xlname)
+                modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
+                statusstring = statusstring + f'[{os.path.split(xlname)[1]} ({modstring})]'
+                print('got one other\n     ', statusstring)
+                # print('UPDATING')
+
 
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
             self.ui.goBtn.setStyleSheet('color:black')
 
+        self.setStatusTip(statusstring)
+        self.ui.dateEdit.setToolTip(statusstring)
+        print('UPDATING', statusstring)
         if self.settings.value('outdirPolicy') == 'default':
             outdir = self.getDirectory()
             outdir = os.path.join(outdir, 'out/')
