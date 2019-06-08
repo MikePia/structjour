@@ -32,6 +32,9 @@ class Inspire:
     def __init__(self):
         quotes = []
 
+        quotes.append(["Adams", "On Purpose", "Patch Adams, physician",
+            '''When you left the house today, you had the intention of putting clothes on and you did. You didn’t try to put your pants on today. You simply put them on. The same has to hold for all of our intentions.'''
+        ])
         quotes.append(["Ali", "On Bouncing Back", "Muhammed Ali, boxer",
             '''Only a man who knows what it is like to be defeated can reach down to the bottom of his soul and come up with the extra ounce of power it takes to win when the match is even.'''
         ])
@@ -65,6 +68,15 @@ class Inspire:
         ])
         quotes.append(["Cage", "On Innovation", "John Cage, composer",
             '''I can't understand why people are frightened of new ideas. I'm frightened of the old ones.'''
+        ])
+        quotes.append(["Carver", "On Leadership", "George Washington Carver, scientist",
+            '''Where there is no vision, there is no hope.'''
+        ])
+        quotes.append(["Charles", "On Tenacity", 'Ray Charles, musician',
+            '''Do it right or don’t do it at all..'''
+        ])
+        quotes.append(["Collier", "On Positive Reinforcement", 'Robert Collier, author',
+            '''Any thought that is passed on to the subconscious often enough and convincingly enough is finally accepted.'''
         ])
         quotes.append(["Cook", "On Impact", "Tim Cook, Apple CEO",
             '''You want to be the pebble in the pond that creates the ripple for change.'''
@@ -104,6 +116,30 @@ class Inspire:
         ])
         quotes.append(["Douglas", "On Trading", "Mark Douglas, Author Trading in the Zone",
             '''Those traders that have confidence in their own trades, who trust themseles and do what needs to be done without hesitation, are the ones who become successful'''
+        ])
+        quotes.append(["Douglas", "Five Fules, no 1-2", "Mark Douglas, Author Trading in the Zone",
+            '''Anything can happen. You don’t need to know what is going to happen next in order to make money.'''
+        ])
+        quotes.append(["Douglas", "Five Fules, no 3-5", "Mark Douglas, Author Trading in the Zone",
+            '''There is a random distribution between wins and losses for any given set of variables that define an edge. An edge is nothing more than an indication of a higher probability of one thing happening over another. Every moment in the market is unique'''
+        ])
+        quotes.append(["Douglas", "on Probabilities", "Mark Douglas, Author Trading in the Zone",
+            '''When you've trained you mind to think in probabilities, it means you have fully accepted all the possibilities (with no internal resistance or conflict).'''
+        ])
+        quotes.append(["Douglas", "On knowing the market", "Mark Douglas, Author Trading in the Zone",
+            '''The degree by which you think you know, assume you know, or in any way need to know what is going to happen next, is equal to the degree to which you will fail as a trader.'''
+        ])
+        quotes.append(["Douglas", "On defining risk", "Mark Douglas, Author Trading in the Zone",
+            '''Not defining the risk before getting into a trade is by far the most common of all trading errors, and starts the whole process of trading from an inappropriate perspective.'''
+        ])
+        quotes.append(["Douglas", "On Control", "Mark Douglas, Author Trading in the Zone",
+            '''Instead of controlling our surroundings so they conform to our idea of the way thins should be, we can learn to control ourselves.'''
+        ])
+        quotes.append(["Douglas", "On Attitude", "Mark Douglas, Author Trading in the Zone",
+            '''If you have the right attitude--the right mind-set--then everything else about trading will be relatively easy, even simple, aand certainly a lot more fun.'''
+        ])
+        quotes.append(["Douglas", "On Blame", "Mark Douglas, Author Trading in the Zone",
+            '''Any degree of blaming means you have not accepted the reality the the market owes you nothing, regardless of what you want or think or how much effort you put into your trading.'''
         ])
         quotes.append(["Einstein", "On Change", "Albert Einstein, physisist",
             '''Wisdom is not a product of schooling but of the lifelong attempt to acquire it.'''
@@ -174,6 +210,9 @@ class Inspire:
         quotes.append(["IBD", "10 Secrets to Success", "10 Traits of Successful People, Number ten",
             '''BE HONEST AND DEPENDABLE; TAKE RESPONSIBILITY: Otherwise, Nos. 1-9 won't matter.'''
         ])
+        quotes.append(["Irving", "On Passion", "John Irving, author",
+            '''You’ve got to get obsessed and stay obsessed.'''
+        ])
         quotes.append(["Jobs", "On Determination", "Steve Jobs, Apple co-founder",
             '''I'm convinced that about half of what separates the successful entrepreneurs from the nonsuccessfuls ones is pure perserverance.'''
         ])
@@ -183,11 +222,17 @@ class Inspire:
         quotes.append(["Jordan", "On Basics", "Michael Jordan, basketball player",
             '''Get the fundamentals down and the level of everything you do will rise.'''
         ])
+        quotes.append(["Jordan", "On Persistence", "Michael Jordan, basketball player",
+            '''I’ve failed over and over again, and that is why I succeed. '''
+        ])
         quotes.append(["Jung", "On Authenticity", "C.G.Jung, Psychiatrist",
             '''The privilege of a lifetime is to become who you truly are.'''
         ])
         quotes.append(["Kasparov", "On Imagination", "Garry Kasparov, chess champion",
             '''There's on thing only humans can do, and that's dream, so let us dream'''
+        ])
+        quotes.append(["Kaukonen", "On Humility", "Jorma Kaukonen, rock musician",
+            '''If life is designed to humble us in the face of time, there is joy in that humility. '''
         ])
         quotes.append(["Kesey", "On Leadership", "Ken Kesey, novelist",
             '''You don't lead by pointing and telling people some place to go. You lead by going to that place and making a case.'''
@@ -201,8 +246,14 @@ class Inspire:
         quotes.append(["May", "On Commitment", "Rollo May, psychologist",
             '''The relationship between commitment and doubt is by no means an antagonistic one. Commitment is healthiest when it is not without doubt but in spite of doubt.'''
         ])
+        quotes.append(["Meir", "On Conviction", "Golda Meir, Israili prime minister",
+            '''I can honestly say that I was never affected by the question of the success of an undertaking. If I felt it was the right thing to do, I was for it regardless of the possible outcome.'''
+        ])
         quotes.append(["Mitchell", "On trading plans", "Cory Mitchell, Author for Vantagepointtrading",
             '''Having a plan takes much of the emotion out of trading..you know exactly what to do, how and when. We can't get rid of our emotions entirely, but the plan helps us control them so they aren't destructive'''
+        ])
+        quotes.append(["Morris", "On Passion", "Desmond Morris, zoologist",
+            '''If our work does not feel like play, then we should ask ourselves whether we are in the right job.'''
         ])
         quotes.append(["Murray", "On Education", "William Hutchison Murray, author",
             '''Until one is commited, there is hesitancy, the chance to draw back, ineffectiveness...whatever you can do, or dream you can do, begin it. Boldness has genius, power and magic in it!'''
@@ -219,13 +270,19 @@ class Inspire:
         quotes.append(["O'Connonr", "On Diligence", "Sandra Day O'Connor, former Supreme Court Justice",
             '''Do the best you can in every task no matter how unimportant it may seem at the time. No  one learns more about a problem than the person at the bottom.'''
         ])
+        quotes.append(["Parks", "On Example", "Rosa Parks, civil rights icon",
+            '''Each person must live their life as a role model for others.'''
+        ])
+        quotes.append(["Patterson", "On Action", "John H. Patterson, businessman",
+            '''An executive is a person who decides; sometime he decides correctly, but he always decides.'''
+        ])
         quotes.append(["Rickover", "On Observation", "Hyman Rickover, admiral",
             '''It is necessary for us to learn from other's mistakes. You will not live long enough to make tham all yourself.'''
         ])
         quotes.append(["Rometty", "On Growth", "Virginia Rometty, IBM CEO",
             '''I learned to always take on things I'd never done before. Growth and comfort do not coexist.'''
         ])
-        quotes.append(["Roosevelt ", "On Conviction", "Elanor Roosevelt, first lady of the U.S.",
+        quotes.append(["Roosevelt", "On Conviction", "Elanor Roosevelt, first lady of the U.S.",
             '''Do what you feel in your heart to be right, for you'll be criticized anyway.'''
         ])
         quotes.append(["Sirleaf", "on Goals", "Ellen Johnson Sirleaf, former president of Liberia",
@@ -240,11 +297,23 @@ class Inspire:
         quotes.append(["Spade", "On Integrity", "Kate Spade, designer",
             '''Live in such a way that if anyone speaks badly of you no one would believe it.'''
         ])
+        quotes.append(["Stimson", "On Faith", "Henry Stimson, statesman",
+            '''The only way to make a man trustworthy is to trust him.'''
+        ])
         quotes.append(["Thoreau", "On Thankfulness", "Henry David Thoreau, essayist",
             '''I am grateful for what I am and have. My thanksgiving is perpetual.'''
         ])
+        quotes.append(["Tillman", "On Passion", "Pat Tillman, football player and U.S. army soldier",
+            '''A passion for life is contagious and uplifting.'''
+        ])
         quotes.append(["Van Gogh", "On Passion", "Vincent Van Gogh, artist",
             '''Your profession is not what brings home your weekly paycheck; your profession is what you’re put here on earth to do, with such passion and such intensity that it becomes a spiritual calling.'''
+        ])
+        quotes.append(["Walsh", "On Learning", "Bill Walsh, football coach",
+            '''Confidence stops you from learning. I can’t tell you how many confident blowhards I’ve seen in my coaching career who never got better after the age of 40.'''
+        ])
+        quotes.append(["Watson", "On Originality", "Thomas J. Watson, businessman",
+            '''Expose your ideas to the dangers of controversy. Speak your mind and fear less the label of crackpot than the stigma of conformity.'''
         ])
         quotes.append(["Ziglar", "On Motivation", "Zig Zigler, sales trainer",
             '''People often say motivation doesn't last. Well neither does bathing--that's why wee recommend it daily.'''
