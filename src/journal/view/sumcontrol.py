@@ -262,6 +262,31 @@ class SumControl(QMainWindow):
         val = self.ui.chart3Interval.value()
         self.chartIntervalChanged(val, 'chart3')
 
+    def resetChartTimes(self, key, swidg, ewidg):
+        entries = self.lf.getEntries(key)
+        begin = entries[0][3]
+        end = entries[-1][3]
+
+        #TODO Remove these arter a month or 2 (2/7/19). In the meantime, open all the
+        # imported/updated files (laod files from 10/25/18 on)and update some inserted images on each
+        # Or write yet another date babysitter here
+        daDate = qtime2pd(self.settings.value('TheDate'))
+        datestring = daDate.strftime('%Y-%m-%d')
+        if isinstance(begin, str):
+            assert len(begin.split(':')) == 3
+            # begin = pd.Timestamp(daDate.strftime('%Y-%m-%d ') + begin)
+            # end = pd.Timestamp(daDate.strftime('%Y-%m-%d ') + end)
+        elif isinstance(begin, pd.Timestamp):
+            begin = begin.strftime('%H:%M:%S')
+            end = end.strftime('%H:%M:%S')
+        else:
+            raise ValueError('Programmer alert, add more babysitters here')
+        begin = pd.Timestamp(f'{datestring} {begin}')
+        end = pd.Timestamp(f'{datestring} {end}')
+        swidg.setDateTime(begin)
+        ewidg.setDateTime(end)
+        return begin, end
+
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
         '''
         Implment the chart retrieval for one of chart1, chart2, or chart3
@@ -300,6 +325,9 @@ class SumControl(QMainWindow):
         fp.randomStyle = False
         begin = qtime2pd(swidg.dateTime())
         end = qtime2pd(ewidg.dateTime())
+        key = self.ui.tradeList.currentText()
+        if qtime2pd(self.settings.value('TheDate')).date() != begin.date():
+            begin, end = self.resetChartTimes(key, swidg, ewidg)
         (dummy, rules, apilist) = fp.apiChooserList(begin, end, fp.api)
         if apilist:
             fp.api = apilist[0]
@@ -308,7 +336,6 @@ class SumControl(QMainWindow):
             return None
         interval = iwidg.value()
         # name = nwidg.text()
-        key = self.ui.tradeList.currentText()
         name = self.lf.getImageNameX(key, c)
         outdir = self.getOutdir()
         ticker = self.ui.tradeList.currentText().split(' ')[1]
