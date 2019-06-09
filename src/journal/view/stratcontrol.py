@@ -42,6 +42,7 @@ class StratControl(QDialog):
         self.ui = Ui_Form()
         self.settings = QSettings('zero_substance', 'structjour')
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
+        self.justloaded = False
         defimage = "C:/python/E/structjour/src/images/ZeroSubstanceCreation_220.png"
         if not os.path.exists(defimage):
             print('========== its not there', defimage)
@@ -64,6 +65,7 @@ class StratControl(QDialog):
         self.ui.linkList.currentTextChanged.connect(self.loadPage)
         self.strat = Strategy()
         self.loadStrategies()
+        
 
     def loadPage(self, val):
         print('val', val)
@@ -191,10 +193,14 @@ class StratControl(QDialog):
             self.strat.setPreferred(key, val)
 
     def stratNotesChanged(self):
-        print('Notes changed')
-        self.setWindowTitle('Strategy Browser ... text edited')
+        if not self.justloaded:
+            print('Notes changed')
+            self.setWindowTitle('Strategy Browser ... text edited')
+        self.justloaded = False
 
     def loadStrategy(self, key):
+        if not key:
+            return
         strat = self.strat.getStrategy(key)
         if strat:
             check = True if strat[1] == 1 else False
@@ -204,6 +210,7 @@ class StratControl(QDialog):
                 self.ui.notPreferred.setChecked(True)
         desc = self.strat.getDescription(key)
         if desc:
+            self.justloaded = True
             self.ui.strategyNotes.setText(desc[1])
         self.setWindowTitle('Strategy Browser')
 

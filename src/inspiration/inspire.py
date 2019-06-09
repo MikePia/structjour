@@ -138,6 +138,9 @@ class Inspire:
         quotes.append(["Douglas", "On Attitude", "Mark Douglas, Author Trading in the Zone",
             '''If you have the right attitude--the right mind-set--then everything else about trading will be relatively easy, even simple, aand certainly a lot more fun.'''
         ])
+        quotes.append(["Douglas", "On Perception", "Mark Douglas, Author Trading in the Zone",
+            '''If you perceive the endless stream of opportunities to enter and exit trades without self-criticism and regret, then you will be in the best frame of mind to act in you own best interest and learn from your experiences.'''
+        ])
         quotes.append(["Douglas", "On Blame", "Mark Douglas, Author Trading in the Zone",
             '''Any degree of blaming means you have not accepted the reality the the market owes you nothing, regardless of what you want or think or how much effort you put into your trading.'''
         ])

@@ -207,17 +207,23 @@ p, li { white-space: pre-wrap; }
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+         <widget class="QLabel" name="link">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>578</width>
-            <height>20</height>
-           </size>
+          <property name="styleSheet">
+           <string notr="true">border: 1px solid black</string>
           </property>
-         </spacer>
+          <property name="text">
+           <string>http://duckduclgo.com</string>
+          </property>
+          <property name="openExternalLinks">
+           <bool>true</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -1657,25 +1663,6 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="0" column="6" colspan="3">
-           <widget class="QLabel" name="link">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">border: 1px solid black</string>
-            </property>
-            <property name="text">
-             <string>http://duckduclgo.com</string>
-            </property>
-            <property name="openExternalLinks">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="7">
            <widget class="QLabel" name="share7">
             <property name="sizePolicy">
@@ -1878,24 +1865,6 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="0" column="3" colspan="3">
-           <widget class="QComboBox" name="strategy">
-            <property name="font">
-             <font>
-              <family>Arial Rounded MT Bold</family>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="editable">
-             <bool>true</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string>Strategy</string>
-             </property>
-            </item>
-           </widget>
-          </item>
           <item row="0" column="0" colspan="3">
            <widget class="QLabel" name="account">
             <property name="sizePolicy">
@@ -1916,6 +1885,30 @@ p, li { white-space: pre-wrap; }
             <property name="text">
              <string>Account</string>
             </property>
+           </widget>
+          </item>
+          <item row="0" column="3" colspan="6">
+           <widget class="QComboBox" name="strategy">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial Rounded MT Bold</family>
+              <pointsize>14</pointsize>
+             </font>
+            </property>
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <item>
+             <property name="text">
+              <string>Strategy</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>

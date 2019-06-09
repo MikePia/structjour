@@ -187,6 +187,8 @@ class SumControl(QMainWindow):
             ok = QMessageBox.question(self, 'New strategy', msg,
                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ok == QMessageBox.Yes:
+                strat.addStrategy(text)
+
                 print('yes clicked.')
             else:
                 key = self.ui.tradeList.currentText()
@@ -930,12 +932,16 @@ class SumControl(QMainWindow):
         except ValueError:
             return 0.0
         if 'long' in self.ui.tradeList.currentText().lower():
-            assert shares >= 0
+            # Still not confident in how to treat flipped positions.
+
+            if shares < 0:
+                print('Flipped trade retaining long maxLoss attributes', self.ui.tradeList.currentText())
             if slDiff >= 0:
                 self.ui.maxLoss.setText('')
                 return 0.0
         elif 'short' in self.ui.tradeList.currentText().lower():
-            assert shares <= 0
+            if shares > 0:
+                print('Flipped trade retaining short maxLoss attributes', self.ui.tradeList.currentText())
             if slDiff <= 0:
                 self.ui.maxLoss.setText('')
                 return 0.0

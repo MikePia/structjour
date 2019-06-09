@@ -63,6 +63,8 @@ class Strategy:
         self.conn.commit()
 
     def getLinks(self, key):
+        if not key:
+            return []
         sid = self.getId(key)
         
         cursor = self.conn.execute('''SELECT link FROM links WHERE strategy_id  = ?''', (sid, ))
@@ -153,6 +155,8 @@ class Strategy:
         return x.fetchall()
     
     def getId(self, name):
+        if not name:
+            return []
         cursor = self.conn.execute('''
             select id from strategy 
             WHERE name = ?''', (name, ))
@@ -168,10 +172,10 @@ class Strategy:
 	    			VALUES(?, ?)''', (name, preferred))
         except sqlite3.IntegrityError as e:
             print(f'{name} already exists in DB. No action taken:', e)
-            return
+            return None
         except sqlite3.OperationalError as e:
             print('Close the database browser please:', e)
-            return
+            return None
         self.conn.commit()
         return x
 
@@ -184,7 +188,7 @@ class Strategy:
         elif sid:
             cursor = self.conn.execute('SELECT * FROM strategy WHERE id = ?', (sid,))
         else:
-            return None
+            return []
         return cursor.fetchone()
 
     def getDescription(self, name):
