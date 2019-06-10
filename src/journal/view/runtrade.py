@@ -26,7 +26,7 @@ import sys
 
 import pandas as pd
 from PyQt5.QtCore import QDate, QDateTime
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QStyleFactory
 
 from journal.definetrades import DefineTrades
 from journal.pandasutil import InputDataFrame
@@ -157,6 +157,8 @@ if __name__ == '__main__':
     # Paths used in summaryform.ui rely on cwd .
     os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
+    s = QStyleFactory.create('Fusion')
+    app.setStyle(s)
     w = SumControl()
     rc = runController(w)
     w.show()
