@@ -74,6 +74,7 @@ class UnbalControl(QDialog):
         ui.explain.setHtml(h)
         model = PandasModel(df)
         ui.tradeTable.setModel(model)
+        ui.tradeTable.resizeColumnsToContents()
         
 
     def wereDone(self):
@@ -90,7 +91,7 @@ class UnbalControl(QDialog):
 
         if setto == 0:
             self.swingTrade['shares'] = setto
-            self.swingTrade['before'] = ivalB
+            self.swingTrade['before'] = -ivalB
             self.swingTrade['after'] = ivalA
 
         self.close()

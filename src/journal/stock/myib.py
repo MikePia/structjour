@@ -349,7 +349,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         # the latter probably better but inaccurate; would not reflect what the trader was using
         # Better suggestions?
         if key == 'vwap':
-            if df.index[0] < maDict['vwap'].index[0]:
+            if len(maDict['vwap']) < 1 or ( df.index[0] < maDict['vwap'].index[0]):
                 del maDict['vwap']
         else:
             assert len(df) == len(maDict[key])
@@ -393,4 +393,4 @@ def notmain():
 if __name__ == '__main__':
     main()
     # notmain()
-    
+    # print(isConnected())

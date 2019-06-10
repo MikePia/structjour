@@ -345,11 +345,6 @@ class DailyControl(QDialogWClose):
             len(liveLosses) + len(simLosses), abs(sum([sum(liveLosses), sum(simLosses)])))
         return dailySumData
 
-
-
-
-
-
     def populateS(self):
         '''
         Create and populate the daily summary form as a tableView
