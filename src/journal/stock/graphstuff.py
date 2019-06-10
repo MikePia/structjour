@@ -359,6 +359,7 @@ class FinPlot:
         colup = self.chartSet.value('colorup', 'g')
         coldown = self.chartSet.value('colordown', 'r')
         ax1 = plt.subplot2grid((6, 1), (0, 0), rowspan=5, colspan=1)
+        ax1.set_axisbelow(True)
         ax1.grid(b=self.gridlines[0], which='major', axis=self.gridlines[1])
 
         ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1,
