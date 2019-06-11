@@ -175,9 +175,11 @@ class LayoutForms:
         if self.df is None:
             print('Failed to locate the trades information. Pickle FAILED')
             return
-        if df is not None and self.df is not None:
-            if not pd.DataFrame.equals(df, self.df):
-                raise ValueError("DataFrames differ. A temporatry programming exception to see if and when this happens")
+        # if df is not None and self.df is not None:
+        #     if not pd.DataFrame.equals(df, self.df):
+        #         raise ValueError("blah blah blah")
+        # It happens when -- after loading an older version of the file-- click save with a new
+        # current version. 
 
 
         with open(name, "wb") as f:
