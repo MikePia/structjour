@@ -25,17 +25,12 @@ import re
 import sys
 
 import pandas as pd
-from PyQt5.QtWidgets import QApplication, QMenu, QMessageBox, QDialog, QFileDialog
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtCore import QSettings, QUrl, QDate, QDateTime, Qt
-
-from journal.xlimage import XLImage
-from journal.view.strategybrowser import Ui_Form
-from strategy.strategies import Strategy
+from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
+from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 
 from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 
-from journal.stock.utilities import ManageKeys, getMAKeys, qtime2pd, pd2qtime
+from journal.stock.utilities import qtime2pd
 
 # pylint: disable = C0103
 
@@ -47,11 +42,7 @@ class FileSetCtrl(QDialog):
     def __init__(self, settings):
         super().__init__(parent=None)
 
-
         self.settings = settings
-
-
-   
 
         # Create the dialog; retrieve and set the settings
         fui = FileSettingsDlg()
@@ -124,12 +115,15 @@ class FileSetCtrl(QDialog):
         self.exec()
 
     def closeit(self):
+        '''Nothing done here'''
         # What needs to be done is in SumControl  -- check either ibImport or dasImport
-        print ('This is broken')
         self.close()
-        
+
 
     def setDialogDate(self, val):
+        '''
+        Set theDate in settings to the widget value and update everything in the form.
+        '''
         self.settings.setValue('theDate', val)
         self.setJournalDir()
         self.setTheScheme(self.settings.value('scheme'))
@@ -141,7 +135,6 @@ class FileSetCtrl(QDialog):
     def setToday(self):
         '''
         Sets the date to today and stores the value in settings
-        Call only when file settings dialog (self.fui) is active.
         '''
         now = pd.Timestamp.today().date()
         if now.weekday() > 4:
@@ -159,13 +152,17 @@ class FileSetCtrl(QDialog):
         self.settings.setValue('setToday', val)
 
     def setOutdirDefault(self):
+        '''
+        Set the outdir directory for the default outdir. If it exists, set the appropriate label
+        green. If not, red. Store the values in settings. Update the widgets.
+        '''
         indir = self.getDirectory()
         odd = os.path.join(indir, 'out/')
         self.fui.outdirLbl.setText(odd)
         if os.path.exists(odd):
             self.fui.outdirLbl.setStyleSheet('color: green')
         else:
-            self.fui.outdirLbl.setStyleSheet('color: green')
+            self.fui.outdirLbl.setStyleSheet('color: red')
 
 
         self.settings.setValue('outdir', odd)
@@ -173,10 +170,10 @@ class FileSetCtrl(QDialog):
         self.fui.outdir.setFocusPolicy(Qt.NoFocus)
         self.settings.setValue('outdirPolicy', 'default')
 
-
     def setOutdir(self):
         '''
-        Call only when file settings dialog (self.fui) is active.
+        Set the outdir and outdir policy settings using the policy and text widgets. Set the label
+        color to show existance/not
         '''
         if self.fui.outdirDefault.isChecked():
             self.setOutdirDefault()
@@ -196,7 +193,6 @@ class FileSetCtrl(QDialog):
 
     def setIBInfileName(self):
         '''
-        Call only when file settings dialog (self.fui) is active.
         Set the default value for ibInfile.
         '''
         defValue = 'Activity{*}.html'
@@ -206,13 +202,14 @@ class FileSetCtrl(QDialog):
 
     def setIBInfile(self):
         '''
-        Call only when file settings dialog (self.fui) is active.
+        Use the glob in the text widget to find a list of matched input files. Set the settings
+        variable to the first one, but warn the user if there are multiple input files.
         '''
         sedit = self.fui.ibInfile.text()
         sglob = os.path.split(sedit)[1]
         self.fui.ibInfile.setStyleSheet("color: black;")
         if not sglob:
-            
+
             self.fui.ibInfileLbl.setText(self.getDirectory())
             self.fui.ibInfileLbl.setStyleSheet("color: red;")
             self.fui.ibInfile.setStyleSheet("color: red;")
@@ -224,7 +221,7 @@ class FileSetCtrl(QDialog):
             if sset:
                 self.fui.ibInfile.setText(sset)
                 return
-        rgx = re.sub('{\*}', '.*', sglob)
+        rgx = re.sub('{\\*}', '.*', sglob)
         rgx = rgx + '$'
         d = self.getDirectory()
 
@@ -264,7 +261,8 @@ class FileSetCtrl(QDialog):
 
     def setDASInfile2Name(self):
         '''
-        Call only when file settings dialog (self.fui) is active.
+       dasinfile2 refers to the positions csv file exported from DAS Trader Pro. Set the settings
+       from the widget.
         '''
         fname = self.settings.value('dasInfile2')
         self.fui.dasInfile2.setText(fname)
@@ -272,11 +270,11 @@ class FileSetCtrl(QDialog):
 
     def setDASInfile2(self):
         '''
-        Call only when file settings dialog (self.fui) is active.
+        Set the label from the text widget
         '''
         fname = self.fui.dasInfile2.text()
         dasInfile2Lbl = os.path.join(self.getDirectory(), fname)
-        self.fui.dasInfile2Btn.setText(dasInfile2Lbl)
+        self.fui.dasInfile2Lbl.setText(dasInfile2Lbl)
         if os.path.exists(dasInfile2Lbl):
             self.fui.dasInfile2Lbl.setStyleSheet("color: green;")
         else:
@@ -284,15 +282,13 @@ class FileSetCtrl(QDialog):
         self.settings.setValue('dasInfile2', fname)
 
     def setDASInfile(self):
-        '''
-        Call only when file settings dialog (self.fui) is active.
-        '''
+        ''' Set the lable widget from the text widget and color the label to show existance/not '''
         fname = self.fui.dasInfile.text()
         dasInfileLbl = os.path.join(self.getDirectory(), fname)
         self.fui.dasInfileLbl.setText(dasInfileLbl)
         if os.path.exists(dasInfileLbl):
             self.fui.dasInfileLbl.setStyleSheet("color: green;")
-        else: 
+        else:
             self.fui.dasInfileLbl.setStyleSheet("color: red;")
         self.settings.setValue('dasInfile', fname)
 
@@ -300,7 +296,6 @@ class FileSetCtrl(QDialog):
     def setTheScheme(self, scheme):
         '''
         Button, LineEdit and Label used to set and display a directory naming scheme.
-        Call only when file settings dialog (self.fui) is active.
         '''
         d = self.settings.value('theDate')
         if not d:
@@ -333,10 +328,7 @@ class FileSetCtrl(QDialog):
         self.settings.setValue('scheme', scheme)
 
     def setScheme(self):
-        '''
-        Set the directory naming scheme to the contents of the LineEdit (scheme) 
-        Call only when file settings dialog (self.fui) is active.
-        '''
+        ''' Set the directory naming scheme to the contents of the LineEdit (scheme)'''
         scheme = self.fui.scheme.text()
         self.setTheScheme(scheme)
 
@@ -351,7 +343,6 @@ class FileSetCtrl(QDialog):
         '''
         Open a file dialog and set the results to the QLineEdit 'journal'. Triggered by its
         neighboring button
-        Call only when file settings dialog (self.fui) is active.
         '''
 
         path = QFileDialog.getExistingDirectory(None, "Select Directory")
@@ -359,6 +350,9 @@ class FileSetCtrl(QDialog):
         self.settings.setValue('journal', path)
 
     def setJournalDir(self):
+        '''
+        Set the journal settings from the widget and color the widget text showing existance/not.
+        '''
         path = self.fui.journal.text()
         if not os.path.exists(path):
             self.fui.journal.setStyleSheet("color: red;")
@@ -366,9 +360,14 @@ class FileSetCtrl(QDialog):
             self.fui.journal.setStyleSheet("color: green;")
             self.settings.setValue('journal', path)
 
-    #============== DUPLICATED WHILE MOVING STUFF ================== FIX LATER =======
+    #============== DUPLICATED WHILE MOVING STUFF ================== FIX LATER  or not =======
+    # It is convenient having these two nudgy accessors in a more central object. duplication
+    # smooplication. Its not that hard or time consuming as long as it is clear.
 
     def getDirectory(self):
+        '''
+        Put together the settings for scheme (realized here), journal and theDate to get the indir
+        '''
 
         scheme = self.settings.value('scheme')
         journal = self.settings.value('journal')
@@ -392,12 +391,21 @@ class FileSetCtrl(QDialog):
         return inpath
 
     def getOutdir(self):
+        '''
+        Retrieve either the static outdir named in settings of get the dynamic defalut directory
+        depending on the outdirPolicyin settings.
+        '''
         op = self.settings.value('outdirPolicy')
         if op == 'static':
             return self.settings.value('outdir')
         outdir = os.path.join(self.getDirectory(), 'out/')
         if not os.path.exists(outdir):
             os.mkdir(outdir)
+            try:
+                os.makedirs(outdir)
+            except (IOError, OSError) as ex:
+                # LOG THIS
+                print(ex)
         return outdir
 
 
