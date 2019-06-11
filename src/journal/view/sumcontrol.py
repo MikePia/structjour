@@ -102,7 +102,7 @@ class SumControl(QMainWindow):
         # Create connections for widgets on this form
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
-        self.ui.dateEdit.dateChanged.connect(self.setFormDate)
+        self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
@@ -142,7 +142,7 @@ class SumControl(QMainWindow):
         d = pd.Timestamp.today()
         theDate = self.settings.value('theDate', d)
         self.ui.dateEdit.setDate(theDate)
-        self.setFormDate()
+        self.loadFromDate()
 
         # These are trade related widgets and won't remain here. These are callback handlers from
         # edit boxes-- calling them manually here.
@@ -334,7 +334,15 @@ class SumControl(QMainWindow):
         if apilist:
             fp.api = apilist[0]
         else:
-            print('Please choose a stock api to use. Select stockapi from the file meny.')
+            msg = '<h3>No stock api is selected</h3><ul> '
+            for rule in rules:
+                msg = msg + f'<div><strong>Violated rule: {rule}</strong></div>'
+            if not rule:
+                msg = msg + '<div>Please select Chart API from the menu</div>'
+            msgbx = QMessageBox()
+            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setText(msg)
+            msgbx.exec()
             return None
         interval = iwidg.value()
         # name = nwidg.text()
@@ -724,18 +732,19 @@ class SumControl(QMainWindow):
     def dasDefault(self, b):
         '''Set the self.settings value for input type to DAS'''
         self.settings.setValue('inputType', 'DAS')
-        self.setFormDate()
+        self.loadFromDate()
 
     def ibDefault(self, b):
         '''Set the self.settings value for input type to IB'''
         self.settings.setValue('inputType', 'IB_HTML')
-        self.setFormDate()
+        self.loadFromDate()
 
-    def setFormDate(self):
+    def loadFromDate(self):
         '''
         Callback when dateEdit is changed. Gather the settings and locate what input files exist.
         Enable/disable radio buttons to choose IB or DAS. Load up the filename in the lineEdit.
-        If it exists, green. If not red. If the directory doesn't exist, set blank.
+        If it exists, green. If not red. If the directory doesn't exist, set blank. If Saved
+        file exists override it to blue
         ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir]
         '''
         daDate = self.ui.dateEdit.date()
@@ -776,7 +785,10 @@ class SumControl(QMainWindow):
 
         if not infile:
             return
+        self.setColorsAndLabels(infile)
 
+    def setColorsAndLabels(self, infile):
+        inputtype = self.settings.value('inputType')
         self.ui.infileEdit.setText(infile)
 
         statusstring = ''
@@ -786,6 +798,7 @@ class SumControl(QMainWindow):
             if inputtype == 'IB_HtmL':
                 self.settings.setValue('ibInfileName', infile)
             savename = self.getSaveName()
+
             if os.path.exists(savename):
                 self.ui.infileEdit.setStyleSheet('color: blue;')
                 tm = os.path.getmtime(savename)
@@ -795,6 +808,7 @@ class SumControl(QMainWindow):
                 self.ui.loadBtn.setStyleSheet('color: blue;')
             else:
                 self.ui.loadBtn.setStyleSheet('color: black;')
+            
             d, xlname = os.path.split(savename)
             xlname = os.path.splitext(xlname)[0] 
             xlname = xlname[1:] + '.xlsx'
