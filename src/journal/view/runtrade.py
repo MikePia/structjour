@@ -26,7 +26,8 @@ import sys
 
 import pandas as pd
 from PyQt5.QtCore import QDate, QDateTime
-from PyQt5.QtWidgets import QApplication, QStyleFactory
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox
 
 from journal.definetrades import DefineTrades
 from journal.pandasutil import InputDataFrame
@@ -122,7 +123,19 @@ class runController:
             statement = Statement_IBActivity(jf)
             df = statement.getTrades_IBActivity(jf.inpathfile)
         elif  self.inputtype == 'DAS':
-            tkt = Ticket(jf)
+            try:
+                tkt = Ticket(jf)
+            except ValueError as ex:
+                msg = '<h3>The input file has caused a ValueError:</h3><ul> '
+                msg = msg + '<div><strong>' + ex.__str__() + '</strong></div>'
+                msg = msg + '<div>Did you export the trades window?</div>'
+                msg = msg + '<div>If so, please configure the table in DAS to have the necessary fields and re-export it.</div>'
+                msgbx = QMessageBox()
+                msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+                msgbx.setText(msg)
+                msgbx.exec()
+                return
+
             df, jf = tkt.getTrades()
         # trades = pd.read_csv(jf.inpathfile)
         else:
