@@ -1,3 +1,4 @@
+from math import isclose
 import os
 import pickle
 import re
@@ -6,13 +7,18 @@ from PyQt5.QtCore import QSettings
 
 class WeGot:
     # Short Circuit Values
+    OK = 0
     MISSING_DAS_SAVED = 1
     MISSING_IB_SAVED = 2
     CONFLICTING_USER_INPUT = 3
     CONFLICTING_CHART_DATA = 4
-    COMPLETED = 5
-    ERROR = 6
-    OK = 7
+    ERROR = 5
+    COMPLETED = 6
+
+    ERROR_IB_STATEMENTS = 'Error: Multiple Ib Activity Statements'
+    ERROR_DATA_CONFLICT = 'Error: Both trades have data for the this field'
+    ERROR_DAS_TRADE_DATA = 'Error: Cannot convert DAS trade data. Please reload file. Press Go, Load, Save'
+    ERROR_IB_TRADE_DATA = 'Error: Cannot convert IB trade data. Please reload file. Press Go, Load, Save'
 
     '''Use the settings for scheme and journal combined with self.date, find the various files for structjour'''
     def __init__(self, daDate):
@@ -25,6 +31,7 @@ class WeGot:
         # IBINFILE = settings.value('ibInfile')
         # IBINFILE, ext = os.path.splitext(IBINFILE)
         dasInfile = settings.value('dasInfile')
+        das_inpathfile_scheme = scheme + dasInfile
         dasInfile, ext = os.path.splitext(dasInfile)
 
         Year = '%Y'
@@ -32,17 +39,17 @@ class WeGot:
         day = '%d'
         MONTH = '%B'
         DAY = '%A'
-        das_inpathfile = scheme + 'trades.csv'
         outdirscheme = f'{scheme}out/'
-        das_outfilescheme = outdirscheme + '.{dasInfile}{DAY}_{month}{day}.zst'
+        self.ofs = '{DAY}_{month}{day}'
+        das_outfilescheme = outdirscheme + '.{dasInfile}' + self.ofs + '.zst'
 
         # ibinfile, and any future infile that is represented with a glob in settings will be
         # translated in a method like getIbInput, getIbSaved, getIbXL
         # ib_outfilescheme = outdirscheme + '.{IBINFILE}{DAY}_{month}{day}.zst'
-        xl_das_outfilescheme = outdirscheme + '{dasInfile}{DAY}_{month}{day}.xlsx'
+        xl_das_outfilescheme = outdirscheme + '{dasInfile}' + self.ofs + '.xlsx'
         
         self.indirfrmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
-        self.das_infilefrmt = das_inpathfile.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
+        self.das_infilefrmt = das_inpathfile_scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         self.outdirfrmt = outdirscheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         self.das_outfilefrmt = das_outfilescheme.format(dasInfile=dasInfile, Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         # self.ib_outfilefrmt = ib_outfilescheme.format(IBINFILE=IBINFILE, Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
@@ -99,10 +106,17 @@ class WeGot:
         saved = os.path.join(self.basedir, self.d.strftime(self.das_outfilefrmt))
         return os.path.exists(saved), saved
 
-    def getIbSaved(self, ibinput):
+    def getIbSaved(self, ibinput, current):
         ibsaved = os.path.split(ibinput)
         ibsaved, ext = os.path.splitext(ibsaved[1])
-        ibsaved = os.path.join(self.getOutdir()[1], f'.{ibsaved}.zst')
+        ibsaved = ''.join(['.', ibsaved, self.ofs, '.zst'])
+
+        day = '%d'
+        month = '%m'
+        DAY = '%A'
+        ibsaved = ibsaved.format(DAY=DAY, month=month, day=day)
+        ibsaved = current.strftime(ibsaved)
+        ibsaved = os.path.join(self.getOutdir()[1], ibsaved)
         return os.path.exists(ibsaved), ibsaved
     
     def get_DAS_XL(self):
@@ -140,33 +154,115 @@ class WeGot:
             
         return retlist
 
-    def loadDictionaries(self, ibsaved, dassaved, forceload=False):
+    def getKeymap(self):
+        keymap = list()
+        for key in self.das_ts:
+            if self.das_ts[key]['Account'].unique()[0] == 'Live':
+                # daskeys.append(key)
+                for ibkey in self.ib_ts:
+                    dastrade = self.das_ts[key]
+                    ibtrade = self.ib_ts[ibkey]
+                    print(dastrade['Entry1'].unique()[0], '<-----*----->', ibtrade['Entry1'].unique()[0])
+                    if isclose(dastrade['Entry1'].unique()[0],  ibtrade['Entry1'], abs_tol=1e-7):
+                        if dastrade['Time1'].unique()[0] == ibtrade['Time1'].unique()[0]:
+                            if dastrade['Shares'].unique()[0] == ibtrade['Shares'].unique()[0]:
+                                keymap.append([key, ibkey])
+                                break
+                print(keymap)
+        if len(keymap) != len(self.ib_ts.keys()):
+            return None
+        return keymap
+                                
+
+
+
+                        # print(dastrade['P / L'].unique()[0], '<-----*----->', ibtrade['P / L'].unique()[0])
+                        # print(dastrade['Duration'].unique()[0], '<-----*----->', ibtrade['Duration'].unique()[0])
+                        # print(dastrade['Time1'].unique()[0], '<-----*----->', ibtrade['Time1'].unique()[0])
+                        # print(dastrade['Time2'].unique()[0], '<-----*----->', ibtrade['Time2'].unique()[0])
+                        # print()
+        
+
+
+    def loadDictionaries(self, dassaved, ibsaved, forceload=False):
         if self.ib_ts == None or forceload:
             with open(ibsaved, "rb") as f:
                 test = pickle.load(f)
-                if len(test) == 2:
-                    print('Save is in the wrong format. Save and load it again to correct it')
-                    (self.ib_ts, entries) = test
-                    # self.ts = test
-                elif len(test) != 3:
+                if len(test) != 3:
                     print('Something is wrong with this file')
-                    return WeGot.ERROR
-                    (self.ib_ts, entries, df) = test
+                    return WeGot.ERROR, WeGot.ERROR_IB_TRADE_DATA
+                else:
+                    (self.ib_ts, self.ib_entries, self.ib_df) = test
             
             with open(dassaved, "rb") as f:
                 test = pickle.load(f)
-                if len(test) == 2:
-                    print('Save is in the wrong format. Save and load it again to correct it')
-                    (self.das_ts, entries) = test
-                    # self.ts = test
-                elif len(test) != 3:
+                if len(test) != 3:
                     print('Something is wrong with this file')
-                    return WeGot.ERROR
+                    return WeGot.ERROR, WeGot.ERROR_DAS_TRADE_DATA
                 else:
-                    (self.das_ts, entries, df) = test
-        pass
+                    (self.das_ts, self.das_entries, self.das_df) = test
+        return [WeGot.OK]
+
+    def saveDictionaries(self, dassaved, ibsaved):
+        with open(dassaved, 'wb') as f:
+            pickle.dump((self.das_ts, self.das_entries, self.das_df), f)
+
+        with open(ibsaved, 'wb') as f:
+            pickle.dump((self.ib_ts, self.ib_entries, self.ib_df), f)
+
+
+    def syncField(self, t1, t2, key):
+        SUCCESS = 1
+        FAIL = 0
+        val1 = t1[key].unique()[0]
+        val2 = t2[key].unique()[0]
+        if val1 and not val2:
+            t2[key] = t1[key]
+        elif val2 and not val1:
+            t1[key] = t2[key]
+        elif not val1 and not val2:
+            pass
+        elif val1 and val2 and val1 != val2:
+            print('Requires human decision')
+            return FAIL, key
+        print()
+        return SUCCESS, key
+
+    def syncCharts(self, t1, t2):
+        '''
+        If a chart exists, leave it alone. Only sync  when a chart exists in one
+        object and not in the other.
+        '''
+        for c in ['chart1', 'chart2', 'chart3']:
+            c1 = t1[c].unique()[0]
+            c2 = t2[c].unique()[0]
+            
+            if os.path.exists(c1) and not os.path.exists(c2):
+                t2[c] = t1[c]
+                t2[c+'Start'] = t1[c+'Start']
+                t2[c+'End'] = t1[c+'End']
+                t2[c+'Interval'] = t1[c+'Interval']
+
+            elif os.path.exists(c2) and not os.path.exists(c1):
+                t1[c] = t2[c]
+                t1[c+'Start'] = t2[c+'Start']
+                t1[c+'End'] = t2[c+'End']
+                t1[c+'Interval'] = t2[c+'Interval']
+
 
     def compareDictionaries(self):
+        keymap = self.getKeymap()
+        for daskey, ibkey in keymap:
+            dastrade = self.das_ts[daskey]
+            ibtrade = self.ib_ts[ibkey]
+            userdata = ['Target', 'StopLoss', 'MstkVal', 'MstkNote', 'Explain', 'Notes']
+            for key in userdata:
+                success, userdatakey = self.syncField(dastrade, ibtrade, key)
+                if not success:
+                    return WeGot.CONFLICTING_USER_INPUT, self.das_ts, self.ib_ts
+                
+                print(dastrade[key].unique()[0], ibtrade[key].unique()[0])
+            self.syncCharts(dastrade, ibtrade)
         return WeGot.OK, None, None, None
 
 def reportDASExcelFiles(begin):
@@ -285,19 +381,29 @@ def reportTwinSavedFiles(begin):
             dasname = f.getDASInput()            
             dasout = f.getSaved()
             if dasname[0] and not dasout[0]:
-                return WeGot.MISSING_DAS_SAVED, None
+                return WeGot.MISSING_DAS_SAVED, current, dasout[1]
             ibnames = f.getIbInput()
-            ibout = f.getIbSaved(ibnames[0]) if ibnames else []
+            ibout = f.getIbSaved(ibnames[0], current) if ibnames else []
             if len(ibnames) > 1:
-                raise ValueError('Here is one, how did that happen?', ibname[0])
+                # short circuit missing saved file
+                return WeGot.ERROR, current, WeGot.ERROR_IB_STATEMENTS, ibnames
+                # raise ValueError('Here is one, how did that happen?', ibnames[0])
             if ibnames and not ibout[0]:
-                return WeGot.MISSING_IB_SAVED
+                # short circuit missing saved file
+                return WeGot.MISSING_IB_SAVED, current, ibout[1]
             if dasname[0] and ibnames:
-                if dasout[0] and ibout:
-                    f.loadDictionaries(dasname[1], ibnames[0])
-                    shortcircuit, key, dasdict, ibdict = f.compareDictionaries()
-                    if shortcircuit != WeGot.OK:
-                        return shortcircuit, key, dasdict, ibdict
+                if dasout[0] and ibout[0]:
+                    results = f.loadDictionaries(dasout[1], ibout[1])
+                    if results[0] != WeGot.OK:
+                        # short circuit bad dictionary data, reload
+                        return results[0], current, results[1], None
+                    results = f.compareDictionaries()
+                    if results[0] != WeGot.OK:
+                        # short circuit data conflict, user choose in gui
+                        return results[0], current, WeGot.ERROR_DATA_CONFLICT, results[1], results[2]
+                f.saveDictionaries(dasout[1], ibout[1])
+            # else:
+            #     print('What now')
             
                 
         current = current + delt
@@ -307,9 +413,21 @@ def reportTwinSavedFiles(begin):
 
 
 def notmain():
-    b = pd.Timestamp('2018-10-25')
+    b = pd.Timestamp('2019-02-12')
+    delt = pd.Timedelta(days=1)
     # ll = reportDASExcelFiles(b)
-    reportTwinSavedFiles(b)
+
+    while True:
+        result = reportTwinSavedFiles(b)
+        if result[0] == WeGot.MISSING_IB_SAVED:
+            print ('Process ib file for ', result[1].strftime('%m-%d') )
+        if result[0] == WeGot.ERROR:
+            print(result[1].strftime('%m-%d'), result[2], result[3] )
+            break
+        if result[0] == WeGot.COMPLETED:
+            break
+        b = result[1] + delt
+        
     print()
     # for l in ll:
     #     if l:
