@@ -2182,6 +2182,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionFileSettings"/>
     <addaction name="actionChart_Settings"/>
     <addaction name="actionStock_API"/>
+    <addaction name="actionSynchronize_Saved_files"/>
+    <addaction name="separator"/>
     <addaction name="actionStrategy_Browser"/>
    </widget>
    <addaction name="menuFile"/>
@@ -2208,6 +2210,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionStrategy_Browser">
    <property name="text">
     <string>Strategy Browser</string>
+   </property>
+  </action>
+  <action name="actionSynchronize_Saved_files">
+   <property name="text">
+    <string>Synchronize Saved Files</string>
    </property>
   </action>
  </widget>

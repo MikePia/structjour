@@ -295,6 +295,21 @@ class LayoutForms:
         entries = self.entries[key]
         return entries
 
+    def updateTsDictionary(self):
+        '''
+        Up date older versions of the dictionary that lack some keys. Specifically update the
+        chart widget elements
+        '''
+        for c, interval in zip(['chart1', 'chart2', 'chart3'], [1, 5, 15]):
+            for key in self.ts:
+                if c not in self.ts[key].keys():
+                    self.ts[key][c] = 'AnimatedParrotComplaintDepartmet'
+                    start = pd.Timestamp('2175-01-02')
+                    end = pd.Timestamp('2175-01-01')
+                    self.ts[key][c+'Start'] = start
+                    self.ts[key][c+'End'] = end
+                    self.ts[key][c+'Interval'] = interval
+
     def getChartData(self, key, ckey):
         '''
         Get the chart data from the tradeObject
@@ -306,6 +321,9 @@ class LayoutForms:
 
         assert ckey in ('chart1', 'chart2', 'chart3')
         tto = self.ts[key]
+        if 'chart1' not in tto.keys():
+            self.updateTsDictionary()
+            
         name = tto[ckey].unique()[0]
         begin = tto[ckey + 'Start'].unique()[0]
         end = tto[ckey + 'End'].unique()[0]

@@ -45,6 +45,7 @@ from journal.view.stratcontrol import StratControl
 from journal.view.summaryform import Ui_MainWindow
 from journal.stock.graphstuff import FinPlot
 from journal.stock.utilities import getMAKeys, qtime2pd, pd2qtime
+from journal.view.synccontrol import SyncControl
 from journal.xlimage import XLImage
 
 from strategy.strategies import Strategy
@@ -137,6 +138,7 @@ class SumControl(QMainWindow):
         self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
         self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
+        self.ui.actionSynchronize_Saved_files.triggered.connect(self.syncFiles)
 
         # Set the file related widgets
         d = pd.Timestamp.today()
@@ -1052,6 +1054,11 @@ class SumControl(QMainWindow):
     def chartSetDlg(self):
         chartsettings = QSettings('zero_substance/chart', 'structjour')
         self.chartDlg = ChartControl(chartsettings)
+
+    def syncFiles(self):
+        settings = QSettings('zero_substance', 'structjour')
+        self.w = SyncControl(settings)
+        self.w.show()
 
 
 def verifyNameInfo(daDate, s):

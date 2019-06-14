@@ -15,7 +15,7 @@ class WeGot:
     ERROR = 5
     COMPLETED = 6
 
-    ERROR_IB_STATEMENTS = 'Error: Multiple Ib Activity Statements'
+    ERROR_MULTIPLE_IB = 'Error: Multiple Ib Activity Statements'
     ERROR_DATA_CONFLICT = 'Error: Both trades have data for the this field'
     ERROR_DAS_TRADE_DATA = 'Error: Cannot convert DAS trade data. Please reload file. Press Go, Load, Save'
     ERROR_IB_TRADE_DATA = 'Error: Cannot convert IB trade data. Please reload file. Press Go, Load, Save'
@@ -66,13 +66,11 @@ class WeGot:
 
     def getIbInput(self):
         '''
-        Gets a list of IB Activity input files as a list. 
+        Gets a list of IB Activity based on the glob in settings, returns a list.
         :return: A list of file name or an empty list. (no pathnames)
         '''
         d = self.getIndir()
         if not d[0]:
-            return []
-        if not d[1] or not os.path.exists(d[1]):
             print(f'Cannot locate directory "{d[1]}".')
             return []
 
@@ -170,7 +168,7 @@ class WeGot:
                                 break
                 print(keymap)
         if len(keymap) != len(self.ib_ts.keys()):
-            return None
+            return []
         return keymap
                                 
 
@@ -379,14 +377,14 @@ def reportTwinSavedFiles(begin):
             f = WeGot(current)
 
             dasname = f.getDASInput()            
-            dasout = f.getSaved()
+            dasout = f.getSaved() 
             if dasname[0] and not dasout[0]:
                 return WeGot.MISSING_DAS_SAVED, current, dasout[1]
             ibnames = f.getIbInput()
-            ibout = f.getIbSaved(ibnames[0], current) if ibnames else []
+            ibout = f.getIbSaved(ibnames[0], current) if ibnames else [False, '']
             if len(ibnames) > 1:
                 # short circuit missing saved file
-                return WeGot.ERROR, current, WeGot.ERROR_IB_STATEMENTS, ibnames
+                return WeGot.ERROR, current, WeGot.ERROR_MULTIPLE_IB, ibnames
                 # raise ValueError('Here is one, how did that happen?', ibnames[0])
             if ibnames and not ibout[0]:
                 # short circuit missing saved file

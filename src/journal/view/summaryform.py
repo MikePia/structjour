@@ -1235,9 +1235,13 @@ class Ui_MainWindow(object):
         self.actionStock_API.setObjectName("actionStock_API")
         self.actionStrategy_Browser = QtWidgets.QAction(MainWindow)
         self.actionStrategy_Browser.setObjectName("actionStrategy_Browser")
+        self.actionSynchronize_Saved_files = QtWidgets.QAction(MainWindow)
+        self.actionSynchronize_Saved_files.setObjectName("actionSynchronize_Saved_files")
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
         self.menuFile.addAction(self.actionStock_API)
+        self.menuFile.addAction(self.actionSynchronize_Saved_files)
+        self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionStrategy_Browser)
         self.menubar.addAction(self.menuFile.menuAction())
 
@@ -1313,5 +1317,6 @@ class Ui_MainWindow(object):
         self.actionChart_Settings.setText(_translate("MainWindow", "Chart Settings"))
         self.actionStock_API.setText(_translate("MainWindow", "Stock API"))
         self.actionStrategy_Browser.setText(_translate("MainWindow", "Strategy Browser"))
+        self.actionSynchronize_Saved_files.setText(_translate("MainWindow", "Synchronize Saved files"))
 
 from journal.view.clicklabel import ClickLabel
