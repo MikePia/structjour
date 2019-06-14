@@ -259,8 +259,10 @@ class DailyControl(QDialogWClose):
             live = True if TheTrade[srf.acct].unique()[0] == "Live" else False
             count = count + 1
 
+            if pl is None:
+                pl = 0.0
             # A bug-ish inspired baby-sitter
-            if isinstance(pl, str):
+            elif isinstance(pl, str):
                 if pl == '':
                     pl = 0
                 else:
