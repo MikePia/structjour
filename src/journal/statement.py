@@ -532,7 +532,7 @@ class Statement_IBActivity:
         df = df.copy()
         df['bal'] = 0
         df['PL'] = 0.0
-        df = df[['Symbol', 'Date/Time', 'Account', 'Quantity', 'bal', 'T. Price', 'Comm/Fee', 'Realized P/L', 'PL',  'Code', 'Proceeds']].copy()
+        df = df[['Symbol', 'Date/Time', 'Account', 'Quantity', 'bal', 'T. Price', 'MTM P/L', 'Comm/Fee', 'Realized P/L', 'PL',  'Code', 'Proceeds']].copy()
 
         newtrade = pd.DataFrame(columns = df.columns)
         for s in df['Symbol'].unique():
@@ -541,7 +541,7 @@ class Statement_IBActivity:
 
             for count, (i, row) in enumerate(tdf.iterrows()):
                 PL = 0.0
-                symb, qty, comm,  rpl, code = list(row[['Symbol',  'Quantity',  'Comm/Fee', 'Realized P/L', 'Code',]])
+                symb, qty, comm,  rpl, pl, code = list(row[['Symbol',  'Quantity',  'Comm/Fee', 'Realized P/L', 'MTM P/L', 'Code',]])
                 code = 'O' if 'O' in code else 'C' if 'C' in code else ''
                 assert code
                 try:
