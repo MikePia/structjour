@@ -1,13 +1,14 @@
 *~
 .ipynb_checkpoints
+*.ipynb
 Untitled*
 __pycache__
 data/
 out/
+./images
+src/strategy/images
 .project
 .settings
-*.png
-*.jpg
 *.pyc
 .pydev*
 *.sqlite
@@ -20,7 +21,6 @@ doodles
 *.txt
 src/run.py
 src/DisciplinedCopy1.xlsx
-src/images
 .coverage
 TODO*
 *.zst
