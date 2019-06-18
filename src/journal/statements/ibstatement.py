@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
-Re-implementing the ib scv statement stuff to get a general solution that can be stored in a db
+Re-implementing the ib csv statement stuff to get a general solution that can be stored in a db
 @author: Mike Petersen
 @creation_data: 06/15/19
 '''
@@ -25,9 +25,24 @@ import os
 import sqlite3
 
 from PyQt5.QtCore import QSettings
+import numpy as np
 import pandas as pd
 
+from bs4 import BeautifulSoup
+import urllib.request
+
 # pylint: disable = C0103
+
+def readit(url):
+    '''Copied this from statement.py. I think this will be its home-- '''
+    data = ''
+    if url.lower().startswith('http:'):
+        data = urllib.request.urlopen(url).read()
+    else:
+        assert os.path.exists(url)
+        with open(url) as f:
+            data = f.read()
+    return data
 
 class IbStatement:
     '''
@@ -35,15 +50,102 @@ class IbStatement:
     columns.
     '''
 
-    #Not sure there is a difference between T_FLEX and TRADE
+    # Not sure there is a difference between T_FLEX and TRADE 
+    # Going to attempt to treat CSV and Html version of activity statements the same once
+    # the initial dataframes are created. For the subset of 3-4 tables we view, should be possible.
     I_TYPES = ["A_FLEX", "T_FLEX", "ACTIVITY", "TRADE"]
     def __init__(self):
 
         self.account = None
-        self.filename = None
+        self.statementname = None
         self.begindate = None
         self.enddate = None
         self.inputType = None
+
+    def parseTitle(self, t):
+        '''
+        The html title tag of the activity statement contains statement info. There are no specs to
+        the structure of the thing. So on failure, raise exceptions. By trial and error, find the
+        available formats. Especially multi day format must be different than this one. So just
+        raise exceptions everywhere until comfortable that all cases are covered. 
+        '''
+        st = dict()
+        try:
+            t, broker = t.split('-')
+        except ValueError:
+            raise ValueError('Failed to parse the statement date')
+        
+        broker = broker.strip()
+        self.broker = broker
+        t = t.strip()
+        t = t.split(' ')
+        if len(t) == 6:
+            account = t[0]
+            sname = ' '.join([t[1], t[2]])
+            theDate = ' '.join([t[3], t[4], t[5]])
+        elif len(t) == 5:
+            account = t[0]
+            sname =  t[1]
+            theDate = ' '.join([t[2], t[3], t[4]])
+        else:
+            raise ValueError('Failed to parse the statement date')
+            
+        try:
+        
+            self.begindate = pd.Timestamp(theDate)
+            self.account = account
+            self.statementname = sname
+            
+        except:
+            raise ValueError('Failed to parse the statement date')
+        
+    def doctorHtmlTables(self, tabd):
+        tabs = ['AccountInformation', 'OpenPositions', 'Transactions']
+        for key in tabd:
+            if key in ['OpenPositions', 'Transactions']:
+                df = tabd[key]
+                df = df[df['Symbol'].str.startswith('Total') == False]
+                df = df.iloc[2:]
+                tabd[key] = df.copy()
+            elif key == 'AccountInformation':
+                tabd[key].columns = ['Field Name', 'Field Value']
+        return tabd
+
+     
+
+    def openIBStatementHtml(self, infile):
+        if not os.path.exists(infile):
+            return
+        soup = BeautifulSoup(readit(infile), 'html.parser')
+        tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tbl'))
+        title = soup.find('title').text
+        self.parseTitle(title)
+    
+        
+
+        tables = dict()
+        for tableTag in tbldivs:
+            continueit = True
+            tabKey = ''
+            for key in ['tblAccountInformation', 'tblOpenPositions', 'tblTransactions']:
+                if tableTag['id'].startswith(key):
+                    continueit = False
+                    tabKey = key[3:]
+                    break
+            if continueit:
+                continue
+
+            tab = tableTag.find("table")
+            if not tab:
+                continue
+            df = pd.read_html(str(tab))
+            assert len(df) == 1
+            df = df[0]    #.replace(np.nan, '')
+            # tables[tableTag['id']] = df[0]
+            tables[tabKey] = df
+            print()
+        self.doctorHtmlTables(tables)
+        return tables
 
     def openIBStatementCSV(self, infile):
         '''
@@ -89,7 +191,6 @@ class IbStatement:
             cols = list()
 
             for i, col in enumerate(tab.iloc[0]):
-                print(col)
                 if isinstance(col, str):
                     if col == key or col == 'Header':
                         continue
@@ -109,7 +210,6 @@ class IbStatement:
                     tab = tab[cols].copy()
                     tables[key] = tab
             # tab.columns = currentcols
-            print()
         return tables, tablenames
 
     def getTablesFromMultiFlex(self, df):
@@ -124,6 +224,7 @@ class IbStatement:
         indexes. If discovered replace this hacky version.
         The trick here is to extract the tables into pandas, get the headers, replace the active
         fields and truncate all the other fields (that lack headers and data)
+
         '''
         ft = IbStatement()
         # df = pd.read_csv(infile)
@@ -131,8 +232,9 @@ class IbStatement:
         tables = dict()
         tablenames = dict()
         if df.iloc[0][0] == 'BOF':
+            # The data in the top (BOF) line is not part of a table. We need begin and end.
             self.account = df.iloc[0][1]
-            self.filename = df.iloc[0][2]
+            self.statementname = df.iloc[0][2]
             # numtables = df.columns[3]
             begindate = df.iloc[0][4]
             self.begindate = pd.Timestamp(begindate)
@@ -196,7 +298,10 @@ class IbStatement:
             return ['Symbol', 'Quantity', 'Side', 'LevelOfDetail']
 
         if tabid == 'TRNT':
-            return ['ClientAccountID', 'AccountAlias', 'Symbol', 'Conid', 'ListingExchange', 'TradeID', 'ReportDate', 'TradeDate', 'TradeTime',              'OrderTime', 'Buy/Sell', 'Quantity', 'TradePrice',  'TransactionType', 'IBCommission', 'Open/CloseIndicator', 'Notes/Codes', 'LevelOfDetail', ]
+            return ['ClientAccountID', 'AccountAlias', 'Symbol', 'Conid', 'ListingExchange', 
+                    'TradeID', 'ReportDate', 'TradeDate', 'TradeTime', 'OrderTime', 'Buy/Sell',
+                    'Quantity', 'TradePrice',  'TransactionType', 'IBCommission',
+                    'Open/CloseIndicator', 'Notes/Codes', 'LevelOfDetail', ]
 
         ####### Activity Statement non flex #######
         if tabid == 'Statement':
@@ -213,12 +318,9 @@ class IbStatement:
             # AHTML= [                                   'Symbol',                                                                                'Date/Time',                          'Quantity', 'T. Price',                        'Comm/Fee',               'Code' ]
 
         if tabid == 'Trade':
-            return ['ClientAccountID', 'AccountAlias', 'Symbol', 'Conid',
-                    'ListingExchange', 'TradeID', 'ReportDate', 'TradeDate',
-                    'Date/Time',
-                    'TransactionType', 'Quantity',
-                    'Price',
-                    'Exchange', 'Buy/Sell',  
+            return ['ClientAccountID', 'AccountAlias', 'Symbol', 'Conid', 'ListingExchange',
+                    'TradeID', 'ReportDate', 'TradeDate', 'Date/Time', 'Buy/Sell', 'TransactionType',
+                    'Quantity', 'Price', 'Exchange',  
                     'Amount',   
                     'Commission',
                     'BrokerExecutionCommission', 'BrokerClearingCommission',
@@ -284,19 +386,19 @@ class StatementDB:
         conn.commit()
 
 
+def localstuff():
+    basedir = 'C:/trader/journal/'
+    settings = QSettings('zero_substance', 'structjour')
+    scheme = settings.value('scheme')
+    d = pd.Timestamp('2019-06-14')
+    scheme = d.strftime(scheme.format(
+        Year='%Y', month='%m', MONTH='%B', day='%d', DAY='%A'))
+    daDir = os.path.join(basedir, scheme)
+    fn = 'ActivityStatement.20190614.html'
+    fn = os.path.join(daDir, fn)
+    ibs = IbStatement()
+    ibs = ibs.openIBStatementHtml(fn)
 
-    # dat = df.iloc[0]
-    # print(dat.head())
-    # findingTable = True
-    # for i, row in df.iterrows():
-
-    #     if row[0] == 'BOS' and findingTable == True:
-    #         dfx = pd.DataFrame()
-    #         tabid= row[1]
-    #         dfx.append(row)
-    #         findingTable == False
-    #     if findingTable == False:
-    #         dfx.append(row)
 
 def notmain():
     '''Run some local code'''
@@ -311,12 +413,15 @@ def notmain():
         Year='%Y', month='%m', MONTH='%B', day='%d', DAY='%A'))
     daDir = os.path.join(basedir, scheme)
 
-    fn = 'ActivityFlexMonth.csv'                # Activity flex Month
+    # fn = 'ActivityFlexMonth.csv'                # Activity flex Month
     # fn = 'TradeFlexMonth.csv'                 # Trade Flex Month (single table)
-    # fn = 'U2429974_20190614_20190614.csv'     # default Activity
+    fn = 'U2429974_20190614_20190614.csv'     # default Activity
     # fn = 'U2429974_U2429974_2018_2018_AS_Fv2_b05f9463b268e093e7a94039001e60f7.csv'
     # fn = os.path.join(basedir, fn)
 
+    # fn = 'CSVMonthly.644225.201905.csv'
+    # ddir = os.path.join(basedir, '_201905_May/')
+    # fn = os.path.join(ddir, fn)
     #This is the ib given name of a default statement download
     fn = os.path.join(daDir, fn)
 
@@ -325,8 +430,7 @@ def notmain():
     tabs, names = ibs.openIBStatementCSV(fn)
 
     for key in tabs:
-        print(key)
-        print(list(tabs[key].columns))
+        print(key, len(list(tabs[key].columns)))
 
     # print(names['ACCT'])
     # tabname = names['ACCT'].lower().replace(' ', '_')
@@ -336,4 +440,5 @@ def notmain():
     # ft.genericTbl(tabname, list(tabs['ACCT'].columns))
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    localstuff()
