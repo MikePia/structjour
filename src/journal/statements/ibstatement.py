@@ -185,6 +185,14 @@ class IbStatement:
         Filter out 'the rest.'
         '''
         newdf = pd.DataFrame()
+        hasPartials = False
+        tickers = df['Symbol'].unique()
+        for tickerKey in tickers:
+            if tickerKey.lower().startswith('closed') or tickerKey.lower().startswith('wash sale'):
+                hasPartials = True
+        if not hasPartials:
+            return df
+                
         for tickerKey in df['Symbol'].unique():
             ticker = df[df['Symbol'] == tickerKey]
             if len(tickerKey) > 6:
@@ -194,28 +202,74 @@ class IbStatement:
                     assert code.find('C') == -1
                     assert code.find('P') == -1
                 continue
-            for timeKey in  ticker['DateTime'].unique():
-                trade = ticker[ticker['DateTime'] == timeKey]
-                if len(trade) > 1:
-                    codes = trade['Codes'].unique()
-                    # I am not sure they all have to share the same code but it makes sense
-                    assert len(codes) == 1
-                    assert codes[0].find('P') > -1
-                    totQuantity = trade.iloc[0]['Quantity']
-                    try:
-                        totQuantity = int(totQuantity)
-                        tot = 0
-                        for qty in trade['Quantity']:
-                            tot = tot + int(qty)
-                        assert tot == 2 * totQuantity
-                    except ValueError:
-                        print("Badly formatted or missing data html in Trades table for partial.")
-                        return None
-                for code in trade['Codes'].unique():
-                    assert code.find('O') > -1 or code.find('C') > -1
-                newdf = newdf.append(trade.iloc[0])
+
+
+            ####### new code #####
+            # aticker = ticker
+            codes = ticker['Codes'].unique()
+            for code in codes:
+                parts = ticker[ticker['Codes'] == code]
+                if code.find('P') > -1:
+                    if len(parts) == 1:
+                        # ASSUMPTION. If there is only one partial, this is a summary row and
+                        # the detail rows are excluded by IB
+                         
+                        # raise ValueError('How to deal with singe partial entries????')
+                        print()
+                        print(f'''1)    {parts.iloc[0][['Symbol', 'DateTime', 'Quantity', 'Codes']].values}''')
+                        x=3
+
+                    else:
+                        print()
+                        addme = []
+                        curTotal = 0
+
+                        for count, (i, row) in enumerate(parts.iterrows()):
+                            share = int(row['Quantity'])
+                            if curTotal == 0:
+                                curTotal = share
+                                addme.append(count)
+                            else:
+                                curTotal = curTotal - share
+                            print(f'{count})   ', row[['Symbol', 'DateTime', 'Quantity', 'Codes']].values)
+                        assert curTotal == 0
+                        print('Summary(s) in row(s)', addme)
+                        x=3
+                        # for code in trade['Codes'].unique():
+                        #     assert code.find('O') > -1 or code.find('C') > -1
+                        for x in addme:
+                            newdf = newdf.append(parts.iloc[x])
+                else:
+                    newdf = newdf.append(parts)
 
         return newdf
+
+
+
+            ####### Old code #####
+            #  for timeKey in  ticker['DateTime'].unique():
+            #     trade = ticker[ticker['DateTime'] == timeKey]
+            #     if len(trade) > 1:
+            #         codes = trade['Codes'].unique()
+            #         # I am not sure they all have to share the same code but it makes sense
+            #         assert len(codes) == 1
+            #         assert codes[0].find('P') > -1
+            #         totQuantity = trade.iloc[0]['Quantity']
+            #         try:
+            #             totQuantity = int(totQuantity)
+            #             tot = 0
+            #             for qty in trade['Quantity']:
+            #                 tot = tot + int(qty)
+            #             if tot != 2 * totQuantity:
+            #                 print('Bad value. The old system is going to add a phantom trade:::::::::')
+            #                 raise TypeError('Stop here')
+                    
+            #         except ValueError:
+            #             print("Badly formatted or missing data html in Trades table for partial.")
+            #             return None
+            #     for code in trade['Codes'].unique():
+            #         assert code.find('O') > -1 or code.find('C') > -1
+            #     newdf = newdf.append(trade.iloc[0])
 
     def doctorHtmlTables(self, tabd):
         tabs = ['AccountInformation', 'OpenPositions', 'Transactions', 'Trades',
@@ -240,10 +294,10 @@ class IbStatement:
                 if key == 'Transactions':
                     df = df.rename(columns={'Date/Time': 'DateTime', 'T. Price': 'Price',
                                    'Comm/Fee': 'Commission', 'Code': 'Codes'})
-                    df = self.unifyDateFormat(df)
                     
                     df['Account'] = self.account
                     df = self.combinePartialsHtml(df)
+                    df = self.unifyDateFormat(df)
                 tabd[key] = df.copy()
 
             elif key == 'AccountInformation':
@@ -259,10 +313,6 @@ class IbStatement:
                 else:
                     tabd['OpenPositions'] = t.copy()
                 del tabd[key]
-
-
-                print()
-            
         return tabd
 
     def openIBStatementHtml(self, infile):
@@ -293,12 +343,11 @@ class IbStatement:
             df = df[0]  # .replace(np.nan, '')
             # tables[tableTag['id']] = df[0]
             tables[tabKey] = df
-            print()
         if 'Transactions' not in tables.keys() and 'Trades' not in tables.keys():
             # This should maybe be a dialog
             msg = 'The statment lacks a trades table; it has no information of interest.'
             print(msg)
-            return dict()
+            return dict(), dict()
         self.doctorHtmlTables(tables)
         tname = ''
         if 'Trades' in tables.keys():
@@ -396,6 +445,10 @@ class IbStatement:
                 continue
 
             tab = df[df[0] == key]
+            headers = tab[tab[1] == 'Header']
+            if len(headers) > 1:
+                print('Multi account statment not supported"')
+                return dict(), dict()
             assert tab.iloc[0][1] == 'Header'
             currentcols = list(tab.columns)
             cols = list()
@@ -445,6 +498,8 @@ class IbStatement:
                 # identical and redundant. Some statements include both but some only include
                 # Order. The occasional slight differences (in time) will not affect trade review.
                 # I have seen none that include Trade, but not Order rows. 
+                if 'Trades' in tablenames.keys():
+                    raise ValueError('Statement type Not Supported: Satement has Trades table for two accounts.')
                 tab = tab[tab['DataDiscriminator'].str.lower() == 'order']
                 tab = tab.rename(columns={'T. Price': 'Price', 'Comm/Fee': 'Commission'})
                 tab['Account'] = self.account
@@ -478,7 +533,12 @@ class IbStatement:
                     self.beginDate = pd.Timestamp(self.beginDate)
                     self.endDate = pd.Timestamp(self.endDate)
             elif key == 'Account Information':
-                self.account = tab[tab['Field Name'] == 'Account']['Field Value'].unique()[0]
+                names = tab['Field Name'].unique()
+                if 'Account' in names:
+                    self.account = tab[tab['Field Name'] == 'Account']['Field Value'].unique()[0]
+                elif 'Segment' in names:
+                    # This is a multi account statement
+                    self.account = tab[tab['Field Name'] == 'Segment']['Field Value'].unique()[0]
 
                 
 
@@ -488,6 +548,13 @@ class IbStatement:
 
 
             # tab.columns = currentcols
+
+        if 'Trades' not in tables.keys():
+            # This should maybe be a dialog
+            msg = 'The statment lacks a trades table; it has no information of interest.'
+            print(msg)
+            return dict(), dict()
+
         ibdb = StatementDB()
         ibdb.processStatement(tables['Trades'], self.beginDate, self.endDate)
         return tables, tablenames
@@ -604,8 +671,7 @@ class IbStatement:
                     # This signals the end of the columns in our index list. better indicator(?)
                     elif isinstance(col, float) and math.isnan(col):
                         # Replace the index, remove non 'Data' rows and the 'HEADER' row,  Filter with our columns
-                        self.verifyAvailableCols(
-                            currentcols, ourcols, tabid + names)
+                        self.verifyAvailableCols(currentcols, ourcols, tabid + names)
                         t.columns = currentcols
                         t = t[t[0].str.lower() == 'data']
                         t = t[t[0].str.lower() != 'header']
@@ -637,8 +703,6 @@ class IbStatement:
                     t = t.drop(['TradeDate', 'TradeTime', 'Codes', 'LevelOfDetail'], axis=1)
                     t = t.rename(columns={'Open/CloseIndicator': 'Codes'})
                     t = self.unifyDateFormat(t)
-
-                    print()
 
                 # Assign to dict and return
                 tables[tabid] = t
@@ -679,7 +743,7 @@ class IbStatement:
             # DataDiscriminator is temporary to filter results
             return ['Symbol', 'Quantity', 'DataDiscriminator']
 
-        if tabid in ['tblLongOpenPositions', 'tblshortOpenPositions']:
+        if tabid in ['tblLongOpenPositions', 'tblShortOpenPositions']:
             # Not a great data discriminator (Mult=='1')
             return ['Symbol', 'Quantity', 'Mult']
 
@@ -713,6 +777,8 @@ class IbStatement:
         if tabid.find('Positions') > -1:
             raise ValueError('Fix it!!!')
 
+        raise ValueError('What did we not catch?')
+
         # Trades= ['ClientAccountID', 'AccountAlias', 'Symbol', 'Conid', 'ListingExchange', 'TradeID', 'ReportDate', 'TradeDate',              'Date/Time',              'Buy/Sell', 'Quantity',  'Price',      'TransactionType',  'Commission',                          'Code',       'LevelOfDetail', ]
 
     def verifyAvailableCols(self, flxcols, ourcols, tabname):
@@ -722,7 +788,8 @@ class IbStatement:
         '''
         missingcols = set(ourcols) - set(flxcols)
         if missingcols:
-            print(f'WARNING: {tabname} is missing the columns {missingcols}')
+            msg = f'ERROR: {tabname} is missing the columns {missingcols}'
+            raise ValueError(msg)
             for col in missingcols:
                 ourcols.remove(col)
         return ourcols
@@ -868,7 +935,6 @@ class StatementDB:
                 {field} TEXT,'''
 
             print(query)
-            print()
         query = query[:-1]
         query = query + ')'
         print(query)
@@ -980,11 +1046,14 @@ def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
 def notmain():
     t = StatementDB()
     t.popHol()
-    print()
     
 
 def localStuff():
-    d = pd.Timestamp('2019-06-13')
+    # Tricky stuff -- triggered by 'atrade' from 3/28. Partials with different times. They exist,
+    # and tht file has no good discriminator. In fact if the times are not guaranteed, none of
+    # those files have guaranteed discriminators for partials. Have to go through a bucnch ofem
+    # and try to use the codes and  share totals. 
+    d = pd.Timestamp('2018-09-13')
     files = dict()
     files['flexTid'] = ['TradeFlexMonth.327778.csv', getDirectory]
     files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
@@ -996,18 +1065,15 @@ def localStuff():
     files['atrade'] = ['trades.643495.html', getDirectory]
 
     das = 'trades.csv'                          # Search verbatim with searchParts=False
+                                                # TODO How to reconcile IB versus DAS input?
 
     sp = True
     for key in files:
-        fs = findFilesInDir(files[key][1](d), files[key][0], searchParts=sp)
-
-        ibs = IbStatement()
-        if fs:
-            x = ibs.openIBStatement(fs[0])
-            # if x:
-            #     for key in x[0]:
-            #         print(x[1][key])
-            #         print(x[0][key].head(3), '\n')
+        # fs = findFilesInDir(files[key][1](d), files[key][0], searchParts=sp)
+        fs = findFilesSinceMonth(d, files[key][0])
+        for f in fs:
+            ibs = IbStatement()
+            x = ibs.openIBStatement(f)
 
 if __name__ == '__main__':
     # notmain()
