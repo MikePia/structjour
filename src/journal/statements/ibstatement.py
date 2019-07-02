@@ -207,20 +207,11 @@ class IbStatement:
                     assert code.find('P') == -1
                 continue
 
-
-            ####### new code #####
-            # aticker = ticker
             codes = ticker['Codes'].unique()
             for code in codes:
                 parts = ticker[ticker['Codes'] == code]
                 if code.find('P') > -1:
                     if len(parts) == 1:
-                        # ASSUMPTION. If there is only one partial, this is a summary row and
-                        # the detail rows are excluded by IB
-                         
-                        # raise ValueError('How to deal with singe partial entries????')
-                        # print()
-                        # print(f'''1)    {parts.iloc[0][['Symbol', 'DateTime', 'Quantity', 'Codes']].values}''')
                         x=3
 
                     else:
@@ -235,12 +226,8 @@ class IbStatement:
                                 addme.append(count)
                             else:
                                 curTotal = curTotal - share
-                            # print(f'{count})   ', row[['Symbol', 'DateTime', 'Quantity', 'Codes']].values)
                         assert curTotal == 0
-                        # print('Summary(s) in row(s)', addme)
                         x=3
-                        # for code in trade['Codes'].unique():
-                        #     assert code.find('O') > -1 or code.find('C') > -1
                         for x in addme:
                             newdf = newdf.append(parts.iloc[x])
                 else:
@@ -248,40 +235,11 @@ class IbStatement:
 
         return newdf
 
-
-
-            ####### Old code #####
-            #  for timeKey in  ticker['DateTime'].unique():
-            #     trade = ticker[ticker['DateTime'] == timeKey]
-            #     if len(trade) > 1:
-            #         codes = trade['Codes'].unique()
-            #         # I am not sure they all have to share the same code but it makes sense
-            #         assert len(codes) == 1
-            #         assert codes[0].find('P') > -1
-            #         totQuantity = trade.iloc[0]['Quantity']
-            #         try:
-            #             totQuantity = int(totQuantity)
-            #             tot = 0
-            #             for qty in trade['Quantity']:
-            #                 tot = tot + int(qty)
-            #             if tot != 2 * totQuantity:
-            #                 print('Bad value. The old system is going to add a phantom trade:::::::::')
-            #                 raise TypeError('Stop here')
-                    
-            #         except ValueError:
-            #             print("Badly formatted or missing data html in Trades table for partial.")
-            #             return None
-            #     for code in trade['Codes'].unique():
-            #         assert code.find('O') > -1 or code.find('C') > -1
-            #     newdf = newdf.append(trade.iloc[0])
-
     def doctorHtmlTables(self, tabd):
         tabs = ['AccountInformation', 'OpenPositions', 'Transactions', 'Trades',
                 'LongOpenPositions', 'ShortOpenPositions']
         keys = list(tabd.keys())
         for key in keys:
-           
-
             if key in ['OpenPositions', 'Transactions', 'Trades', 'LongOpenPositions', 'ShortOpenPositions']:
                 df = tabd[key]
                 df = df[df['Symbol'].str.startswith('Total') == False]
@@ -345,7 +303,6 @@ class IbStatement:
             df = pd.read_html(str(tab))
             assert len(df) == 1
             df = df[0]  # .replace(np.nan, '')
-            # tables[tableTag['id']] = df[0]
             tables[tabKey] = df
         if 'Transactions' not in tables.keys() and 'Trades' not in tables.keys():
             # This should maybe be a dialog
@@ -361,7 +318,7 @@ class IbStatement:
         
         if tname:
             ibdb = StatementDB()
-            ibdb.processStatement(tables[tname], self.beginDate, self.endDate)
+            ibdb.processStatement(tables[tname], self.account, self.beginDate, self.endDate)
         else:
             raise ValueError('This code should not have come here')
         for key in tables:
@@ -382,10 +339,8 @@ class IbStatement:
         Identify a csv file as a type of IB Statement and send to the right place to open it
         '''
         df = pd.read_csv(infile, names=[x for x in range(0, 100)])
-        # for s in df[0]:
-        #     print(s)
         df = df
-        if df.iloc[0][0] == 'BOF':
+        if df.iloc[0][0] == 'BOF'  or df.iloc[0][0] == 'HEADER':
             # This is a flex activity statement with multiple tables
             self.inputType = "A_FLEX"
             return self.getTablesFromMultiFlex(df)
@@ -418,7 +373,7 @@ class IbStatement:
             end = fred.iloc[-1]['DateTime'][:8]
             end = pd.Timestamp(end).date()
             ibdb = StatementDB()
-            ibdb.processStatement(df, beg, end)
+            ibdb.processStatement(df, self.account, beg, end)
             ### end db stuff ###
 
             return {'Trades': df}, {'Trades': 'Trades'}
@@ -426,7 +381,7 @@ class IbStatement:
             # This is a multi table statement like a default statement
             self.inputType = 'ACTIVITY'
             return self.getTablesFromDefaultStatement(df)
-        return None, None
+        return dict(), dict()
 
     def unifyDateFormat(self, df):
         '''
@@ -434,7 +389,8 @@ class IbStatement:
         this method.
         '''
         df['DateTime'] = df['DateTime'].str.replace('-', '').str.replace(':', '').str.replace(',', ';').str.replace(' ', '')
-        assert len(df.iloc[0]['DateTime']) == 15
+        if df.any()[0]:
+            assert len(df.iloc[0]['DateTime']) == 15
         return df
 
     def getTablesFromDefaultStatement(self, df):
@@ -503,7 +459,8 @@ class IbStatement:
                 # We want the rows where DataDiscriminator=Trade or Order. The info is nearly
                 # identical and redundant. Some statements include both but some only include
                 # Order. The occasional slight differences (in time) will not affect trade review.
-                # I have seen none that include Trade, but not Order rows. 
+                # but could affect recognition of partial executions. (Changed combinePartials to
+                # avoid problem)
                 if 'Trades' in tablenames.keys():
                     raise ValueError('Statement type Not Supported: Satement has Trades table for two accounts.')
                 tab = tab[tab['DataDiscriminator'].str.lower() == 'order']
@@ -532,8 +489,6 @@ class IbStatement:
                     except ValueError:
                         print('Unrecognized date format in Statement', period)
                 else:
-                
-                
                     self.beginDate = test[0].strip()
                     self.endDate = test[1].strip()
                     self.beginDate = pd.Timestamp(self.beginDate).date()
@@ -542,8 +497,6 @@ class IbStatement:
                 names = tab['Field Name'].unique()
                 self.account = tab[tab['Field Name'] == 'Account']['Field Value'].unique()[0]
 
-                
-
             key = key.replace(' ', '')
             if key == 'OpenPositions':
                 d =  self.endDate if self.endDate else self.beginDate
@@ -551,9 +504,6 @@ class IbStatement:
                 
             tables[key] = tab
             tablenames[key] = key
-
-
-            # tab.columns = currentcols
 
         if 'Trades' not in tables.keys():
             # This should maybe be a dialog
@@ -569,7 +519,7 @@ class IbStatement:
         openpos = None
         if 'OpenPositions' in tables.keys():
             openpos = tables['OpenPositions']
-        ibdb.processStatement(tables['Trades'], self.beginDate, self.endDate, openpos)
+        ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, openpos)
         return tables, tablenames
 
     def combinePartials(self, t):
@@ -590,11 +540,6 @@ class IbStatement:
         if lod[0].lower() != 'execution':
             assert ValueError('I need to see this')
             
-        # if lod.lower() == 'order':
-        #     t = t[t['LevelOfDetail'].str.lower() == lod]
-        #     orderfound = True
-        #     return t
-
         t = t[t['LevelOfDetail'].str.lower() == 'execution']
         newdf = pd.DataFrame()
         for tickerKey in t['Symbol'].unique():
@@ -627,97 +572,32 @@ class IbStatement:
                         newdf = newdf.append(ticket)
         return newdf
 
-
-
-
-
-                # if code.find('P') > -1:
-                #     if len(parts) == 1:
-                #         # ASSUMPTION. If there is only one partial, this is a summary row and
-                #         # the detail rows are excluded by IB so add it 
-                #         x=3
-
-                #     else:
-                #         # print()
-                #         addme = []
-                #         curTotal = 0
-
-                #         for count, (i, row) in enumerate(parts.iterrows()):
-                #             share = int(row['Quantity'])
-                #             if curTotal == 0:
-                #                 curTotal = share
-                #                 addme.append(count)
-                #             else:
-                #                 curTotal = curTotal - share
-                #             # print(f'{count})   ', row[['Symbol', 'DateTime', 'Quantity', 'Codes']].values)
-                #         assert curTotal == 0
-                #         # print('Summary(s) in row(s)', addme)
-                #         x=3
-                        # for code in trade['Codes'].unique():
-                        #     assert code.find('O') > -1 or code.find('C') > -1
-                        # for x in addme:
-                        #     newdf = newdf.append(parts.iloc[x])
-        #         else:
-        #             newdf = newdf.append(parts)
-
-        # return newdf
-
-
-            #####   End New Code
-        #     for ttime in tickers['DateTime'].unique():
-        #         ticket = tickers[tickers['DateTime'] == ttime]
-
-        #         l = len(ticket)
-        #         if l > 1:
-        #             for i, row in ticket.iterrows():
-        #                 code = row['Codes']
-        #                 assert code.find('P') > -1
-
-        #             ticket = ticket.replace(np.nan, '')
-                    
-        #             thisticket = DataFrameUtil.createDf( ticket.columns, 1)
-        #             net = 0.0
-
-        #             # Need to figure the average price of the transactions and sum of quantity and commission
-        #             for i, row in ticket.iterrows():
-        #                 net = net + (float(row['Price']) * int(row['Quantity']))
-        #             for col in list(thisticket.columns):
-        #                 if col not in ['Quantity', 'Price', 'IBCommission']:
-        #                     thisticket[col] = ticket[col].unique()[0]
-        #             thisticket['Quantity'] = ticket['Quantity'].map(int).sum()
-        #             thisticket['Commission'] = ticket['Commission'].map(float).sum()
-        #             thisticket['Price'] = net / ticket['Quantity'].map(int).sum()
-        #             newtickets = newtickets.append(thisticket)
-
-        #         else:
-        #             newtickets = newtickets.append(ticket)
-        # return newtickets
-
-    def doctorFlexTRNTCols(self, t, ourcols, missingcols):
+    def doctorFlexTRNTCols(self, t, missingcols):
         '''
-        Deal with idiosyncracies; set uniform format in the Activity Flex Trades table (tableid = TRNT)
+        Deal with idiosyncracies; 
+        set uniform format in the Activity Flex Trades table (tableid = TRNT)
             1) Some statements' TRNT table include TradeDate and TradeTime seperately. Others may
                have the combined DateTime. And, maybe, some statements use Date/Time
-            2) The other required fields are provided in the arguments
+            2) The missing possibly required fields are provided in missingcols
             3) Combine Open/CloseIndicator and Notes/Codes into Codes-- required if we need to
                combine partials
-            4) LevelOfDetail may include ORDER and /or  EXECTION. We want the ORDER info but if
+            4) LevelOfDetail may include ORDER and/or  EXECTION. We want the ORDER info but if
                we have only EXECUTION, combine the partials. One or the other is required.
             5) Set uniform columns names and date format.
         '''
         # 1
-        if 'Date/Time' in ourcols:
+        if 'Date/Time' in t.columns:
             raise ValueError('wtf ib!?!, Maybe you should hire me to do this stuff.')
             # t = t.rename(columns={'Date/Time': 'DateTime'})
-        elif 'DateTime' in ourcols:
+        elif 'DateTime' in t.columns:
             pass
-        elif 'TradeDate' and 'TradeTime' in ourcols:
+        elif 'TradeDate' and 'TradeTime' in t.columns:
             t['DateTime'] = t['TradeDate'].map(str) + ';' + t['TradeTime']
             t = t.drop(['TradeDate', 'TradeTime'], axis=1)
         else:
-            msg = 'This Activity Flex statement is missing order time information.'
-            msg = msg + '''Please include the 'Date/Time' column 
-                           or ['TradeDate','TradeTime'] columns. '''
+            msg = '\n'.join(['''This Activity Flex statement is missing order time information. Please include the',
+                               'Date/Time' column or ['TradeDate','TradeTime'] columns. '''])
+            self.beginDate = None
             return pd.DataFrame(), msg
 
         # 2
@@ -752,115 +632,141 @@ class IbStatement:
             t = t[t['LevelOfDetail'].str.lower() == 'order']
         elif 'execution' in lod:
             if not 'IBOrderId' in t.columns:
-                msg = '''This Activity Flex statement Includes EXECUTION level data (aka partials)
-                         To combine the partial executions into readable trades,  the column
-                         "IBOrderID" must be included in the Flex Query Trades table. Alternately
-                         select the Orders Options.'''
+                self.beginDate = None
+                msg = '\n'.join(['This Activity Flex statement Includes EXECUTION level data (aka partials) To combine the partial executions',
+                               'into readable trades, the column "IBOrderID" must be included in the Flex Query Trades table. Alternately,',
+                               'select the Orders Options.'])
                 return pd.DataFrame(), msg
 
             t = t[t['LevelOfDetail'].str.lower() == 'execution']
             t = self.combinePartials(t)
-        else:
-            msg = 'This Activity Flex statement is missing partial execution data.'
-            msg = msg + '''Please include the Orders or Execution Options for the Trades Table
-                           in your Activity flex statement.'''
+        elif len(t) > 0:
+            msg = '\n'.join(['This Activity Flex statement is missing partial execution data. Please include the Orders or Execution Options for',
+                           'the Trades Table in your Activity flex statement. '])
             return pd.DataFrame(), msg
-        # if ''
 
         t = self.unifyDateFormat(t)
-        t = t.drop('LevelOfDetail', axis=1)
-        
-        return t, '' 
+        dcolumns, mcolumns = self.verifyAvailableCols(list(t.columns), ['LevelOfDetail', 'IBOrderID', 'TradeDate'], 'utility')
+        t = t.drop(dcolumns, axis=1)
+        return t, ''
 
+    def getFrame(self, fid, df):
+        x = df[df[0] == fid[0]]
+        metadata = []
+        ldf = []
+        for i in range(0, len(x)):
+            started = False
+            # newdf = pd.DataFrame()
+            data = []
+
+            for j, row in df.iterrows():
+                if row[0] == fid[0] and started == False:
+                    md = [x for x in row if isinstance(x, str)]
+                    metadata.append(md)
+                    started = True
+                    continue
+                elif started == True and row[0] != fid[1]:
+                    data.append(row.values)
+                    # newdf = newdf.append(row)
+                elif started:
+                    newdf = pd.DataFrame(data=data, columns=df.columns)
+                    ldf.append(newdf)
+                    break
+        
+        return ldf, metadata
+
+    def doctorFlexTables(self, tables, mcd):
+        if 'TRNT' in tables.keys():
+            missingcols = mcd['TRNT']
+            tables['TRNT'], m = self.doctorFlexTRNTCols(tables['TRNT'], missingcols)
+            # A statement with no trades and a beginDate can update the ib_covered table. But w/o
+            # the date or Trades, this statement has no use.
+            if tables['TRNT'].empty and not self.beginDate:
+                m = m + '\nThis statement has no trades and no begin or end date.'
+                return dict(), m
+        if 'ACCT' in tables.keys():
+            tables['ACCT'] = tables['ACCT'].rename(columns={'ClientAccountID': 'Account'})
+            self.account = tables['ACCT']['Account'].values[0]
+        if 'POST' in tables.keys():
+            # If the statement lacks date metadata, the next best thing is the the first and last
+            # dates for trades
+            d =  self.endDate if self.endDate else self.beginDate if self.beginDate else None
+            if d == None:
+                # Bit of a catch 22 in the processing produces unsure
+                if 'TRNT' in tables.keys():
+                    beginDate = tables['TRNT']['DateTime'].min()
+                    endDate = tables['TRNT']['DateTime'].max()
+
+            tables['POST']['Date'] = d.strftime('%Y%m%d')
+            tables['POST'] = tables['POST'].rename(columns={'ClientAccountID': 'Account'})
+        return tables, ''
 
     def getTablesFromMultiFlex(self, df):
         '''
-        :code notes:
-        navigation values = [BOF,EOF,BOA,EOA,BOS,EOS,HEADER,DATA] They occur in column one
-        The imported columns names are clunky: col 1 is named 'BOF' col 2 is named the {account#}
-        (e.g. 'U1234567')
-        column 2 navigation is accountid (sames as the column heading [1]) or {tableid} which will
-        identify all the rows in a table (i.e df[df.account==tableid] where account is column 2)
-        There is probably a way to identify this csv structure using heirarchical multilevel
-        indexes. If discovered replace this hacky version.
-        The trick here is to extract the tables into pandas, get the headers, replace the active
-        fields and truncate all the other fields (that lack headers and data)
-
+        This will process a flex activity statement with headers and with or without  metadata. The
+        metadata rows are itendified with BOF BOA BOS columns.
+        Setting up to process multiple accounts but the table names are still messed up
+        Raise error if multiple accounts are sent in for now
         '''
-        ft = IbStatement()
-        # df = pd.read_csv(infile)
 
         tables = dict()
         tablenames = dict()
-        if df.iloc[0][0] == 'BOF':
-            # The data in the top (BOF) line is not part of a table. We need begin and end.
-            self.account = df.iloc[0][1]
-            self.statementname = df.iloc[0][2]
-            # numtables = df.columns[3]
-            beginDate = df.iloc[0][4]
-            self.beginDate = pd.Timestamp(beginDate).date()
-            endDate = df.iloc[0][5]
-            self.endDate = pd.Timestamp(endDate).date()
-
-            # Retrieve the rows for all BeginOfSection markers, TableIDs are in the second column
-            x = df[df[0] == 'BOS']
-
-            tabids = x[1]
+        mcd = dict()
+        accounts = []
+        ldf, filemetadata = self.getFrame(('BOF', 'EOF'), df)
+        accountsmetadata = []
+        if ldf and isinstance(ldf[0], pd.DataFrame):
+            accounts, accountsmetadata = self.getFrame(('BOA', 'EOA'), ldf[0])
+            if len(accounts) > 1:
+                raise ValueError('Multiple accounts is not enabled for Ib Statement parsing')
+            filemetadata = filemetadata[0]
+            accountsmetadata = accountsmetadata[0]
+        else:
+            accounts.append(df)
+        for dfa in accounts:
+            if filemetadata:
+                # self.account = filemetadata[1]
+                self.statementname = filemetadata[2]
+                beginDate = filemetadata[4]
+                self.beginDate = pd.Timestamp(beginDate).date()
+                endDate = filemetadata[5]
+                self.endDate = pd.Timestamp(endDate).date()
+            if accountsmetadata:
+                self.account = accountsmetadata[1]
+        
+            tabids = dfa[1].unique()
             for tabid in tabids:
-                missingcols = set()
-                ourcols = ft.getColsByTabid(tabid)
-                if not ourcols:
-                    continue
-
-                # Create a DataFrame for tabid, Remove marker rows EOS and BOS,
-                # get the header columns, then remove the header row
-                t = df[df[1] == tabid]
-                names = t.iloc[0][2]
-
-                t = t[t[0] != 'EOS']
-                t = t[t[0] != 'BOS']
-
-                # Get the headers as found in the FLEX file (index is numbers),
-                cols = list()
+                t = dfa[dfa[1] == tabid]
+                if 'BOS' in t[0].unique():
+                    tab, tabmetadata = self.getFrame(('BOS', 'EOS'), t)
+                    assert len(tab) == 1
+                    assert len(tabmetadata) == 1
+                    t = tab[0]
+                    tabmetadata = tabmetadata[0]
                 currentcols = list(t.columns)
-                for i, col in enumerate(t[t[0] == 'HEADER'].iloc[0]):
-                    if col and isinstance(col, str):
-                        if col in ['HEADER', tabid]:
-                            continue
-
-                        # Selectively replace list of index names with headers
-                        cols.append(col)
-                        currentcols[i] = col
-
-                    # This signals the end of the columns in our index list. better indicator(?)
-                    elif isinstance(col, float) and math.isnan(col):
-                        # Replace the index, remove non 'Data' rows and the 'HEADER' row,  Filter with our columns
-                        ourcols, missingcols = self.verifyAvailableCols(currentcols, ourcols, tabid + names)
-                        t.columns = currentcols
-                        t = t[t[0].str.lower() == 'data']
-                        t = t[t[0].str.lower() != 'header']
-                        t = t[ourcols].copy()
-                        break
-                    else:
-                        # Could this also signal the end of the columns? (never been triggered)
-                        msg = "".join(['A Programmer thing: Probably do the same thing as the elif',
-                                       'but I want to see if it occurs.'])
-                        raise ValueError(msg)
-                if tabid == 'TRNT':
-                    t, m = self.doctorFlexTRNTCols(t, ourcols, missingcols)
-                    if t.empty:
-                        return dict(), m
-
-
-                        
+                headers = list(t[t[0] == 'HEADER'].iloc[0])
+                t = t[t[0] == 'DATA']
+                assert len(currentcols) == len(headers)
+                t.columns = headers
+                ourcols = self.getColsByTabid(tabid)
+                ourcols, missingcols = self.verifyAvailableCols(headers, ourcols, tabid)
+                if not  ourcols:
+                    continue
+                t = t[ourcols]
+                mcd[tabid] = missingcols
 
                 # Assign to dict and return
                 tables[tabid] = t.copy()
-                tablenames[tabid] = names
+                tablenames[tabid] = tabid
+            tables, msg = self.doctorFlexTables(tables, mcd)
+            if not len(tables.keys()):
+                # TODO When enabling multi accounts-- fix this to not return
+                return tables, msg
             ibdb = StatementDB()
-            ibdb.processStatement(tables['TRNT'], self.beginDate, self.endDate)
-        else:
-            return None
+            positions = None
+            if 'POST' in tables.keys():
+                positions = tables['POST']
+            ibdb.processStatement(tables['TRNT'], self.account, self.beginDate, self.endDate, positions)
         return tables, tablenames
 
     def getColsByTabid(self, tabid):
@@ -874,10 +780,7 @@ class IbStatement:
             csv Activity Statements(Trades)
             html Activity statements (Transactions)
         Fixing the differences is not done here.
-
         '''
-        # Trades not implemented -- still figuring the place to reconcile the different fields.
-        #######  From the Flex Activity statement #######
         if tabid not in ['ACCT', 'POST', 'TRNT',  'Open Positions', 'OpenPositions',
                          'Long Open Positions', 'Short Open Positions', 'Trades', 'FlexTrades',
                          'tblTrades', 'tblTransactions', 'tblOpenPositions',
@@ -887,16 +790,15 @@ class IbStatement:
             return ['ClientAccountID', 'AccountAlias']
 
         if tabid in ['POST', 'Open Positions', 'OpenPositions', 'tblOpenPositions']:
-            return ['Symbol', 'Quantity']
+            return ['ClientAccountID', 'Symbol', 'Quantity']
 
         if tabid in ['Long Open Positions', 'Short Open Positions']:
             # DataDiscriminator is temporary to filter results
-            return ['Symbol', 'Quantity', 'DataDiscriminator']
+            return ['ClientAccountID', 'Symbol', 'Quantity', 'DataDiscriminator']
 
         if tabid in ['tblLongOpenPositions', 'tblShortOpenPositions']:
             # Not a great data discriminator (Mult=='1')
-            return ['Symbol', 'Quantity', 'Mult']
-
+            return ['ClientAccountID', 'Symbol', 'Quantity', 'Mult']
 
         # Trades table from fllex csv
         # It seems some statements use DateTime and others Date/Time. (not sure)  Baby sit it with an exception to try to find out.
@@ -904,10 +806,7 @@ class IbStatement:
             return ['ClientAccountID', 'Symbol', 'TradeDate', 'TradeTime','Date/Time', 'DateTime', 'Quantity', 'TradePrice', 'IBCommission', 'Open/CloseIndicator', 'Notes/Codes', 'LevelOfDetail', 'IBOrderID']
 
         if tabid == 'Trades':
-            # return [ 'Symbol', 'TradeDate', 'Date/Time', 'Quantity', 'Price', 'Commission', 'Code']
             return ['Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Comm/Fee', 'Code', 'DataDiscriminator']
-            # [ 'Asset Category', 'Currency', 'Exchange', 'C. Price', 'Proceeds', 'Basis', 'Realized P/L' 'MTM P/L' ]
-
 
         if tabid == 'FlexTrades':
             return ['ClientAccountID', 'Symbol', 'Date/Time', 'Quantity', 'Price', 'Commission', 'Code', 'LevelOfDetail' ]
@@ -918,7 +817,6 @@ class IbStatement:
         if tabid == 'tblTransactions':
             return ['Symbol', 'Date/Time', 'Quantity', 'T. Price',  'Comm/Fee',       'Code'    ]
 
-
         ####### Activity Statement non flex #######
         if tabid == 'Statement':
             return ['Field Name', 'Field Value']
@@ -928,8 +826,6 @@ class IbStatement:
 
         raise ValueError('What did we not catch?')
 
-        # Trades= ['ClientAccountID', 'AccountAlias', 'Symbol', 'Conid', 'ListingExchange', 'TradeID', 'ReportDate', 'TradeDate',              'Date/Time',              'Buy/Sell', 'Quantity',  'Price',      'TransactionType',  'Commission',                          'Code',       'LevelOfDetail', ]
-
     def verifyAvailableCols(self, flxcols, ourcols, tabname):
         '''
         Check flxcols against ourcols, remove any cols in ourcols that are missing in flxcols and
@@ -938,13 +834,9 @@ class IbStatement:
         '''
         missingcols = set(ourcols) - set(flxcols)
         if missingcols:
-            # msg = f'ERROR: {tabname} is missing the columns {missingcols}'
-            # raise ValueError(msg)
-            # print(msg)
             for col in missingcols:
                 ourcols.remove(col)
         return ourcols, missingcols
-
 
 def findFilesInDir(direct, fn, searchParts):
     '''
@@ -983,9 +875,7 @@ def findFilesInMonth(daDate, fn, searchParts):
     :fn: A filename of file pattern with parts seperated by '.' 
     :searchParts: If False, search for the precise filename. If True search parts seperated by
             '.' and ending with the same extension 
-
     '''
-
     m = daDate
     m = pd.Timestamp(m)
     m = pd.Timestamp(m.year, m.month, 1)
@@ -1043,27 +933,26 @@ def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
     return files
         
 
-
-
 def notmain():
     t = StatementDB()
     t.popHol()
     
-
 def localStuff():
     # Tricky stuff -- triggered by 'atrade' from 3/28. Partials with different times. They exist,
     # and tht file has no good discriminator. In fact if the times are not guaranteed, none of
     # those files have guaranteed discriminators for partials. Have to go through a bucnch ofem
     # and try to use the codes and  share totals. 
-    d = pd.Timestamp('2018-01-01')
+    d = pd.Timestamp('2019-06-01')
     files = dict()
-    files['annual'] = ['_2018_2018.csv', getBaseDir]
+    # files['annual'] = ['_2018_2018.csv', getBaseDir]
+
+    # files['stuff'] = ['N.csv', getDirectory]
     # files['flexTid'] = ['TradeFlexMonth.327778.csv', getDirectory]
     # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
     # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
-    # files['U242'] = ['U2429974.csv', getDirectory]
+    # files['U242'] = ['U242.csv', getDirectory]
     # files['activityMonth'] = ['CSVMonthly.644225.csv', getMonthDir]
     # files['dtr'] = ['DailyTradeReport.html', getDirectory]
     # files['act'] = ['ActivityStatement.html', getDirectory]
@@ -1074,12 +963,18 @@ def localStuff():
 
     sp = True
     for key in files:
-        fs = findFilesInDir(files[key][1](d), files[key][0], searchParts=sp)
-        # fs = findFilesSinceMonth(d, files[key][0])
+        # fs = findFilesInDir(files[key][1](d), files[key][0], searchParts=sp)
+        fs = findFilesSinceMonth(d, files[key][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
-            if not x[0]:
+            if x[0]:
+                print()
+                for key in x[0]:
+                    print (key, list(x[0][key].columns), len(x[0][key]))
+                
+
+            if x[1] and not x[0]:
                 msg = f'\nStatement {f} \n{x[1]}'
                 print(msg)
         print()

@@ -33,7 +33,6 @@ from journal.view.filesettings import Ui_Dialog as FileSettingsDlg
 from journal.stock.utilities import qtime2pd
 
 # pylint: disable = C0103
-
 class FileSetCtrl(QDialog):
     '''
     The file settings dialog. Top level dialg triggered by File->FileSettings menu. Display
@@ -118,7 +117,6 @@ class FileSetCtrl(QDialog):
         '''Nothing done here'''
         # What needs to be done is in SumControl  -- check either ibImport or dasImport
         self.close()
-
 
     def setDialogDate(self, val):
         '''
@@ -309,11 +307,8 @@ class FileSetCtrl(QDialog):
         day = d.strftime('%d')
         DAY = d.strftime('%A')
         try:
-            schemeFmt = scheme.format(
-                Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
-            # self.fui.scheme.setStyleSheet("color: black;")
+            schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         except (KeyError, ValueError):
-            # self.fui.scheme.setStyleSheet("color: red;")
             schemeFmt = scheme
 
         indir = self.fui.journal.text()
@@ -383,8 +378,7 @@ class FileSetCtrl(QDialog):
         day = d.strftime('%d')
         DAY = d.strftime('%A')
         try:
-            schemeFmt = scheme.format(
-                Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
+            schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         except KeyError:
             return None
         inpath = os.path.join(journal, schemeFmt)
@@ -392,7 +386,7 @@ class FileSetCtrl(QDialog):
 
     def getOutdir(self):
         '''
-        Retrieve either the static outdir named in settings of get the dynamic defalut directory
+        Retrieve either the static outdir named in settings or get the dynamic defalut directory
         depending on the outdirPolicyin settings.
         '''
         op = self.settings.value('outdirPolicy')
@@ -407,7 +401,6 @@ class FileSetCtrl(QDialog):
                 # LOG THIS
                 print(ex)
         return outdir
-
 
 if __name__ == '__main__':
     ddiirr = os.path.dirname(__file__)

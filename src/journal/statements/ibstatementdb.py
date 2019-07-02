@@ -94,24 +94,26 @@ class StatementDB:
         cur.execute('''
             CREATE TABLE if not exists ib_positions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                symbol TEXT,
-	            quantity INTEGER,
-                date TEXT);''')
+                account TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+	            quantity INTEGER NOT NULL,
+                date TEXT NOT NULL);''')
                 
 
         cur.execute('''
             CREATE TABLE if not exists ib_covered (
-                day	TEXT,
+                day	TEXT NOT NULL,
+                account TEXT NOT NULL,
                 covered	TEXT NOT NULL DEFAULT "false",
-                PRIMARY KEY(day))''')
+                PRIMARY KEY(day, account))''')
 
         cur.execute('''
             CREATE TABLE if not exists holidays(
-                day TEXT,
+                day TEXT NOT NULL,
                 name TEXT)''')
         conn.commit()
 
-        def findTrade(self, row, cur):
+    def findTrade(self, row, cur):
         cursor = cur.execute('''
             SELECT * from ib_trades where datetime = ?
             AND symbol = ?
@@ -145,29 +147,33 @@ class StatementDB:
             return True
         return False
 
-    def isDateCovered(self, cur, d):
+    def isDateCovered(self, cur, account, d):
         d = d.strftime("%Y%m%d")
         cursor = cur.execute('''
-            SELECT * from ib_covered where day = ?
-            ''', (d, ))
+            SELECT * from ib_covered 
+                WHERE day = ?
+                AND account = ?
+                ''', (d, account))
         x = cursor.fetchone()
         return x
 
-    def coveredDates(self, begin, end, cur):
+    def coveredDates(self, begin, end, account, cur):
         delt = pd.Timedelta(days=1)
         current = begin
         if not end:
             end=current
         while current < end:
-            if not self.isDateCovered(cur, current):
+            if not self.isDateCovered(cur, account, current):
                 d = current.strftime('%Y%m%d')
                 cursor = cur.execute('''
-                    INSERT INTO ib_covered(day, covered)
-                    VALUES(?, ?)''',  (d, 'true'))
+                    INSERT INTO ib_covered(day, covered, account)
+                    VALUES(?, ?, ?)''',  (d, 'true', account))
             current = current + delt
         # conn.commit()
 
     def insertPositions(self, cur, posTab):
+        if not posTab.any()[0]:
+            return
         endDate=posTab['Date'].unique()
         assert len(endDate) == 1
         endDate = pd.Timestamp(endDate[0])
@@ -182,16 +188,27 @@ class StatementDB:
         for i, row in posTab.iterrows():
             d = pd.Timestamp(row['Date']).strftime("%Y%m%d")
             cur.execute('''
-                INSERT INTO ib_positions (symbol, quantity, date)
-                VALUES(?, ?, ?)''',
-               (row['Symbol'], row['Quantity'], d) )
+                INSERT INTO ib_positions (account, symbol, quantity, date)
+                VALUES(?, ?, ?, ?)''',
+               (row['Account'], row['Symbol'], row['Quantity'], d) )
         
         # cur.execute('''
         #     SELECT * FROM 
         # ''')
-        
+    
+    def processShareBalance(self, cur, begin, end):
+        '''
+        UNIMPLEMENTED
+        Process the ib_trades.balance field for all trade entries between begin and end
+        :prerequisites: ib_positions has an knowledge of positions for the end date. That means
+                        there may or may not be any entries on that date,but if there are not,
+                        then the account is flat on that date. The only way to know this if this
+                        method is called after processing an ib statement that has a positions
+                        table.that all entry for the  
+        '''
+        pass
 
-    def processStatement(self, tdf, begin, end, openPos=None):
+    def processStatement(self, tdf, account, begin, end, openPos=None):
         assert begin
         # print(begin, type(begin), end, type(end))
         assert isinstance(begin, dt.date)
@@ -205,12 +222,13 @@ class StatementDB:
             if self.insertTrade(row, cur):
                 count = count + 1
         if count == len(tdf):
-            self.coveredDates(begin, end, cur)
+            self.coveredDates(begin, end, account, cur)
             # print('These dates are covered')
             pass
         else:
             print('Not all of those trades processed')
         self.insertPositions(cur, openPos)
+        self.processShareBalance(cur, begin, end)
 
         conn.commit()
 
@@ -244,15 +262,15 @@ class StatementDB:
             return True
         return False
 
-    def isCovered(self, d):
+    def isCovered(self, account, d):
         d = pd.Timestamp(d).date()
         beg = end = d
-        unc = self.getUncoveredDays(beg, end)
+        unc = self.getUncoveredDays(account, beg, end)
         if d in unc:
             return False
         return True
 
-    def getStatement(self, beg, end=None):
+    def getStatement(self, account, beg, end=None):
         beg = pd.Timestamp(beg).date()
 
         if not end:
@@ -261,7 +279,7 @@ class StatementDB:
             end = pd.Timestamp(end).date()
         current = beg
         delt = pd.Timedelta(days=1)
-        uncovered = self.getUncoveredDays(beg, end)
+        uncovered = self.getUncoveredDays(account, beg, end)
         if uncovered:
             return uncovered
         beg = pd.Timestamp(beg.year, beg.month, beg.day, 0, 0, 0)
@@ -284,7 +302,7 @@ class StatementDB:
         return all 
 
 
-    def getUncoveredDays(self, beg='20180301', end=None, usecache=True):
+    def getUncoveredDays(self, account, beg='20180301', end=None, usecache=True):
         '''
         Get Market days between beg and end for which we are not covered by an IB statement
         '''
@@ -301,7 +319,8 @@ class StatementDB:
                     WHERE covered = 'true'
                     AND day >= ?
                     AND day <= ?
-                    ORDER BY day''', (beg.strftime('%Y%m%d'), end.strftime('%Y%m%d')))
+                    AND account = ?
+                    ORDER BY day''', (beg.strftime('%Y%m%d'), end.strftime('%Y%m%d'), account))
 
             all = all.fetchall()
             self.covered = [pd.Timestamp(x[0]).date() for x in all]
@@ -345,9 +364,8 @@ class StatementDB:
 
 def notmain():
     db = StatementDB()
-    # zz = db.getUncoveredDays()
-    # zzz = db.isCovered('2019-01-10')
-    s = db.getStatement('20181203')
+    # zz = db.getUncoveredDays('U2429974')
+    # zzz = db.isCovered('account'2019-01-10')
     if s:
         print(s)
     print()

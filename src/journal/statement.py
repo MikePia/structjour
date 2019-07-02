@@ -760,9 +760,7 @@ def runActivity():
     return df
 
 def runCSV():
-    # infile="U2429974_20180913_20180913.csv"
     indir = r'C:/trader/journal/_201903_March/_0301_Friday/'
-    infile=r"U2429974_20190301_20190301.csv"
     inpathfile = os.path.join(indir, infile)
     assert os.path.exists(inpathfile)
 
