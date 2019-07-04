@@ -179,6 +179,7 @@ class IbStatement:
 
         except:
             raise ValueError('Failed to parse the statement date')
+
     def combinePartialsHtml(self, df):
         '''
         Combine the partial entries in a trades table. The Html refers to the origin of the table.
@@ -333,7 +334,7 @@ class IbStatement:
             return self.openIBStatementHtml(infile)
         else:
             print('Only htm or csv files are recognized')
-        
+    
     def openIBStatementCSV(self, infile):
         '''
         Identify a csv file as a type of IB Statement and send to the right place to open it
@@ -343,40 +344,11 @@ class IbStatement:
         if df.iloc[0][0] == 'BOF'  or df.iloc[0][0] == 'HEADER':
             # This is a flex activity statement with multiple tables
             self.inputType = "A_FLEX"
-            return self.getTablesFromMultiFlex(df)
+            return self.openActivityFlexCSV(df)
 
         elif df.iloc[0][0] == 'ClientAccountID':
-            # This is a single table file. Re read to get default column names from row 1
-            # This table is missing the Open/Close data. Its probably in transacations,
-            # identified by LevelOfDetail=EXECUTION
-            df = pd.read_csv(infile)
-            self.inputType = 'T_FLEX'
+            return self.openTradeFlexCSV(infile)
 
-            # This one table file has no tableid
-            ourcols = self.getColsByTabid('FlexTrades')
-            currentcols = list(df.columns)
-            self.verifyAvailableCols(currentcols, ourcols, 'DailyTrades')
-            df = df[ourcols].copy()
-            df = df.rename(columns={'Date/Time': 'DateTime', 'Code': 'Codes'})
-            df = self.combinePartials(df)
-            df = df.rename(columns={'ClientAccountID': 'Account'})
-
-            # The Codes col acks the OpenClose codes so were done with it.
-            df = df.drop(['LevelOfDetail', 'Codes'], axis=1)
-            df = self.unifyDateFormat(df)
-
-            ### db stuff ###
-            fred = df.copy()
-            fred.sort_values('DateTime', ascending=True, inplace=True)
-            beg = fred.iloc[0]['DateTime'][:8]
-            beg = pd.Timestamp(beg).date()
-            end = fred.iloc[-1]['DateTime'][:8]
-            end = pd.Timestamp(end).date()
-            ibdb = StatementDB()
-            ibdb.processStatement(df, self.account, beg, end)
-            ### end db stuff ###
-
-            return {'Trades': df}, {'Trades': 'Trades'}
         elif df.iloc[0][0] == 'Statement':
             # This is a multi table statement like a default statement
             self.inputType = 'ACTIVITY'
@@ -393,6 +365,69 @@ class IbStatement:
             assert len(df.iloc[0]['DateTime']) == 15
         return df
 
+    def parseDefaultCSVPeriod(self, period):
+        '''
+        The printed perod at the top of the staement comes in at least 3 formats. I have found no
+        specs. If this fails, the program will set covered dates by the min and max trade dates.
+        '''
+        try:
+            test = period.split('-')
+            if len(test) == 1:
+                # Expecting a full date like January 25, 2019
+                self.beginDate = pd.Timestamp(period).date()
+            elif len(test) == 3:
+                # Expecting 14-Jun-9 or 2019-01-03
+                self.beginDate = pd.Timestamp(period).date()
+            else:
+                # Expecting a range like January 1, 2019 - January 31, 2019
+                self.beginDate = test[0].strip()
+                self.endDate = test[1].strip()
+                self.beginDate = pd.Timestamp(self.beginDate).date()
+                self.endDate = pd.Timestamp(self.endDate).date()
+        except ValueError:
+            msg = f'Failed to parse the statement date period: {period}'
+            print(msg)
+
+    def doctorDefaultCSVStatement(self, tables, mcd):
+        # for key in tables:
+        if 'Statement' in tables.keys():
+            t = tables['Statement']
+            self.broker = t[t['Field Name'] == 'BrokerName']['Field Value'].unique()[0]
+            self.statementname = t[t['Field Name'] == 'Title']['Field Value'].unique()[0]
+            period = t[t['Field Name'] == 'Period']['Field Value'].unique()[0]
+            self.parseDefaultCSVPeriod(period)
+            tables['Statement'] = t
+            
+        if 'AccountInformation' in tables.keys():
+            self.account = tables['AccountInformation'].iloc[1][1]
+
+        if 'OpenPositions' in tables.keys():
+            d =  self.endDate if self.endDate else self.beginDate
+            tables['OpenPositions']['Date'] = d.strftime('%Y%m%d')
+            if 'ClientAccountID' in mcd['OpenPositions']:
+                if self.account:
+                    tables['OpenPositions']['Account'] = self.account
+            else:
+                tables['OpenPositions'] = tables['OpenPositions'].rename(columns={'ClientAccountID': 'Account'}) 
+        if 'Trades' in tables.keys():
+            t = tables['Trades']
+            if 'order' in t['DataDiscriminator'].str.lower().unique():
+                t = t[t['DataDiscriminator'].str.lower() == 'order']
+            elif 'execution' in t['DataDiscriminator'].str.lower():
+                # TODO
+                raise ValueError('Need to implement combine partials for the default statement')
+            elif 'trade' in t['DataDiscriminator'].str.lower():
+                raise ValueError('Need to either implement a cludge or disable the statement')
+            t = t.rename(columns={'T. Price': 'Price', 'Comm/Fee': 'Commission'})
+            t['Account'] = self.account
+            t = t.drop('DataDiscriminator', axis=1)
+            t = t.rename(columns={'Code': 'Codes', 'Date/Time': 'DateTime'})
+            t = self.unifyDateFormat(t)
+            tables['Trades'] = t
+
+
+        return tables
+        
     def getTablesFromDefaultStatement(self, df):
         '''
         From a default Activity statement csv, retrieve AccountInformation, OpenPositions, and
@@ -402,119 +437,62 @@ class IbStatement:
         keys = df[0].unique()
         tables = dict()
         tablenames = dict()
+        mcd = dict()
         for key in keys:
             if key not in ['Statement', 'Account Information', 'Open Positions', 'Short Open Positions', 'Long Open Positions', 'Trades']:
                 continue
 
-            tab = df[df[0] == key]
-            headers = tab[tab[1] == 'Header']
+            t = df[df[0] == key]
+            headers = t[t[1].str.lower() == 'header']
             if len(headers) > 1:
-                print('\nMulti account statment not supported"')
-                return dict(), dict()
-            assert tab.iloc[0][1] == 'Header'
-            currentcols = list(tab.columns)
-            cols = list()
+                msg = '\nMulti account statment not supported.'
+                return dict(), msg
+            assert t.iloc[0][1].lower() == 'header'
+            currentcols = list(t.columns)
+            headers = headers.iloc[0]
+            t = t[t[1].str.lower() == 'data']
+            assert len(currentcols) == len(headers)
+            t.columns = headers
+            ourcols = self.getColsByTabid(key)
+            ourcols, missingcols = self.verifyAvailableCols(headers, ourcols, key)
+            if not ourcols:
+                continue
+            t = t[ourcols]
 
-            for i, col in enumerate(tab.iloc[0]):
-                if isinstance(col, str):
-                    if col == key or col == 'Header':
-                        continue
-                    cols.append(col)
-                    currentcols[i] = col
-                    # tab = tab.rename({headers: col})
-                elif isinstance(col, float) and math.isnan(col):
-                    tab.columns = currentcols
-                    tab = tab[tab[1].str.lower() == 'data']
-                    tab = tab[cols].copy()
-                    ourcols = self.getColsByTabid(key)
-                    if ourcols:
-                        ourcols, missingcols = self.verifyAvailableCols(currentcols, ourcols, key)
-                        tab = tab[ourcols].copy()
-
-                    break
-                else:
-                    print('do the same thing?')
-                    tab.columns = currentcols
-                    tab = tab[cols].copy()
             if key in ['Long Open Positions', 'Short Open Positions']:
-                tab = tab[tab['DataDiscriminator'].str.lower() == 'summary']
+                t = t[t['DataDiscriminator'].str.lower() == 'summary']
                 key = 'OpenPositions'
                 ourcols = self.getColsByTabid(key)
                 if ourcols:
                     ourcols, missingcols = self.verifyAvailableCols(
-                        list(tab.columns), ourcols, key)
-                    tab = tab[ourcols].copy()
+                        list(t.columns), ourcols, key)
+                    t = t[ourcols].copy()
 
                 if 'OpenPositions' in tables.keys():
-                    if not (set(tables['OpenPositions'].columns) == set(tab.columns)):
+                    if not (set(tables['OpenPositions'].columns) == set(t.columns)):
                         msg = 'A Programmer thing-- see it occur before I write code'
                         raise ValueError(msg)
                             
-                    tables['OpenPositions'] = tables['OpenPositions'].append(tab)
+                    tables['OpenPositions'] = tables['OpenPositions'].append(t)
                     tablenames['OpenPositions'] = 'OpenPositions'
                     continue
                 else:
                     key = 'OpenPositions'
-            elif key == 'Trades':
-                # We want the rows where DataDiscriminator=Trade or Order. The info is nearly
-                # identical and redundant. Some statements include both but some only include
-                # Order. The occasional slight differences (in time) will not affect trade review.
-                # but could affect recognition of partial executions. (Changed combinePartials to
-                # avoid problem)
-                if 'Trades' in tablenames.keys():
-                    raise ValueError('Statement type Not Supported: Satement has Trades table for two accounts.')
-                tab = tab[tab['DataDiscriminator'].str.lower() == 'order']
-                tab = tab.rename(columns={'T. Price': 'Price', 'Comm/Fee': 'Commission'})
-                tab['Account'] = self.account
-                tab = tab.drop('DataDiscriminator', axis=1)
-                tab = tab.rename(columns={'Code': 'Codes', 'Date/Time': 'DateTime'})
-                tab = self.unifyDateFormat(tab)
-
-            elif key == 'Statement':
-                # This bugs me. It is too dependent on the file to be formatted precisely as
-                # expected and expectations based only on observation. There are no specs for layout
-                # Another argument to insist on flex queries only- they have specs.  When this raises
-                # exceptions ...
-                self.broker = tab[tab['Field Name'] == 'BrokerName']['Field Value'].unique()[0]
-                self.statementname = tab[tab['Field Name'] == 'Title']['Field Value'].unique()[0]
-                self.statementname = tab[tab['Field Name'] == 'Title']['Field Value'].unique()[0]
-                period = tab[tab['Field Name'] == 'Period']['Field Value'].unique()[0]
-                test = period.split('-')
-                if len(test) == 1:
-                    self.beginDate = pd.Timestamp(period).date()
-                elif len(test) == 3:
-                    # This is proably a date formatted 14-Jun-9
-                    try:
-                        self.beginDate = pd.Timestamp(period).date()
-                    except ValueError:
-                        print('Unrecognized date format in Statement', period)
-                else:
-                    self.beginDate = test[0].strip()
-                    self.endDate = test[1].strip()
-                    self.beginDate = pd.Timestamp(self.beginDate).date()
-                    self.endDate = pd.Timestamp(self.endDate).date()
-            elif key == 'Account Information':
-                names = tab['Field Name'].unique()
-                self.account = tab[tab['Field Name'] == 'Account']['Field Value'].unique()[0]
 
             key = key.replace(' ', '')
-            if key == 'OpenPositions':
-                d =  self.endDate if self.endDate else self.beginDate
-                tab['Date'] = d.strftime('%Y%m%d')
-                
-            tables[key] = tab
+            mcd[key] = missingcols
+            tables[key] = t
             tablenames[key] = key
+        tables = self.doctorDefaultCSVStatement(tables, mcd)
 
         if 'Trades' not in tables.keys():
             # This should maybe be a dialog
-            msg = 'The statment lacks a trades table; it has no information of interest.'
-            print(msg)
-            return dict(), dict()
+            msg = 'The statment lacks a trades table'
+            return dict(), msg
 
         if self.account == None:
             msg = '''This statement lacks an account number. Can't add it to the database'''
-            print(msg)
-            return dict(), dict()
+            return dict(), msg
         ibdb = StatementDB()
         openpos = None
         if 'OpenPositions' in tables.keys():
@@ -522,12 +500,108 @@ class IbStatement:
         ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, openpos)
         return tables, tablenames
 
+    def combinePartialsFlexTrade(self, t):
+        '''
+        The necessity of a new method to handle this is annoying...BUT gdmit, The Open/Close info
+        is not in any of the available fields. Instead, a less rigorous system is used based on 
+        OrderID
+        '''
+        lod = t['LevelOfDetail'].unique()
+        if len(lod) > 1:
+            assert ValueError('I need to see this')
+        if lod[0].lower() != 'execution':
+            assert ValueError('I need to see this')
+            
+        t = t[t['LevelOfDetail'].str.lower() == 'execution']
+        newdf = pd.DataFrame()
+        for tickerKey in t['Symbol'].unique():
+            ticker = t[t['Symbol'] == tickerKey]
+            # ##### New Code
+            ticketKeys = ticker['OrderID'].unique()
+            for ticketKey in ticketKeys:
+                ticket = ticker[ticker['OrderID'] == ticketKey]
+                if len(ticket) > 1:
+                    codes = ticket['Codes']
+                    for code in codes:
+                        assert code.find('P') > -1
+
+                    thisticket = DataFrameUtil.createDf(ticket.columns, 1)
+                    net = 0.0
+                    # Need to figure the average price of the transactions and sum of quantity and commission
+                    for i, row in ticket.iterrows():
+                        net = net + (float(row['Price']) * int(row['Quantity']))
+                    for col in list(thisticket.columns):
+                        if col not in ['Quantity', 'Price', 'Commission']:
+                            thisticket[col] = ticket[col].unique()[0]
+                    thisticket['Quantity'] = ticket['Quantity'].map(int).sum()
+                    thisticket['Commission'] = ticket['Commission'].map(float).sum()
+                    thisticket['Price'] = net / ticket['Quantity'].map(int).sum()
+                    newdf = newdf.append(thisticket)
+
+                else:
+                    newdf = newdf.append(ticket)
+        return newdf
+
+    def openTradeFlexCSV(self, infile):
+         # This is a single table file. Re read to get default column names from row 1
+        # This table is missing the Open/Close data. Its probably in transacations,
+        # identified by LevelOfDetail=EXECUTION
+        df = pd.read_csv(infile)
+        self.inputType = 'T_FLEX'
+
+        # This one table file has no tableid
+        currentcols = list(df.columns)
+        ourcols = self.getColsByTabid('FlexTrades')
+        ourcols, missingcols = self.verifyAvailableCols(currentcols, ourcols, 'DailyTrades')
+        df = df[ourcols].copy()
+        df = df.rename(columns={'Date/Time': 'DateTime', 'Code': 'Codes', 'ClientAccountID': 'Account'})
+
+        lod = df['LevelOfDetail'].str.lower().unique()
+        if 'order' in lod:
+            pass
+        elif 'execution' in lod:
+            if 'OrderID' in missingcols:
+                msg = 'This table contains transaction level data but lacks OrderID.'
+                return dict(), msg
+            else:
+                # df = df.rename(columns={'OrderID': 'IBOrderID'})
+                df = self.combinePartialsFlexTrade(df)
+        else:
+            # TODO 2019-07-03 if this never trips, blitz the statmement for just in case
+            raise ValueError("If this trips, detemine if the data is savlagable")
+        if len(df) < 1:
+            msg = 'This statement has no trades.'
+            return dict(), msg
+
+        # The Codes col acks the OpenClose codes so were done with it.
+        df = df.drop(['LevelOfDetail', 'Codes'], axis=1)
+        df = self.unifyDateFormat(df)
+        self.account = df['Account'].unique()[0]
+
+        beg = df['DateTime'].min()
+        end = df['DateTime'].max()
+        assert beg
+        assert end
+        try:
+            self.beginDate = pd.Timestamp(beg).date()
+            self.endDate = pd.Timestamp(end).date()
+        except ValueError:
+            msg = f'Unknown date format error: {beg}, {end}'
+            return dict(), msg
+
+        ibdb = StatementDB()
+        ibdb.processStatement(df, self.account, self.beginDate, self.endDate)
+
+        return {'Trades': df}, {'Trades': 'Trades'}
+
     def combinePartials(self, t):
         '''
-        In flex docs, the TRNT (Trades) table input might be in transacations instead of tickets
-        identified by LevelOfDetail=EXECUTION without the summary rows identified by 
-        LevelOfDetail=ORDERS. This is fixable by changing the Flex query to include ORDERS but we
-        can recombine the rows back into tackets here.
+        In flex Statements, the TRNT (Trades) table input might be in transacations instead of
+        tickets identified by LevelOfDetail=EXECUTION without the summary rows identified by 
+        LevelOfDetail=ORDERS. This is fixable (in both Activity statements and Trade statements)
+        by changing Options to inclue Orders. If we have Executions only, we need to recombine
+        the partials as identified by IBOrderID. If we also lack that column, blitz the sucker.
+        Its not that hard to get a new statment
         :t: Is a TRNT DataFrame. That is a Trades table from a CSV multi table doc in which TRNT
                  is the tableid.
         :assert: Tickets written at the exact same time are partials, identified by 
@@ -572,7 +646,7 @@ class IbStatement:
                         newdf = newdf.append(ticket)
         return newdf
 
-    def doctorFlexTRNTCols(self, t, missingcols):
+    def doctorActivityFlexTrades(self, t, missingcols):
         '''
         Deal with idiosyncracies; 
         set uniform format in the Activity Flex Trades table (tableid = TRNT)
@@ -631,7 +705,7 @@ class IbStatement:
         if 'order' in lod:
             t = t[t['LevelOfDetail'].str.lower() == 'order']
         elif 'execution' in lod:
-            if not 'IBOrderId' in t.columns:
+            if not 'IBOrderID' in t.columns:
                 self.beginDate = None
                 msg = '\n'.join(['This Activity Flex statement Includes EXECUTION level data (aka partials) To combine the partial executions',
                                'into readable trades, the column "IBOrderID" must be included in the Flex Query Trades table. Alternately,',
@@ -678,7 +752,7 @@ class IbStatement:
     def doctorFlexTables(self, tables, mcd):
         if 'TRNT' in tables.keys():
             missingcols = mcd['TRNT']
-            tables['TRNT'], m = self.doctorFlexTRNTCols(tables['TRNT'], missingcols)
+            tables['TRNT'], m = self.doctorActivityFlexTrades(tables['TRNT'], missingcols)
             # A statement with no trades and a beginDate can update the ib_covered table. But w/o
             # the date or Trades, this statement has no use.
             if tables['TRNT'].empty and not self.beginDate:
@@ -701,7 +775,7 @@ class IbStatement:
             tables['POST'] = tables['POST'].rename(columns={'ClientAccountID': 'Account'})
         return tables, ''
 
-    def getTablesFromMultiFlex(self, df):
+    def openActivityFlexCSV(self, df):
         '''
         This will process a flex activity statement with headers and with or without  metadata. The
         metadata rows are itendified with BOF BOA BOS columns.
@@ -781,9 +855,9 @@ class IbStatement:
             html Activity statements (Transactions)
         Fixing the differences is not done here.
         '''
-        if tabid not in ['ACCT', 'POST', 'TRNT',  'Open Positions', 'OpenPositions',
-                         'Long Open Positions', 'Short Open Positions', 'Trades', 'FlexTrades',
-                         'tblTrades', 'tblTransactions', 'tblOpenPositions',
+        if tabid not in ['ACCT', 'POST', 'TRNT',  'Open Positions', 'OpenPositions', 'Statement',
+                         'Account Information', 'Long Open Positions', 'Short Open Positions',
+                         'Trades', 'FlexTrades', 'tblTrades', 'tblTransactions', 'tblOpenPositions',
                          'tblLongOpenPositions', 'tblShortOpenPositions']:
             return []
         if tabid == 'ACCT':
@@ -791,6 +865,7 @@ class IbStatement:
 
         if tabid in ['POST', 'Open Positions', 'OpenPositions', 'tblOpenPositions']:
             return ['ClientAccountID', 'Symbol', 'Quantity']
+
 
         if tabid in ['Long Open Positions', 'Short Open Positions']:
             # DataDiscriminator is temporary to filter results
@@ -803,22 +878,25 @@ class IbStatement:
         # Trades table from fllex csv
         # It seems some statements use DateTime and others Date/Time. (not sure)  Baby sit it with an exception to try to find out.
         if tabid == 'TRNT':
-            return ['ClientAccountID', 'Symbol', 'TradeDate', 'TradeTime','Date/Time', 'DateTime', 'Quantity', 'TradePrice', 'IBCommission', 'Open/CloseIndicator', 'Notes/Codes', 'LevelOfDetail', 'IBOrderID']
+            return ['ClientAccountID', 'Symbol', 'TradeDate', 'TradeTime','Date/Time', 'DateTime',
+                    'Quantity', 'TradePrice', 'IBCommission', 'Open/CloseIndicator', 'Notes/Codes',
+                    'LevelOfDetail', 'IBOrderID']
 
         if tabid == 'Trades':
             return ['Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Comm/Fee', 'Code', 'DataDiscriminator']
 
         if tabid == 'FlexTrades':
-            return ['ClientAccountID', 'Symbol', 'Date/Time', 'Quantity', 'Price', 'Commission', 'Code', 'LevelOfDetail' ]
+            return ['ClientAccountID', 'Symbol', 'Date/Time', 'Quantity', 'Price', 'Commission',
+            'Code', 'LevelOfDetail', 'OrderID']
 
         if tabid == 'tblTrades':
-            return ['Acct ID', 'Symbol', 'Trade Date/Time', 'Quantity', 'Price', 'Comm' ]
+            return ['Acct ID', 'Symbol', 'Trade Date/Time', 'Quantity', 'Price', 'Comm']
 
         if tabid == 'tblTransactions':
-            return ['Symbol', 'Date/Time', 'Quantity', 'T. Price',  'Comm/Fee',       'Code'    ]
+            return ['Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Comm/Fee', 'Code']
 
         ####### Activity Statement non flex #######
-        if tabid == 'Statement':
+        if tabid in ['Statement', 'Account Information']:
             return ['Field Name', 'Field Value']
 
         if tabid.find('Positions') > -1:
@@ -942,26 +1020,27 @@ def localStuff():
     # and tht file has no good discriminator. In fact if the times are not guaranteed, none of
     # those files have guaranteed discriminators for partials. Have to go through a bucnch ofem
     # and try to use the codes and  share totals. 
-    d = pd.Timestamp('2019-06-01')
+    d = pd.Timestamp('2018-04-01')
     files = dict()
     # files['annual'] = ['_2018_2018.csv', getBaseDir]
 
-    # files['stuff'] = ['N.csv', getDirectory]
-    # files['flexTid'] = ['TradeFlexMonth.327778.csv', getDirectory]
-    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
+    # files['stuff'] = ['U2.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
     # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
     # files['U242'] = ['U242.csv', getDirectory]
-    # files['activityMonth'] = ['CSVMonthly.644225.csv', getMonthDir]
-    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
-    # files['act'] = ['ActivityStatement.html', getDirectory]
-    # files['atrade'] = ['trades.643495.html', getDirectory]
+    # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
+    files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    files['act'] = ['ActivityStatement.html', getDirectory]
+    files['atrade'] = ['trades.643495.html', getDirectory]
 
     das = 'trades.csv'                          # Search verbatim with searchParts=False
                                                 # TODO How to reconcile IB versus DAS input?
 
     sp = True
+    badfiles = []
+    goodfiles = []
     for key in files:
         # fs = findFilesInDir(files[key][1](d), files[key][0], searchParts=sp)
         fs = findFilesSinceMonth(d, files[key][0])
@@ -969,12 +1048,14 @@ def localStuff():
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
             if x[0]:
+                goodfiles.append(f)
                 print()
                 for key in x[0]:
                     print (key, list(x[0][key].columns), len(x[0][key]))
                 
 
             if x[1] and not x[0]:
+                badfiles.append([f, x[1]])
                 msg = f'\nStatement {f} \n{x[1]}'
                 print(msg)
         print()

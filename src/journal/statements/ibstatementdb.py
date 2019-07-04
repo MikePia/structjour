@@ -162,7 +162,7 @@ class StatementDB:
         current = begin
         if not end:
             end=current
-        while current < end:
+        while current <= end:
             if not self.isDateCovered(cur, account, current):
                 d = current.strftime('%Y%m%d')
                 cursor = cur.execute('''
@@ -172,30 +172,30 @@ class StatementDB:
         # conn.commit()
 
     def insertPositions(self, cur, posTab):
-        if not posTab.any()[0]:
+        if posTab is None or not posTab.any()[0]:
             return
         endDate=posTab['Date'].unique()
         assert len(endDate) == 1
         endDate = pd.Timestamp(endDate[0])
-        found = cur.execute('''
-            SELECT symbol, quantity, date 
-                FROM ib_positions
-                WHERE date = ?''', (endDate.strftime('%Y%m%d'),) )
-        found = found.fetchall()
-        if found:
-            assert len(found) == len(posTab)
-            return
+        account = posTab['Account'].unique()
         for i, row in posTab.iterrows():
+            # row['Account'], row['Symbol'], row['Quantity'], d) )
+            
             d = pd.Timestamp(row['Date']).strftime("%Y%m%d")
-            cur.execute('''
-                INSERT INTO ib_positions (account, symbol, quantity, date)
-                VALUES(?, ?, ?, ?)''',
-               (row['Account'], row['Symbol'], row['Quantity'], d) )
+            found = cur.execute('''
+                SELECT symbol, quantity, date 
+                    FROM ib_positions
+                    WHERE account = ?
+                    AND symbol = ?
+                    AND date = ?''',
+                    (row['Account'], row['Symbol'], d) )
+            found = found.fetchall()
+            if not found:
+                cur.execute('''
+                    INSERT INTO ib_positions (account, symbol, quantity, date)
+                    VALUES(?, ?, ?, ?)''',
+                (row['Account'], row['Symbol'], row['Quantity'], d) )
         
-        # cur.execute('''
-        #     SELECT * FROM 
-        # ''')
-    
     def processShareBalance(self, cur, begin, end):
         '''
         UNIMPLEMENTED
@@ -249,6 +249,7 @@ class StatementDB:
                         VALUES(?,?)''', (year[i], year[0]))
         if didsomething:
             conn.commit()
+
     def isHoliday(self, d):
         if not self.holidays:
             conn = sqlite3.connect(self.db)
@@ -301,7 +302,6 @@ class StatementDB:
         print()
         return all 
 
-
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=True):
         '''
         Get Market days between beg and end for which we are not covered by an IB statement
@@ -338,8 +338,23 @@ class StatementDB:
             current = current + delt
             if current > end:
                 break
-        print()
+        # print()
         return notcovered
+
+    def getMissingCoverage(self, account):
+        '''Get all the missing market days between the min and max covered days'''
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        cur.execute('''SELECT min(day), max(day) 
+            FROM ib_covered
+            WHERE account = ?''', (account,))
+        days = cur.fetchone()
+        if days:
+            uncovered = self.getUncoveredDays(account, days[0], days[1])
+            return {'min': pd.Timestamp(days[0]).date(), 
+                    'max': pd.Timestamp(days[1]).date(),
+                    'uncovered': uncovered}
+        print()
 
     def genericTbl(self, tabname, fields):
         '''
@@ -363,14 +378,16 @@ class StatementDB:
         conn.commit()
 
 def notmain():
+    settings = QSettings('zero_substance', 'structjour')
+    account = settings.value('account')
     db = StatementDB()
-    # zz = db.getUncoveredDays('U2429974')
+    # zz = db.getUncoveredDays(account)
     # zzz = db.isCovered('account'2019-01-10')
-    if s:
-        print(s)
+    missingdict = db.getMissingCoverage(account)
+    print('Beginning', missingdict['min'])
+    print('Ending', missingdict['max'])
+    print('Missing', missingdict['uncovered'])
     print()
-
-
 if __name__ == '__main__':
     notmain()
 
