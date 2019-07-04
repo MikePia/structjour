@@ -20,19 +20,14 @@ Re-implementing the ib statement stuff to get a general solution that can be sto
 @creation_data: 06/15/19
 '''
 
-import math
 import os
-import sqlite3
-
-from PyQt5.QtCore import QSettings, QDate, QDateTime
-import numpy as np
-import pandas as pd
-
-from bs4 import BeautifulSoup
 import urllib.request
 
-from journal.stock.utilities import qtime2pd
+import pandas as pd
+from bs4 import BeautifulSoup
+
 from journal.dfutil import DataFrameUtil
+from journal.statements.findfiles import getDirectory, findFilesSinceMonth
 from journal.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -50,66 +45,6 @@ def readit(url):
     return data
 
 
-def getBaseDir(nothing=None):
-    settings = QSettings('zero_substance', 'structjour')
-    journal = settings.value('journal')
-    return journal
-
-
-def getMonthDir(daDate=None):
-    settings = QSettings('zero_substance', 'structjour')
-    if daDate:
-        d = daDate
-    else:
-        d = settings.value('theDate')
-
-    scheme = settings.value('scheme')
-    journal = settings.value('journal')
-    if not scheme or not journal:
-        return None
-    scheme = scheme.split('/')[0]
-
-    if isinstance(d, (QDate, QDateTime)):
-        d = qtime2pd(d)
-    Year = d.year
-    month = d.strftime('%m')
-    MONTH = d.strftime('%B')
-    day = d.strftime('%d')
-    DAY = d.strftime('%A')
-    try:
-        schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
-    except KeyError:
-        return None
-    inpath = os.path.join(journal, schemeFmt)
-    return inpath
-
-
-def getDirectory(daDate=None):
-    settings = QSettings('zero_substance', 'structjour')
-    if daDate:
-        d = daDate
-    else:
-        d = settings.value('theDate')
-
-    scheme = settings.value('scheme')
-    journal = settings.value('journal')
-    if not scheme or not journal:
-        return None
-    # scheme = scheme.split('/')[0]
-
-    if isinstance(d, (QDate, QDateTime)):
-        d = qtime2pd(d)
-    Year = d.year
-    month = d.strftime('%m')
-    MONTH = d.strftime('%B')
-    day = d.strftime('%d')
-    DAY = d.strftime('%A')
-    try:
-        schemeFmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
-    except KeyError:
-        return None
-    inpath = os.path.join(journal, schemeFmt)
-    return inpath
 
 class IbStatement:
     '''
@@ -146,8 +81,9 @@ class IbStatement:
             broker = result[2].strip()
             try:
                 self.endDate = pd.Timestamp(endDate).date()
-            except ValueError('Failed to parse the statement date'):
-                raise
+            except ValueError:
+                raise ValueError('Failed to parse the statement date')
+            
 
         # broker = broker.strip()
         self.broker = broker
@@ -197,7 +133,7 @@ class IbStatement:
                 hasPartials = True
         if not hasPartials:
             return df
-                
+
         for tickerKey in df['Symbol'].unique():
             ticker = df[df['Symbol'] == tickerKey]
             if len(tickerKey) > 6:
@@ -213,7 +149,7 @@ class IbStatement:
                 parts = ticker[ticker['Codes'] == code]
                 if code.find('P') > -1:
                     if len(parts) == 1:
-                        x=3
+                        pass
 
                     else:
                         # print()
@@ -228,7 +164,7 @@ class IbStatement:
                             else:
                                 curTotal = curTotal - share
                         assert curTotal == 0
-                        x=3
+                        x = 3
                         for x in addme:
                             newdf = newdf.append(parts.iloc[x])
                 else:
@@ -237,27 +173,33 @@ class IbStatement:
         return newdf
 
     def doctorHtmlTables(self, tabd):
-        tabs = ['AccountInformation', 'OpenPositions', 'Transactions', 'Trades',
-                'LongOpenPositions', 'ShortOpenPositions']
+        '''
+        Fix the idiosyncracies in the tables from an html IB Statement
+        '''
         keys = list(tabd.keys())
         for key in keys:
-            if key in ['OpenPositions', 'Transactions', 'Trades', 'LongOpenPositions', 'ShortOpenPositions']:
+            if key not in  ['AccountInformation', 'OpenPositions', 'Transactions',
+                            'Trades', 'LongOpenPositions', 'ShortOpenPositions']:
+                raise ValueError('Unknown table needs to be examined')
+            if key in ['OpenPositions', 'Transactions', 'Trades', 'LongOpenPositions',
+                       'ShortOpenPositions']:
                 df = tabd[key]
                 df = df[df['Symbol'].str.startswith('Total') == False]
                 df = df.iloc[2:]
                 # Using 'tbl' prefix to identify the html specific table
                 ourcols = self.getColsByTabid('tbl' + key)
                 if ourcols:
-                    ourcols, missingcols = self.verifyAvailableCols(list(df.columns), ourcols, 'tbl' + key)
+                    ourcols, missingcols = self.verifyAvailableCols(list(df.columns), ourcols,
+                                                                    'tbl' + key)
                     df = df[ourcols]
                 if key == 'Trades':
                     df = df.rename(columns={'Acct ID': 'Account', 'Trade Date/Time': 'DateTime',
-                                   'Comm': 'Commission'})
+                                            'Comm': 'Commission'})
                     df = self.unifyDateFormat(df)
                 if key == 'Transactions':
                     df = df.rename(columns={'Date/Time': 'DateTime', 'T. Price': 'Price',
-                                   'Comm/Fee': 'Commission', 'Code': 'Codes'})
-                    
+                                            'Comm/Fee': 'Commission', 'Code': 'Codes'})
+
                     df['Account'] = self.account
                     df = self.combinePartialsHtml(df)
                     df = self.unifyDateFormat(df)
@@ -265,7 +207,7 @@ class IbStatement:
 
             elif key == 'AccountInformation':
                 tabd[key].columns = ['Field Name', 'Field Value']
-            
+
             if key in ['LongOpenPositions', 'ShortOpenPositions']:
                 t = tabd[key]
 
@@ -279,6 +221,9 @@ class IbStatement:
         return tabd
 
     def openIBStatementHtml(self, infile):
+        '''
+        Open an IB Statement in html form
+        '''
         if not os.path.exists(infile):
             return
         soup = BeautifulSoup(readit(infile), 'html.parser')
@@ -290,7 +235,8 @@ class IbStatement:
         for tableTag in tbldivs:
             continueit = True
             tabKey = ''
-            for key in ['tblAccountInformation', 'tblOpenPositions', 'tblLongOpenPositions', 'tblShortOpenPositions', 'tblTransactions', 'tblTrades']:
+            for key in ['tblAccountInformation', 'tblOpenPositions', 'tblLongOpenPositions',
+                        'tblShortOpenPositions', 'tblTransactions', 'tblTrades']:
                 if tableTag['id'].startswith(key):
                     continueit = False
                     tabKey = key[3:]
@@ -316,7 +262,7 @@ class IbStatement:
             tname = 'Trades'
         elif 'Transactions' in tables.keys():
             tname = 'Transactions'
-        
+
         if tname:
             ibdb = StatementDB()
             ibdb.processStatement(tables[tname], self.account, self.beginDate, self.endDate)
@@ -328,13 +274,16 @@ class IbStatement:
         return tables, tablenames
 
     def openIBStatement(self, infile):
+        '''
+        Open an IB Statement in either csv or html form
+        '''
         if os.path.splitext(infile)[1] == '.csv':
             return self.openIBStatementCSV(infile)
         elif os.path.splitext(infile)[1] == '.html':
             return self.openIBStatementHtml(infile)
         else:
             print('Only htm or csv files are recognized')
-    
+
     def openIBStatementCSV(self, infile):
         '''
         Identify a csv file as a type of IB Statement and send to the right place to open it
@@ -360,7 +309,8 @@ class IbStatement:
         Ib sends back differnt formats from different files. All statement processing should call
         this method.
         '''
-        df['DateTime'] = df['DateTime'].str.replace('-', '').str.replace(':', '').str.replace(',', ';').str.replace(' ', '')
+        df['DateTime'] = df['DateTime'].str.replace('-', '').str.replace(
+            ':', '').str.replace(',', ';').str.replace(' ', '')
         if df.any()[0]:
             assert len(df.iloc[0]['DateTime']) == 15
         return df
@@ -389,6 +339,8 @@ class IbStatement:
             print(msg)
 
     def doctorDefaultCSVStatement(self, tables, mcd):
+        '''
+        Fix up the idiosyncracies in the tables from a default csv statement'''
         # for key in tables:
         if 'Statement' in tables.keys():
             t = tables['Statement']
@@ -397,18 +349,19 @@ class IbStatement:
             period = t[t['Field Name'] == 'Period']['Field Value'].unique()[0]
             self.parseDefaultCSVPeriod(period)
             tables['Statement'] = t
-            
+
         if 'AccountInformation' in tables.keys():
             self.account = tables['AccountInformation'].iloc[1][1]
 
         if 'OpenPositions' in tables.keys():
-            d =  self.endDate if self.endDate else self.beginDate
+            d = self.endDate if self.endDate else self.beginDate
             tables['OpenPositions']['Date'] = d.strftime('%Y%m%d')
             if 'ClientAccountID' in mcd['OpenPositions']:
                 if self.account:
                     tables['OpenPositions']['Account'] = self.account
             else:
-                tables['OpenPositions'] = tables['OpenPositions'].rename(columns={'ClientAccountID': 'Account'}) 
+                tables['OpenPositions'] = tables['OpenPositions'].rename(
+                    columns={'ClientAccountID': 'Account'})
         if 'Trades' in tables.keys():
             t = tables['Trades']
             if 'order' in t['DataDiscriminator'].str.lower().unique():
@@ -424,10 +377,8 @@ class IbStatement:
             t = t.rename(columns={'Code': 'Codes', 'Date/Time': 'DateTime'})
             t = self.unifyDateFormat(t)
             tables['Trades'] = t
-
-
         return tables
-        
+
     def getTablesFromDefaultStatement(self, df):
         '''
         From a default Activity statement csv, retrieve AccountInformation, OpenPositions, and
@@ -439,7 +390,8 @@ class IbStatement:
         tablenames = dict()
         mcd = dict()
         for key in keys:
-            if key not in ['Statement', 'Account Information', 'Open Positions', 'Short Open Positions', 'Long Open Positions', 'Trades']:
+            if key not in ['Statement', 'Account Information', 'Open Positions',
+                           'Short Open Positions', 'Long Open Positions', 'Trades']:
                 continue
 
             t = df[df[0] == key]
@@ -469,10 +421,10 @@ class IbStatement:
                     t = t[ourcols].copy()
 
                 if 'OpenPositions' in tables.keys():
-                    if not (set(tables['OpenPositions'].columns) == set(t.columns)):
+                    if not set(tables['OpenPositions'].columns) == set(t.columns):
                         msg = 'A Programmer thing-- see it occur before I write code'
                         raise ValueError(msg)
-                            
+
                     tables['OpenPositions'] = tables['OpenPositions'].append(t)
                     tablenames['OpenPositions'] = 'OpenPositions'
                     continue
@@ -490,7 +442,7 @@ class IbStatement:
             msg = 'The statment lacks a trades table'
             return dict(), msg
 
-        if self.account == None:
+        if self.account is None:
             msg = '''This statement lacks an account number. Can't add it to the database'''
             return dict(), msg
         ibdb = StatementDB()
@@ -503,7 +455,7 @@ class IbStatement:
     def combinePartialsFlexTrade(self, t):
         '''
         The necessity of a new method to handle this is annoying...BUT gdmit, The Open/Close info
-        is not in any of the available fields. Instead, a less rigorous system is used based on 
+        is not in any of the available fields. Instead, a less rigorous system is used based on
         OrderID
         '''
         lod = t['LevelOfDetail'].unique()
@@ -511,7 +463,7 @@ class IbStatement:
             assert ValueError('I need to see this')
         if lod[0].lower() != 'execution':
             assert ValueError('I need to see this')
-            
+
         t = t[t['LevelOfDetail'].str.lower() == 'execution']
         newdf = pd.DataFrame()
         for tickerKey in t['Symbol'].unique():
@@ -527,7 +479,8 @@ class IbStatement:
 
                     thisticket = DataFrameUtil.createDf(ticket.columns, 1)
                     net = 0.0
-                    # Need to figure the average price of the transactions and sum of quantity and commission
+                    # Need to figure the average price of the transactions and sum of quantity
+                    # and commission
                     for i, row in ticket.iterrows():
                         net = net + (float(row['Price']) * int(row['Quantity']))
                     for col in list(thisticket.columns):
@@ -543,9 +496,11 @@ class IbStatement:
         return newdf
 
     def openTradeFlexCSV(self, infile):
-         # This is a single table file. Re read to get default column names from row 1
-        # This table is missing the Open/Close data. Its probably in transacations,
-        # identified by LevelOfDetail=EXECUTION
+        '''
+        Open a Trade flex statement csv file. This is a single table file. The headers are in the
+        top row so just reading it with read_csv will collect them. This table is missing the
+        Open/Close data.
+        '''
         df = pd.read_csv(infile)
         self.inputType = 'T_FLEX'
 
@@ -554,7 +509,8 @@ class IbStatement:
         ourcols = self.getColsByTabid('FlexTrades')
         ourcols, missingcols = self.verifyAvailableCols(currentcols, ourcols, 'DailyTrades')
         df = df[ourcols].copy()
-        df = df.rename(columns={'Date/Time': 'DateTime', 'Code': 'Codes', 'ClientAccountID': 'Account'})
+        df = df.rename(columns={'Date/Time': 'DateTime', 'Code': 'Codes',
+                                'ClientAccountID': 'Account'})
 
         lod = df['LevelOfDetail'].str.lower().unique()
         if 'order' in lod:
@@ -597,23 +553,24 @@ class IbStatement:
     def combinePartials(self, t):
         '''
         In flex Statements, the TRNT (Trades) table input might be in transacations instead of
-        tickets identified by LevelOfDetail=EXECUTION without the summary rows identified by 
+        tickets identified by LevelOfDetail=EXECUTION without the summary rows identified by
         LevelOfDetail=ORDERS. This is fixable (in both Activity statements and Trade statements)
         by changing Options to inclue Orders. If we have Executions only, we need to recombine
         the partials as identified by IBOrderID. If we also lack that column, blitz the sucker.
         Its not that hard to get a new statment
         :t: Is a TRNT DataFrame. That is a Trades table from a CSV multi table doc in which TRNT
                  is the tableid.
-        :assert: Tickets written at the exact same time are partials, identified by 
+        :assert: Tickets written at the exact same time are partials, identified by
                  Notes/Codes == P (change name to Codes) and by having a single Symbol
-        :prerequisite: Must have the columns ['Price', 'Commission', 'Quantity', 'LevelOfDetail', 'Codes']
+        :prerequisite: Must have the columns
+                        ['Price', 'Commission', 'Quantity', 'LevelOfDetail', 'Codes']
         '''
         lod = t['LevelOfDetail'].unique()
         if len(lod) > 1:
             assert ValueError('I need to see this')
         if lod[0].lower() != 'execution':
             assert ValueError('I need to see this')
-            
+
         t = t[t['LevelOfDetail'].str.lower() == 'execution']
         newdf = pd.DataFrame()
         for tickerKey in t['Symbol'].unique():
@@ -631,7 +588,8 @@ class IbStatement:
                     if len(ticket) > 1:
                         thisticket = DataFrameUtil.createDf(ticket.columns, 1)
                         net = 0.0
-                        # Need to figure the average price of the transactions and sum of quantity and commission
+                        # Need to figure the average price of the transactions and sum of
+                        # quantity and commission
                         for i, row in ticket.iterrows():
                             net = net + (float(row['Price']) * int(row['Quantity']))
                         for col in list(thisticket.columns):
@@ -648,7 +606,7 @@ class IbStatement:
 
     def doctorActivityFlexTrades(self, t, missingcols):
         '''
-        Deal with idiosyncracies; 
+        Deal with idiosyncracies;
         set uniform format in the Activity Flex Trades table (tableid = TRNT)
             1) Some statements' TRNT table include TradeDate and TradeTime seperately. Others may
                have the combined DateTime. And, maybe, some statements use Date/Time
@@ -669,18 +627,21 @@ class IbStatement:
             t['DateTime'] = t['TradeDate'].map(str) + ';' + t['TradeTime']
             t = t.drop(['TradeDate', 'TradeTime'], axis=1)
         else:
-            msg = '\n'.join(['''This Activity Flex statement is missing order time information. Please include the',
+            msg = '\n'.join(['''This Activity Flex statement is missing order'
+                               'time information. Please include the',
                                'Date/Time' column or ['TradeDate','TradeTime'] columns. '''])
             self.beginDate = None
             return pd.DataFrame(), msg
 
         # 2
-        missingcols = set(missingcols) - set(['TradeDate', 'TradeTime', 'DateTime', 'Date/Time', 'IBOrderID'])
+        missingcols = set(missingcols) - set(['TradeDate', 'TradeTime', 'DateTime', 'Date/Time',
+                                              'IBOrderID'])
         if missingcols:
             msg = f'Statment is missing cols: {list(missingcols)}'
             return pd.DataFrame, msg
         # 5
-        t = t.rename(columns={'TradePrice': 'Price', 'IBCommission': 'Commission', 'ClientAccountID': 'Account'})
+        t = t.rename(columns={'TradePrice': 'Price', 'IBCommission': 'Commission',
+                              'ClientAccountID': 'Account'})
 
         # 3
         t['Codes'] = ''
@@ -690,7 +651,8 @@ class IbStatement:
             if isinstance(OC, float):
                 OC = ''
             if isinstance(P, str):
-                if (OC.find('O') > -1 and P.find('O') > -1) or (OC.find('C') > -1 and P.find('C') > -1):
+                if (OC.find('O') > -1 and P.find('O') > -1) or (
+                        OC.find('C') > -1 and P.find('C') > -1):
                     codes = P
                 else:
                     codes = f'{OC};{P}'
@@ -707,24 +669,32 @@ class IbStatement:
         elif 'execution' in lod:
             if not 'IBOrderID' in t.columns:
                 self.beginDate = None
-                msg = '\n'.join(['This Activity Flex statement Includes EXECUTION level data (aka partials) To combine the partial executions',
-                               'into readable trades, the column "IBOrderID" must be included in the Flex Query Trades table. Alternately,',
-                               'select the Orders Options.'])
+                msg = '\n'.join(['This Activity Flex statement Includes EXECUTION level data'
+                                 '(aka partials) To combine the partial executions',
+                                 'into readable trades, the column "IBOrderID" must be included'
+                                 'in the Flex Query Trades table. Alternately,',
+                                 'select the Orders Options.'])
                 return pd.DataFrame(), msg
 
             t = t[t['LevelOfDetail'].str.lower() == 'execution']
             t = self.combinePartials(t)
         elif len(t) > 0:
-            msg = '\n'.join(['This Activity Flex statement is missing partial execution data. Please include the Orders or Execution Options for',
-                           'the Trades Table in your Activity flex statement. '])
+            msg = '\n'.join(['This Activity Flex statement is missing partial execution data.'
+                             'Please include the Orders or Execution Options for',
+                             'the Trades Table in your Activity flex statement. '])
             return pd.DataFrame(), msg
 
         t = self.unifyDateFormat(t)
-        dcolumns, mcolumns = self.verifyAvailableCols(list(t.columns), ['LevelOfDetail', 'IBOrderID', 'TradeDate'], 'utility')
+        dcolumns, mcolumns = self.verifyAvailableCols(
+            list(t.columns), ['LevelOfDetail', 'IBOrderID', 'TradeDate'], 'utility')
         t = t.drop(dcolumns, axis=1)
         return t, ''
 
     def getFrame(self, fid, df):
+        '''
+        Retrieve the rows between (fid[0], fid[1]) in df
+        :fid: A section identifier like ('BOF', 'EOF')
+        '''
         x = df[df[0] == fid[0]]
         metadata = []
         ldf = []
@@ -734,22 +704,24 @@ class IbStatement:
             data = []
 
             for j, row in df.iterrows():
-                if row[0] == fid[0] and started == False:
+                if row[0] == fid[0] and not started:
                     md = [x for x in row if isinstance(x, str)]
                     metadata.append(md)
                     started = True
                     continue
-                elif started == True and row[0] != fid[1]:
+                elif started and row[0] != fid[1]:
                     data.append(row.values)
                     # newdf = newdf.append(row)
                 elif started:
                     newdf = pd.DataFrame(data=data, columns=df.columns)
                     ldf.append(newdf)
                     break
-        
         return ldf, metadata
 
     def doctorFlexTables(self, tables, mcd):
+        '''
+        Fix up the idiosyncracies in the tables in from an Activity Flex Statement
+        '''
         if 'TRNT' in tables.keys():
             missingcols = mcd['TRNT']
             tables['TRNT'], m = self.doctorActivityFlexTrades(tables['TRNT'], missingcols)
@@ -764,9 +736,9 @@ class IbStatement:
         if 'POST' in tables.keys():
             # If the statement lacks date metadata, the next best thing is the the first and last
             # dates for trades
-            d =  self.endDate if self.endDate else self.beginDate if self.beginDate else None
-            if d == None:
-                # Bit of a catch 22 in the processing produces unsure
+            d = self.endDate if self.endDate else self.beginDate if self.beginDate else None
+            if d is None:
+                # Bit of a catch 22 in the processing produces unsure  ???
                 if 'TRNT' in tables.keys():
                     beginDate = tables['TRNT']['DateTime'].min()
                     endDate = tables['TRNT']['DateTime'].max()
@@ -807,7 +779,7 @@ class IbStatement:
                 self.endDate = pd.Timestamp(endDate).date()
             if accountsmetadata:
                 self.account = accountsmetadata[1]
-        
+
             tabids = dfa[1].unique()
             for tabid in tabids:
                 t = dfa[dfa[1] == tabid]
@@ -840,22 +812,22 @@ class IbStatement:
             positions = None
             if 'POST' in tables.keys():
                 positions = tables['POST']
-            ibdb.processStatement(tables['TRNT'], self.account, self.beginDate, self.endDate, positions)
+            ibdb.processStatement(tables['TRNT'], self.account, self.beginDate, self.endDate,
+                                  positions)
         return tables, tablenames
 
     def getColsByTabid(self, tabid):
         '''
         Using the tableids from the Flex queries and other Statements, we are interetsed in these
-        tables only and in the columns we define here only. 
-        The column headers are a subset as found in the input files. 
-        Functionally TRNT and Trades and tblTransactions are the same but IB returns different
-        column names in 
-            flex(TRNT) 
+        tables only and in the columns we define here only.
+        The column headers are a subset as found in the input files. eturns different
+        column names in
+            flex(TRNT)
             csv Activity Statements(Trades)
             html Activity statements (Transactions)
         Fixing the differences is not done here.
         '''
-        if tabid not in ['ACCT', 'POST', 'TRNT',  'Open Positions', 'OpenPositions', 'Statement',
+        if tabid not in ['ACCT', 'POST', 'TRNT', 'Open Positions', 'OpenPositions', 'Statement',
                          'Account Information', 'Long Open Positions', 'Short Open Positions',
                          'Trades', 'FlexTrades', 'tblTrades', 'tblTransactions', 'tblOpenPositions',
                          'tblLongOpenPositions', 'tblShortOpenPositions']:
@@ -876,18 +848,20 @@ class IbStatement:
             return ['ClientAccountID', 'Symbol', 'Quantity', 'Mult']
 
         # Trades table from fllex csv
-        # It seems some statements use DateTime and others Date/Time. (not sure)  Baby sit it with an exception to try to find out.
+        # It seems some statements use DateTime and others Date/Time. (not sure)  Baby sit it
+        # with an exception to try to find out.
         if tabid == 'TRNT':
-            return ['ClientAccountID', 'Symbol', 'TradeDate', 'TradeTime','Date/Time', 'DateTime',
+            return ['ClientAccountID', 'Symbol', 'TradeDate', 'TradeTime', 'Date/Time', 'DateTime',
                     'Quantity', 'TradePrice', 'IBCommission', 'Open/CloseIndicator', 'Notes/Codes',
                     'LevelOfDetail', 'IBOrderID']
 
         if tabid == 'Trades':
-            return ['Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Comm/Fee', 'Code', 'DataDiscriminator']
+            return ['Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Comm/Fee', 'Code',
+                    'DataDiscriminator']
 
         if tabid == 'FlexTrades':
             return ['ClientAccountID', 'Symbol', 'Date/Time', 'Quantity', 'Price', 'Commission',
-            'Code', 'LevelOfDetail', 'OrderID']
+                    'Code', 'LevelOfDetail', 'OrderID']
 
         if tabid == 'tblTrades':
             return ['Acct ID', 'Symbol', 'Trade Date/Time', 'Quantity', 'Price', 'Comm']
@@ -916,121 +890,25 @@ class IbStatement:
                 ourcols.remove(col)
         return ourcols, missingcols
 
-def findFilesInDir(direct, fn, searchParts):
-    '''
-    Find the files in direct that match fn, either exactly or including the same parts.
-    :direct: The directory to search
-    :fn: A filename or file pattern with parts seperated by '.' 
-    :freq: Either DaiyDir or MonthlyDir. DailyDir will search the daily directories and MonthlyDir
-            will search the Monthly directories.
-    :searchParts: If False, search for the precise filename. If True search parts seperated by
-            '.' and ending with the same extension 
-    '''
-    files = os.listdir(direct)
-    found=[]
-    if searchParts:
-        fn, ext = os.path.splitext(fn)
-        for f in files:
-            parts = fn.split('.')
-            countparts=0
-            for part in parts:
-                if f.find(part) > -1:
-                    countparts = countparts + 1
-                    if countparts == len(parts) and f.endswith(ext):
-                        found.append(os.path.join(direct, f))
-                else:
-                    break
-    else:
-        for f in files:
-            if fn == f:
-                found.append(os.path.join(direct, f))
-        
-    return found
-
-def findFilesInMonth(daDate, fn, searchParts):
-    '''
-    Match the file in the given month that contain the name fn
-    :fn: A filename of file pattern with parts seperated by '.' 
-    :searchParts: If False, search for the precise filename. If True search parts seperated by
-            '.' and ending with the same extension 
-    '''
-    m = daDate
-    m = pd.Timestamp(m)
-    m = pd.Timestamp(m.year, m.month, 1)
-    delt = pd.Timedelta(days=1)
-    current = m
-    files = []
-    while True:
-        currentMonth = current.month
-        theDir = getDirectory(current)
-
-        if current.weekday() > 4:
-            current = current + delt
-            continue
-        
-        addme=[]
-        if os.path.exists(theDir):
-            addme = findFilesInDir(theDir, fn, searchParts)
-        if addme:
-            files.extend(addme)
-    
-            
-        current = current + delt
-        if current.month != currentMonth:
-            break
-    return files
-
-def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
-    '''
-    Collect the all files since daDate in the journal directory that match fn
-    :fn: A filename or file pattern with parts seperated by '.' 
-    :freq: Either DaiyDir or MonthlyDir. DailyDir will search the daily directories and MonthlyDir
-            will search the Monthly directories.
-    :searchParts: If False, search for the precise filename. If True search parts seperated by
-            '.' and ending with the same extension 
-    '''
-    assert freq in ['DailyDir', 'MonthlyDir']
-    daDate = pd.Timestamp(daDate)
-    now = pd.Timestamp.today()
-    thisMonth = pd.Timestamp(now.year, now.month, 1)
-    current = pd.Timestamp(daDate.year, daDate.month, 1)
-    files = []
-    addme = []
-    while current <= thisMonth:
-        if freq == 'DailyDir':
-            addme = findFilesInMonth(current, fn, searchParts)
-        else:
-            addme = findFilesInDir(getMonthDir(current), fn, searchParts)
-        if addme:
-            files.extend(addme)
-        month = current.month
-        if month == 12:
-            current = pd.Timestamp(current.year+1, 1, 1)
-        else:
-            current = pd.Timestamp(current.year, month+1, 1)
-    return files
-        
 
 def notmain():
+    ''' Run local stuff'''
     t = StatementDB()
     t.popHol()
-    
+
 def localStuff():
-    # Tricky stuff -- triggered by 'atrade' from 3/28. Partials with different times. They exist,
-    # and tht file has no good discriminator. In fact if the times are not guaranteed, none of
-    # those files have guaranteed discriminators for partials. Have to go through a bucnch ofem
-    # and try to use the codes and  share totals. 
+    '''Run local stuff'''
     d = pd.Timestamp('2018-04-01')
     files = dict()
     # files['annual'] = ['_2018_2018.csv', getBaseDir]
 
-    # files['stuff'] = ['U2.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
-    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
-    # files['U242'] = ['U242.csv', getDirectory]
-    # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
+    files['stuff'] = ['U2.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
+    files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    files['U242'] = ['U242.csv', getDirectory]
+    files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
     files['dtr'] = ['DailyTradeReport.html', getDirectory]
     files['act'] = ['ActivityStatement.html', getDirectory]
     files['atrade'] = ['trades.643495.html', getDirectory]
@@ -1038,12 +916,11 @@ def localStuff():
     das = 'trades.csv'                          # Search verbatim with searchParts=False
                                                 # TODO How to reconcile IB versus DAS input?
 
-    sp = True
     badfiles = []
     goodfiles = []
-    for key in files:
+    for filekey in files:
         # fs = findFilesInDir(files[key][1](d), files[key][0], searchParts=sp)
-        fs = findFilesSinceMonth(d, files[key][0])
+        fs = findFilesSinceMonth(d, files[filekey][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
@@ -1051,8 +928,8 @@ def localStuff():
                 goodfiles.append(f)
                 print()
                 for key in x[0]:
-                    print (key, list(x[0][key].columns), len(x[0][key]))
-                
+                    print(key, list(x[0][key].columns), len(x[0][key]))
+
 
             if x[1] and not x[0]:
                 badfiles.append([f, x[1]])
