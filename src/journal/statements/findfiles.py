@@ -35,7 +35,6 @@ def getBaseDir(nothing=None):
     journal = settings.value('journal')
     return journal
 
-
 def getMonthDir(daDate=None):
     '''Get the monthe in the journal subdirs that represents the month from daDate '''
 
@@ -64,7 +63,6 @@ def getMonthDir(daDate=None):
         return None
     inpath = os.path.join(journal, schemeFmt)
     return inpath
-
 
 def getDirectory(daDate=None):
     '''
@@ -140,7 +138,10 @@ def findFilesInMonth(daDate, fn, searchParts):
     delt = pd.Timedelta(days=1)
     current = m
     files = []
+    currentMonth = current.month
     while True:
+        if current.month != currentMonth:
+            break
         currentMonth = current.month
         theDir = getDirectory(current)
 
@@ -155,8 +156,6 @@ def findFilesInMonth(daDate, fn, searchParts):
             files.extend(addme)
 
         current = current + delt
-        if current.month != currentMonth:
-            break
     return files
 
 def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):

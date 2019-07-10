@@ -30,6 +30,8 @@ from PyQt5.QtCore import QSettings
 
 from journal.definetrades import ReqCol
 
+# pylint: disable = C0103
+
 
 
 class StatementDB:
@@ -85,11 +87,13 @@ class StatementDB:
                 symbol	TEXT NOT NULL,
                 datetime	TEXT NOT NULL,
                 quantity	INTEGER NOT NULL,
+                balance INTEGER NOT NULL,
                 price	NUMERIC NOT NULL,
+                average NUMERIC,
+                pl NUMERIC,
                 commission	NUMERIC,
                 codes	TEXT,
-                account	TEXT NOT NULL,
-                balance INTEGER);''')
+                account	TEXT NOT NULL);''')
 
         cur.execute('''
             CREATE TABLE if not exists ib_positions (
@@ -113,36 +117,59 @@ class StatementDB:
                 name TEXT)''')
         conn.commit()
 
-    def findTrade(self, row, cur):
+    def findTrades(self, datetime, symbol, quantity,  account, cur=None):
+        if not cur:
+            conn = sqlite3.connect(self.db)
+            cur = conn.cursor()
         cursor = cur.execute('''
-            SELECT * from ib_trades where datetime = ?
-            AND symbol = ?
-            AND quantity = ?
-            AND account = ?
+            SELECT symbol, datetime, quantity, balance, price, average, pl, account
+                FROM ib_trades
+                    WHERE datetime = ?
+                    AND symbol = ?
+                    AND quantity = ?
+                    AND account = ?
             ''',
-            (row['DateTime'], row['Symbol'], row['Quantity'], row['Account']))
+            (datetime, symbol, quantity, account))
+        x = cursor.fetchall()
+        # print('Adding a trade', row['Symbol'], row['DateTime'])
+        return False
+
+    def findTrade(self, datetime, symbol, quantity, balance, account, cur=None):
+        if not cur:
+            conn = sqlite3.connect(self.db)
+            cur = conn.cursor()
+        cursor = cur.execute('''
+            SELECT symbol, datetime, quantity, balance, price, average, pl, account
+                FROM ib_trades
+                    WHERE datetime = ?
+                    AND symbol = ?
+                    AND quantity = ?
+                    AND balance = ?
+                    AND account = ?
+            ''',
+            (datetime, symbol, quantity, balance, account))
         x = cursor.fetchall()
         if x:
             if len(x) !=1:
-                print('Duplicates ? ', row['Symbol'], row['DateTime'])
+                print('Duplicates ? ', symbol, datetime)
             # print('. ', end='')
-            return True
+            return x
         # print('Adding a trade', row['Symbol'], row['DateTime'])
         return False
 
     def insertTrade(self, row, cur):
         '''Insert a trade. Commit not included'''
-        if self.findTrade(row, cur):
+        if self.findTrade(row['DateTime'], row['Symbol'], row['Quantity'], row['Balance'], row['Account'], cur):
             return True
         if 'Codes' in row.keys():
             codes = row['Codes']
         else:
             codes = ''
         x = cur.execute(''' 
-            INSERT INTO ib_trades (symbol, datetime, quantity, price, commission, codes, account, balance)
-            VALUES(?,?, ?, ?, ?, ?, ?, ?)''',
+            INSERT INTO ib_trades (symbol, datetime, quantity, price, commission, codes, account, balance, average, pl)
+            VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (row['Symbol'], row['DateTime'], row['Quantity'], row['Price'], row['Commission'],
-             codes, row['Account'], None))
+             codes, row['Account'], row['Balance'], row['Average'], row['PL']))
         if x.rowcount == 1:
             return True
         return False
@@ -174,13 +201,8 @@ class StatementDB:
     def insertPositions(self, cur, posTab):
         if posTab is None or not posTab.any()[0]:
             return
-        endDate=posTab['Date'].unique()
-        assert len(endDate) == 1
-        endDate = pd.Timestamp(endDate[0])
-        account = posTab['Account'].unique()
+        assert len(posTab['Date'].unique()) == 1
         for i, row in posTab.iterrows():
-            # row['Account'], row['Symbol'], row['Quantity'], d) )
-            
             d = pd.Timestamp(row['Date']).strftime("%Y%m%d")
             found = cur.execute('''
                 SELECT symbol, quantity, date 
@@ -196,7 +218,7 @@ class StatementDB:
                     VALUES(?, ?, ?, ?)''',
                 (row['Account'], row['Symbol'], row['Quantity'], d) )
         
-    def processShareBalance(self, cur, begin, end):
+    def reFigureAPL(self, cur, begin, end):
         '''
         UNIMPLEMENTED
         Process the ib_trades.balance field for all trade entries between begin and end
@@ -206,7 +228,196 @@ class StatementDB:
                         method is called after processing an ib statement that has a positions
                         table.that all entry for the  
         '''
-        pass
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        found = cur.execute('''
+            SELECT symbol, datetime, quantity, balance, price, average, pl, account FROM ib_trades
+
+            WHERE average IS NULL
+        ''')
+        badTrades = found.fetchall()
+        for badTrade in badTrades:
+            bt = dict()
+            bt['sym'], bt['dt'], bt['qty'], bt['bal'], bt['p'], bt['avg'], bt['pl'], bt['act'] = badTrade
+            dbTrade = self.findTrade(bt['dt'], bt['sym'], bt['qty'], bt['bal'], bt['act'], cur)
+            if dbTrade and dbTrade[0][5]:
+                print('Already fixed this one', dbTrade)
+                continue
+            symbol = bt['sym']
+            account = bt['act']
+
+            prevTrades = cur.execute('''
+                SELECT symbol, datetime, quantity, balance, price, average, pl, account FROM ib_trades
+                    WHERE symbol = ?
+                    AND datetime < ?
+                    AND account = ?
+                    ORDER BY datetime DESC
+                ''', (symbol, bt['dt'], account))
+            prevTrades = prevTrades.fetchall()
+            fixthese = []
+            for prevTrade in prevTrades:
+                pt = dict()
+                pt['sym'], pt['dt'], pt['qty'], pt['bal'], pt['p'], pt['avg'], pt['pl'], pt['act'] = prevTrade
+                uncovered = self.getUncoveredDays(account, beg=pt['dt'], end=bt['dt'])
+                if uncovered:
+                    break
+                else:
+                    # We have continuous coverage...
+                    # We can update badTrade if we found a trade that has either
+                    # 1) both average and PL (PL tells us if we are long or short) 
+                    # or 2) A trade opener identified by quantity == balance
+                    # print()
+                    LONG = True
+                    SHORT = False
+                    
+                    # if pt['avg'] and pt['qty'] == pt['bal']:
+                    if pt['avg'] and pt['bal'] == pt['qty']:
+                        fixthese.append(prevTrade)
+                        fixthese.insert(0, badTrade)
+                        fixthese = reversed(fixthese)
+
+                        #######
+                        balance = 0
+                        #Discriminator for first opening transaction
+                        pastPrimo = False
+                        side = LONG
+                        
+                        for fixthis in fixthese:
+                            ft = dict()
+                            ft['sym'], ft['dt'], ft['qty'], ft['bal'], ft['p'], ft['avg'], ft['pl'], ft['act'] = fixthis
+
+
+                            # Figure Balance first -- adjust offset for overnight
+                            # for i, row in tdf.iterrows():
+                            # quantity = ft['qty']
+                            prevBalance = balance
+                            balance = balance + ft['qty']
+
+                            if not ft['bal']:
+                                cur.execute('''
+                                    UPDATE ib_trades SET balance = ?
+                                        WHERE symbol = ?
+                                        AND datetime = ?
+                                        AND quantity = ?
+                                        AND account = ?''', (balance, ft['sym'], pt['dt'], pt['qty'], pt['act']))
+                                # side = LONG if quantity >= 0 else SHORT
+                                ft['bal'] = balance
+
+                            
+
+                            # Check for a flipped position. The flipper is figured like Opener; the average
+                            # changes, and no PL is taken 
+                            if pastPrimo and side == LONG and balance < 0:
+                                side = SHORT
+                            elif pastPrimo and side == SHORT and balance > 0:
+                                side = LONG
+
+                            # This the first trade Open; average == price and set the side- 
+                            if not pastPrimo and ft['bal'] == ft['qty']:
+                                
+                                pastPrimo = True
+                                average = ft['avg']
+
+                                #average should be set for this one
+                                # tdf.at[i, 'Average'] = average
+                                side = LONG if ft['qty'] >= 0 else SHORT
+
+                            # Here are openers -- adding to the trade; average changes
+                            # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
+                            elif (pastPrimo and side is LONG and ft['qty'] >= 0) or (
+                                pastPrimo and side is SHORT and ft['qty'] < 0):
+                                newAverage = ((average * prevBalance) + (ft['qty'] * ft['p'])) / ft['bal']
+                                average = newAverage
+
+                                cur.execute('''
+                                    UPDATE ib_trades SET average = ?
+                                        WHERE symbol = ?
+                                        AND datetime = ?
+                                        AND quantity = ?
+                                        AND account = ?''', (average, ft['sym'], pt['dt'], pt['qty'], pt['act']))
+
+
+                            # Here are closers; PL is figured and check for trade ending
+                            elif pastPrimo:
+                                # Close Tx, P/L is figured on CLOSING transactions only
+                                pl = (average - ft['p']) * ft['qty']
+                                x = cur.execute('''
+                                    UPDATE ib_trades SET average = ?, pl = ?
+                                        WHERE symbol = ?
+                                        AND datetime = ?
+                                        AND quantity = ?
+                                        AND account = ?''', (average, pl, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                if ft['bal'] == 0:
+                                    pastPrimo = False
+                            else:
+                                # This should be a first trade for this statmenet/Symbol. Could be Open or
+                                # Close. We are lacking the previous balance so cannot reliably figure the
+                                # average.
+                                print('Missing price data in this statement')
+                                print(fixthis)
+                                # raise ValueError('A programmers exception to find examples')
+                        conn.commit()
+                        break
+                            #######
+                    elif pt['avg'] and pt['pl']:
+                        fixthese.append(prevTrade)
+                        fixthese.insert(0, badTrade)
+                        fixthese_r = reversed(fixthese)
+                        average = None
+                        for fixthis in fixthese_r:
+                            print(fixthis)
+                            ft = dict()
+                            ft['sym'], ft['dt'], ft['qty'], ft['bal'], ft['p'], ft['avg'], ft['pl'], ft['act'] = fixthis
+                            if ft['pl']:
+                                side = LONG if ft['qty'] < 0 else SHORT
+                                balance = ft['bal']
+                                average = ft['avg']
+                            elif average and not ft['avg']:
+                                # Opener
+                                # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance 
+                                if (side is LONG and ft['qty'] >= 0) or (
+                                    side is SHORT and ft['qty'] < 0):
+                                    newAverage = ((average * balance) + (ft['qty'] * ft['p'])) / ft['bal']
+                                    average = newAverage
+                                    balance = ft['bal']
+                                    cur.execute('''
+                                    UPDATE ib_trades SET average = ?
+                                        WHERE symbol = ?
+                                        AND datetime = ?
+                                        AND quantity = ?
+                                        AND account = ?''', (average, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                # Closer. Enter PL and check for last trade
+                                elif average:
+                                    pl = (average - ft['p']) * ft['qty']
+                                    x = cur.execute('''
+                                        UPDATE ib_trades SET average = ?, pl = ?
+                                            WHERE symbol = ?
+                                            AND datetime = ?
+                                            AND quantity = ?
+                                            AND account = ?''', (average, pl, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                    if ft['bal'] == 0:
+                                        average = None
+                            elif ft['avg']:
+                                average = ft['avg']
+                                prevBalance = ft['bal']
+                                # raise ValueError('Programmer exception to find the statements')
+                            else:
+                                raise ValueError('What else we got here?')
+                        conn.commit()
+
+
+
+
+                                
+
+
+
+                        break
+                    else:
+                        fixthese.append(prevTrade)
+
+
+        
 
     def processStatement(self, tdf, account, begin, end, openPos=None):
         assert begin
@@ -223,14 +434,11 @@ class StatementDB:
                 count = count + 1
         if count == len(tdf):
             self.coveredDates(begin, end, account, cur)
-            # print('These dates are covered')
-            pass
         else:
             print('Not all of those trades processed')
         self.insertPositions(cur, openPos)
-        self.processShareBalance(cur, begin, end)
-
         conn.commit()
+        self.reFigureAPL(cur, begin, end)
 
     def popHol(self):
         '''
@@ -299,7 +507,7 @@ class StatementDB:
         for t in x:
             print(t)
         all = cur.fetchall()
-        print()
+        # print()
         return all 
 
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=True):
@@ -354,7 +562,20 @@ class StatementDB:
             return {'min': pd.Timestamp(days[0]).date(), 
                     'max': pd.Timestamp(days[1]).date(),
                     'uncovered': uncovered}
-        print()
+        # print()
+        
+    def getTradesByDates(self, account, sym, min, max):
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        cur.execute('''
+            SELECT symbol, datetime, quantity, balance FROM ib_trades
+                WHERE account = ?
+                AND symbol = ?
+                AND datetime >= ?
+                AND datetime <= ?
+                ORDER BY datetime''', (account, sym, min, max))
+        found = cur.fetchall()
+        return found
 
     def genericTbl(self, tabname, fields):
         '''
