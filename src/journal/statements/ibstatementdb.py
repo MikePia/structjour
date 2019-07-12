@@ -28,7 +28,7 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from journal.definetrades import ReqCol
+from journal.definetrades import FinReqCol
 
 # pylint: disable = C0103
 
@@ -63,9 +63,7 @@ class StatementDB:
         self.popHol()
         self.holidays = None
         self.covered = None
-        self.rc = ReqCol()
-
-    
+        self.frc = FinReqCol()
 
     def account(self):
         '''Create account table'''
@@ -131,6 +129,8 @@ class StatementDB:
             ''',
             (datetime, symbol, quantity, account))
         x = cursor.fetchall()
+        if x:
+            return x
         # print('Adding a trade', row['Symbol'], row['DateTime'])
         return False
 
@@ -175,6 +175,9 @@ class StatementDB:
         return False
 
     def isDateCovered(self, cur, account, d):
+        '''
+        Test if date d is covered in the given account
+        '''
         d = d.strftime("%Y%m%d")
         cursor = cur.execute('''
             SELECT * from ib_covered 
@@ -184,11 +187,20 @@ class StatementDB:
         x = cursor.fetchone()
         return x
 
-    def coveredDates(self, begin, end, account, cur):
+    def coveredDates(self, begin, end, account, cur=None):
+        '''
+        Inserts the dates between begin and end  into the ib_covered table
+        '''
+        if not cur:
+            conn = sqlite3.connect(self.db)
+            cur = conn.cursor()
         delt = pd.Timedelta(days=1)
+        begin = pd.Timestamp(begin).date()
         current = begin
         if not end:
             end=current
+        else:
+            end = pd.Timestamp(end).date()
         while current <= end:
             if not self.isDateCovered(cur, account, current):
                 d = current.strftime('%Y%m%d')
@@ -199,6 +211,10 @@ class StatementDB:
         # conn.commit()
 
     def insertPositions(self, cur, posTab):
+        '''
+        Stores the daily positions. Each statement can have only one day of positions. That is the
+        existing positions after close on the end day of the statemnet
+        '''
         if posTab is None or not posTab.any()[0]:
             return
         assert len(posTab['Date'].unique()) == 1
@@ -220,13 +236,9 @@ class StatementDB:
         
     def reFigureAPL(self, cur, begin, end):
         '''
-        UNIMPLEMENTED
+        Its sketchy still
         Process the ib_trades.balance field for all trade entries between begin and end
-        :prerequisites: ib_positions has an knowledge of positions for the end date. That means
-                        there may or may not be any entries on that date,but if there are not,
-                        then the account is flat on that date. The only way to know this if this
-                        method is called after processing an ib statement that has a positions
-                        table.that all entry for the  
+        :prerequisites: Balance-- the differenc between refigureBAPL and this one.
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -353,9 +365,7 @@ class StatementDB:
                                 # This should be a first trade for this statmenet/Symbol. Could be Open or
                                 # Close. We are lacking the previous balance so cannot reliably figure the
                                 # average.
-                                print('Missing price data in this statement')
-                                print(fixthis)
-                                # raise ValueError('A programmers exception to find examples')
+                                print(f'''There is a  trade for {ft['sym']} that lacks a transaction in this statement''')
                         conn.commit()
                         break
                             #######
@@ -416,10 +426,11 @@ class StatementDB:
                     else:
                         fixthese.append(prevTrade)
 
-
-        
-
     def processStatement(self, tdf, account, begin, end, openPos=None):
+        '''
+        Processs the trade, positions, ancd covered tables using the Trades table and the 
+        OpenPositions table.
+        '''
         assert begin
         # print(begin, type(begin), end, type(end))
         assert isinstance(begin, dt.date)
@@ -459,6 +470,8 @@ class StatementDB:
             conn.commit()
 
     def isHoliday(self, d):
+        '''Returns T or F is given day is a market holiday
+        '''
         if not self.holidays:
             conn = sqlite3.connect(self.db)
             cur = conn.cursor()
@@ -472,6 +485,10 @@ class StatementDB:
         return False
 
     def isCovered(self, account, d):
+        '''
+        returns True or False if this day is covered in the db. It is True if we have processed a
+        Statement that covers this day. There may be no trades on a covered day.
+        '''
         d = pd.Timestamp(d).date()
         beg = end = d
         unc = self.getUncoveredDays(account, beg, end)
@@ -480,39 +497,54 @@ class StatementDB:
         return True
 
     def getStatement(self, account, beg, end=None):
+        '''
+        Retrieve all the trades for the given days.
+        :account:
+        :beg:
+        :end:
+        :return: If not all days are covered return empty list. Otherwise return a df with all
+                 trades inclusive of the days beg and end, column names drawn from FinReqCol)
+        '''
         beg = pd.Timestamp(beg).date()
+        eformat = '%Y%m%d;%H%M%S'
+        bformat = '%Y%m%d'
 
         if not end:
-            end = beg
+            end = pd.Timestamp(beg.year, beg.month, beg.day, 23, 59, 59)
         else:
-            end = pd.Timestamp(end).date()
-        current = beg
-        delt = pd.Timedelta(days=1)
-        uncovered = self.getUncoveredDays(account, beg, end)
+            end = pd.Timestamp(end.year, end.month, end.day, 23, 59, 59)
+        beg = beg.strftime(bformat)
+        end = end.strftime(eformat)
+        uncovered = self.getUncoveredDays(account, beg, end, usecache=False)
         if uncovered:
-            return uncovered
-        beg = pd.Timestamp(beg.year, beg.month, beg.day, 0, 0, 0)
-        end = pd.Timestamp(end.year, end.month, end.day, 23, 59, 59)
+            return []
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        rc=self.rc
-        df = pd.DataFrame(columns=[rc.ticker, rc.date, rc.shares, rc.price, 'Commission', rc.acct,
-                                   'Codes', rc.side, rc.PL])
+        frc = self.frc
+        cols = [frc.ticker, frc.date, frc.shares, frc.bal, frc.price, frc.avg, frc.comm, frc.acct,
+                frc.oc, frc.PL]
         x = cur.execute('''
-            SELECT symbol, datetime, quantity, price, commission, account, codes 
+            SELECT symbol, datetime, quantity, balance, price, average,
+            commission, account, codes, pl
                     FROM ib_trades
                     WHERE datetime >= ?
                     AND datetime <= ?
-                    ''', (beg.strftime('%Y%m%d;%H%M%S'), end.strftime('%Y%m%d;%H%M%S') ))
-        for t in x:
-            print(t)
-        all = cur.fetchall()
+                    ''', (beg, end))
+        x = x.fetchall()
+        if x:
+            df = pd.DataFrame(data=x, columns=cols)
+            return df
         # print()
-        return all 
+        return pd.DataFrame()
 
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=True):
         '''
-        Get Market days between beg and end for which we are not covered by an IB statement
+        Get Market days between beg and end for which we are not covered by an IB statement.
+        :account:
+        :beg:
+        :end:
+        :usecache: Use the default True is this is to be called repeatedly to check the same dates.
+                   Use usecache=False to check for unique dates.
         '''
         beg = pd.Timestamp(beg).date()
         if not end:
@@ -564,7 +596,10 @@ class StatementDB:
                     'uncovered': uncovered}
         # print()
         
-    def getTradesByDates(self, account, sym, min, max):
+    def getTradesByDates(self, account, sym, daMin, daMax):
+        '''
+        Get trades between  times min and max for a ticker/account
+        '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cur.execute('''
@@ -573,7 +608,7 @@ class StatementDB:
                 AND symbol = ?
                 AND datetime >= ?
                 AND datetime <= ?
-                ORDER BY datetime''', (account, sym, min, max))
+                ORDER BY datetime''', (account, sym, daMin, daMax))
         found = cur.fetchall()
         return found
 

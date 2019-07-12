@@ -66,11 +66,12 @@ def getMonthDir(daDate=None):
 
 def getDirectory(daDate=None):
     '''
-    Get the directory in the journal subdirs that represent daDate
+    Get the directory in the journal subdirs that represent daDate. Relies on
+    the naming scheme saved in settings
     '''
     settings = QSettings('zero_substance', 'structjour')
     if daDate:
-        d = daDate
+        d = pd.Timestamp(daDate)
     else:
         d = settings.value('theDate')
 
@@ -111,7 +112,9 @@ def findFilesInDir(direct, fn, searchParts):
         for f in files:
             parts = fn.split('.')
             countparts = 0
+            f = f.lower()
             for part in parts:
+                part = part.lower()
                 if f.find(part) > -1:
                     countparts = countparts + 1
                     if countparts == len(parts) and f.endswith(ext):
@@ -127,7 +130,8 @@ def findFilesInDir(direct, fn, searchParts):
 
 def findFilesInMonth(daDate, fn, searchParts):
     '''
-    Match the file in the given month that contain the name fn
+    Match the file in the given month that contain the name fn. Relies on
+    the naming scheme saved in settings
     :fn: A filename of file pattern with parts seperated by '.'
     :searchParts: If False, search for the precise filename. If True search parts seperated by
             '.' and ending with the same extension
@@ -160,7 +164,8 @@ def findFilesInMonth(daDate, fn, searchParts):
 
 def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
     '''
-    Collect the all files since daDate in the journal directory that match fn
+    Collect the all files in the since daDate in the journal directory that match fn. Relies on
+    the naming scheme saved in settings
     :fn: A filename or file pattern with parts seperated by '.'
     :freq: Either DaiyDir or MonthlyDir. DailyDir will search the daily directories and MonthlyDir
             will search the Monthly directories.

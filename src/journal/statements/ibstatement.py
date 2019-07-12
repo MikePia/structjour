@@ -58,7 +58,7 @@ class IbStatement:
     # Going to attempt to treat CSV and Html version of activity statements the same once
     # the initial dataframes are created. For the subset of 3-4 tables we view, should be possible.
     I_TYPES = ["A_FLEX", "T_FLEX", "ACTIVITY", "TRADE"]
-    def __init__(self):
+    def __init__(self, db=None):
 
         self.account = None
         self.statementname = None
@@ -66,6 +66,7 @@ class IbStatement:
         self.endDate = None
         self.inputType = None
         self.broker = None
+        self.db = db
 
     def figureBAPL(self, tt, tos):
         '''
@@ -137,9 +138,7 @@ class IbStatement:
                     # This should be a first trade for this statmenet/Symbol. Could be Open or
                     # Close. We are lacking the previous balance so cannot reliably figure the
                     # average.
-                    print('Missing price data in this statement')
-                    # print(row)
-                    # raise ValueError('A programmers exception to find examples')
+                    print(f'''There is a trade for {row['Symbol']} that lacks a tx.''')
 
 
             assert tdf.iloc[-1]['Balance'] == holding
@@ -573,7 +572,7 @@ class IbStatement:
         if self.account is None:
             msg = '''This statement lacks an account number. Can't add it to the database'''
             return dict(), msg
-        ibdb = StatementDB()
+        ibdb = StatementDB(self.db)
         openpos = None
         if 'OpenPositions' in tables.keys():
             openpos = tables['OpenPositions']
@@ -710,26 +709,13 @@ class IbStatement:
                         # This should be a first trade for this statmenet/Symbol. Could be Open or
                         # Close. We are lacking the previous balance so cannot reliably figure the
                         # average.
-                        print('Missing price data in this statement')
-                        # print(row)
-                        # raise ValueError('A programmers exception to find examples')
+                        print(f'''There is a  trade for {row['Symbol']} that lacks a transaction in this statement''')
 
                 newdf = newdf.append(tdf)
             else:
                 # If the balance for any trade is not found, return empty. 
                 return pd.DataFrame()
         return newdf
-
-
-
-            # min = tdf['DateTime'].min()
-            # max = tdf['DateTime'].max()
-            # dbtick = ibdb.getTradesByDates(self.account, sym, min, max)
-            # if dbtick:
-            #     for tick in dbtick:
-            #         print(tick)
-            # print()
-
 
     def openTradeFlexCSV(self, infile):
         '''
@@ -1071,12 +1057,13 @@ class IbStatement:
         '''
         Using the tableids from the Flex queries and other Statements, we are interetsed in these
         tables only and in the columns we define here only.
-        The column headers are a subset as found in the input files. eturns different
+        The column headers are a subset as found in the input files. returns different
         column names in
             flex(TRNT)
             csv Activity Statements(Trades)
             html Activity statements (Transactions)
-        Fixing the differences is not done here.
+        Fixing the differences is not done here. From here we need the original names. If the names
+        change (from IB), this process should catch it and raise an error.
         '''
         if tabid not in ['ACCT', 'POST', 'TRNT', 'Open Positions', 'OpenPositions', 'Statement',
                          'Account Information', 'Long Open Positions', 'Short Open Positions',
@@ -1151,7 +1138,7 @@ def localStuff():
     '''Run local stuff'''
     d = pd.Timestamp('2018-02-01')
     files = dict()
-    files['annual'] = ['_2018_2018.csv', getBaseDir]
+    files['annual'] = ['U242.csv', getBaseDir]
 
     # files['stuff'] = ['U2.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
