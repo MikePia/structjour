@@ -27,25 +27,34 @@ from PyQt5.QtCore import QSettings, QDate, QDateTime
 from journal.stock.utilities import qtime2pd
 # pylint: disable = C0103
 
+class FindFiles:
+    '''
+    Provide an alternative to JournalFiles, which was created to support a console app. FindFiles
+    is a more direct approach to file management.
+    '''
+
+    def __init__(self):
+        self.settings = QSettings('zero_substance', 'structjour')
+
 
 
 def getBaseDir(nothing=None):
     '''Get the journal base directory using settings'''
-    settings = QSettings('zero_substance', 'structjour')
-    journal = settings.value('journal')
+    ff = FindFiles()
+    journal = ff.settings.value('journal')
     return journal
 
 def getMonthDir(daDate=None):
     '''Get the monthe in the journal subdirs that represents the month from daDate '''
 
-    settings = QSettings('zero_substance', 'structjour')
+    ff = FindFiles()
     if daDate:
         d = daDate
     else:
-        d = settings.value('theDate')
+        d = ff.settings.value('theDate')
 
-    scheme = settings.value('scheme')
-    journal = settings.value('journal')
+    scheme = ff.settings.value('scheme')
+    journal = ff.settings.value('journal')
     if not scheme or not journal:
         return None
     scheme = scheme.split('/')[0]
@@ -67,16 +76,16 @@ def getMonthDir(daDate=None):
 def getDirectory(daDate=None):
     '''
     Get the directory in the journal subdirs that represent daDate. Relies on
-    the naming scheme saved in settings
+    the naming scheme saved in ff.settings
     '''
-    settings = QSettings('zero_substance', 'structjour')
+    ff = FindFiles()
     if daDate:
         d = pd.Timestamp(daDate)
     else:
-        d = settings.value('theDate')
+        d = ff.settings.value('theDate')
 
-    scheme = settings.value('scheme')
-    journal = settings.value('journal')
+    scheme = ff.settings.value('scheme')
+    journal = ff.settings.value('journal')
     if not scheme or not journal:
         return None
     # scheme = scheme.split('/')[0]
