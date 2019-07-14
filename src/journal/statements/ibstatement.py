@@ -15,9 +15,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
-Re-implementing the ib statement stuff to get a general solution that can be stored in a db
+Opens an ib statement and, if possible, stores the trades in the db. The thing that prevents db
+placement is lack of balance info-- overnight trades without a positions table. This occurs in
+single table statements that have only the trades table. For custom Activity statements, its a
+setup choice at the IB website.
+
+In most cases, its is probably possible to figure out the balance by querying the trades in the
+db. The code to do that is not there yet.
 @author: Mike Petersen
-@creation_data: 06/15/19
+@creation_data: 07/8/19
 '''
 
 import math
@@ -76,69 +82,72 @@ class IbStatement:
         tt['Average'] = np.nan
         tt['PL'] = np.nan
         newdf = pd.DataFrame()
+
+        for acct in tt['Account'].unique():
+            accounts = tt[tt['Account'] == acct]
         
-        for ticker in tt['Symbol'].unique():
+            for ticker in accounts['Symbol'].unique():
 
-            LONG = True
-            SHORT = False
+                LONG = True
+                SHORT = False
 
-            tdf = tt[tt['Symbol'] == ticker]
-            tdf = tdf.sort_values(['DateTime'])
-            tdf.reset_index(drop=True, inplace=True)
-            offset = tdf['Quantity'].sum()
-            holding = 0
-            if ticker in tos['Symbol'].unique():
-                oset = tos[tos['Symbol'] == ticker]
-                holding = int(oset['Quantity'].unique()[0])
-                offset = offset - holding
-            balance = -offset
+                tdf = tt[tt['Symbol'] == ticker]
+                tdf = tdf.sort_values(['DateTime'])
+                tdf.reset_index(drop=True, inplace=True)
+                offset = tdf['Quantity'].sum()
+                holding = 0
+                if ticker in tos['Symbol'].unique():
+                    oset = tos[tos['Symbol'] == ticker]
+                    holding = int(oset['Quantity'].unique()[0])
+                    offset = offset - holding
+                balance = -offset
 
-            #Discriminator for first opening transaction
-            primo = False
-            side = LONG
-            
-            # Figure Balance first -- adjust offset for overnight
-            for i, row in tdf.iterrows():
-                quantity = row['Quantity']
-                prevBalance = balance
-                balance = balance + quantity
-                tdf.at[i, 'Balance'] = balance
+                #Discriminator for first opening transaction
+                primo = False
+                side = LONG
+                
+                # Figure Balance first -- adjust offset for overnight
+                for i, row in tdf.iterrows():
+                    quantity = row['Quantity']
+                    prevBalance = balance
+                    balance = balance + quantity
+                    tdf.at[i, 'Balance'] = balance
 
-                # Check for a flipped position. The flipper is figured like Opener; the average
-                # changes, and no PL is taken 
-                if primo and side == LONG and balance < 0:
-                    side = SHORT
-                elif primo and side == SHORT and balance > 0:
-                    side = LONG
+                    # Check for a flipped position. The flipper is figured like Opener; the average
+                    # changes, and no PL is taken 
+                    if primo and side == LONG and balance < 0:
+                        side = SHORT
+                    elif primo and side == SHORT and balance > 0:
+                        side = LONG
 
-                # This the first trade Open; average == price and set the side- 
-                if not primo and balance == row['Quantity']:
-                    
-                    primo = True
-                    average = row['Price']
-                    tdf.at[i, 'Average'] = average
-                    side = LONG if row['Quantity'] >= 0 else SHORT
+                    # This the first trade Open; average == price and set the side- 
+                    if not primo and balance == row['Quantity']:
+                        
+                        primo = True
+                        average = row['Price']
+                        tdf.at[i, 'Average'] = average
+                        side = LONG if row['Quantity'] >= 0 else SHORT
 
-                # Here are openers -- adding to the trade; average changes
-                # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
-                elif (primo and side is LONG and quantity >= 0) or (
-                      primo and side is SHORT and quantity < 0):
-                    newAverage = ((average * prevBalance) + (quantity * row['Price'])) / balance
-                    average = newAverage
-                    tdf.at[i, 'Average'] = average
+                    # Here are openers -- adding to the trade; average changes
+                    # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
+                    elif (primo and side is LONG and quantity >= 0) or (
+                        primo and side is SHORT and quantity < 0):
+                        newAverage = ((average * prevBalance) + (quantity * row['Price'])) / balance
+                        average = newAverage
+                        tdf.at[i, 'Average'] = average
 
-                # Here are closers; PL is figured and check for trade ending
-                elif primo:
-                    # Close Tx, P/L is figured on CLOSING transactions only
-                    tdf.at[i, 'Average'] = average
-                    tdf.at[i, 'PL'] = (average - row['Price']) * quantity
-                    if balance == 0:
-                        primo = False
-                else:
-                    # This should be a first trade for this statmenet/Symbol. Could be Open or
-                    # Close. We are lacking the previous balance so cannot reliably figure the
-                    # average.
-                    print(f'''There is a trade for {row['Symbol']} that lacks a tx.''')
+                    # Here are closers; PL is figured and check for trade ending
+                    elif primo:
+                        # Close Tx, P/L is figured on CLOSING transactions only
+                        tdf.at[i, 'Average'] = average
+                        tdf.at[i, 'PL'] = (average - row['Price']) * quantity
+                        if balance == 0:
+                            primo = False
+                    else:
+                        # This should be a first trade for this statmenet/Symbol. Could be Open or
+                        # Close. We are lacking the previous balance so cannot reliably figure the
+                        # average.
+                        print(f'''There is a trade for {row['Symbol']} that lacks a tx.''')
 
 
             assert tdf.iloc[-1]['Balance'] == holding
@@ -1140,18 +1149,18 @@ def localStuff():
     files = dict()
     files['annual'] = ['U242.csv', getBaseDir]
 
-    # files['stuff'] = ['U2.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
-    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
-    # files['U242'] = ['U242.csv', getDirectory]
-    # files['csvtrades'] = ['644223.csv', getDirectory]
-    # files['multi'] = ['MULTI', getDirectory]
-    # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
-    # files['act'] = ['ActivityStatement.html', getDirectory]
-    # files['atrade'] = ['trades.643495.html', getDirectory]
+    files['stuff'] = ['U2.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
+    files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    files['U242'] = ['U242.csv', getDirectory]
+    files['csvtrades'] = ['644223.csv', getDirectory]
+    files['multi'] = ['MULTI', getDirectory]
+    files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
+    files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    files['act'] = ['ActivityStatement.html', getDirectory]
+    files['atrade'] = ['trades.643495.html', getDirectory]
 
     das = 'trades.csv'                          # Search verbatim with searchParts=False
                                                 # TODO How to reconcile IB versus DAS input?
@@ -1159,20 +1168,21 @@ def localStuff():
     badfiles = []
     goodfiles = []
     for filekey in files:
-        fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
-        # fs = findFilesSinceMonth(d, files[filekey][0])
+        # fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
+        fs = findFilesSinceMonth(d, files[filekey][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
             if x[0]:
                 goodfiles.append(f)
-                print()
-                for key in x[0]:
-                    print(key, list(x[0][key].columns), len(x[0][key]))
+                print("GOOD", f)
+                # for key in x[0]:
+                #     print(key, list(x[0][key].columns), len(x[0][key]))
 
 
-            # if x[1] and not x[0]:
-            #     badfiles.append([f, x[1]])
+            if x[1] and not x[0]:
+                badfiles.append([f, x[1]])
+                print("BAD", f)
             #     msg = f'\nStatement {f} \n{x[1]}'
             #     print(msg)
         # print()
