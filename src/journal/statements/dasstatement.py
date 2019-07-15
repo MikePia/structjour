@@ -24,6 +24,7 @@ Re- doing das Statemnet stuff to save the trades in the db and generally imporve
 
 # from pandas import DataFrame, read_csv
 # import matplotlib.pyplot as plt
+import math
 import os
 import pandas as pd
 import numpy as np
@@ -75,39 +76,84 @@ class DasStatement:
     def askUser(self, df):
         pass
 
+    def figureUnbalancedBAPL(self, tdf):
+        # Going to write this as I locate the different cases for each case cumulative
+        # Then plan to re-write after all case types are found.
+        rc = FinReqCol()
+        LONG = True
+        SHORT = False
+        side = LONG
+        tdf.reset_index(drop=True, inplace=True)
+        foundPrimo = False
+        success = False
+        for i in range(len(tdf)):
+            if tdf.at[i, rc.PL] != 0:
+                # This is a closer
+                average = (tdf.at[i, rc.PL] / tdf.at[i, rc.shares]) + tdf.at[i, rc.price]
+                tdf.at[i, rc.avg] = average
+                tdf.at[i, rc.oc] = 'C'
+                side = SHORT if tdf.at[i, rc.shares] > 0 else LONG
+                for j in range(i-1, -1, -1):
+                    # Iterate backward to beginning trade of statement
+                    if (side == LONG and tdf.at[j, rc.shares] > 0) or (
+                        side == SHORT and tdf.at[j, rc.shares] < 0):
+                        # opener
+                        tdf.at[j, rc.oc] = 'O'
+                        if tdf.at[j+1, rc.oc] == 'C':
+                            tdf.at[j, rc.avg] = average
+                            if math.isclose(tdf.at[j, rc.price], average, abs_tol=1e-5):
+                                # I believe this means this is the opening trade and the unbalanced amount
+                                # is held after and not before
+                                assert j == 0
+                                foundPrimo = True
+                                balance = 0
+                                for k in range(len(tdf)):
+                                    balance = tdf.at[k, rc.shares] + balance
+                                    tdf.at[k, rc.bal] = balance
+                                    success = True
+                    
+        return tdf, success
 
-    def hasOvernight(self, df):
+
+
+
+
+    def figureBA_noPositions(self, df):
         '''
         This is called if the positions table is lacking to detemine if there is missing data
-        for any equities traded today. This is not ideal. Using the positions table is ideal
+        for any equities traded today. This is not ideal. Using the positions table is ideal.
+        For tickers with balanced shares, we cn figure the average based on PL and Shares. For
+        tickers with unbalanced shares, call figureUnbalancedBAPL. For the rare case where 
         '''
         rc = FinReqCol()
         ddf = df.copy()
         actKeys = ddf[rc.acct].unique()
-        swingTrades = list()
+        swingTrades = pd.DataFrame()
+        newTrades = pd.DataFrame()
         for actKey in actKeys:
             act = ddf[ddf[rc.acct] == actKey]
             symKeys = act[rc.ticker].unique()
             for symKey in symKeys:
-                # Swing trades are determined by
-                # 1) unbalanced shares
-                # 2) PL that does not add up to  the average price (but the same number shares are
-                #    held after as before)
-                # Finally,  if it all adds up, it is still possible that there is a held position
-                # and the average price is equal to the average of this statement's first trade and
-                # the same number of shares are held after as before. In this rare case, the PL is
-                # unaffected but the balance is affected. There is no way to detect this case. The
-                # weak solution is to be sure the user knows they are absolutely responsible to
-                # provide the positions table when there are overnight trades. And rather than
-                # grind to a halt, we will allow the error to occur and ignore it until it is
-                # caught by a database entry from an Ibstatement. PL and avg is unaffected so the
-                # trade review is unaffected (as long as we catch it before it is duplicated in the
-                # db)
+                # Signifacant items to figure approach
+                # 1) unbalanced shares -- Call figureUnbalancedBAPL
+                # 2) Balanced shares in which the PL does not add up right -- 
+                #    Call figureUnBalancedBAPL
+                # 3) Balanced share in which the PL does add up but the Balance is wrong. (I don't
+                #    think I have a single example of this or a way to detect it. In this case the
+                #    average will = the price of the first trade but the share balance will differ.
+                #    Plan9=Accept/ignore the error and catch it in the database entries. Neither
+                #    PL nor daily review is affected
+                # 4) For any tickers that figureUnbalancedBAPL fails, call askUserAboutPosition
+                # 3) Everything else can be figured out here.
                 tdf = act[act[rc.ticker] == symKey]
                 tdf.sort_values([rc.date], inplace=True)
                 if tdf[rc.shares].sum() != 0:
-                    swingTrades.append(tdf)
-                    continue
+                    tdfx, success = self.figureUnbalancedBAPL(tdf)
+                    if success:
+                        newTrades = newTrades.append(tdfx)
+                    else:
+                        swingTrades = swingTrades.append(tdf)
+                    break
 
                 pastPrimo = False
                 prevBalance = 0
@@ -142,17 +188,19 @@ class DasStatement:
 
                     # Openers -- adding to the trade. The average changes
                     elif (pastPrimo and side and row[rc.shares] > 0) or (
-                          pastPrimo and not side and row[rc.shares] > 0):
+                          pastPrimo and not side and row[rc.shares] < 0):
                         # Opening trade
                         tdf.at[i, rc.oc] = 'O'
-                        tdf.at[i, rc.avg] = ((average * prevBalance) + (row[rc.shares] * row[rc.price])) / balance
+                        average = ((average * prevBalance) + (row[rc.shares] * row[rc.price])) / balance
+                        tdf.at[i, rc.avg] = average
 
                     # Closers, set Close, check that PL matches, if not send to SwingTrade
                     elif pastPrimo:
                         # Closing trade
-                        if tdf.at[i, rc.avg] = average
-                        if row[rc.PL] != (average - row['Price']) * row[rc.shares]:
-                            swingTrades.append(tdf)
+                        tdf.at[i, rc.avg] = average
+                        avgFig = (average - row['Price']) * row[rc.shares]
+                        if not math.isclose(row[rc.PL], avgFig, abs_tol=1e-5):
+                            swingTrades = swingTrades.append(tdf)
                             break
                             # raise ValueError('That  is a lot of exceptions for code fixin')
                         tdf.at[i, rc.oc] = 'C'
@@ -162,16 +210,18 @@ class DasStatement:
                         # Should be catching swing trades with the PL check in the closers excep
                         # for the ultra rare thing which I will have to painstakingly, with several
                         # fake statements, trigger in a system test
-                        raise ValueError('Do not think this happens.... So what happened???')
-                         
-
-
-
-
-                    print(row)
+                        raise ValueError('Do not think this ever happens.... So what happened???')
+                newTrades = newTrades.append(tdf)
+        newTrades.reset_index(drop=True, inplace=True)
+        swingTrades.reset_index(drop=True, inplace=True)
+        return newTrades, swingTrades
                 
-                
+    def askAboutSwingTrades(self, st):
+        return st, False
+
     def figureBalance(self, df):
+
+        rc = FinReqCol()
 
         reqcols = ['Symb', 'Account', 'Avgcost', 'Unrealized']
         positions = pd.DataFrame(columns=reqcols)
@@ -187,12 +237,15 @@ class DasStatement:
             else:
                 positions = positions[reqcols]
         else:
-            self.hasOvernight(df)
-
-
-
-        df['Balance'] = np.nan
-        df['O/C'] = ''
+            df, swingTrades = self.figureBA_noPositions(df)
+            if not swingTrades.empty:
+                swingTrades, success = self.askAboutSwingTrades(swingTrades)
+                if not success:
+                    return pd.DataFrame()
+                df = df.append(swingTrades)
+                df = df.sort_values([rc.acct, rc.ticker, rc.date])
+                df.reset_index(drop=True, inplace=True)
+            return df
         rc = FinReqCol()
         newdf = pd.DataFrame()
         for acntKey in df[rc.acct].unique():
