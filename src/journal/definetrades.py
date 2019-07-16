@@ -43,7 +43,7 @@ class FinReqCol(object):
         # frcvals are the actual column titles (to be abstracted when we add new input files)
         # frckeys are the abstracted names for use with all file types
         frcvals = ['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty', 'Balance', 'Account',
-                   "P / L", 'Sum', 'Duration', 'Name', 'Date', 'O/C', 'Average', 'Commission']
+                   "PnL", 'Sum', 'Duration', 'Name', 'Date', 'OC', 'Average', 'Commission']
         frckeys = ['tix', 'start', 'time', 'ticker', 'side', 'price', 'shares', 'bal', 'acct',
                    'PL', 'sum', 'dur', 'name', 'date', 'oc', 'avg', 'comm']
         frc = dict(zip(frckeys, frcvals))

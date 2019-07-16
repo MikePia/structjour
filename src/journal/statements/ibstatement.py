@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from journal.definetrades import FinReqCol
 from journal.dfutil import DataFrameUtil
 from journal.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir, getBaseDir
 from journal.statements.ibstatementdb import StatementDB
@@ -73,28 +74,30 @@ class IbStatement:
         self.inputType = None
         self.broker = None
         self.db = db
+        self.rc = FinReqCol()
 
     def figureBAPL(self, tt, tos):
         '''
         Figure Balance, Average price and PL
         '''
-        tt['Balance'] = np.nan
-        tt['Average'] = np.nan
-        tt['PL'] = np.nan
+        rc = self.rc
+        tt[rc.bal] = np.nan
+        tt[rc.avg] = np.nan
+        tt[rc.PL] = np.nan
         newdf = pd.DataFrame()
 
-        for acct in tt['Account'].unique():
-            accounts = tt[tt['Account'] == acct]
+        for acct in tt[rc.acct].unique():
+            accounts = tt[tt[rc.acct] == acct]
         
-            for ticker in accounts['Symbol'].unique():
+            for ticker in accounts[rc.ticker].unique():
 
                 LONG = True
                 SHORT = False
 
-                tdf = tt[tt['Symbol'] == ticker]
+                tdf = tt[tt[rc.ticker] == ticker]
                 tdf = tdf.sort_values(['DateTime'])
                 tdf.reset_index(drop=True, inplace=True)
-                offset = tdf['Quantity'].sum()
+                offset = tdf[rc.shares].sum()
                 holding = 0
                 if ticker in tos['Symbol'].unique():
                     oset = tos[tos['Symbol'] == ticker]
@@ -108,10 +111,10 @@ class IbStatement:
                 
                 # Figure Balance first -- adjust offset for overnight
                 for i, row in tdf.iterrows():
-                    quantity = row['Quantity']
+                    quantity = row[rc.shares]
                     prevBalance = balance
                     balance = balance + quantity
-                    tdf.at[i, 'Balance'] = balance
+                    tdf.at[i, rc.bal] = balance
 
                     # Check for a flipped position. The flipper is figured like Opener; the average
                     # changes, and no PL is taken 
@@ -121,40 +124,41 @@ class IbStatement:
                         side = LONG
 
                     # This the first trade Open; average == price and set the side- 
-                    if not primo and balance == row['Quantity']:
+                    if not primo and balance == row[rc.shares]:
                         
                         primo = True
-                        average = row['Price']
-                        tdf.at[i, 'Average'] = average
-                        side = LONG if row['Quantity'] >= 0 else SHORT
+                        average = row[rc.price]
+                        tdf.at[i, rc.avg] = average
+                        side = LONG if row[rc.shares] >= 0 else SHORT
 
                     # Here are openers -- adding to the trade; average changes
                     # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
                     elif (primo and side is LONG and quantity >= 0) or (
                         primo and side is SHORT and quantity < 0):
-                        newAverage = ((average * prevBalance) + (quantity * row['Price'])) / balance
+                        newAverage = ((average * prevBalance) + (quantity * row[rc.price])) / balance
                         average = newAverage
-                        tdf.at[i, 'Average'] = average
+                        tdf.at[i, rc.avg] = average
 
                     # Here are closers; PL is figured and check for trade ending
                     elif primo:
                         # Close Tx, P/L is figured on CLOSING transactions only
-                        tdf.at[i, 'Average'] = average
-                        tdf.at[i, 'PL'] = (average - row['Price']) * quantity
+                        tdf.at[i, rc.avg] = average
+                        tdf.at[i, rc.PL] = (average - row[rc.price]) * quantity
                         if balance == 0:
                             primo = False
                     else:
-                        # This should be a first trade for this statmenet/Symbol. Could be Open or
-                        # Close. We are lacking the previous balance so cannot reliably figure the
+                        # This should be the first trades for this statmenet/Symbol. 
+                        # We are lacking the previous average so cannot reliably figure the
                         # average.
-                        print(f'''There is a trade for {row['Symbol']} that lacks a tx.''')
+                        print(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
 
 
-            assert tdf.iloc[-1]['Balance'] == holding
-            newdf = newdf.append(tdf)
-        newdf = newdf.sort_values(['Symbol', 'DateTime'])
+                assert tdf.iloc[-1][rc.bal] == holding
+                newdf = newdf.append(tdf)
+        newdf = newdf.sort_values([rc.acct, rc.ticker, 'DateTime'])
         newdf.reset_index(drop=True, inplace=True)
         return newdf
+
     def parseTitle(self, t):
         '''
         The html title tag of the activity statement contains statement info. There are no specs to
@@ -212,33 +216,34 @@ class IbStatement:
         Combine the partial entries in a trades table. The Html refers to the origin of the table.
         This is really more of a removing the details than combining them. This is a table without
         a DataDiscriminator or LevelOfDetail column. The Partials were identified in html with
-        classes and the user identifies them with expanding thingys. So woopdy do for that. The
+        css and js and the user identifies them with expanding thingys. So woopdy do for that. The
         discriminator now is equal[DateTime, Codes, Symbol](Codes must include a P). The first of
         the bunch (with the javascript expanding thingy) has the summary Quantity, 'the rest' add
-        to the first. Filter out 'the rest.'
+        up to the first. Filter out 'the rest.'
         '''
         newdf = pd.DataFrame()
         hasPartials = False
-        tickers = df['Symbol'].unique()
+        rc = self.rc
+        tickers = df[rc.ticker].unique()
         for tickerKey in tickers:
             if tickerKey.lower().startswith('closed') or tickerKey.lower().startswith('wash sale'):
                 hasPartials = True
         if not hasPartials:
             return df
 
-        for tickerKey in df['Symbol'].unique():
+        for tickerKey in df[rc.ticker].unique():
             ticker = df[df['Symbol'] == tickerKey]
             if len(tickerKey) > 6:
                 # This is probably not a ticker assert to verify
-                for code in ticker['Codes'].unique():
+                for code in ticker[rc.oc].unique():
                     assert code.find('O') == -1
                     assert code.find('C') == -1
                     assert code.find('P') == -1
                 continue
 
-            codes = ticker['Codes'].unique()
+            codes = ticker[rc.oc].unique()
             for code in codes:
-                parts = ticker[ticker['Codes'] == code]
+                parts = ticker[ticker[rc.oc] == code]
                 if code.find('P') > -1:
                     if len(parts) == 1:
                         pass
@@ -249,7 +254,7 @@ class IbStatement:
                         curTotal = 0
 
                         for count, (i, row) in enumerate(parts.iterrows()):
-                            share = int(row['Quantity'])
+                            share = int(row[rc.shares])
                             if curTotal == 0:
                                 curTotal = share
                                 addme.append(count)
@@ -465,6 +470,7 @@ class IbStatement:
         '''
         Fix up the idiosyncracies in the tables from a default csv statement'''
         # for key in tables:
+        rc = self.rc
         if 'Statement' in tables.keys():
             t = tables['Statement']
             self.broker = t[t['Field Name'] == 'BrokerName']['Field Value'].unique()[0]
@@ -501,16 +507,16 @@ class IbStatement:
                 raise ValueError('Need to implement combine partials for the default statement')
             elif 'trade' in t['DataDiscriminator'].str.lower():
                 raise ValueError('Need to either implement a cludge or disable the statement')
-            t = t.rename(columns={'T. Price': 'Price', 'Comm/Fee': 'Commission'})
-            t['Account'] = self.account
+            t = t.rename(columns={'T. Price': rc.price, 'Comm/Fee': rc.comm})
+            t[rc.acct] = self.account
             t = t.drop('DataDiscriminator', axis=1)
-            t = t.rename(columns={'Code': 'Codes', 'Date/Time': 'DateTime'})
+            t = t.rename(columns={'Symbol': rc.ticker, 'Code': rc.oc, 'Date/Time': 'DateTime', 'Quantity': rc.shares})
             t = self.unifyDateFormat(t)
 
-            t['Quantity'] = t['Quantity'].str.replace(',', '')
-            t['Quantity'] = pd.to_numeric(t['Quantity'], errors='coerce')
-            t['Price'] = pd.to_numeric(t['Price'], errors='coerce')
-            t['Commission'] = pd.to_numeric(t['Commission'], errors='coerce')
+            t[rc.shares] = t[rc.shares].str.replace(',', '')
+            t[rc.shares] = pd.to_numeric(t[rc.shares], errors='coerce')
+            t[rc.price] = pd.to_numeric(t[rc.price], errors='coerce')
+            t[rc.comm] = pd.to_numeric(t[rc.comm], errors='coerce')
 
             tables['Trades'] = t
         return tables
@@ -645,41 +651,42 @@ class IbStatement:
         # TODO This is the third of three methods that do similar things. Its a bit complex and
         # is bound to produce errors. Eventually, this method, figureBAPL and figureAPL should be
         # combined or at least share code.
+        rc = self.rc
         ibdb = StatementDB()
-        t['Balance'] = np.nan
-        t['Average'] = np.nan
-        t['PL'] = np.nan
+        t[rc.bal] = np.nan
+        t[rc.avg] = np.nan
+        t[rc.PL] = np.nan
         newdf = pd.DataFrame()
-        for ticker in t['Symbol'].unique():
+        for ticker in t[rc.ticker].unique():
 
             LONG = True
             SHORT = False
 
-            tdf = t[t['Symbol'] == ticker]
+            tdf = t[t[rc.ticker] == ticker]
             tdf = tdf.sort_values(['DateTime'])
             tdf.reset_index(drop=True, inplace=True)
             for i, row in tdf.iterrows():
-                x = ibdb.findTrades(row['DateTime'], row['Symbol'], row['Quantity'], row['Account'])
+                x = ibdb.findTrades(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct])
                 # Its possible this can return more than one trade, if it does, note that they share
                 # everything but balance
                 if x:
-                    tdf.at[i, 'Balance'] = x[0][3]
+                    tdf.at[i, rc.bal] = x[0][3]
                     break
             started = False
             balance = 0
             for i, row in tdf.iterrows():
-                if not math.isnan(tdf.at[i, 'Balance']):
+                if not math.isnan(tdf.at[i, rc.bal]):
                     started = True
-                    balance = row['Balance']
+                    balance = row[rc.bal]
                 elif started:
-                    balance = row['Quantity'] + balance
+                    balance = row[rc.shares] + balance
             offset = balance
             if started:
                 pastPrimo = False
                 side = LONG
                 balance = offset
                 for i, row in tdf.iterrows():
-                    quantity = row['Quantity']
+                    quantity = row[rc.shares]
                     if pastPrimo and side == LONG and balance < 0:
                         side = SHORT
                     elif pastPrimo and side == SHORT and balance > 0:
@@ -687,38 +694,38 @@ class IbStatement:
 
                     prevBalance = balance
 
-                    tdf.at[i, 'Balance'] = row['Quantity'] + balance
-                    balance = tdf.at[i, 'Balance']
+                    tdf.at[i, rc.bal] = row[rc.shares] + balance
+                    balance = tdf.at[i, rc.bal]
 
 
                     # This the first trade Open; average == price and set the side- 
-                    if not pastPrimo and balance == row['Quantity']:
+                    if not pastPrimo and balance == row[rc.shares]:
                         
                         pastPrimo = True
-                        average = row['Price']
-                        tdf.at[i, 'Average'] = average
-                        side = LONG if row['Quantity'] >= 0 else SHORT
+                        average = row[rc.price]
+                        tdf.at[i, rc.avg] = average
+                        side = LONG if row[rc.shares] >= 0 else SHORT
 
                     # Here are openers -- adding to the trade; average changes
                     # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
                     elif (pastPrimo and side is LONG and quantity >= 0) or (
                         pastPrimo and side is SHORT and quantity < 0):
-                        newAverage = ((average * prevBalance) + (quantity * row['Price'])) / balance
+                        newAverage = ((average * prevBalance) + (quantity * row[rc.price])) / balance
                         average = newAverage
-                        tdf.at[i, 'Average'] = average
+                        tdf.at[i, rc.avg] = average
 
                     # Here are closers; PL is figured and check for trade ending
                     elif pastPrimo:
                         # Close Tx, P/L is figured on CLOSING transactions only
-                        tdf.at[i, 'Average'] = average
-                        tdf.at[i, 'PL'] = (average - row['Price']) * quantity
+                        tdf.at[i, rc.avg] = average
+                        tdf.at[i, rc.PL] = (average - row[rc.price]) * quantity
                         if balance == 0:
                             primo = False
                     else:
                         # This should be a first trade for this statmenet/Symbol. Could be Open or
                         # Close. We are lacking the previous balance so cannot reliably figure the
                         # average.
-                        print(f'''There is a  trade for {row['Symbol']} that lacks a transaction in this statement''')
+                        print(f'''There is a  trade for {row[rc.ticker]} that lacks a transaction in this statement''')
 
                 newdf = newdf.append(tdf)
             else:
@@ -734,6 +741,7 @@ class IbStatement:
         '''
         df = pd.read_csv(infile)
         self.inputType = 'T_FLEX'
+        rc = self.rc
 
         # This one table file has no tableid
         currentcols = list(df.columns)
@@ -776,7 +784,7 @@ class IbStatement:
         except ValueError:
             msg = f'Unknown date format error: {beg}, {end}'
             return dict(), 
-            
+        df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares})
         x = self.cheatForBAPL(df)
         if not x.empty:
             ibdb = StatementDB()
@@ -856,6 +864,7 @@ class IbStatement:
                we have only EXECUTION, combine the partials. One or the other is required.
             5) Set uniform columns names and date format.
         '''
+        rc = self.rc
         # 1
         if 'Date/Time' in t.columns:
             raise ValueError('wtf ib!?!, Maybe you should hire me to do this stuff.')
@@ -933,6 +942,9 @@ class IbStatement:
         dcolumns, mcolumns = self.verifyAvailableCols(
             list(t.columns), ['LevelOfDetail', 'IBOrderID', 'TradeDate'], 'utility')
         t = t.drop(dcolumns, axis=1)
+        ###### Set all the right names here
+        t = t.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares, 'Codes': rc.oc})
+
         return t, ''
 
     def getFrame(self, fid, df):
@@ -1145,22 +1157,22 @@ def notmain():
 
 def localStuff():
     '''Run local stuff'''
-    d = pd.Timestamp('2018-02-01')
+    d = pd.Timestamp('2018-03-03')
     files = dict()
-    files['annual'] = ['U242.csv', getBaseDir]
+    # files['annual'] = ['U242.csv', getBaseDir]
 
-    files['stuff'] = ['U2.csv', getDirectory]
-    files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    # files['stuff'] = ['U2.csv', getDirectory]
+    # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
+    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
     files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
-    files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
-    files['U242'] = ['U242.csv', getDirectory]
-    files['csvtrades'] = ['644223.csv', getDirectory]
-    files['multi'] = ['MULTI', getDirectory]
-    files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    files['dtr'] = ['DailyTradeReport.html', getDirectory]
-    files['act'] = ['ActivityStatement.html', getDirectory]
-    files['atrade'] = ['trades.643495.html', getDirectory]
+    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    # files['U242'] = ['U242.csv', getDirectory]
+    # files['csvtrades'] = ['644223.csv', getDirectory]
+    # files['multi'] = ['MULTI', getDirectory]
+    # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
+    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    # files['act'] = ['ActivityStatement.html', getDirectory]
+    # files['atrade'] = ['trades.643495.html', getDirectory]
 
     das = 'trades.csv'                          # Search verbatim with searchParts=False
                                                 # TODO How to reconcile IB versus DAS input?

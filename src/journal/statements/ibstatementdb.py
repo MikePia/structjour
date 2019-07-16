@@ -21,6 +21,7 @@ DB archive of all ib statements
 '''
 
 import datetime as dt
+import math
 import os
 import sqlite3
 
@@ -47,6 +48,7 @@ class StatementDB:
         if not db:
             db = 'structjour_test.db'
         self.db = os.path.join(jdir, db)
+        self.rc = FinReqCol()
         self.createTradeTables()
 
         self.holidays = [ 
@@ -63,7 +65,6 @@ class StatementDB:
         self.popHol()
         self.holidays = None
         self.covered = None
-        self.frc = FinReqCol()
 
     def account(self):
         '''Create account table'''
@@ -79,19 +80,20 @@ class StatementDB:
     def createTradeTables(self):
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        cur.execute('''
+        rc = self.rc
+        cur.execute(f'''
             CREATE TABLE if not exists ib_trades (
                 id	INTEGER PRIMARY KEY AUTOINCREMENT,
-                symbol	TEXT NOT NULL,
+                {rc.ticker}	TEXT NOT NULL,
                 datetime	TEXT NOT NULL,
-                quantity	INTEGER NOT NULL,
-                balance INTEGER NOT NULL,
-                price	NUMERIC NOT NULL,
-                average NUMERIC,
-                pl NUMERIC,
-                commission	NUMERIC,
-                codes	TEXT,
-                account	TEXT NOT NULL);''')
+                {rc.shares}	INTEGER NOT NULL,
+                {rc.bal} INTEGER NOT NULL,
+                {rc.price}	NUMERIC NOT NULL,
+                {rc.avg} NUMERIC,
+                {rc.PL} NUMERIC,
+                {rc.comm}	NUMERIC,
+                {rc.oc}	TEXT,
+                {rc.acct}	TEXT NOT NULL);''')
 
         cur.execute('''
             CREATE TABLE if not exists ib_positions (
@@ -116,16 +118,17 @@ class StatementDB:
         conn.commit()
 
     def findTrades(self, datetime, symbol, quantity,  account, cur=None):
+        rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
             cur = conn.cursor()
-        cursor = cur.execute('''
-            SELECT symbol, datetime, quantity, balance, price, average, pl, account
+        cursor = cur.execute(f'''
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct}
                 FROM ib_trades
                     WHERE datetime = ?
-                    AND symbol = ?
-                    AND quantity = ?
-                    AND account = ?
+                    AND {rc.ticker} = ?
+                    AND {rc.shares} = ?
+                    AND {rc.acct} = ?
             ''',
             (datetime, symbol, quantity, account))
         x = cursor.fetchall()
@@ -135,17 +138,18 @@ class StatementDB:
         return False
 
     def findTrade(self, datetime, symbol, quantity, balance, account, cur=None):
+        rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
             cur = conn.cursor()
-        cursor = cur.execute('''
-            SELECT symbol, datetime, quantity, balance, price, average, pl, account
+        cursor = cur.execute(f'''
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct}
                 FROM ib_trades
                     WHERE datetime = ?
-                    AND symbol = ?
-                    AND quantity = ?
-                    AND balance = ?
-                    AND account = ?
+                    AND {rc.ticker} = ?
+                    AND {rc.shares} = ?
+                    AND {rc.bal} = ?
+                    AND {rc.acct} = ?
             ''',
             (datetime, symbol, quantity, balance, account))
         x = cursor.fetchall()
@@ -159,17 +163,18 @@ class StatementDB:
 
     def insertTrade(self, row, cur):
         '''Insert a trade. Commit not included'''
-        if self.findTrade(row['DateTime'], row['Symbol'], row['Quantity'], row['Balance'], row['Account'], cur):
+        rc = self.rc
+        if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.bal], row[rc.acct], cur):
             return True
-        if 'Codes' in row.keys():
-            codes = row['Codes']
+        if rc.oc in row.keys():
+            codes = row[rc.oc]
         else:
             codes = ''
-        x = cur.execute(''' 
-            INSERT INTO ib_trades (symbol, datetime, quantity, price, commission, codes, account, balance, average, pl)
+        x = cur.execute(f''' 
+            INSERT INTO ib_trades ({rc.ticker}, datetime, {rc.shares}, {rc.price}, {rc.comm}, {rc.oc}, {rc.acct}, {rc.bal}, {rc.avg}, {rc.PL})
             VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (row['Symbol'], row['DateTime'], row['Quantity'], row['Price'], row['Commission'],
-             codes, row['Account'], row['Balance'], row['Average'], row['PL']))
+            (row[rc.ticker], row['DateTime'], row[rc.shares], row[rc.price], row[rc.comm],
+             codes, row[rc.acct], row[rc.bal], row[rc.avg], row[rc.PL]))
         if x.rowcount == 1:
             return True
         return False
@@ -242,10 +247,10 @@ class StatementDB:
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        found = cur.execute('''
-            SELECT symbol, datetime, quantity, balance, price, average, pl, account FROM ib_trades
-
-            WHERE average IS NULL
+        rc = self.rc
+        found = cur.execute(f'''
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct} FROM ib_trades
+            WHERE {rc.avg} IS NULL
         ''')
         badTrades = found.fetchall()
         for badTrade in badTrades:
@@ -258,11 +263,11 @@ class StatementDB:
             symbol = bt['sym']
             account = bt['act']
 
-            prevTrades = cur.execute('''
-                SELECT symbol, datetime, quantity, balance, price, average, pl, account FROM ib_trades
-                    WHERE symbol = ?
+            prevTrades = cur.execute(f'''
+                SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct} FROM ib_trades
+                    WHERE {rc.ticker} = ?
                     AND datetime < ?
-                    AND account = ?
+                    AND {rc.acct} = ?
                     ORDER BY datetime DESC
                 ''', (symbol, bt['dt'], account))
             prevTrades = prevTrades.fetchall()
@@ -276,7 +281,7 @@ class StatementDB:
                 else:
                     # We have continuous coverage...
                     # We can update badTrade if we found a trade that has either
-                    # 1) both average and PL (PL tells us if we are long or short) 
+                    # 1) both average and PL (PL tells us if we are long or short-(closing trade)) 
                     # or 2) A trade opener identified by quantity == balance
                     # print()
                     LONG = True
@@ -306,12 +311,12 @@ class StatementDB:
                             balance = balance + ft['qty']
 
                             if not ft['bal']:
-                                cur.execute('''
-                                    UPDATE ib_trades SET balance = ?
-                                        WHERE symbol = ?
+                                cur.execute(f'''
+                                    UPDATE ib_trades SET {rc.bal} = ?
+                                        WHERE {rc.ticker} = ?
                                         AND datetime = ?
-                                        AND quantity = ?
-                                        AND account = ?''', (balance, ft['sym'], pt['dt'], pt['qty'], pt['act']))
+                                        AND {rc.shares} = ?
+                                        AND {rc.acct} = ?''', (balance, ft['sym'], pt['dt'], pt['qty'], pt['act']))
                                 # side = LONG if quantity >= 0 else SHORT
                                 ft['bal'] = balance
 
@@ -328,7 +333,8 @@ class StatementDB:
                             if not pastPrimo and ft['bal'] == ft['qty']:
                                 
                                 pastPrimo = True
-                                average = ft['avg']
+                                average = ft['p']
+                                assert math.isclose(ft['p'], ft['avg'], abs_tol=1e-5)
 
                                 #average should be set for this one
                                 # tdf.at[i, 'Average'] = average
@@ -341,24 +347,26 @@ class StatementDB:
                                 newAverage = ((average * prevBalance) + (ft['qty'] * ft['p'])) / ft['bal']
                                 average = newAverage
 
-                                cur.execute('''
-                                    UPDATE ib_trades SET average = ?
-                                        WHERE symbol = ?
-                                        AND datetime = ?
-                                        AND quantity = ?
-                                        AND account = ?''', (average, ft['sym'], pt['dt'], pt['qty'], pt['act']))
+                                if not ft['avg']:
+
+                                    cur.execute(f'''
+                                        UPDATE ib_trades SET {rc.avg} = ?
+                                            WHERE {rc.ticker} = ?
+                                            AND datetime = ?
+                                            AND {rc.shares} = ?
+                                            AND {rc.acct} = ?''', (average, ft['sym'], ft['dt'], ft['qty'], ft['act']))
 
 
                             # Here are closers; PL is figured and check for trade ending
                             elif pastPrimo:
                                 # Close Tx, P/L is figured on CLOSING transactions only
                                 pl = (average - ft['p']) * ft['qty']
-                                x = cur.execute('''
-                                    UPDATE ib_trades SET average = ?, pl = ?
-                                        WHERE symbol = ?
+                                x = cur.execute(f'''
+                                    UPDATE ib_trades SET {rc.avg} = ?, {rc.PL} = ?
+                                        WHERE {rc.ticker} = ?
                                         AND datetime = ?
-                                        AND quantity = ?
-                                        AND account = ?''', (average, pl, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                        AND {rc.shares} = ?
+                                        AND {rc.acct} = ?''', (average, pl, ft['sym'], ft['dt'], ft['qty'], ft['act']))
                                 if ft['bal'] == 0:
                                     pastPrimo = False
                             else:
@@ -390,21 +398,21 @@ class StatementDB:
                                     newAverage = ((average * balance) + (ft['qty'] * ft['p'])) / ft['bal']
                                     average = newAverage
                                     balance = ft['bal']
-                                    cur.execute('''
-                                    UPDATE ib_trades SET average = ?
-                                        WHERE symbol = ?
+                                    cur.execute(f'''
+                                    UPDATE ib_trades SET {rc.avg} = ?
+                                        WHERE {rc.ticker} = ?
                                         AND datetime = ?
-                                        AND quantity = ?
-                                        AND account = ?''', (average, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                        AND {rc.shares} = ?
+                                        AND {rc.acct} = ?''', (average, ft['sym'], ft['dt'], ft['qty'], ft['act']))
                                 # Closer. Enter PL and check for last trade
                                 elif average:
                                     pl = (average - ft['p']) * ft['qty']
-                                    x = cur.execute('''
-                                        UPDATE ib_trades SET average = ?, pl = ?
-                                            WHERE symbol = ?
+                                    x = cur.execute(f'''
+                                        UPDATE ib_trades SET {rc.avg} = ?, {rc.PL} = ?
+                                            WHERE {rc.ticker} = ?
                                             AND datetime = ?
-                                            AND quantity = ?
-                                            AND account = ?''', (average, pl, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                            AND {rc.shares} = ?
+                                            AND {rc.acct} = ?''', (average, pl, ft['sym'], ft['dt'], ft['qty'], ft['act']))
                                     if ft['bal'] == 0:
                                         average = None
                             elif ft['avg']:
@@ -508,6 +516,7 @@ class StatementDB:
         beg = pd.Timestamp(beg).date()
         eformat = '%Y%m%d;%H%M%S'
         bformat = '%Y%m%d'
+        rc = self.rc
 
         if not end:
             end = pd.Timestamp(beg.year, beg.month, beg.day, 23, 59, 59)
@@ -520,12 +529,11 @@ class StatementDB:
             return []
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        frc = self.frc
-        cols = [frc.ticker, frc.date, frc.shares, frc.bal, frc.price, frc.avg, frc.comm, frc.acct,
-                frc.oc, frc.PL]
-        x = cur.execute('''
-            SELECT symbol, datetime, quantity, balance, price, average,
-            commission, account, codes, pl
+        cols = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.comm, rc.acct,
+                rc.oc, rc.PL]
+        x = cur.execute(f'''
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
+            {rc.comm}, {rc.acct}, {rc.oc}, {rc.PL}
                     FROM ib_trades
                     WHERE datetime >= ?
                     AND datetime <= ?
@@ -602,36 +610,16 @@ class StatementDB:
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
+        rc = self.rc
         cur.execute('''
-            SELECT symbol, datetime, quantity, balance FROM ib_trades
-                WHERE account = ?
-                AND symbol = ?
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal} FROM ib_trades
+                WHERE {rc.acct} = ?
+                AND {rc.ticker} = ?
                 AND datetime >= ?
                 AND datetime <= ?
                 ORDER BY datetime''', (account, sym, daMin, daMax))
         found = cur.fetchall()
         return found
-
-    def genericTbl(self, tabname, fields):
-        '''
-        Create a table with an id plus all the fields in fields as TEXT
-        '''
-        tabname = tabname.lower().replace(' ', '_').replace(';', '')
-        query = f'''
-            CREATE TABLE if not exists {tabname} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,'''
-        for field in fields:
-            query = query + f'''
-                {field} TEXT,'''
-
-            print(query)
-        query = query[:-1]
-        query = query + ')'
-        print(query)
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cur.execute(query)
-        conn.commit()
 
 def notmain():
     settings = QSettings('zero_substance', 'structjour')

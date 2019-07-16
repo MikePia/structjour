@@ -302,6 +302,8 @@ class DasStatement:
             df.at[i, 'Date'] = daDate
         return df
 
+    
+
     def getTrades(self, listDf=None):
         '''
         Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
