@@ -117,7 +117,7 @@ class StatementDB:
                 name TEXT)''')
         conn.commit()
 
-    def findTrades(self, datetime, symbol, quantity,  account, cur=None):
+    def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
         rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
@@ -127,17 +127,18 @@ class StatementDB:
                 FROM ib_trades
                     WHERE datetime = ?
                     AND {rc.ticker} = ?
+                    AND {rc.price} = ?
                     AND {rc.shares} = ?
                     AND {rc.acct} = ?
             ''',
-            (datetime, symbol, quantity, account))
+            (datetime, symbol, price, quantity, account))
         x = cursor.fetchall()
         if x:
             return x
         # print('Adding a trade', row['Symbol'], row['DateTime'])
         return False
 
-    def findTrade(self, datetime, symbol, quantity, balance, account, cur=None):
+    def findTrade(self, datetime, symbol, price, quantity, balance, account, cur=None):
         rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
@@ -147,11 +148,12 @@ class StatementDB:
                 FROM ib_trades
                     WHERE datetime = ?
                     AND {rc.ticker} = ?
+                    AND {rc.price} = ?
                     AND {rc.shares} = ?
                     AND {rc.bal} = ?
                     AND {rc.acct} = ?
             ''',
-            (datetime, symbol, quantity, balance, account))
+            (datetime, symbol, price, quantity, balance, account))
         x = cursor.fetchall()
         if x:
             if len(x) !=1:
@@ -164,7 +166,7 @@ class StatementDB:
     def insertTrade(self, row, cur):
         '''Insert a trade. Commit not included'''
         rc = self.rc
-        if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.bal], row[rc.acct], cur):
+        if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.price], row[rc.shares], row[rc.bal], row[rc.acct], cur):
             return True
         if rc.oc in row.keys():
             codes = row[rc.oc]
@@ -256,7 +258,7 @@ class StatementDB:
         for badTrade in badTrades:
             bt = dict()
             bt['sym'], bt['dt'], bt['qty'], bt['bal'], bt['p'], bt['avg'], bt['pl'], bt['act'] = badTrade
-            dbTrade = self.findTrade(bt['dt'], bt['sym'], bt['qty'], bt['bal'], bt['act'], cur)
+            dbTrade = self.findTrade(bt['dt'], bt['sym'],bt['p'], bt['qty'], bt['bal'], bt['act'], cur)
             if dbTrade and dbTrade[0][5]:
                 print('Already fixed this one', dbTrade)
                 continue

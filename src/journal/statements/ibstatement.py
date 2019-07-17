@@ -232,7 +232,7 @@ class IbStatement:
             return df
 
         for tickerKey in df[rc.ticker].unique():
-            ticker = df[df['Symbol'] == tickerKey]
+            ticker = df[df[rc.ticker] == tickerKey]
             if len(tickerKey) > 6:
                 # This is probably not a ticker assert to verify
                 for code in ticker[rc.oc].unique():
@@ -273,6 +273,7 @@ class IbStatement:
         '''
         Fix the idiosyncracies in the tables from an html IB Statement
         '''
+        rc = self.rc
         keys = list(tabd.keys())
         for key in keys:
             if key in ['OpenPositions', 'Transactions', 'Trades', 'LongOpenPositions',
@@ -287,14 +288,15 @@ class IbStatement:
                                                                     'tbl' + key)
                     df = df[ourcols]
                 if key == 'Trades':
-                    df = df.rename(columns={'Acct ID': 'Account', 'Trade Date/Time': 'DateTime',
-                                            'Comm': 'Commission'})
+                    df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares, 'Acct ID': rc.acct, 'Trade Date/Time': 'DateTime',
+                                            'Comm': rc.comm})
                     df = self.unifyDateFormat(df)
                 if key == 'Transactions':
-                    df = df.rename(columns={'Date/Time': 'DateTime', 'T. Price': 'Price',
-                                            'Comm/Fee': 'Commission', 'Code': 'Codes'})
+                    df = df.rename(columns={'Symbol': rc.ticker, 'Date/Time': 'DateTime',
+                                            'T. Price': rc.price, 'Comm/Fee': rc.comm,
+                                            'Code': rc.oc, 'Quantity': rc.shares})
 
-                    df['Account'] = self.account
+                    df[rc.acct] = self.account
                     df = self.fixNmericTypes(df)
                     df = self.combinePartialsHtml(df)
                     df = self.unifyDateFormat(df)
@@ -325,8 +327,8 @@ class IbStatement:
                 beg = tabd['Trades']['DateTime'].min()
                 end = tabd['Trades']['DateTime'].max()
                 try:
-                    beg = pd.Timestamp(beg).date()
-                    end = pd.Timestamp(end).date()
+                    self.beginDate = pd.Timestamp(beg).date()
+                    self.endDate = pd.Timestamp(end).date()
                 except ValueError:
                     print('Failed to get date from trades file')
             assert self.beginDate
@@ -385,10 +387,11 @@ class IbStatement:
 
             ibdb = StatementDB()
             ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, posTab)
-        for key in tables:
-            tablenames[key] = key
-        tablenames[tabKey] = tabKey
-        return tables, tablenames
+            for key in tables:
+                tablenames[key] = key
+            tablenames[tabKey] = tabKey
+            return tables, tablenames
+        return dict(), 'This statement lacks any overnight information.'
 
     def openIBStatement(self, infile):
         '''
@@ -414,7 +417,8 @@ class IbStatement:
             return self.openActivityFlexCSV(df)
 
         elif df.iloc[0][0] == 'ClientAccountID':
-            return self.openTradeFlexCSV(infile)
+            return dict(), "Unsupported file type. Lacks all overnight information."
+            # return self.openTradeFlexCSV(infile)
 
         elif df.iloc[0][0] == 'Statement':
             # This is a multi table statement like a default statement
@@ -423,13 +427,17 @@ class IbStatement:
         return dict(), dict()
 
     def fixNmericTypes(self, t):
+        rc = self.rc
         if 'Quantity' in t.columns:
             t['Quantity'] = t['Quantity'].str.replace(',', '')
             t['Quantity'] = pd.to_numeric(t['Quantity'], errors='coerce')
-        if 'Price' in t.columns:
-            t['Price'] = pd.to_numeric(t['Price'], errors='coerce')
-        if 'Commission' in t.columns:
-            t['Commission'] = pd.to_numeric(t['Commission'], errors='coerce')
+        elif rc.shares in t.columns:
+            t[rc.shares] = t[rc.shares].str.replace(',', '')
+            t[rc.shares] = pd.to_numeric(t[rc.shares], errors='coerce')
+        if rc.price in t.columns:
+            t[rc.price] = pd.to_numeric(t[rc.price], errors='coerce')
+        if rc.comm in t.columns:
+            t[rc.comm] = pd.to_numeric(t[rc.comm], errors='coerce')
         return t
 
     def unifyDateFormat(self, df):
@@ -539,7 +547,8 @@ class IbStatement:
             t = df[df[0] == key]
             headers = t[t[1].str.lower() == 'header']
             if len(headers) > 1:
-                msg = '\nMulti account statment not supported.'
+                msg = f'This statement has {len(headers)} {key} tables.'
+                msg = msg + '\nMulti account statment not supported.'
                 return dict(), msg
             assert t.iloc[0][1].lower() == 'header'
             currentcols = list(t.columns)
@@ -666,7 +675,7 @@ class IbStatement:
             tdf = tdf.sort_values(['DateTime'])
             tdf.reset_index(drop=True, inplace=True)
             for i, row in tdf.iterrows():
-                x = ibdb.findTrades(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct])
+                x = ibdb.findTrades(row['DateTime'], row[rc.ticker], row[rc.price], row[rc.shares], row[rc.acct])
                 # Its possible this can return more than one trade, if it does, note that they share
                 # everything but balance
                 if x:
@@ -790,10 +799,12 @@ class IbStatement:
             ibdb = StatementDB()
             ibdb.processStatement(x, self.account, self.beginDate, self.endDate)
             df = x.copy()
+            return {'Trades': df}, {'Trades': 'Trades'}
+        
 
         # print('Trades processed and returned. This statement has no positions info and no')
         # print("The Share Balance, average and PL cannot be relialby determined for overnight trades")
-        # print("Trades are added to the database")
+        print("Trades are not added to the database")
         return {'Trades': df}, {'Trades': 'Trades'}
 
     # Conversion Stuff
@@ -1159,13 +1170,13 @@ def localStuff():
     '''Run local stuff'''
     d = pd.Timestamp('2018-03-03')
     files = dict()
-    # files['annual'] = ['U242.csv', getBaseDir]
+    files['annual'] = ['U242.csv', getBaseDir]
 
     # files['stuff'] = ['U2.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
-    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
+    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]/
     # files['U242'] = ['U242.csv', getDirectory]
     # files['csvtrades'] = ['644223.csv', getDirectory]
     # files['multi'] = ['MULTI', getDirectory]
@@ -1180,8 +1191,8 @@ def localStuff():
     badfiles = []
     goodfiles = []
     for filekey in files:
-        # fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
-        fs = findFilesSinceMonth(d, files[filekey][0])
+        fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
+        # fs = findFilesSinceMonth(d, files[filekey][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
@@ -1194,7 +1205,7 @@ def localStuff():
 
             if x[1] and not x[0]:
                 badfiles.append([f, x[1]])
-                print("BAD", f)
+                print("\nBAD", f, '\n', x[1])
             #     msg = f'\nStatement {f} \n{x[1]}'
             #     print(msg)
         # print()
