@@ -342,6 +342,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
             return 0, pd.DataFrame(), None
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
+    removeMe = list()
     for key in maDict:
         # VWAP is a reference that begins at market open. If the open trade precedes VWAP
         # we will exclude it from the chart. Other possibilities: give VWAP a start time or
@@ -350,9 +351,14 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         # Better suggestions?
         if key == 'vwap':
             if len(maDict['vwap']) < 1 or ( df.index[0] < maDict['vwap'].index[0]):
-                del maDict['vwap']
+                removeMe.append(key)
+                # del maDict['vwap']
         else:
-            assert len(df) == len(maDict[key])
+            if len(df) != len(maDict[key]):
+                removeMe.append(key)
+                # del maDict[key]
+    for key in removeMe:
+        del maDict[key]
 
     ib.disconnect()
     return len(df), df, maDict
@@ -379,8 +385,8 @@ def isConnected():
 
 def main():
     '''test run'''
-    start = dt.datetime(2019, 5, 15, 9, 19)
-    end = dt.datetime(2019, 5, 15, 15, 5)
+    start = dt.datetime(2019, 7, 15, 9, 19)
+    end = dt.datetime(2019, 7, 15, 15, 5)
     minutes = 1
     x, ddf, maDict = getib_intraday('SQ', start, end, minutes)
     print(x, ddf.tail(3))
