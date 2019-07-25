@@ -33,6 +33,21 @@ from journal.definetrades import FinReqCol
 
 # pylint: disable = C0103
 
+def isNumeric(l):
+    
+    '''
+    Not to be confused with str.isnumeric. Takes an arg or a list and tests if all members are
+    numeric types and not NAN.
+    '''
+    ll = list()
+    if not isinstance(l, list):
+        ll.append(l)
+    else:
+        ll = l
+    for t in ll:
+        if not isinstance(t, (int, float)) and not math.isnan(t):
+            return False
+    return True
 
 
 class StatementDB:
@@ -86,8 +101,8 @@ class StatementDB:
                 id	INTEGER PRIMARY KEY AUTOINCREMENT,
                 {rc.ticker}	TEXT NOT NULL,
                 datetime	TEXT NOT NULL,
-                {rc.shares}	INTEGER NOT NULL,
-                {rc.bal} INTEGER NOT NULL,
+                {rc.shares}	INTEGER NOT NULL CHECK({rc.shares} != 0),
+                {rc.bal} INTEGER,
                 {rc.price}	NUMERIC NOT NULL,
                 {rc.avg} NUMERIC,
                 {rc.PL} NUMERIC,
@@ -138,7 +153,7 @@ class StatementDB:
         # print('Adding a trade', row['Symbol'], row['DateTime'])
         return False
 
-    def findTrade(self, datetime, symbol, price, quantity, balance, account, cur=None):
+    def findTrade(self, datetime, symbol, quantity, account, cur=None):
         rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
@@ -148,12 +163,10 @@ class StatementDB:
                 FROM ib_trades
                     WHERE datetime = ?
                     AND {rc.ticker} = ?
-                    AND {rc.price} = ?
                     AND {rc.shares} = ?
-                    AND {rc.bal} = ?
                     AND {rc.acct} = ?
             ''',
-            (datetime, symbol, price, quantity, balance, account))
+            (datetime, symbol, quantity, account))
         x = cursor.fetchall()
         if x:
             if len(x) !=1:
@@ -166,7 +179,7 @@ class StatementDB:
     def insertTrade(self, row, cur):
         '''Insert a trade. Commit not included'''
         rc = self.rc
-        if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.price], row[rc.shares], row[rc.bal], row[rc.acct], cur):
+        if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct], cur):
             return True
         if rc.oc in row.keys():
             codes = row[rc.oc]
@@ -258,7 +271,7 @@ class StatementDB:
         for badTrade in badTrades:
             bt = dict()
             bt['sym'], bt['dt'], bt['qty'], bt['bal'], bt['p'], bt['avg'], bt['pl'], bt['act'] = badTrade
-            dbTrade = self.findTrade(bt['dt'], bt['sym'],bt['p'], bt['qty'], bt['bal'], bt['act'], cur)
+            dbTrade = self.findTrade(bt['dt'], bt['sym'], bt['qty'], bt['act'], cur)
             if dbTrade and dbTrade[0][5]:
                 print('Already fixed this one', dbTrade)
                 continue
@@ -291,9 +304,10 @@ class StatementDB:
                     
                     # if pt['avg'] and pt['qty'] == pt['bal']:
                     if pt['avg'] and pt['bal'] == pt['qty']:
+                        # Found Trade opener good trade
                         fixthese.append(prevTrade)
                         fixthese.insert(0, badTrade)
-                        fixthese = reversed(fixthese)
+                        fixthese_r = reversed(fixthese)
 
                         #######
                         balance = 0
@@ -301,14 +315,11 @@ class StatementDB:
                         pastPrimo = False
                         side = LONG
                         
-                        for fixthis in fixthese:
+                        for fixthis in fixthese_r:
                             ft = dict()
                             ft['sym'], ft['dt'], ft['qty'], ft['bal'], ft['p'], ft['avg'], ft['pl'], ft['act'] = fixthis
 
-
                             # Figure Balance first -- adjust offset for overnight
-                            # for i, row in tdf.iterrows():
-                            # quantity = ft['qty']
                             prevBalance = balance
                             balance = balance + ft['qty']
 
@@ -318,7 +329,7 @@ class StatementDB:
                                         WHERE {rc.ticker} = ?
                                         AND datetime = ?
                                         AND {rc.shares} = ?
-                                        AND {rc.acct} = ?''', (balance, ft['sym'], pt['dt'], pt['qty'], pt['act']))
+                                        AND {rc.acct} = ?''', (balance, pt['sym'], pt['dt'], pt['qty'], pt['act']))
                                 # side = LONG if quantity >= 0 else SHORT
                                 ft['bal'] = balance
 
@@ -380,23 +391,59 @@ class StatementDB:
                         break
                             #######
                     elif pt['avg'] and pt['pl']:
+                        # Found a good closer (has PL and avg)
                         fixthese.append(prevTrade)
                         fixthese.insert(0, badTrade)
                         fixthese_r = reversed(fixthese)
+
                         average = None
+                        nextTrade = False
+                        pastPrimo = False
                         for fixthis in fixthese_r:
                             print(fixthis)
                             ft = dict()
                             ft['sym'], ft['dt'], ft['qty'], ft['bal'], ft['p'], ft['avg'], ft['pl'], ft['act'] = fixthis
-                            if ft['pl']:
+                            if isNumeric([ft['pl'], ft['bal'], ft['avg']]) and not pastPrimo:
+                                # found a good trade closer
+                                pastPrimo = True
                                 side = LONG if ft['qty'] < 0 else SHORT
                                 balance = ft['bal']
                                 average = ft['avg']
+                                if ft['bal'] == 0:
+                                    # Found a trade ender
+                                    nextTrade = True
+                            elif nextTrade:
+                                # This is a baginning trade opener. We know because it was
+                                # preceeded by bal==0, fix and DB UPDATE
+                                nextTrade = False
+                                if not ft['bal'] or math.isnan(ft['bal']):
+                                    ft['bal'] = ft['qty']
+                                else:
+                                    assert ft[rc.bal] == ft['qty']
+
+                                if not ft['avg'] or math.isnan(ft['avg']):
+                                    ft['avg'] = ft['p']
+                                else:
+                                    assert math.isclose(ft['avg'], ft['p'], abs_tol=1e-5)
+                                average = ft['avg']
+                                prevBal = ft['bal']
+                                pl = 0
+
+                                x = cur.execute(f'''
+                                    UPDATE ib_trades SET {rc.avg} = ?, {rc.PL} = ?, {rc.bal} = ?
+                                        WHERE {rc.ticker} = ?
+                                        AND datetime = ?
+                                        AND {rc.shares} = ?
+                                        AND {rc.acct} = ?''', (average, pl, prevBal, ft['sym'], ft['dt'], ft['qty'], ft['act']))
+                                nextTrade = False
+                                continue
+
+                                    
                             elif average and not ft['avg']:
-                                # Opener
-                                # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance 
                                 if (side is LONG and ft['qty'] >= 0) or (
                                     side is SHORT and ft['qty'] < 0):
+                                    # Opener
+                                    # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance 
                                     newAverage = ((average * balance) + (ft['qty'] * ft['p'])) / ft['bal']
                                     average = newAverage
                                     balance = ft['bal']
@@ -406,8 +453,8 @@ class StatementDB:
                                         AND datetime = ?
                                         AND {rc.shares} = ?
                                         AND {rc.acct} = ?''', (average, ft['sym'], ft['dt'], ft['qty'], ft['act']))
-                                # Closer. Enter PL and check for last trade
                                 elif average:
+                                    # Closer. Enter PL and check for last trade
                                     pl = (average - ft['p']) * ft['qty']
                                     x = cur.execute(f'''
                                         UPDATE ib_trades SET {rc.avg} = ?, {rc.PL} = ?
@@ -424,14 +471,6 @@ class StatementDB:
                             else:
                                 raise ValueError('What else we got here?')
                         conn.commit()
-
-
-
-
-                                
-
-
-
                         break
                     else:
                         fixthese.append(prevTrade)
@@ -441,6 +480,7 @@ class StatementDB:
         Processs the trade, positions, ancd covered tables using the Trades table and the 
         OpenPositions table.
         '''
+        rc = self.rc
         assert begin
         # print(begin, type(begin), end, type(end))
         assert isinstance(begin, dt.date)
@@ -454,7 +494,9 @@ class StatementDB:
             if self.insertTrade(row, cur):
                 count = count + 1
         if count == len(tdf):
-            self.coveredDates(begin, end, account, cur)
+            accounts = tdf[rc.acct].unique()
+            for account in accounts:
+                self.coveredDates(begin, end, account, cur)
         else:
             print('Not all of those trades processed')
         self.insertPositions(cur, openPos)
@@ -547,7 +589,7 @@ class StatementDB:
         # print()
         return pd.DataFrame()
 
-    def getUncoveredDays(self, account, beg='20180301', end=None, usecache=True):
+    def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
         '''
         Get Market days between beg and end for which we are not covered by an IB statement.
         :account:
