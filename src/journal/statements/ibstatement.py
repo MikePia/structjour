@@ -106,6 +106,7 @@ class IbStatement:
                 balance = -offset
 
                 #Discriminator for first opening transaction
+                # TODO account for account in tos
                 primo = False
                 side = LONG
                 
@@ -291,19 +292,22 @@ class IbStatement:
                     df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares, 'Acct ID': rc.acct, 'Trade Date/Time': 'DateTime',
                                             'Comm': rc.comm})
                     df = self.unifyDateFormat(df)
+                    df = self.combineOrdersByTime(df)
+
                 if key == 'Transactions':
                     df = df.rename(columns={'Symbol': rc.ticker, 'Date/Time': 'DateTime',
                                             'T. Price': rc.price, 'Comm/Fee': rc.comm,
                                             'Code': rc.oc, 'Quantity': rc.shares})
 
                     df[rc.acct] = self.account
-                    df = self.fixNmericTypes(df)
+                    df = self.fixNumericTypes(df)
                     df = self.combinePartialsHtml(df)
                     df = self.unifyDateFormat(df)
+                    df = self.combineOrdersByTime(df)
                     key = 'Trades'
                 else:
                     # small cringe
-                    df = self.fixNmericTypes(df)
+                    df = self.fixNumericTypes(df)
                 tabd[key] = df.copy()
 
             elif key == 'AccountInformation':
@@ -426,7 +430,7 @@ class IbStatement:
             return self.getTablesFromDefaultStatement(df)
         return dict(), dict()
 
-    def fixNmericTypes(self, t):
+    def fixNumericTypes(self, t):
         rc = self.rc
         if 'Quantity' in t.columns:
             t['Quantity'] = t['Quantity'].str.replace(',', '')
@@ -474,6 +478,19 @@ class IbStatement:
             msg = f'Failed to parse the statement date period: {period}'
             print(msg)
 
+    def combinePartialsDefaultCSV(self, t):
+        if 'order' in t['DataDiscriminator'].str.lower().unique():
+            t = t[t['DataDiscriminator'].str.lower() == 'order']
+        elif 'execution' in t['DataDiscriminator'].str.lower():
+            # TODO
+            raise ValueError('Need to implement combine partials for the default statement')
+        elif 'trade' in t['DataDiscriminator'].str.lower():
+            raise ValueError('Need to either implement a cludge or disable the statement')
+
+        t = self.fixNumericTypes(t)
+
+        return self.combineOrdersByTime(t)
+
     def doctorDefaultCSVStatement(self, tables, mcd):
         '''
         Fix up the idiosyncracies in the tables from a default csv statement'''
@@ -508,23 +525,13 @@ class IbStatement:
             tables['OpenPositions'] = t
         if 'Trades' in tables.keys():
             t = tables['Trades']
-            if 'order' in t['DataDiscriminator'].str.lower().unique():
-                t = t[t['DataDiscriminator'].str.lower() == 'order']
-            elif 'execution' in t['DataDiscriminator'].str.lower():
-                # TODO
-                raise ValueError('Need to implement combine partials for the default statement')
-            elif 'trade' in t['DataDiscriminator'].str.lower():
-                raise ValueError('Need to either implement a cludge or disable the statement')
-            t = t.rename(columns={'T. Price': rc.price, 'Comm/Fee': rc.comm})
+            t = t.rename(columns={'T. Price': rc.price, 'Comm/Fee': rc.comm, 'Symbol': rc.ticker,
+                                  'Code': rc.oc, 'Date/Time': 'DateTime', 'Quantity': rc.shares})
             t[rc.acct] = self.account
-            t = t.drop('DataDiscriminator', axis=1)
-            t = t.rename(columns={'Symbol': rc.ticker, 'Code': rc.oc, 'Date/Time': 'DateTime', 'Quantity': rc.shares})
             t = self.unifyDateFormat(t)
+            t = self.combinePartialsDefaultCSV(t)
 
-            t[rc.shares] = t[rc.shares].str.replace(',', '')
-            t[rc.shares] = pd.to_numeric(t[rc.shares], errors='coerce')
-            t[rc.price] = pd.to_numeric(t[rc.price], errors='coerce')
-            t[rc.comm] = pd.to_numeric(t[rc.comm], errors='coerce')
+            t = t.drop('DataDiscriminator', axis=1)
 
             tables['Trades'] = t
         return tables
@@ -586,8 +593,8 @@ class IbStatement:
             mcd[key] = missingcols
             tables[key] = t
             tablenames[key] = key
-        tables = self.doctorDefaultCSVStatement(tables, mcd)
 
+        tables = self.doctorDefaultCSVStatement(tables, mcd)
         if 'Trades' not in tables.keys():
             # This should maybe be a dialog
             msg = 'The statment lacks a trades table'
@@ -801,21 +808,60 @@ class IbStatement:
             df = x.copy()
             return {'Trades': df}, {'Trades': 'Trades'}
         
-
-        # print('Trades processed and returned. This statement has no positions info and no')
-        # print("The Share Balance, average and PL cannot be relialby determined for overnight trades")
         print("Trades are not added to the database")
         return {'Trades': df}, {'Trades': 'Trades'}
 
-    # Conversion Stuff
-    def combinePartials(self, t):
+    def combineOrdersByTime(self, t):
+        '''
+        There are a few seperate orders for equities that share the same order time. These cannot
+        have an assigned share balance because there is no way to assign the order of execution.
+        Combine them to a single order here. This corresponds to the trader's intention, not the
+        broker's execution. When found, both of these orders were charged commission despite having
+        the same order time.
+        '''
+        rc  = self.rc
+        newdf = pd.DataFrame()
+        for account in t[rc.acct].unique():
+            if not account:
+                return t
+            accountdf = t[t[rc.acct] == account]
+            for symbol in accountdf[rc.ticker].unique():
+                tickerdf = accountdf[accountdf[rc.ticker] == symbol]  
+                for datetime in tickerdf['DateTime'].unique():
+                    ticketdf = tickerdf[tickerdf['DateTime'] == datetime]
+                    if len(ticketdf) > 1:
+                        net = 0
+                        # Need to combin price commission and shares.
+                        firstindex = True
+                        ixval = None
+                        buy = ticketdf.iloc[0][rc.shares] > 0
+                        for i, row in ticketdf.iterrows():
+                            assert buy == (row[rc.shares] > 0)
+                            if firstindex:
+                                ixval = i
+                                firstindex = False
+                            net = net + (row[rc.shares] * row[rc.price])
+                        price = net / ticketdf[rc.shares].sum()
+                        ticketdf.at[ixval, rc.price] = price
+                        ticketdf.at[ixval, rc.comm] = ticketdf[rc.comm].sum()
+                        ticketdf.at[ixval, rc.shares] = ticketdf[rc.shares].sum()
+                        newdf = newdf.append(ticketdf.loc[ixval])
+                        print('Gonna combineem Gonne doit')
+                    else:
+                        newdf = newdf.append(ticketdf)
+        return newdf
+
+    def combinePartialsFlexCSV(self, t):
         '''
         In flex Statements, the TRNT (Trades) table input might be in transacations instead of
         tickets identified by LevelOfDetail=EXECUTION without the summary rows identified by
         LevelOfDetail=ORDERS. This is fixable (in both Activity statements and Trade statements)
         by changing Options to inclue Orders. If we have Executions only, we need to recombine
         the partials as identified by IBOrderID. If we also lack that column, blitz the sucker.
-        Its not that hard to get a new statment
+        Its not that hard to get a new statment.
+        New wrinkle. There are some orders that have the same datetime making any sort by time void
+        and leaving the balance up to chance which is first. While these might be different orders
+        by IB, the trader ordered them as a single ticket- and we will combine them.
         :t: Is a TRNT DataFrame. That is a Trades table from a CSV multi table doc in which TRNT
                  is the tableid.
         :assert: Tickets written at the exact same time are partials, identified by
@@ -921,11 +967,7 @@ class IbStatement:
         t = t.drop(['Open/CloseIndicator', 'Notes/Codes'], axis=1)
 
         # 4
-        # lod =  list(t['LevelOfDetail'].unique())
-        t['Quantity'] = t['Quantity'].str.replace(',', '')
-        t['Quantity'] = pd.to_numeric(t['Quantity'], errors='coerce')
-        t['Price'] = pd.to_numeric(t['Price'], errors='coerce')
-        t['Commission'] = pd.to_numeric(t['Commission'], errors='coerce')
+        t = self.fixNumericTypes(t)
         lod = [x.lower() for x in list((t['LevelOfDetail'].unique()))]
         if 'order' in lod:
             t = t[t['LevelOfDetail'].str.lower() == 'order']
@@ -942,19 +984,20 @@ class IbStatement:
 
 
 
-            t = self.combinePartials(t)
+            t = self.combinePartialsFlexCSV(t)
         elif len(t) > 0:
             msg = '\n'.join(['This Activity Flex statement is missing partial execution data.'
                              'Please include the Orders or Execution Options for',
                              'the Trades Table in your Activity flex statement. '])
             return pd.DataFrame(), msg
+        t = t.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares, 'Codes': rc.oc})
+        t = self.combineOrdersByTime(t)
 
         t = self.unifyDateFormat(t)
         dcolumns, mcolumns = self.verifyAvailableCols(
             list(t.columns), ['LevelOfDetail', 'IBOrderID', 'TradeDate'], 'utility')
         t = t.drop(dcolumns, axis=1)
         ###### Set all the right names here
-        t = t.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares, 'Codes': rc.oc})
 
         return t, ''
 
@@ -1170,20 +1213,20 @@ def localStuff():
     '''Run local stuff'''
     d = pd.Timestamp('2018-03-03')
     files = dict()
-    files['annual'] = ['U242.csv', getBaseDir]
+    # files['annual'] = ['U242.csv', getBaseDir]
 
-    # files['stuff'] = ['U2.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
-    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]/
-    # files['U242'] = ['U242.csv', getDirectory]
-    # files['csvtrades'] = ['644223.csv', getDirectory]
-    # files['multi'] = ['MULTI', getDirectory]
-    # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
-    # files['act'] = ['ActivityStatement.html', getDirectory]
-    # files['atrade'] = ['trades.643495.html', getDirectory]
+    files['stuff'] = ['U2.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
+    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
+    files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    files['U242'] = ['U242.csv', getDirectory]
+    files['csvtrades'] = ['644223.csv', getDirectory]
+    files['multi'] = ['MULTI', getDirectory]
+    files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
+    files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    files['act'] = ['ActivityStatement.html', getDirectory]
+    files['atrade'] = ['trades.643495.html', getDirectory]
 
     das = 'trades.csv'                          # Search verbatim with searchParts=False
                                                 # TODO How to reconcile IB versus DAS input?
@@ -1191,8 +1234,8 @@ def localStuff():
     badfiles = []
     goodfiles = []
     for filekey in files:
-        fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
-        # fs = findFilesSinceMonth(d, files[filekey][0])
+        # fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
+        fs = findFilesSinceMonth(d, files[filekey][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
