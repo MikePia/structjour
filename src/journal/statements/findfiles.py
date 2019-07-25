@@ -137,7 +137,7 @@ def findFilesInDir(direct, fn, searchParts):
 
     return found
 
-def findFilesInMonth(daDate, fn, searchParts):
+def findFilesInMonth(daDate, fn, searchParts, DAS=False):
     '''
     Match the file in the given month that contain the name fn. Relies on
     the naming scheme saved in settings
@@ -151,6 +151,7 @@ def findFilesInMonth(daDate, fn, searchParts):
     delt = pd.Timedelta(days=1)
     current = m
     files = []
+    dasfiles = []
     currentMonth = current.month
     while True:
         if current.month != currentMonth:
@@ -166,12 +167,14 @@ def findFilesInMonth(daDate, fn, searchParts):
         if os.path.exists(theDir):
             addme = findFilesInDir(theDir, fn, searchParts)
         if addme:
+            if DAS:
+                addme = [(x, current) for x in addme]
             files.extend(addme)
 
         current = current + delt
     return files
 
-def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
+def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True, DAS=False):
     '''
     Collect the all files in the since daDate in the journal directory that match fn. Relies on
     the naming scheme saved in settings
@@ -190,7 +193,7 @@ def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
     addme = []
     while current <= thisMonth:
         if freq == 'DailyDir':
-            addme = findFilesInMonth(current, fn, searchParts)
+            addme = findFilesInMonth(current, fn, searchParts, DAS)
         else:
             addme = findFilesInDir(getMonthDir(current), fn, searchParts)
         if addme:
@@ -201,3 +204,5 @@ def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True):
         else:
             current = pd.Timestamp(current.year, month+1, 1)
     return files
+
+    # def findDasFilesSinceMonth
