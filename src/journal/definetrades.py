@@ -88,7 +88,7 @@ class ReqCol(object):
         # rcvals are the actual column titles (to be abstracted when we add new input files)
         # rckeys are the abstracted names for use with all file types
         rckeys = ['time', 'ticker', 'side', 'price', 'shares', 'acct', 'PL', 'date']
-        rcvals = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'P / L', 'Date']
+        rcvals = ['Time', 'Symb', 'Side', 'Price', 'Qty', 'Account', 'PnL', 'Date']
         rc = dict(zip(rckeys, rcvals))
 
         # Suggested way to address the columns for the main input DataFrame.
