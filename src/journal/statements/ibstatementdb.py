@@ -56,12 +56,13 @@ class StatementDB:
     from activity flex query
     '''
 
-    def __init__(self, db=None):
+    def __init__(self, db=None, source=None):
         '''Initialize and set the db location'''
         settings = QSettings('zero_substance', 'structjour')
         jdir = settings.value('journal')
         if not db:
             db = 'structjour_test.db'
+        self.source = source
         self.db = os.path.join(jdir, db)
         self.rc = FinReqCol()
         self.createTradeTables()
@@ -108,6 +109,8 @@ class StatementDB:
                 {rc.PL} NUMERIC,
                 {rc.comm}	NUMERIC,
                 {rc.oc}	TEXT,
+                DAS TEXT,
+                IB TEXT,
                 {rc.acct}	TEXT NOT NULL);''')
 
         cur.execute('''
@@ -185,11 +188,18 @@ class StatementDB:
             codes = row[rc.oc]
         else:
             codes = ''
+        das = None
+        ib = None
+        if self.source == 'DAS':
+            das = 'DAS'
+        elif self.source == 'IB':
+            ib = 'IB'
         x = cur.execute(f''' 
-            INSERT INTO ib_trades ({rc.ticker}, datetime, {rc.shares}, {rc.price}, {rc.comm}, {rc.oc}, {rc.acct}, {rc.bal}, {rc.avg}, {rc.PL})
-            VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            INSERT INTO ib_trades ({rc.ticker}, datetime, {rc.shares}, {rc.price}, {rc.comm},
+                                   {rc.oc}, {rc.acct}, {rc.bal}, {rc.avg}, {rc.PL}, DAS, IB)
+            VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (row[rc.ticker], row['DateTime'], row[rc.shares], row[rc.price], row[rc.comm],
-             codes, row[rc.acct], row[rc.bal], row[rc.avg], row[rc.PL]))
+             codes, row[rc.acct], row[rc.bal], row[rc.avg], row[rc.PL], das, ib))
         if x.rowcount == 1:
             return True
         return False
@@ -869,7 +879,14 @@ def notmain():
         print('Missing', missingdict['uncovered'])
     print()
 
+def local():
+    d = pd.Timestamp('2018-12-03')
+    e = pd.Timestamp('2018-12-31')
+    print(d.strftime("%B, %A %d %Y"))
+    db = StatementDB()
+    db.getStatement('U2429974', d, e)
+
 if __name__ == '__main__':
-    pass
     # notmain()
+    local()
 

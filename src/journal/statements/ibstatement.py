@@ -36,7 +36,7 @@ from bs4 import BeautifulSoup
 
 from journal.definetrades import FinReqCol
 from journal.dfutil import DataFrameUtil
-from journal.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir
+from journal.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir, getBaseDir
 from journal.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -389,8 +389,8 @@ class IbStatement:
             posTab = tables['OpenPositions']
             tables['Trades'] = self.figureBAPL(tables['Trades'], posTab)
 
-            ibdb = StatementDB()
-            ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, posTab)
+            ibdb = StatementDB(source='IB')
+            ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, openPos=posTab)
             for key in tables:
                 tablenames[key] = key
             tablenames[tabKey] = tabKey
@@ -603,7 +603,7 @@ class IbStatement:
         if self.account is None:
             msg = '''This statement lacks an account number. Can't add it to the database'''
             return dict(), msg
-        ibdb = StatementDB(self.db)
+        ibdb = StatementDB(self.db, source='IB')
         openpos = None
         if 'OpenPositions' in tables.keys():
             openpos = tables['OpenPositions']
@@ -611,7 +611,7 @@ class IbStatement:
             # Here we need to combine with cheatForBAPL to accomodate statements with no
             # OpenPositions
             ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate,
-                                  openpos)
+                                  openPos=openpos)
         return tables, tablenames
 
     # Conversion stuff
@@ -668,7 +668,7 @@ class IbStatement:
         # is bound to produce errors. Eventually, this method, figureBAPL and figureAPL should be
         # combined or at least share code.
         rc = self.rc
-        ibdb = StatementDB()
+        ibdb = StatementDB(source='IB')
         t[rc.bal] = np.nan
         t[rc.avg] = np.nan
         t[rc.PL] = np.nan
@@ -803,7 +803,7 @@ class IbStatement:
         df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares})
         x = self.cheatForBAPL(df)
         if not x.empty:
-            ibdb = StatementDB()
+            ibdb = StatementDB(source='IB')
             ibdb.processStatement(x, self.account, self.beginDate, self.endDate)
             df = x.copy()
             return {'Trades': df}, {'Trades': 'Trades'}
@@ -846,7 +846,6 @@ class IbStatement:
                         ticketdf.at[ixval, rc.comm] = ticketdf[rc.comm].sum()
                         ticketdf.at[ixval, rc.shares] = ticketdf[rc.shares].sum()
                         newdf = newdf.append(ticketdf.loc[ixval])
-                        print('Gonna combineem Gonne doit')
                     else:
                         newdf = newdf.append(ticketdf)
         return newdf
@@ -1119,13 +1118,13 @@ class IbStatement:
             if not len(tables.keys()):
                 # TODO When enabling multi accounts-- fix this to not return
                 return tables, msg
-            ibdb = StatementDB()
+            ibdb = StatementDB(source='IB')
             positions = None
             if 'POST' in tables.keys():
                 positions = tables['POST']
                 tables['TRNT'] = self.figureBAPL(tables['TRNT'], positions)
             ibdb.processStatement(tables['TRNT'], self.account, self.beginDate, self.endDate,
-                                  positions)
+                                  openPos=positions)
         return tables, tablenames
 
     def getColsByTabid(self, tabid):
@@ -1206,7 +1205,7 @@ class IbStatement:
 
 def notmain():
     ''' Run local stuff'''
-    t = StatementDB()
+    t = StatementDB(source='IB')
     t.popHol()
 
 def localStuff():
