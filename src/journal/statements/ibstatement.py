@@ -36,7 +36,7 @@ from bs4 import BeautifulSoup
 
 from journal.definetrades import FinReqCol
 from journal.dfutil import DataFrameUtil
-from journal.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir, getBaseDir
+from journal.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir
 from journal.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -736,7 +736,7 @@ class IbStatement:
                         tdf.at[i, rc.avg] = average
                         tdf.at[i, rc.PL] = (average - row[rc.price]) * quantity
                         if balance == 0:
-                            primo = False
+                            pastPrimo = False
                     else:
                         # This should be a first trade for this statmenet/Symbol. Could be Open or
                         # Close. We are lacking the previous balance so cannot reliably figure the

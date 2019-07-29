@@ -26,25 +26,27 @@ Re- doing das Statemnet stuff to save the trades in the db and generally imporve
 # import matplotlib.pyplot as plt
 import math
 import os
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from PyQt5.QtCore import QSettings
 
-
-from journal.definetrades import ReqCol, FinReqCol
-# from journal.dfutil import 
-from journal.statements import findfiles as ff
+from journal.definetrades import FinReqCol, ReqCol
 from journal.dfutil import DataFrameUtil
-from journal.pandasutil import InputDataFrame
-from journal.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir, getBaseDir
+# from journal.dfutil import
+from journal.statements import findfiles as ff
+from journal.statements.findfiles import findFilesSinceMonth
 from journal.statements.ibstatementdb import StatementDB
-
 
 # pylint: disable=C0103
 
 
-from PyQt5.QtCore import QSettings
 
 class DasStatement:
+    '''
+    Handles opening DAS export files from the trades and positions window and creating a df.
+    Adds Balance, Average, OC and Date columns
+    '''
     def __init__(self, infile, settings, theDate, positions='positions.csv', df=None):
         self.settings = settings
         self.theDate = theDate
@@ -53,16 +55,17 @@ class DasStatement:
         self.positions = positions
         rc = FinReqCol()
         self.rc = rc
-        if theDate == None:
+        if not theDate:
             raise ValueError('Das input files require theDate parameter.')
-        
+
         if isinstance(df, pd.DataFrame):
             self.df = df
         else:
             self.df = self.openDasFile()
         if not self.df.empty:
             DataFrameUtil.checkRequiredInputFields(self.df, ReqCol().columns)
-            self.df = self.df[[rc.time, rc.ticker, rc.side, rc.price, rc.shares, rc.acct, rc.PL, rc.date, 'Cloid']]
+            self.df = self.df[[rc.time, rc.ticker, rc.side, rc.price,
+                               rc.shares, rc.acct, rc.PL, rc.date, 'Cloid']]
             self.df[rc.bal] = np.nan
             self.df[rc.avg] = np.nan
             self.df[rc.comm] = np.nan
@@ -79,14 +82,15 @@ class DasStatement:
                 df.at[i, rc.shares] = ((df.at[i, rc.shares]) * -1)
         return df
 
-    def askUser(self, df):
-        pass
-
     def figureUnbalancedBAPL(self, ttdf):
         '''
+        Figure Balance, Average, and PnL. DAS has a PL column but it often differs from the 
+        calculations  (and from IB). 
         :ttdf: A dataframe of a single ticker/account, It includes 1 or 2 partial trades. It may
-               also include 1 or more complete trades. We will try to deduce the averages by using the PL.
-               If any trade lacks a (PL != 0), we can't figure out anything -- This should be very rare.
+               also include 1 or more complete trades. We will try to deduce the averages by using
+               the PL. If any trade lacks a (PL != 0), we can't figure out anything -- This happens
+               most commonly on statements that open one day,  and close on a later day. DAS statements
+               are generally one day only statements.
         '''
         # Going to write this as I locate the different cases for each case cumulative
         # Then plan to re-write after all case types are found.
@@ -99,27 +103,27 @@ class DasStatement:
         tdf.reset_index(drop=True, inplace=True)
         average = None
         # breakitup = False
-        foundone = False
         for i in range(len(tdf)):
-            # if breakitup:
-                # break
             # Using this snaky iteration we go forwards to a point, backwards to the beginning
             # and forward to the end (to be successful and getting some  redundant results for
-            # figureAPL, all we need is the  balance from the first trade in the tdf)  Let the contortions begin
+            # figureAPL, all we need is the  balance from the first trade in the tdf)  Let the
+            # contortions begin
 
-            # Need to find a PL ( a closer 'B') preceeded immediately by an opener ('A') 
-            #    Where A.price == B.average 
-            #       Note that any closer must be preceeded by an opener so find a 
+            # Need to find a PL ( a closer 'B') preceeded immediately by an opener ('A')
+            #    Where A.price == B.average
+            #       Note that any closer must be preceeded by an opener so find a
             #       (SHORT closer) -- look for a (SHORT opener)
-            #           Criteria met when -- in forward iteration, we find any closer preceed by its oppositie side
+            #           Criteria met when -- in forward iteration, we find any closer preceed by
+            #           its oppositie side
             # If this fails return the original df
             # The 2 conditions of failure, I believe, (not sure about number 1 anymore)
-            #   1) The first trade closes without a PL (ie PL==0) and no other tx in first trade has PL
+            #   1) The first trade closes without a PL (ie PL==0) and no other tx in first trade
+            #      has PL
             #   2) No PL found period
-            # Result of failure is the trade is entered in the DB as is and will be found a badTrade in refigureBAPL
-            #       But it will still be available for structjour and the (avoidatallcost) ask the user (positions) form
+            # Result of failure is the trade is entered in the DB as is and will be found a
+            #       badTrade in refigureBAPL But it will still be available for structjour and the
+            #      (avoidatallcost) ask the user (positions) form
             if tdf.at[i, rc.PL] != 0:
-                foundone = True
                 # This is a closer
                 average = (tdf.at[i, rc.PL] / tdf.at[i, rc.shares]) + tdf.at[i, rc.price]
                 tdf.at[i, rc.avg] = average
@@ -132,29 +136,29 @@ class DasStatement:
                     continue
                 moreBackwards = False
                 for j in range(i-1, -1, -1):
-                    # Iterate backward to beginning trade of statement --- note that this test is not what it seems
-                    # It tests that the this trade's and the following closer trade's  sides  have opposite buy/sell
-                    #    Don't believe that guarantees the two transactions are from the same trade
-                    # if the trades are adjacent, we got something --  a closer demands a previous opener but 
-                    # don't think the bases are covered yet
+                    # Iterate backward to beginning trade of statement --- note that this test is
+                    # not what it seems It tests that the this trade's and the following closer
+                    # trade's  sides  have opposite buy/sell Don't believe that guarantees the two
+                    # transactions are from the same trade if the trades are adjacent, we got
+                    # something --  a closer demands a previous opener but don't think the bases
+                    # are covered yet
                     if moreBackwards:
                         balance = balance - tdf.at[j+1, rc.shares]
                         tdf.at[j, rc.bal] = balance
 
                         if j == 0:
                             #maybe def updateBalance(self, balance)
-                            balance = balance - tdf.at[j, rc.shares] 
-                            
+                            balance = balance - tdf.at[j, rc.shares]
+
                             for k in range(len(tdf)):
                                 balance = tdf.at[k, rc.shares] + balance
                                 tdf.at[k, rc.bal] = balance
                             balance = tdf.iloc[0][rc.bal] - tdf.iloc[0][rc.shares]
                             ntdf, stdf = self.figureAPL(tdf, balance, 0)
                             return ntdf, stdf
- 
-                        
+
                     elif (side == LONG and tdf.at[j, rc.shares] > 0) or (
-                        side == SHORT and tdf.at[j, rc.shares] < 0):
+                            side == SHORT and tdf.at[j, rc.shares] < 0):
                         # opener
                         # If the following row is a closer, then we share the average
                         if tdf.at[j+1, rc.oc] == 'C':
@@ -168,7 +172,7 @@ class DasStatement:
                                 tdf.at[j, rc.bal] = balance
                                 if j == 0:
                                     # We could quit here
-                                    # thurn turn the snake around --and exit at 
+                                    # thurn turn the snake around --and exit at
                                     balance = 0
                                     for k in range(len(tdf)):
                                         # partially redundantly fill in balances
@@ -186,6 +190,10 @@ class DasStatement:
         return ttdf, pd.DataFrame()
 
     def figureAPL(self, tdf, balance, prevBalance):
+        '''
+        Figure the average price and the PL. Although DAS has PL, it often does not match the
+        figures -- or IB
+        '''
 
         rc = self.rc
 
@@ -211,7 +219,7 @@ class DasStatement:
             elif pastPrimo and side == SHORT and balance > 0:
                 side = LONG
 
-            # This the first trade Open; average == price and set the side- 
+            # This the first trade Open; average == price and set the side-
             if not pastPrimo and balance == row[rc.shares]:
 
                 pastPrimo = True
@@ -236,20 +244,27 @@ class DasStatement:
                 tdf.at[i, rc.avg] = average
                 PLfig = (average - row['Price']) * quantity
 
-                if not math.isclose(row[rc.PL], PLfig, abs_tol=1e-2):
-                    stdf = stdf.append(tdf)
-                    break
-                    # raise ValueError('That  is a lot of exceptions for code fixin')
+                # If DAS is more than 50 cents off, send it ot swing Trades (which is not
+                # implemented yet-- just adds it back to normal) Otherwise just fixit here
+                if not math.isclose(row[rc.PL], PLfig, abs_tol=0.5):
+                    print('Figured the PL differently than DAS')
+                    if abs(row[rc.PL] - PLfig) > 2:
+                        print("The figured PL is far from DAS's PLcalculated PL")
+                tdf.at[i, rc.PL] = PLfig                
                 tdf.at[i, rc.oc] = 'C'
                 if balance == 0:
                     pastPrimo = False
-            elif (row[rc.bal] or row[rc.bal]  == 0) and not math.isnan(row[rc.bal]) and (
-                  row[rc.avg] and not math.isnan(row[rc.bal])):
-                  average = row[rc.avg]
-                  balance = row[rc.bal]
-                  continue
+            elif (row[rc.bal] or row[rc.bal] == 0) and not math.isnan(row[rc.bal]) and (
+                    row[rc.avg] and not math.isnan(row[rc.bal])):
+                average = row[rc.avg]
+                balance = row[rc.bal]
+                continue
             else:
-                raise ValueError('First trade(s) no bal/avg in the tdf and pastPrimo is False')
+                print('just want to place a break here and verify these are unfixable from here.')
+                # if len(tdf) == 1:
+                #     continue
+                # else:
+                    # raise ValueError('First trade(s) no bal/avg in the tdf and pastPrimo is False')
         ntdf = ntdf.append(tdf)
         return ntdf, stdf
 
@@ -258,7 +273,7 @@ class DasStatement:
         This is called if the positions table is lacking to detemine if there is missing data
         for any equities traded today. This is not ideal. Using the positions table is ideal.
         For tickers with balanced shares, we cn figure the average based on PL and Shares. For
-        tickers with unbalanced shares, call figureUnbalancedBAPL. For the rare case where 
+        tickers with unbalanced shares, call figureUnbalancedBAPL. For the rare case where
         '''
         rc = FinReqCol()
         ddf = df.copy()
@@ -286,68 +301,18 @@ class DasStatement:
 
         newTrades.reset_index(drop=True, inplace=True)
         swingTrades.reset_index(drop=True, inplace=True)
+        assert len(newTrades) + len(swingTrades) == len(df)
         return newTrades, swingTrades
-                # LONG = True
-                # SHORT = False
-                # side = LONG
 
-                # # Figure balance first -- send to swing trade if PL does not match
-                # for i, row in tdf.iterrows():
-                #     prevBalance = balance
-                #     balance = balance + row[rc.shares]
-                #     tdf.at[i, rc.bal] = balance
-
-                #     # Check for a flipped position. The flipper is figured like an Opener; the
-                #     # average changes, and no PL is take.
-                #     if pastPrimo and side == LONG and balance < 0:
-                #         side = SHORT
-                #     elif pastPrimo and side == SHORT and balance > 0:
-                #         side = LONG
-
-                #     # This is the first transaction of a trade
-                #     # Set the side, set Open and avg == price 
-                #     if not pastPrimo and balance == row[rc.shares]:
-                #         side = SHORT if row[rc.shares] < 0 else LONG
-                #         average = row[rc.price]
-                #         pastPrimo = True
-                #         tdf.at[i, rc.oc] = 'O'
-                #         tdf.at[i, rc.avg] = average
-
-                #     # Openers -- adding to the trade. The average changes
-                #     elif (pastPrimo and side and row[rc.shares] > 0) or (
-                #           pastPrimo and not side and row[rc.shares] < 0):
-                #         # Opening trade
-                #         tdf.at[i, rc.oc] = 'O'
-                #         average = ((average * prevBalance) + (row[rc.shares] * row[rc.price])) / balance
-                #         tdf.at[i, rc.avg] = average
-
-                #     # Closers, set Close, check that PL matches, if not send to SwingTrade
-                #     elif pastPrimo:
-                #         # Closing trade
-                #         tdf.at[i, rc.avg] = average
-                #         PLfig = (average - row['Price']) * row[rc.shares]
-                #         if not math.isclose(row[rc.PL], PLfig, abs_tol=1e-2):
-                #             swingTrades = swingTrades.append(tdf)
-                #             break
-                #             # raise ValueError('That  is a lot of exceptions for code fixin')
-                #         tdf.at[i, rc.oc] = 'C'
-                #         if balance == 0:
-                #             pastPrimo = False
-                #     else:
-                #         # Should be catching swing trades with the PL check in the closers excep
-                #         # for the ultra rare thing which I will have to painstakingly, with several
-                #         # fake statements, trigger in a system test
-                #         raise ValueError('Do not think this ever happens.... So what happened???')
-                # newTrades = newTrades.append(tdf)
-                
     def askAboutSwingTrades(self, st):
+        '''placeholder'''
         return st, True
 
     def figureBalance(self, df):
         '''
         The easy way (using positions.csv) and the hard way (no positions.csv). The hard way should
         occassionally fail and require user intervention via the qt positions form. Avoid that by
-        all possible contorted means. 
+        all possible contorted means.
         '''
 
         rc = FinReqCol()
@@ -356,7 +321,7 @@ class DasStatement:
         if self.positions and os.path.exists(self.positions):
             positions = pd.read_csv(self.positions)
             print(positions)
-            reqcols = ['Symb', 'Account', 'Shares'] 
+            reqcols = ['Symb', 'Account', 'Shares']
             currentcols = list(positions.columns)
             if not set(reqcols).issubset(set(currentcols)):
                 print('WARNING: positions table is missing the following required columns.')
@@ -365,8 +330,6 @@ class DasStatement:
             else:
                 positions = positions[positions['Shares'] != 0]
                 positions = positions[reqcols]
-
-
 
         else:
             df, swingTrades = self.figureBA_noPositions(df)
@@ -389,7 +352,7 @@ class DasStatement:
                 offset = tdf[rc.shares].sum()
                 holding = 0
                 pos = positions[(positions['Account'] == acntKey)  & (positions['Symb'] == ticker)]
-                if ticker in pos['Symb'].unique(): 
+                if ticker in pos['Symb'].unique():
                     assert pos['Symb'].unique()[0] == ticker
                     holding = pos['Shares'].unique()[0]
                     offset = offset - holding
@@ -411,78 +374,20 @@ class DasStatement:
         newdf = newdf.sort_values([rc.acct, rc.ticker, rc.date])
         newdf.reset_index(drop=True, inplace=True)
         return newdf
-                # LONG = True
-                # SHORT = False
-                # pastPrimo = False
-                # side = LONG
-
-
-                # ###  TODO Share this code with ibstatement somehow-- maybe a base class
-                # # Figure Balance first -- adjust offset for overnight
-                # for i, row in tdf.iterrows():
-                #     quantity = row[rc.shares]
-                #     prevBalance = balance
-                #     balance = balance + quantity
-                #     tdf.at[i, rc.bal] = balance
-
-                #     # Check for a flipped position. The flipper is figured like Opener; the average
-                #     # changes, and no PL is taken 
-                #     if pastPrimo and side == LONG and balance < 0:
-                #         side = SHORT
-                #     elif pastPrimo and side == SHORT and balance > 0:
-                #         side = LONG
-
-                #     # This the first trade Open; average == price and set the side- 
-                #     if not pastPrimo and balance == row[rc.shares]:
-                        
-                #         pastPrimo = True
-                #         average = row[rc.price]
-                #         tdf.at[i, rc.avg] = average
-                #         side = LONG if row[rc.shares] >= 0 else SHORT
-
-                #     # Here are openers -- adding to the trade; average changes
-                #     # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
-                #     elif (pastPrimo and side is LONG and quantity >= 0) or (
-                #         pastPrimo and side is SHORT and quantity < 0):
-                #         newAverage = ((average * prevBalance) + (quantity * row[rc.price])) / balance
-                #         average = newAverage
-                #         tdf.at[i, rc.avg] = average
-
-                #     # Here are closers; PL is figured and check for trade ending
-                #     elif pastPrimo:
-                #         # Close Tx, P/L is figured on CLOSING transactions only
-                #         tdf.at[i, rc.avg] = average
-                #         tdf.at[i, rc.PL] = (average - row[rc.price]) * quantity
-                #         if balance == 0:
-                #             pastPrimo = False
-                #     else:
-                #         # This should be the first trades for this statmenet/Symbol. 
-                #         # We are lacking the previous average so cannot reliably figure the
-                #         # average.
-                #         print(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
-
-
-                
-                # ###                
-
-
-
-        #         # A closer may have 0 PL-- can't assume these are all of them
-        #         balance = tdf[rc.PL].sum()
-        #         if balance == 0:
-        #             balance = balance + tdf[rc.qty]
-        #             tdf[rc.bal] = balance
-        #         print()
-        #         newdf = newdf.append(tdf)
-        # return newdf
 
     def normify(self, df):
+        '''
+        Normalize the df to match other Trade DFs
+        '''
         for i, row in df.iterrows():
             if (isinstance(row.Time, float) and math.isnan(row.Time)) or not row.Time:
                 df.drop([i], inplace=True)
         return df
 
     def openDasFile(self):
+        '''
+        Open an DAS export file from the trades window
+        '''
         rc = self.rc
         self.theDate = pd.Timestamp(self.theDate)
         if not os.path.exists(self.infile):
@@ -512,19 +417,21 @@ class DasStatement:
         if 'P / L' in df.columns:
             df = df.rename(columns={'P / L': rc.PL})
 
-        reqcol=[rc.time, rc.ticker, rc.side, rc.price, rc.shares, rc.acct, rc.PL, rc.date, 'Cloid']
+        reqcol = [rc.time, rc.ticker, rc.side, rc.price, rc.shares, rc.acct,
+                  rc.PL, rc.date, 'Cloid']
         actualcols = list(df.columns)
-        missingcols =  set(reqcol) - set(actualcols)
+        missingcols = set(reqcol) - set(actualcols)
 
         if missingcols:
             print('statement is missing the required fields:', missingcols)
             return pd.DataFrame()
-        
+
         df = df[reqcol].copy()
-        
+
         return df
 
     def createDateField(self, df):
+        '''Add a datefield to df that uses a Timestamp'''
         for i, row in df.iterrows():
             dd = self.theDate
             tt = pd.Timestamp(row.Time)
@@ -535,7 +442,7 @@ class DasStatement:
     def getTrades(self, listdf=None):
         '''
         Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
-        fewer transactions. 
+        fewer transactions.
         :params listdf: Normally leave blank. If used, listdf should be the be a list of DFs.
         :return: The DataFrame created version of the data.
         :side effects: Saves a csv file of all transactions as single ticket transactions to
@@ -543,7 +450,7 @@ class DasStatement:
         '''
         # TODO: Add the date to the saved file name after we get the date sorted out.
         if self.df.empty:
-            return self.df 
+            return self.df
         if not listdf:
             listdf = self.getListOfTicketDF()
 
@@ -572,7 +479,7 @@ class DasStatement:
             newdf.at[i, 'DateTime'] = row[self.rc.date].strftime('%Y%m%d;%H%M%S')
         ibdb = StatementDB()
 
-        # TODO Horrible assumption is that the date is 'covered' when this statement could be 
+        # TODO Horrible assumption is that the date is 'covered' when this statement could be
         # a partial day. I think we can't fill in any covered days from a DAS export unless
         # the user says so...maybe in the filesettings form
         ibdb.processStatement(newdf, 'U2429974', self.theDate, self.theDate)
@@ -630,7 +537,7 @@ class DasStatement:
         SIMdf = dframe[dframe['Cloid'] == "AUTO"]
         newdf = dframe[dframe['Cloid'] != "AUTO"]
         # Found a DAS export that had two trades with the same times--so we will combine them
-        SIMdf.sort_values([rc.acct, rc.ticker, rc.time], inplace = True)
+        SIMdf.sort_values([rc.acct, rc.ticker, rc.time], inplace=True)
         i = 0
         for tickKey in SIMdf[rc.ticker].unique():
             ticker = SIMdf[SIMdf[rc.ticker] == tickKey].copy()
@@ -644,8 +551,6 @@ class DasStatement:
         #For each unique ticket ID (akaCloid), create a DataFrame and add it to a list of DataFrames
         listOfTickets = list()
         for ticketID in newdf.Cloid.unique():
-            # if ticketID == "AUTO":
-            #     continue
             # Retrieves all rows that match the ticketID
             t = newdf[newdf['Cloid'] == ticketID]
             listOfTickets.append(t)
@@ -659,11 +564,9 @@ class DasStatement:
 
 
 def notmain():
-    d = "20180815"
-    infile = 'trades.csv'
+    '''Run some local code'''
+    d = "20181101"
     settings = QSettings('zero_substance', 'structjour')
-    files = dict()
-    trades = ['trades.csv', getDirectory]
     # fs = findFilesInDir(trades[1], trades[0], searchParts=False)
     fs = findFilesSinceMonth(d, 'trades.csv', searchParts=False, DAS=True)
     for f in fs:
@@ -677,4 +580,3 @@ def notmain():
 
 if __name__ == '__main__':
     notmain()
-
