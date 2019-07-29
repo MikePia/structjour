@@ -439,6 +439,57 @@ class DasStatement:
             df.at[i, 'Date'] = daDate
         return df
 
+    def setNewInfile(self, newinfile):
+        scheme = self.settings.value('scheme').split('/')
+        if len(scheme) > 1:
+            d = self.theDate
+            scheme = scheme[1].format(Year='%Y', MONTH='%B', month='%m', DAY='%A', day='%d')
+            d = d.strftime(scheme)
+            newinfile, ext = os.path.splitext(newinfile)
+            newinfile = f'{newinfile}{d}{ext}'
+        self.settings.setValue('infile', newinfile)
+        newinfile = os.path.join(ff.getDirectory(self.theDate), newinfile)
+        return newinfile
+
+    def combineOrdersByTime(self, t):
+        '''
+        There are a few seperate orders for equities that share the same order time. These cannot
+        have an assigned share balance because there is no way to assign the order of execution.
+        Combine them to a single order here. This corresponds to the trader's intention, not the
+        broker's execution. When found, both of these orders were charged commission despite having
+        the same order time.
+        '''
+        rc  = self.rc
+        newdf = pd.DataFrame()
+        for account in t[rc.acct].unique():
+            if not account:
+                return t
+            accountdf = t[t[rc.acct] == account]
+            for symbol in accountdf[rc.ticker].unique():
+                tickerdf = accountdf[accountdf[rc.ticker] == symbol]  
+                for datetime in tickerdf['DateTime'].unique():
+                    ticketdf = tickerdf[tickerdf['DateTime'] == datetime]
+                    if len(ticketdf) > 1:
+                        net = 0
+                        # Need to combin price commission and shares.
+                        firstindex = True
+                        ixval = None
+                        buy = ticketdf.iloc[0][rc.shares] > 0
+                        for i, row in ticketdf.iterrows():
+                            assert buy == (row[rc.shares] > 0)
+                            if firstindex:
+                                ixval = i
+                                firstindex = False
+                            net = net + (row[rc.shares] * row[rc.price])
+                        price = net / ticketdf[rc.shares].sum()
+                        ticketdf.at[ixval, rc.price] = price
+                        ticketdf.at[ixval, rc.comm] = ticketdf[rc.comm].sum()
+                        ticketdf.at[ixval, rc.shares] = ticketdf[rc.shares].sum()
+                        newdf = newdf.append(ticketdf.loc[ixval])
+                    else:
+                        newdf = newdf.append(ticketdf)
+        return newdf
+
     def getTrades(self, listdf=None):
         '''
         Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
@@ -461,23 +512,16 @@ class DasStatement:
             t = self.createSingleTicket(tick)
             newdf = newdf.append(t)
 
-        newinfile = "tradesByTicket.csv"
-        scheme = self.settings.value('scheme').split('/')
-        if len(scheme) > 1:
-            d = self.theDate
-            scheme = scheme[1].format(Year='%Y', MONTH='%B', month='%m', DAY='%A', day='%d')
-            d = d.strftime(scheme)
-            newinfile, ext = os.path.splitext(newinfile)
-            newinfile = f'{newinfile}{d}{ext}'
-        self.settings.setValue('infile', newinfile)
-        newinfile = os.path.join(ff.getDirectory(self.theDate), newinfile)
+        for i, row in newdf.iterrows():
+            newdf.at[i, 'DateTime'] = row[self.rc.date].strftime('%Y%m%d;%H%M%S')
+        newdf = self.combineOrdersByTime(newdf)
+
+        newinfile = self.setNewInfile("tradesByTicket.csv")
         newdf.to_csv(newinfile)
         self.settings.setValue('inpathfile', newinfile)
         newdf = self.figureBalance(newdf)
-        newdf['DateTime'] = ''
-        for i, row in newdf.iterrows():
-            newdf.at[i, 'DateTime'] = row[self.rc.date].strftime('%Y%m%d;%H%M%S')
-        ibdb = StatementDB()
+        # newdf['DateTime'] = ''
+        ibdb = StatementDB(source='DAS')
 
         # TODO Horrible assumption is that the date is 'covered' when this statement could be
         # a partial day. I think we can't fill in any covered days from a DAS export unless
@@ -578,5 +622,15 @@ def notmain():
     # trades, success = idf.processInputFile(df, settings.value('theDate'))
 
 
+def local():
+    fn = "C:/journal/trader/_20181203_December/_1203_Monday/trades.csv"
+    if not os.path.exists(fn):
+        print('try again')
+    theDate = '20181203'
+    settings = QSettings('zero_substance', 'structjour')
+    ds = DasStatement('trades.csv', settings, theDate)
+    df = ds.getTrades()
+
 if __name__ == '__main__':
     notmain()
+    # local()
