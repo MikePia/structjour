@@ -64,6 +64,7 @@ class Statement_DAS(object):
     '''
 
     def __init__(self, jf, df=None):
+        rc = ReqCol()
         self.jf = jf
         if not isinstance(df, pd.DataFrame):
             self.df = pd.read_csv(self.jf.inpathfile)
@@ -71,7 +72,8 @@ class Statement_DAS(object):
             self.df = df
         if 'Date' not in self.df.columns:
             self.df['Date'] = jf.theDate
-        rc = ReqCol()
+        if 'P / L' in self.df.columns:
+            self.df = self.df.rename(columns={'P / L': rc.PL})
         DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
 
     def _checkUniqueSIMTX(self):
