@@ -25,7 +25,7 @@ Created on May 14, 2019
 import os
 import sys
 
-from matplotlib import style
+from matplotlib import style, colors as mplcolors
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtWidgets import QDialog, QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
@@ -45,6 +45,7 @@ class ChartControl(QDialog):
         ui.setupUi(self)
         self.ui = ui
         self.widgDict = None
+        self.mplcolors = None
         self.loadStyles()
 
         self.ui.styleCb.currentTextChanged.connect(self.setStyle)
@@ -119,15 +120,54 @@ class ChartControl(QDialog):
 
         self.ui.chart3VWAP.clicked.connect(self.setChart3VWAP)
         self.ui.chart3VWAPColor.textChanged.connect(self.setChart3VWAPColor)
+        
 
         v = QDoubleValidator()
         v.setRange(0.0, 1.0, 7)
         self.ui.markerAlpha.setValidator(v)
 
         self.initFromSettings()
+        self.validateColors()
         self.show()
 
     ####### chart3 #######
+
+    def validateColors(self):
+        '''
+        Check that the color names in each QlineEdit widget for a color has a legit mpl color
+        Otherwise, set it to black. This is currently called on initiation of the dialog.
+        '''
+        # val = val.strip()
+        x = mplcolors.cnames
+        x['b'] = x['blue']
+        x['g'] = x['green']
+        x['r'] = x['red']
+        x['c'] = x['cyan']
+        x['m'] = x['magenta']
+        x['y'] = x['yellow']
+        x['b'] = x['black']
+        x['w'] = x['white']
+        self.mplcolors = x
+
+        for key in self.widgDict:
+            widg = self.widgDict[key]
+            if isinstance(widg, QLineEdit) and 'color' in widg.objectName().lower():
+                print(widg.objectName())
+                val = widg.text()
+                origval = val
+                val = val.strip()
+                if not val.startswith('#'):
+                    if val not in x.keys():
+                        val = 'b'
+                if not val == origval:
+                    widg.setText(val)
+        # if val not in x.keys():
+        #     return x['b']
+
+        print()
+
+
+        
 
     def setChart3VWAPColor(self, val):
         self.chartSet.setValue('chart3vwapcolor', val)
@@ -145,8 +185,6 @@ class ChartControl(QDialog):
 
     def setChart3MA4(self, val):
         self.chartSet.setValue('chart3ma4', val)
-
-
 
     def setChart3MA3Color(self, val):
         self.chartSet.setValue('chart3ma3color', val)
@@ -169,9 +207,6 @@ class ChartControl(QDialog):
     def setChart3MA2(self, val):
         self.chartSet.setValue('chart3ma2', val)    
 
-
-
-
     def setChart3MA1Color(self, val):
         self.chartSet.setValue('chart3ma1color', val)
 
@@ -182,7 +217,6 @@ class ChartControl(QDialog):
     def setChart3MA1(self, val):
         self.chartSet.setValue('chart3ma1', val)
 
-    
 
     ####### chart2 #######
 
@@ -281,9 +315,6 @@ class ChartControl(QDialog):
     def setChart1MA2(self, val):
         self.chartSet.setValue('chart1ma2', val)    
 
-
-
-
     def setChart1MA1Color(self, val):
         self.chartSet.setValue('chart1ma1color', val)
 
@@ -293,7 +324,6 @@ class ChartControl(QDialog):
 
     def setChart1MA1(self, val):
         self.chartSet.setValue('chart1ma1', val)
-
 
     def setCbLabel(self, val, widg):
         if val <= 20:
@@ -342,10 +372,8 @@ class ChartControl(QDialog):
         self.ui.styleCb.addItem('No style')
         self.ui.styleCb.addItems(style.available)
 
-
-
     def initFromSettings(self):
-        widgdict = {'chart': self.ui.styleCb, 
+        widgDict = {'chart': self.ui.styleCb, 
                 'gridv': self.ui.gridvCb,
                 'gridh': self.ui.gridhCb,
                 'markercolorup': self.ui.markerColorUp,
@@ -399,11 +427,11 @@ class ChartControl(QDialog):
                 'chart3ma3color': self.ui.chart3MA3Color,
                 'chart3ma4color': self.ui.chart3MA4Color,
                 'chart3vwapcolor': self.ui.chart3VWAPColor}
-        for key in widgdict:
+        for key in widgDict:
             val = self.chartSet.value(key)
             if not val:
                 continue
-            widg = widgdict[key]
+            widg = widgDict[key]
             if isinstance(widg, QLineEdit):
                 widg.setText(val)
             elif isinstance(widg, QCheckBox):
@@ -414,7 +442,7 @@ class ChartControl(QDialog):
             elif isinstance(widg, QComboBox):
                 index = widg.findText(val)
                 widg.setCurrentIndex(index)
-        self.widgdict = widgdict
+        self.widgDict = widgDict
 
 
 
