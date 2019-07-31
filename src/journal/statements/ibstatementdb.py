@@ -264,12 +264,42 @@ class StatementDB:
                     VALUES(?, ?, ?, ?)''',
                 (row['Account'], row['Symbol'], row['Quantity'], d) )
 
+    ########################################################################################
+    ############################ methods for structjour ####################################
+    ########################################################################################
+    
+    def getNumTicketsforDay(self, day, account='all'):
+
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        day = pd.Timestamp(day)
+        begin = day.strftime('%Y%m%d')
+        end = day.strftime('%Y%m%d;99')
+        count = 0
+        if account == 'all':
+            count = cur.execute(f'''
+            SELECT count() FROM ib_trades
+                where datetime > ?
+                and datetime < ?
+            ''', (begin, end))
+        else:
+            count = cur.execute(f'''
+                SELECT count() FROM ib_trades
+                where datetime > ?
+                and datetime < ?
+                and Account = ?
+            ''', (begin, end, account))
+        if count:
+            count = count.fetchone()[0]
+        return count
+
     
     ########################################################################################
     #################### DB Helper methods for refigureAPL #################################
     ########################################################################################
 
     def DBfigureUnbalancedPL(self, cur, prevTrades, bt):
+        rc = self.rc
         pTrades = [self.makeTradeDict(x) for x in prevTrades]
         tdict = pTrades.copy()
         tdict.append(bt)
@@ -286,80 +316,46 @@ class StatementDB:
             if not preOmega:
                 # First trade is a closer or this was called in error, figure out the average
                 # average = (pl/qty) + price
-                assert isNumeric(tdict[0]['pl']) and tdict[0]['pl'] != 0
-                tdict[0]['oc'] = 'C'
-                average = (tdict[0]['pl'] / tdict[0]['qty'] ) + tdict[0]['p']
-                tdict[0]['avg'] = average
+                assert isNumeric(tdict[0][rc.PL]) and tdict[0][rc.PL] != 0
+                tdict[0][rc.oc] = 'C'
+                average = (tdict[0][rc.PL] / tdict[0][rc.shares] ) + tdict[0][rc.price]
+                tdict[0][rc.avg] = average
 
-                side = LONG if tdict[0]['qty'] < 0 else SHORT
+                side = LONG if tdict[0][rc.shares] < 0 else SHORT
                 preOmega = True
 
-            elif (preOmega and side == LONG and tdict[i]['qty'] > 0) or (
-                    preOmega and side == SHORT and tdict[i]['qty'] < 0):
+            elif (preOmega and side == LONG and tdict[i][rc.shares] > 0) or (
+                    preOmega and side == SHORT and tdict[i][rc.shares] < 0):
                 # opener
                 # If just before a closer, then the average is shared
-                if tdict[i-1]['oc'] == 'C':
-                    tdict[i]['oc'] = 'O'
-                    tdict[i]['avg'] = average
+                if tdict[i-1][rc.oc] == 'C':
+                    tdict[i][rc.oc] = 'O'
+                    tdict[i][rc.avg] = average
                 # If the average==price, this is the trade opener (for our purposes)
                 # and we can now set all the balances
-                if math.isclose(tdict[i]['p'], average, abs_tol=1e-2):
+                if math.isclose(tdict[i][rc.price], average, abs_tol=1e-2):
                     # Found a Trade beginning opener balance = quantity
-                    balance = tdict[i]['qty']
-                    tdict[i]['bal'] = balance
+                    balance = tdict[i][rc.shares]
+                    tdict[i][rc.bal] = balance
                     for j in range(i-1, -1, -1):
-                        balance = balance - tdict[j+1]['qty']
+                        balance = balance - tdict[j+1][rc.shares]
                         if j == 0:
-                            self.updateAvgBalPlOC(cur, tdict[j], tdict[j]['avg'], balance, tdict[j]['pl'], tdict[j]['oc'])
+                            self.updateAvgBalPlOC(cur, tdict[j], tdict[j][rc.avg], balance, tdict[j][rc.PL], tdict[j][rc.oc])
                             return True
                     
 
         return False
         
         
-        
-        #             if j == 0:
-        #                 # We could quit here
-        #                 # thurn turn the snake around --and exit at
-        #                 balance = 0
-        #                 for k in range(len(tdf)):
-        #                     # partially redundantly fill in balances
-        #                     balance = tdf.at[k, rc.shares] + balance
-        #                     tdf.at[k, rc.bal] = balance
-        #                 # breakitup = True
-        #             else:
-        #                 # Continue backwards iteration-- setting balance
-        #                 # then go forward from here
-        #                 moreBackwards = True
-        #                 continue
-        #             balance = tdf.iloc[0][rc.bal] - tdf.iloc[0][rc.shares]
-        #             ntdf, stdf = self.figureAPL(tdf, balance, 0)
-        #             return ntdf, stdf
-            # return ttdf, pd.DataFrame()
-        #         moreBackwards = False
-        #         for j in range(i-1, -1, -1):
-        #             if moreBackwards:
-        #                 balance = balance - tdf.at[j+1, rc.shares]
-        #                 tdf.at[j, rc.bal] = balance
-
-        #                 if j == 0:
-        #                     #maybe def updateBalance(self, balance)
-        #                     balance = balance - tdf.at[j, rc.shares]
-
-        #                     for k in range(len(tdf)):
-        #                         balance = tdf.at[k, rc.shares] + balance
-        #                         tdf.at[k, rc.bal] = balance
-        #                     balance = tdf.iloc[0][rc.bal] - tdf.iloc[0][rc.shares]
-        #                     ntdf, stdf = self.figureAPL(tdf, balance, 0)
-        #                     return ntdf, stdf
 
     def makeTradeDict(self, atrade):
         '''
         A convenience to ensure the trade dictionaries are all the same. The arbitrary order
         is set specifically from the db query
         '''
+        rc = self.rc
         t = dict()
-        t['sym'], t['dt'], t['qty'], t['bal'], t['p'], t['avg'], t['pl'], t['act'], t['oc'], t['id'] = atrade
+        t[rc.ticker], t[rc.date], t[rc.shares], t[rc.bal], t[rc.price], t[rc.avg], t[rc.PL], t[rc.acct], t[rc.oc], t['id'] = atrade
         return t
 
     def getBadTrades(self):
@@ -385,7 +381,7 @@ class StatementDB:
                 AND datetime < ?
                 AND {rc.acct} = ?
                 ORDER BY datetime DESC
-                ''', (bt['sym'], bt['dt'], bt['act']))
+                ''', (bt[rc.ticker], bt[rc.date], bt[rc.acct]))
         prevTrades = prevTrades.fetchall()
         return prevTrades
 
@@ -398,7 +394,7 @@ class StatementDB:
                 AND datetime > ?
                 AND {rc.acct} = ?
                 ORDER BY datetime
-                ''', (bt['sym'], bt['dt'], bt['act']))
+                ''', (bt[rc.ticker], bt[rc.date], bt[rc.acct]))
         prevTrades = prevTrades.fetchall()
         return prevTrades
 
@@ -427,23 +423,24 @@ class StatementDB:
         Process the ib_trades.balance field for all trade entries between begin and end
         :prerequisites: Balance-- the differenc between refigureBAPL and this one.
         '''
+        rc = self.rc
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         badTrades = self.getBadTrades()
         for badTrade in badTrades:
             bt = self.makeTradeDict(badTrade)
 
-            if isNumeric([bt['avg'], bt['bal']]):
+            if isNumeric([bt[rc.avg], bt[rc.bal]]):
                 print('Already fixed this one', bt)
                 continue
-            symbol = bt['sym']
-            account = bt['act']
+            symbol = bt[rc.ticker]
+            account = bt[rc.acct]
             prevTrades = self.getPreviousTrades(cur, bt)
 
             fixthese = []
             for i, prevTrade in enumerate(prevTrades):
                 pt = self.makeTradeDict(prevTrade)
-                uncovered = self.getUncoveredDays(account, beg=pt['dt'], end=bt['dt'])
+                uncovered = self.getUncoveredDays(account, beg=pt[rc.date], end=bt[rc.date])
                 if uncovered:
                     break
                 else:
@@ -455,8 +452,8 @@ class StatementDB:
                     LONG = True
                     SHORT = False
                     
-                    # if pt['avg'] and pt['qty'] == pt['bal']:
-                    if pt['avg'] and pt['bal'] == pt['qty']:
+                    # if pt[rc.avg] and pt[rc.shares] == pt[rc.bal]:
+                    if pt[rc.avg] and pt[rc.bal] == pt[rc.shares]:
                         # Found Trade opener good trade
                         fixthese.append(prevTrade)
                         fixthese.insert(0, badTrade)
@@ -473,11 +470,11 @@ class StatementDB:
 
                             # Figure Balance first -- adjust offset for overnight
                             prevBalance = balance
-                            balance = balance + ft['qty']
+                            balance = balance + ft[rc.shares]
 
-                            if not ft['bal']:
+                            if not ft[rc.bal]:
                                 self.updateBal(cur, ft, balance )
-                                ft['bal'] = balance
+                                ft[rc.bal] = balance
 
                             # Check for a flipped position. The flipper is figured as an Opener; the average
                             # changes, and no PL is taken.
@@ -487,45 +484,45 @@ class StatementDB:
                                 side = LONG
 
                             # This the first trade Open; average == price and set the side- 
-                            if not pastPrimo and ft['bal'] == ft['qty']:
+                            if not pastPrimo and ft[rc.bal] == ft[rc.shares]:
                                 
                                 pastPrimo = True
-                                average = ft['p']
-                                assert math.isclose(ft['p'], ft['avg'], abs_tol=1e-5)
+                                average = ft[rc.price]
+                                assert math.isclose(ft[rc.price], ft[rc.avg], abs_tol=1e-5)
 
                                 #average should be set for this one
                                 # tdf.at[i, 'Average'] = average
-                                side = LONG if ft['qty'] >= 0 else SHORT
+                                side = LONG if ft[rc.shares] >= 0 else SHORT
 
                             # Here are openers -- adding to the trade; average changes
                             # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
-                            elif (pastPrimo and side is LONG and ft['qty'] >= 0) or (
-                                pastPrimo and side is SHORT and ft['qty'] < 0):
-                                newAverage = ((average * prevBalance) + (ft['qty'] * ft['p'])) / ft['bal']
+                            elif (pastPrimo and side is LONG and ft[rc.shares] >= 0) or (
+                                pastPrimo and side is SHORT and ft[rc.shares] < 0):
+                                newAverage = ((average * prevBalance) + (ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
                                 average = newAverage
-                                ft['oc'] = 'O'
-                                if not ft['avg']:
-                                    ft['avg'] = average
+                                ft[rc.oc] = 'O'
+                                if not ft[rc.avg]:
+                                    ft[rc.avg] = average
                                     self.updateAvgOC(cur, ft, average, 'O')
 
 
                             # Here are closers; PL is figured and check for trade ending
                             elif pastPrimo:
                                 # Close Tx, P/L is figured on CLOSING transactions only
-                                pl = (average - ft['p']) * ft['qty']
-                                ft['oc'] = 'C'
+                                pl = (average - ft[rc.price]) * ft[rc.shares]
+                                ft[rc.oc] = 'C'
                                 self.updateAvgPlOC(cur, ft, average, pl, 'C')
-                                if ft['bal'] == 0:
+                                if ft[rc.bal] == 0:
                                     pastPrimo = False
                             else:
                                 # This should be a first trade for this statmenet/Symbol. Could be Open or
                                 # Close. We are lacking the previous balance so cannot reliably figure the
                                 # average.
-                                print(f'''There is a  trade for {ft['sym']} that lacks a transaction in this statement''')
+                                print(f'''There is a  trade for {ft[rc.ticker]} that lacks a transaction in this statement''')
                         conn.commit()
                         break
                             #######
-                    elif isNumeric([pt['avg'], pt['pl'], pt['bal']]) and pt['pl'] != 0:
+                    elif isNumeric([pt[rc.avg], pt[rc.PL], pt[rc.bal]]) and pt[rc.PL] != 0:
                         # Found a good closer (has PL and avg)
                         fixthese.append(prevTrade)
                         fixthese.insert(0, badTrade)
@@ -538,73 +535,73 @@ class StatementDB:
                             print(fixthis)
                             ft = self.makeTradeDict(fixthis)
 
-                            if pastPrimo and not isNumeric(ft['bal']):
+                            if pastPrimo and not isNumeric(ft[rc.bal]):
                                  ### Has the balance variable been set????
                                 prevBalance = balance
-                                balance = balance + ft['qty']
+                                balance = balance + ft[rc.shares]
                                 self.updateBal(cur, ft, balance)
                                 # side = LONG if quantity >= 0 else SHORT
-                                ft['bal'] = balance
+                                ft[rc.bal] = balance
 
-                            if isNumeric([ft['pl'], ft['bal'], ft['avg']])and ft['pl'] !=0 and not pastPrimo:
+                            if isNumeric([ft[rc.PL], ft[rc.bal], ft[rc.avg]])and ft[rc.PL] !=0 and not pastPrimo:
                                 # found a good trade closer
                                 pastPrimo = True
-                                side = LONG if ft['qty'] < 0 else SHORT
-                                balance = ft['bal']
-                                average = ft['avg']
-                                if ft['bal'] == 0:
+                                side = LONG if ft[rc.shares] < 0 else SHORT
+                                balance = ft[rc.bal]
+                                average = ft[rc.avg]
+                                if ft[rc.bal] == 0:
                                     # Found a trade ender
                                     nextTrade = True
                             elif nextTrade:
                                 # This is a baginning trade opener. We know because it was
                                 # preceeded by bal==0, fix and DB UPDATE
                                 nextTrade = False
-                                ft['oc'] = 'O'
-                                if not ft['bal'] or math.isnan(ft['bal']):
-                                    ft['bal'] = ft['qty']
+                                ft[rc.oc] = 'O'
+                                if not ft[rc.bal] or math.isnan(ft[rc.bal]):
+                                    ft[rc.bal] = ft[rc.shares]
                                 else:
-                                    assert ft['bal'] == ft['qty']
+                                    assert ft[rc.bal] == ft[rc.shares]
 
-                                if not ft['avg'] or math.isnan(ft['avg']):
-                                    ft['avg'] = ft['p']
+                                if not ft[rc.avg] or math.isnan(ft[rc.avg]):
+                                    ft[rc.avg] = ft[rc.price]
                                 else:
-                                    assert math.isclose(ft['avg'], ft['p'], abs_tol=1e-5)
-                                average = ft['avg']
-                                prevBal = ft['bal']
+                                    assert math.isclose(ft[rc.avg], ft[rc.price], abs_tol=1e-5)
+                                average = ft[rc.avg]
+                                prevBal = ft[rc.bal]
                                 pl = 0
-                                self.updateAvgBalPlOC(cur, ft, average, ft['bal'], pl, 'O')
+                                self.updateAvgBalPlOC(cur, ft, average, ft[rc.bal], pl, 'O')
                                 nextTrade = False
                                 break
-                            elif average and not ft['avg']:
+                            elif average and not ft[rc.avg]:
                                 # A badTrade -
 
-                                if (side is LONG and ft['qty'] >= 0) or (
-                                    side is SHORT and ft['qty'] < 0):
+                                if (side is LONG and ft[rc.shares] >= 0) or (
+                                    side is SHORT and ft[rc.shares] < 0):
                                     # Opener
                                     # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance 
-                                    newAverage = ((average * balance) + (ft['qty'] * ft['p'])) / ft['bal']
+                                    newAverage = ((average * balance) + (ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
                                     average = newAverage
-                                    balance = ft['bal']
-                                    ft['avg'] = average
-                                    ft['oc'] = 'O'
+                                    balance = ft[rc.bal]
+                                    ft[rc.avg] = average
+                                    ft[rc.oc] = 'O'
                                     self.updateAvgOC(cur, ft, average, 'O')
                                 elif average:
                                     # Closer. Enter PL and check for last trade -- 
-                                    pl = (average - ft['p']) * ft['qty']
-                                    ft['oc'] = 'C'
-                                    # if ft['bal'] == 0:
+                                    pl = (average - ft[rc.price]) * ft[rc.shares]
+                                    ft[rc.oc] = 'C'
+                                    # if ft[rc.bal] == 0:
                                     #     average = None
                                     self.updateAvgPlOC(cur, ft, average, pl, 'C')
                                     break
-                            elif ft['avg']:
-                                average = ft['avg']
-                                prevBalance = ft['bal']
+                            elif ft[rc.avg]:
+                                average = ft[rc.avg]
+                                prevBalance = ft[rc.bal]
                                 # raise ValueError('Programmer exception to find the statements')
                             else:
                                 raise ValueError('What else we got here?')
                         conn.commit()
                         break
-                    elif i == len(prevTrades) -1 and isNumeric(bt['pl']) and bt['pl'] != 0:
+                    elif i == len(prevTrades) -1 and isNumeric(bt[rc.PL]) and bt[rc.PL] != 0:
                         # This catches a badTrade if the conditions above have failed (end of
                         # prevTrades) and the badTrade has a PL. Its possible we can figure out the
                         # some of the rest of the details by comparing average price to previous
@@ -623,6 +620,7 @@ class StatementDB:
         '''
         A second algorithm to try to fill in some blanks
         '''
+        rc = self.rc
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
 
@@ -637,32 +635,32 @@ class StatementDB:
             nextTrades = [self.makeTradeDict(x) for x in nextTrades]
             pastPrimo = False
             for nt in nextTrades:
-                uncovered = self.getUncoveredDays(bt['act'], bt['dt'], nt['dt'])
+                uncovered = self.getUncoveredDays(bt[rc.acct], bt[rc.date], nt[rc.date])
                 if uncovered:
                     break 
                 fixthese.append(nt)
             for i, ft in enumerate(fixthese):
-                if isNumeric(ft['bal']) and ft['qty'] == ft['bal']:
+                if isNumeric(ft[rc.bal]) and ft[rc.shares] == ft[rc.bal]:
                     print('Got the balance of a future trade with no uncovered days')
-                    if not isNumeric(ft['avg']):
-                        ft['avg'] = ft['p']
-                        ft['oc'] = 'O'
-                        self.updateAvgOC(cur, ft, ft['avg'], ft['oc'])
+                    if not isNumeric(ft[rc.avg]):
+                        ft[rc.avg] = ft[rc.price]
+                        ft[rc.oc] = 'O'
+                        self.updateAvgOC(cur, ft, ft[rc.avg], ft[rc.oc])
                         conn.commit()
                         return
-                elif isNumeric(ft['pl']) and ft['pl'] != 0:
+                elif isNumeric(ft[rc.PL]) and ft[rc.PL] != 0:
                     pastPrimo = True
-                    average = ((ft['pl'] / ft['qty']) + ft['p'])
-                    if not ft['avg'] or not isNumeric(ft['avg']):
-                        ft['avg'] = average
+                    average = ((ft[rc.PL] / ft[rc.shares]) + ft[rc.price])
+                    if not ft[rc.avg] or not isNumeric(ft[rc.avg]):
+                        ft[rc.avg] = average
                     else:
-                        assert math.isclose(average, ft['avg'], abs_tol=1e-2)
-                    ft['oc'] = 'C'
-                    side = LONG if ft['qty'] < 0 else SHORT
-                    if isNumeric(ft['bal']):
-                        balance = ft['bal']
+                        assert math.isclose(average, ft[rc.avg], abs_tol=1e-2)
+                    ft[rc.oc] = 'C'
+                    side = LONG if ft[rc.shares] < 0 else SHORT
+                    if isNumeric(ft[rc.bal]):
+                        balance = ft[rc.bal]
                         for j in range(i-1, -1, -1):
-                            balance = balance - fixthese[j+1]['qty']
+                            balance = balance - fixthese[j+1][rc.shares]
                             self.updateBal(cur, fixthese[j], balance)
                             if j == 0:
                                 conn.commit()
@@ -745,7 +743,37 @@ class StatementDB:
             return False
         return True
 
-    def getStatement(self, account, beg, end=None):
+    def getStatement(self, day, account='all'):
+        rc = self.rc
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        day = pd.Timestamp(day)
+        begin = day.strftime('%Y%m%d')
+        end = day.strftime('%Y%m%d;99')
+        count = 0
+        if account == 'all':
+            trades = cur.execute(f'''
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
+                   {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+                where datetime > ?
+                and datetime < ?
+            ''', (begin, end))
+        else:
+            trades = cur.execute(f'''
+                SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
+                       {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+                    where datetime > ?
+                    and datetime < ?
+                    and Account = ?
+            ''', (begin, end, account))
+        if count:
+            trades = count.fetchall()
+        return trades
+
+
+        pass
+
+    def getStatementDays(self, account, beg, end=None):
         '''
         Retrieve all the trades for the given days.
         :account:
@@ -884,7 +912,9 @@ def local():
     e = pd.Timestamp('2018-12-31')
     print(d.strftime("%B, %A %d %Y"))
     db = StatementDB()
-    db.getStatement('U2429974', d, e)
+    # df = db.getStatementDays('U2429974', d, e)
+    x = db.getNumTicketsforDay(d)
+    print(x, "tickets")
 
 if __name__ == '__main__':
     # notmain()

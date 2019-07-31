@@ -92,6 +92,13 @@
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
+             <widget class="QRadioButton" name="useDatabase">
+              <property name="text">
+               <string>Database</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QRadioButton" name="dasImport">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

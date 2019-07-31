@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file '.\summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -64,6 +65,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.addLayout(self.gridLayout)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.useDatabase = QtWidgets.QRadioButton(self.centralwidget)
+        self.useDatabase.setObjectName("useDatabase")
+        self.verticalLayout_3.addWidget(self.useDatabase)
         self.dasImport = QtWidgets.QRadioButton(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -1252,6 +1256,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Structjour -- Daily trade review"))
         self.inFileBtn.setText(_translate("MainWindow", "In File"))
+        self.useDatabase.setText(_translate("MainWindow", "Database"))
         self.dasImport.setText(_translate("MainWindow", "DAS import"))
         self.ibImport.setText(_translate("MainWindow", "IB import"))
         self.goBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#00aa00;\">Load the file shown in the file edit box.</span></p></body></html>"))
@@ -1317,6 +1322,7 @@ class Ui_MainWindow(object):
         self.actionChart_Settings.setText(_translate("MainWindow", "Chart Settings"))
         self.actionStock_API.setText(_translate("MainWindow", "Stock API"))
         self.actionStrategy_Browser.setText(_translate("MainWindow", "Strategy Browser"))
-        self.actionSynchronize_Saved_files.setText(_translate("MainWindow", "Synchronize Saved files"))
+        self.actionSynchronize_Saved_files.setText(_translate("MainWindow", "Synchronize Saved Files"))
+
 
 from journal.view.clicklabel import ClickLabel

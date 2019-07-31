@@ -73,7 +73,7 @@ class Statement_DAS(object):
         if 'Date' not in self.df.columns:
             self.df['Date'] = jf.theDate
         if 'P / L' in self.df.columns:
-            self.df = self.df.rename(columns={'P / L': rc.PL})
+            self.df = self.df.rename(columns={'P / L': rc.PnL})
         DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
 
     def _checkUniqueSIMTX(self):
@@ -402,7 +402,8 @@ class Statement_IBActivity:
         for i, row in df.iterrows():
             addme, tval = floatValue(row['T. Price'])
             dblchk, bval = floatValue(row['Basis'])
-            if addme and dblchk and not row['Symbol'].lower().startswith('total'):
+            if addme and dblchk and not row['Symbol'].lower().startswith('total') and (
+                    not row['Symbol'].lower().startswith('closed lot')):
                 newtrades = newtrades.append(row)
 
         return newtrades
@@ -415,9 +416,9 @@ class Statement_IBActivity:
         '''
 
         rc = ReqCol()
-        if 'PL' not in df.columns:
+        if rc.PL not in df.columns:
             df['PL'] = 0
-        df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'bal', 'Account', 'Proceeds', 'Comm/Fee', 'PL', 'Code']].copy()
+        df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'bal', 'Account', 'Proceeds', 'Comm/Fee', rc.PL, 'Code']].copy()
 
         df['Date'] = df['Date/Time']
         df[rc.side] = ''
@@ -449,92 +450,14 @@ class Statement_IBActivity:
 
 
         df = df.rename(columns={'Date/Time': rc.time, 'Symbol': rc.ticker, 'T. Price': rc.price,
-                                        'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PL': rc.PL})
+                                        'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PnL': rc.PL})
         return df
-
-
-    # def figurePL_IBActivity(self, df, soup=None, url=None):
-    #     df = df.copy()
-    #     df['bal'] = 0
-    #     df['PL'] = 0.0
-    #     df['avg'] = 0.0
-    #     df['mkt'] = 0.0
-    #     # df = df[['Symbol', 'Date/Time', 'Quantity', 'bal', 'T. Price', 'Comm/Fee', 'Realized P/L', 'PL', 'avg', 'Code', 'Proceeds', 'mkt' ]].copy()
-
-    #     newtrade = pd.DataFrame(columns = df.columns)
-    #     # unbal = self.getUnbal_IBActivity(soup=soup, url=url)
-    #     for s in df['Symbol'].unique():
-    #         tdf = df[(df.Symbol == s)].copy()
-    #         bal = costSum = comSum = total = 0.0
-
-    #         firsttrade = True
-    #         avg = 0
-    #         txPL = 0.0
-    #         for count, (i, row) in enumerate(tdf.iterrows()):
-    #             PL = 0.0
-    #             symb, qty, price, comm,  rpl, code = list(row[['Symbol',  'Quantity', 'T. Price', 'Comm/Fee', 'Realized P/L', 'Code',]])
-    #             code = 'O' if 'O' in code else 'C' if 'C' in code else ''
-    #             # this is bound to tringger-- I want to see it when it does
-    #             assert code
-    #             try:
-    #                 qty = int(qty) if qty else 0
-    #                 price = float(price) if price else 0.0
-    #                 rpl = float(rpl) if rpl else 0.0
-    #                 comm = float(comm) if comm else 0.0
-
-    #             except ValueError:
-    #                 msg = f'Bad Value in {row} found in {__file__}'
-    #                 raise ValueError(msg)
-                    
-    #             comSum = comSum + comm
-
-    #             if 'C' in tdf.iloc[0].Code:
-    #                 if 'C' in row['Code']:
-    #                     mkt = qty * price
-    #                     PL = rpl - comSum + txPL
-    #                     txPL = 0.0
-    #                 elif 'O' in row['Code']:
-    #                     txPL = txPL + rpl
-
-    #             elif 'O' in tdf.iloc[0].Code:
-
-    #                 bal = bal + qty
-    #                 mkt = qty * price
-    #                 costSum = costSum + mkt
-    #                 if firsttrade:
-    #                     avg = price
-    #                 if code == 'O':
-    #                     txPL = txPL + rpl
-    #                     if bal != 0:
-    #                         avg = costSum/bal
-    #                 elif code == 'C':
-    #                     PL = (avg - price) * qty
-    #                     txPL = 0
-    #                     total = total + PL
-    #             else:
-    #                 print('hmmm what have we here?')
-
-
-    #             tdf.at[i, 'bal'] = bal
-    #             tdf.at[i, 'PL'] = PL
-    #             tdf.at[i, 'avg'] = avg
-    #             tdf.at[i, 'mkt'] = mkt
-
-    #             newtrade = newtrade.append(tdf.loc[i])
-
-    #             if bal == 0:
-    #                 firsttrade = True
-    #             else:
-    #                 firsttrade = False
-
-
-    #     return newtrade
 
     def getPL(self, df, soup=None, url=None):
         df = df.copy()
         df['bal'] = 0
-        df['PL'] = 0.0
-        df = df[['Symbol', 'Date/Time', 'Account', 'Quantity', 'bal', 'T. Price', 'MTM P/L', 'Comm/Fee', 'Realized P/L', 'PL',  'Code', 'Proceeds']].copy()
+        df['PnL'] = 0.0
+        df = df[['Symbol', 'Date/Time', 'Account', 'Quantity', 'bal', 'T. Price', 'MTM P/L', 'Comm/Fee', 'Realized P/L', 'PnL',  'Code', 'Proceeds']].copy()
 
         newtrade = pd.DataFrame(columns = df.columns)
         for s in df['Symbol'].unique():
@@ -557,7 +480,7 @@ class Statement_IBActivity:
 
                 bal = bal + qty
                 tdf.at[i, 'bal'] = bal
-                tdf.at[i, 'PL'] = rpl - comm
+                tdf.at[i, 'PnL'] = rpl - comm
 
                 newtrade = newtrade.append(tdf.loc[i])
 
@@ -623,7 +546,7 @@ def dayPl(df):
     daypl = 0.0
     commission = 0.0
     # df = fred[0].copy()
-    df['PL'] = 0.0
+    df['PnL'] = 0.0
     # df['Realized P/L'] = df['Realized P/L'].astype(float)
     # df['Comm/Fee'] = df['Comm/Fee'].astype(float)
     for i, row in df.iterrows():
@@ -639,7 +562,7 @@ def dayPl(df):
                 if recordProfit:
                     daypl = daypl - commission
                     # print('{:3}   {:10}   {}   {} = {}'.format(i, row['Realized P/L'], row['Symbol'], recordProfit, daypl))
-                    df.at[i, 'PL'] = daypl
+                    df.at[i, 'PnL'] = daypl
                     daypl = 0.0
                     commission = 0.0
                     # pl = 0
@@ -671,8 +594,8 @@ def normColumns_IbCsv(df):
     
     rc = ReqCol()
     
-    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PL', 'Code']].copy()
-    # df['PL'] = 0
+    df = df[['Date/Time', 'Symbol', 'T. Price', 'Quantity', 'Account',  'Proceeds', 'PnL', 'Code']].copy()
+    # df['nPL'] = 0
     df['Date'] = df['Date/Time']
     df[rc.side] = ''
     df.Quantity = df.Quantity.astype(int)
@@ -701,7 +624,7 @@ def normColumns_IbCsv(df):
     
 
     df = df.rename(columns={'Date/Time': rc.time, 'Symbol': rc.ticker, 'T. Price': rc.price,
-                                    'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PL': rc.PL})
+                                    'Quantity': rc.shares, 'Account': rc.acct, 'Code': 'O/C', 'PnL': rc.PL})
     return df
 
 

@@ -140,9 +140,9 @@ class Test_StatementDB(unittest.TestCase):
             self.assertTrue(c > ibs.endDate)
             self.assertTrue(c <= end)
 
-    def test_getStatement(self):
+    def test_getStatementDays(self):
         '''
-        Test the method StatementDB.getStatement. Exercises getUncovered. Specifically test that
+        Test the method StatementDB.getStatementDays. Exercises getUncovered. Specifically test that
         when it returns data, it has the correct fields required in FinReqCol. And the the trades
         all occur within the specified dates (this tests on a single day). There is no good way to
         test that we have all available trades beyond opening statemnets/DAS exports and looking.
@@ -156,7 +156,7 @@ class Test_StatementDB(unittest.TestCase):
         for day in days:
             if day.weekday() > 4 or ibdb.isHoliday(current):
                 continue
-            s = ibdb.getStatement(ibs.account, beg=day)
+            s = ibdb.getStatementDays(ibs.account, beg=day)
             if not s.empty:
                 cols = [frc.ticker, frc.date, frc.shares, frc.bal, frc.price,
                         frc.avg, frc.comm, frc.acct, frc.oc, frc.PL]
@@ -171,7 +171,7 @@ def main():
 def notmain():
     t = Test_StatementDB()
     # t.test_getUncoveredDays()
-    t.test_getStatement()
+    t.test_getStatementDays()
 
 
 if __name__ == '__main__':

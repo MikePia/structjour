@@ -35,6 +35,7 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap
 import pandas as pd
 
 from inspiration.inspire import Inspire
+from journal.statements.ibstatementdb import StatementDB
 from journal.view.chartcontrol import ChartControl
 from journal.view.filesetcontrol import FileSetCtrl
 from journal.view.ejcontrol import EJControl
@@ -95,6 +96,8 @@ class SumControl(QMainWindow):
                 self.ui.dasImport.setChecked(True)
             elif intype == 'IB_HTML':
                 self.ui.ibImport.setChecked(True)
+            elif intype == 'DB':
+                self.ui.useDatabase.setChecked(True)
 
         # Minimal implementation
         inspire = Inspire()
@@ -106,6 +109,8 @@ class SumControl(QMainWindow):
         self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
+        self.ui.useDatabase.clicked.connect(self.dbDefault)
+    
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.lost.textEdited.connect(self.setMstkVal)
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
@@ -741,6 +746,12 @@ class SumControl(QMainWindow):
         self.settings.setValue('inputType', 'IB_HTML')
         self.loadFromDate()
 
+    def dbDefault(self, b):
+        print('dbDefault called with', b)
+        self.settings.setValue('dboutput', 'on')
+        self.settings.setValue('inputType', 'DB')
+        self.loadFromDate()
+
     def loadFromDate(self):
         '''
         Callback when dateEdit is changed. Gather the settings and locate what input files exist.
@@ -754,13 +765,13 @@ class SumControl(QMainWindow):
             daDate = qtime2pd(daDate)
         self.settings.setValue('theDate', daDate)
         indir = self.getDirectory()
-        dasinfile = self.settings.value('dasInfile')
-        ibinfile = self.settings.value('ibInfile')
-        if not indir or (not dasinfile and not ibinfile):
-            self.ui.infileEdit.setText('')
-            self.ui.infileEdit.setStyleSheet('color: black;')
-            return
-        if ibinfile:
+        inputType = self.settings.value('inputType')
+        if inputType == 'DAS':
+            dasinfile = self.settings.value('dasInfile')
+            infile = self.settings.value('dasInfile')
+        elif inputType == 'IB_HTML' or inputType == 'IB_CVS':
+            ibinfile = self.settings.value('ibInfile')
+            infile = self.settings.value('ibInfile')
             sglob = ibinfile
             rgx = re.sub('{\*}', '.*', sglob)
 
@@ -772,26 +783,50 @@ class SumControl(QMainWindow):
                         fs.append(x.string)
                 if fs:
                     ibinfile = fs[0]
+                    infile = fs[0]
                     self.settings.setValue('ibInfileName', ibinfile)
+        elif inputType == 'DB':
+            infile = 'DB'
+            # dbDate = daDate.strftime('%Y%m%d')
+            statementDb = StatementDB()
+            account = self.settings.value('account')
+            count = statementDb.getNumTicketsforDay(daDate)
+            s = f"{count} DB tickets for {daDate.strftime('%A, %B %d, %Y')}"
+            self.ui.infileEdit.setText(s)
+            statusstring = "Ready to load trades"
+            if count:
+                self.ui.infileEdit.setStyleSheet('color: green;')
+                self.ui.loadBtn.setStyleSheet('color: blue;')
+            else:
+                self.ui.infileEdit.setStyleSheet('color: red;')
+                self.ui.loadBtn.setStyleSheet('color: black;')
+            # statement = statementDb.getStatementDays(account, beg=daDate)
+            return
 
-        dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
-        ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
+        if not indir or not infile:
+            #self.ui.infileEdit.setText('')
+            self.ui.infileEdit.setStyleSheet('color: black;')
+            return
 
-        infile = None
-        inputtype = self.settings.value('inputType')
-        if inputtype:
-            if inputtype == 'DAS':
-                infile = dasinfile
-            elif inputtype == 'IB_HTML':
-                infile = ibinfile
+        inpathfile = os.path.join(indir, infile) if infile else None
+        # dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
+        # ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
+
+        # infile = None?
+        # if inputtype:
+        #     if inputtype == 'DAS':
+        #         infile = dasinfile
+        #     elif inputtype == 'IB_HTML':
+        #         infile = ibinfile
 
         if not infile:
             return
-        self.setColorsAndLabels(infile)
+        self.setColorsAndLabels(inpathfile)
 
     def setColorsAndLabels(self, infile):
         inputtype = self.settings.value('inputType')
-        self.ui.infileEdit.setText(infile)
+        if inputtype != "DB":
+            self.ui.infileEdit.setText(infile)
 
         statusstring = ''
         if os.path.exists(infile):
@@ -800,6 +835,7 @@ class SumControl(QMainWindow):
             if inputtype == 'IB_HtmL':
                 self.settings.setValue('ibInfileName', infile)
             savename = self.getSaveName()
+            statusstring = 'File ready to open'
 
             if os.path.exists(savename):
                 self.ui.infileEdit.setStyleSheet('color: blue;')
@@ -808,7 +844,10 @@ class SumControl(QMainWindow):
                 statusstring = f'[{os.path.split(savename)[1]} ({modstring})]   '
                 print('got one\n     ', statusstring)
                 self.ui.loadBtn.setStyleSheet('color: blue;')
+                statusstrine = statusstring + ' or saved object ready to load.'
             else:
+                statusstrine = statusstring + '.'
+                self.ui.loadBtn.setStyleSheet('color: black;')
                 self.ui.loadBtn.setStyleSheet('color: black;')
             
             d, xlname = os.path.split(savename)
@@ -818,14 +857,13 @@ class SumControl(QMainWindow):
             if os.path.exists(xlname):
                 tm = os.path.getmtime(xlname)
                 modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
-                statusstring = statusstring + f'[{os.path.split(xlname)[1]} ({modstring})]'
-                print('got one other\n     ', statusstring)
-                # print('UPDATING')
+                statusstring = statusstring + f'Excel file is saved: {os.path.split(xlname)[1]} ({modstring})]'
 
 
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
             self.ui.goBtn.setStyleSheet('color:black')
+            statusstring = f'File {infile} does not exist.'
 
         self.setStatusTip(statusstring)
         self.ui.dateEdit.setToolTip(statusstring)

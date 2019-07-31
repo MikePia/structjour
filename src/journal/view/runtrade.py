@@ -29,8 +29,9 @@ from PyQt5.QtCore import QDate, QDateTime
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox
 
-from journal.definetrades import DefineTrades
+from journal.definetrades import DefineTrades, FinReqCol
 from journal.pandasutil import InputDataFrame
+from journal.statements.ibstatementdb import StatementDB
 from journal.statement import Statement_DAS as Ticket
 from journal.statement import Statement_IBActivity
 from journal.view.layoutforms import LayoutForms
@@ -89,21 +90,53 @@ class runController:
         '''
         Load saved objects
         '''
-        print('gonna loadit gonna loadit')
+        inputType = self.settings.value('inputType')
+            
         daDate = self.ui.dateEdit.date()
         self.settings.setValue('theDate', daDate)
         self.initialize()
+
         if not self.indir:
             print('What file is supposed to load?')
             return
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
+        if inputType == 'DB':
+            self.runDBInput(daDate, jf)
+            return
 
         lf = LayoutForms(self.sc, jf, None)
         lf.loadSavedFile()
         if lf.df is None:
             print('Did not load up correctly. Try pressing Go, Load, Save')
+
+    def runDBInput(self, daDate, jf):
+        statement = StatementDB()
+
+        daDate = qtime2pd(daDate)
+
+        rc = FinReqCol()
+        data = statement.getStatement(daDate)
+        columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id']
+        df = pd.DataFrame(data=data, columns=columns)
+
+        idf = InputDataFrame()
+        # trades, success = idf.processInputFile(df, jf.theDate, jf)
+        # if not success:
+        #     return
+
+        tu = DefineTrades(self.inputtype)
+        inputlen, dframe, ldf = tu.processOutputDframe(df)
+        # self.inputlen = inputlen
+
+        # images and Trade Summaries.
+        # margin = 25
+
+        lf = LayoutForms(self.sc, jf, dframe)
+        lf.pickleitnow()
+        tradeSummaries = lf.runTtoSummaries(ldf)
+
 
     def runnit(self):
         '''

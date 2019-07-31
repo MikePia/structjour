@@ -34,7 +34,7 @@ class JournalFiles:
     files to read and write.
     '''
 
-    inputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS'}
+    inputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS', 'db': 'DB'}
 
     # As the console version has no plan for release, not to worry too much about configuration
     def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS',
@@ -142,9 +142,9 @@ class JournalFiles:
         '''
         Check the value of self.inpathfile, self.inpathfile2 (if the entry exists), and self.outdir 
         for existance. Note that this is called by __init__
-        :raise NameError: If inpathfile, inpathfile2 (if given) or outdir do not exist.
+        :raise NameError: If not DB and inpathfile, inpathfile2 (if given) or outdir do not exist.
         '''
-        if not os.path.exists(self.inpathfile):
+        if self.inputType != 'DB' and not os.path.exists(self.inpathfile):
             print(os.path.realpath(self.inpathfile))
             if os.path.exists(os.path.join(self.root, self.infile)):
                 self.indir = self.root
@@ -155,11 +155,14 @@ class JournalFiles:
                 self.printValues()
                 raise NameError(err)
 
-        if self.inpathfile2 and not os.path.exists(self.inpathfile2):
+        if self.inputType != 'DB' and self.inpathfile2 and not os.path.exists(self.inpathfile2):
             err = "Fatal error:{0}: input can't be located: {1}".format(
                     "JournalFiles._checkPaths", self.inpathfile2)
             self.printValues()
             raise NameError(err)
+
+        if not os.path.exists(self.indir):
+            print('fixme')
         
         if not os.path.exists(self.outdir):
 
