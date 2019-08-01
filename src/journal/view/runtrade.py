@@ -118,16 +118,18 @@ class runController:
 
         rc = FinReqCol()
         data = statement.getStatement(daDate)
-        columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id']
+        columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id', rc.comm]
         df = pd.DataFrame(data=data, columns=columns)
+        df[rc.time] = ''
+        for i, row in df.iterrows():
+            df.at[i, rc.time] = row[rc.date][9:11] + ':' + row[rc.date][11:13] + ':' + row[rc.date][13:15]
+        # df[rc.time] = df[rc.time].map(str) + df[rc.date][:6]
+        df[rc.date] = pd.to_datetime(df[rc.date], format='%Y%m%d;%H%M%S')
 
-        idf = InputDataFrame()
-        # trades, success = idf.processInputFile(df, jf.theDate, jf)
-        # if not success:
-        #     return
 
         tu = DefineTrades(self.inputtype)
-        inputlen, dframe, ldf = tu.processOutputDframe(df)
+        # inputlen, dframe, ldf = tu.processOutputDframe(df)
+        inputlen, dframe, ldf = tu.processDBTrades(df)
         # self.inputlen = inputlen
 
         # images and Trade Summaries.

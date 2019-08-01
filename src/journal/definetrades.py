@@ -21,9 +21,10 @@ Created on Sep 5, 2018
 @author: Mike Petersen
 '''
 import sys
-import datetime
+# import datetime
 import pandas as pd
 from journal.dfutil import DataFrameUtil
+from journal.stock.utilities import isNumeric
 # pylint: disable = C0103
 
 class FinReqCol(object):
@@ -122,6 +123,38 @@ class DefineTrades(object):
 
         self._frc = FinReqCol(source)
 
+    def processDBTrades(self, trades):
+        '''
+        Run the methods to create the new DataFrame and fill in the data for the new trade-
+        centric DataFrame.
+        '''
+        rc = self._frc
+
+        # Process the output file DataFrame
+        trades = self.addFinReqCol(trades)
+        newTrades = trades[rc.columns]
+        newTrades.copy()
+        nt = newTrades.sort_values([rc.ticker, rc.acct, rc.time])
+        # nt = self.writeShareBalance(nt)
+        nt = self.addStartTimeDB(nt)
+        # nt.Date = pd.to_datetime(nt.Date)
+        nt = nt.sort_values([rc.ticker, rc.acct, rc.start, rc.date, rc.time], ascending=True)
+        nt = self.addTradeIndex(nt)
+        nt = self.addTradePL(nt)
+        nt = self.addTradeDuration(nt)
+        nt = self.addTradeNameDB(nt)
+        # ldf is a list of DataFrames, one per trade
+        ldf = self.getTradeList(nt)
+        ldf, nt = self.postProcessingDB(ldf)
+        nt = DataFrameUtil.addRows(nt, 2)
+        nt = self.addSummaryPL(nt)
+
+        # Get the length of the original input file before adding rows for processing Workbook
+        # later (?move this out a level)
+        inputlen = len(nt)
+        dframe = DataFrameUtil.addRows(nt, 2)
+        return inputlen, dframe, ldf
+
     def processOutputDframe(self, trades):
         '''
         Run the methods to create the new DataFrame and fill in the data for the new trade-
@@ -177,6 +210,38 @@ class DefineTrades(object):
 
             dframe.at[i, c.bal] = newBalance
             prevBal = newBalance
+        return dframe
+
+    def addStartTimeDB(self, dframe):
+        '''
+        Add the start time to the new column labeled Start or frc.start. Each transaction in each
+        trade will share a start time.
+        :params dframe: The output df to place the data
+        :return dframe: The same dframe but with the new start data.
+        '''
+
+        rc = self._frc
+
+        newTrade = True
+        oldsymb = ''
+        oldaccnt = ''
+        for i, row in dframe.iterrows():
+
+            if row[rc.ticker] != oldsymb or row[rc.acct] != oldaccnt:
+                newTrade = True
+            oldsymb = row[rc.ticker]
+            oldaccnt = row[rc.acct]
+
+            if newTrade:
+                newTrade = True if isNumeric(row[rc.bal]) and row[rc.bal] == 0 else False
+                oldTime = dframe.at[i, rc.time]
+                dframe.at[i, rc.start] = oldTime
+
+            else:
+                #             print("      Finally :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
+                dframe.at[i, rc.start] = oldTime
+            if row[rc.bal] == 0:
+                newTrade = True
         return dframe
 
     def addStartTime(self, dframe):
@@ -241,10 +306,13 @@ class DefineTrades(object):
 
         tradeTotal = 0.0
         for i, row in dframe.iterrows():
+            if not isNumeric(row[c.bal]):
+                raise ValueError('Programmers exception from addTradePL. Input from badTrade')
+            pl = row[c.PL] if isNumeric(row[c.PL]) else 0
             if row[c.bal] != 0:
-                tradeTotal = tradeTotal + row[c.PL]
+                tradeTotal = tradeTotal + pl
             else:
-                sumtotal = tradeTotal + row[c.PL]
+                sumtotal = tradeTotal + pl
                 dframe.at[i, c.sum] = sumtotal
                 tradeTotal = 0
         return dframe
@@ -268,6 +336,30 @@ class DefineTrades(object):
                 dframe.at[i, c.dur] = diff
         return dframe
 
+    def addTradeNameDB(self, dframe):
+        '''
+        Create a name for this trade like 'AMD Short'. Place it in the c.name column. If this is
+        not an overnight hold, then the last transaction is an exit so B indicates short. This
+        could still be a flipped position. We need the initial transactions- which are processed
+        later.
+        '''
+
+        rc = self._frc
+
+        for i, row in dframe.iterrows():
+
+            longShort = " Long"
+            if not isNumeric(row[rc.bal]):
+
+                continue
+            if row[rc.bal] == 0:
+                assert row[rc.oc].find('C') >= 0
+                if row[rc.shares] > 0: 
+                    longShort = " Short"
+                dframe.at[i, rc.name] = row[rc.ticker] + longShort
+        return dframe
+
+
     def addTradeName(self, dframe):
         '''
         Create a name for this trade like 'AMD Short'. Place it in the c.name column. If this is
@@ -288,13 +380,42 @@ class DefineTrades(object):
                 dframe.at[i, c.name] = row[c.ticker] + longShort
         return dframe
 
-    def addSummaryPL(self, dframe):
+    def addSummaryPL(self, df):
+        '''
+        Create a summaries of live, sim and total P/L for the day and place it in new rows.
+        Total and sim total go in the first blank row under PL and sum
+        Live total in lower blank row under sum. Note that the accounts are identified 'IB' style
+        and will break when new brokers are added.  Uxxxxxxxx is live, TRxxxxxx is sim. When new
+        brokers are added do something else.
+        :prerequisites: 2 blank rows added at the bottom of the df
+        :raise ValueError: If blank lines are not in df.
+        '''
+        rc = self._frc
+        df.reset_index(drop=True, inplace=True)
+        df[rc.PL] = pd.to_numeric(df[rc.PL], errors='coerce')
+
+        ixs = df[df[rc.ticker] == ''].index
+        assert len(ixs) > 1
+        total = df[rc.PL].sum()
+        for acnt in df[rc.acct].unique():
+            acnttotal = df[df[rc.acct] == acnt][rc.PL].sum()
+            if acnt.startswith('U'):
+                df.at[ixs[1], rc.sum] = acnttotal
+            elif acnt.startswith('TR'):
+                df.at[ixs[0], rc.sum] = acnttotal
+                
+        df.at[ixs[0], rc.PL] = total
+        return df
+
+
+    def addSummaryPLold(self, dframe):
         ''' 
         Create a summary of the P/L for the day, place it in new row. 
         Sum up the transactions in c.PL for Live and Sim Seperately.
         We rely on the account number starting with 'U' or 'TR' to determine
         live or SIM. These two columns should add to the same amount. '''
         # Note that .sum() should work on this but it failed when I tried it.
+        # because the two extra rows had PL Strings as ''
         c = self._frc
 
         count = 0
@@ -343,7 +464,7 @@ class DefineTrades(object):
         try:
             if not dframe[c.tix].unique()[0].startswith('Trade'):
                 raise(NameError(
-                    "Cannot make a trade list. You must first create the TIndex column using addTradeIndex()."))
+                    "Cannot make a trade list. Call addTradeIndex() before."))
         except NameError as ex:
             print(ex, 'Bye!')
             sys.exit(-1)
@@ -361,6 +482,40 @@ class DefineTrades(object):
         # print("Got {0} trades".format(len(ldf)))
         return ldf
 
+    def postProcessingDB(self, ldf):
+        '''
+        A few items that need fixing up. Locate and name flipped positions and overnight holds and change
+        the name appropriately. 
+        :params ldf: A ist of DataFrames, each DataFrame represents a trade defined by the initial
+                     purchase or short of a stock, and all transactions until the transaction which
+                     returns the share balance to 0.
+        :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single
+                      DataFrame.
+        '''
+        rc = self._frc
+        dframe = pd.DataFrame()
+        for count, tdf in enumerate(ldf):
+            x0 = tdf.index[0]
+            xl = tdf.index[-1]
+            if tdf.at[x0, rc.bal] != tdf.at[x0, rc.shares] or tdf.at[xl, rc.bal] != 0:
+                tdf.at[xl, rc.name] = tdf.at[xl, rc.name] + " OVERNIGHT"
+        
+            if tdf.at[x0, rc.bal] != 0:
+                firstrow = True
+                for i, row in tdf.iterrows():
+                    if firstrow:
+                        side = True if row[rc.bal] > 0 else False
+                        firstrow = False
+                    elif row[rc.bal] != 0 and (row[rc.bal] >= 0) != side:
+                        tdf.at[xl, rc.name] = tdf.at[xl, rc.name] + " FLIPPED"
+                        break
+            else:
+                assert len(tdf) == 1
+                    
+            dframe = dframe.append(tdf)
+        return ldf, dframe
+
+
     def postProcessing(self, ldf):
         '''
         A few items that need fixing up in names and initial HOLD entries. This method is called
@@ -374,7 +529,8 @@ class DefineTrades(object):
                      After HOLDs are nontransactions. shares are listed as 0 indicating the
                      number of shares owned is in the previous transaction. Before HOLDs attempt to
                      show the current status of previous transctions not given explicity.
-        :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single DataFrame.
+        :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single
+                      DataFrame.
 
         '''
         c = self._frc
@@ -409,7 +565,7 @@ class DefineTrades(object):
                     # Still not sure how IB deals with flipped trades. I think they break down the
                     # shares to figure, for ex, PL from shares sold closed to 0 balance, and avg
                     # price change from Shares sold Open to bal
-                    # TODO: Get a an IB Statement with a flipped position 
+                    # TODO: Get a an IB Statement with a flipped position
                     tdf.at[xl, c.name] = tdf.at[xl, c.name] + " FLIPPED"
 
                     msg = '\nFound a flipper long to short.\n'
@@ -449,12 +605,10 @@ class DefineTrades(object):
 
     def addFinReqCol(self, dframe):
         '''
-        Add the columns from FinReqCol that are not already in dframe. These are columns to determine the
-        trade in which a  transaction belongs. It will probably include the FinReqCol dict values for the 
-        keys: tix, start, bal, sum, dur, name
-        :params dframe: The original DataFrame with the columns of the input file and including at least
-                        all of the columns in ReqCol.columns
-        :return dframe: A DataFrame that includes at least all of the columns in FinReqCol.columns 
+        Add the columns from FinReqCol that are not already in dframe.
+        :params dframe: The original DataFrame with the columns of the input file and including at
+                         least all of the columns in ReqCol.columns
+        :return dframe: A DataFrame that includes at least all of the columns in FinReqCol.columns
         '''
         c = self._frc
         for l in c.columns:

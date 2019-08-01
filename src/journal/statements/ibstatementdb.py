@@ -30,25 +30,9 @@ import pandas as pd
 from PyQt5.QtCore import QSettings
 
 from journal.definetrades import FinReqCol
+from journal.stock.utilities import isNumeric
 
 # pylint: disable = C0103
-
-def isNumeric(l):
-    
-    '''
-    Not to be confused with str.isnumeric. Takes an arg or a list and tests if all members are
-    numeric types and not NAN.
-    '''
-    ll = list()
-    if not isinstance(l, list):
-        ll.append(l)
-    else:
-        ll = l
-    for t in ll:
-        if t is None or not isinstance(t, (int, float)) or math.isnan(t):
-            return False
-    return True
-
 
 class StatementDB:
     '''
@@ -355,7 +339,7 @@ class StatementDB:
         '''
         rc = self.rc
         t = dict()
-        t[rc.ticker], t[rc.date], t[rc.shares], t[rc.bal], t[rc.price], t[rc.avg], t[rc.PL], t[rc.acct], t[rc.oc], t['id'] = atrade
+        t[rc.ticker], t[rc.date], t[rc.shares], t[rc.bal], t[rc.price], t[rc.avg], t[rc.PL], t[rc.acct], t[rc.oc], t['id'], t[rc.comm] = atrade
         return t
 
     def getBadTrades(self):
@@ -365,7 +349,7 @@ class StatementDB:
         rc = self.rc
         found = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-            {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+            {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm} FROM ib_trades
                 WHERE {rc.avg} IS NULL
                 OR {rc.bal} IS NULL
         ''')
@@ -376,7 +360,7 @@ class StatementDB:
         rc = self.rc
         prevTrades = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-            {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+            {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm} FROM ib_trades
                 WHERE {rc.ticker} = ?
                 AND datetime < ?
                 AND {rc.acct} = ?
@@ -389,7 +373,7 @@ class StatementDB:
         rc = self.rc
         prevTrades = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-            {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+            {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm} FROM ib_trades
                 WHERE {rc.ticker} = ?
                 AND datetime > ?
                 AND {rc.acct} = ?
@@ -515,10 +499,7 @@ class StatementDB:
                                 if ft[rc.bal] == 0:
                                     pastPrimo = False
                             else:
-                                # This should be a first trade for this statmenet/Symbol. Could be Open or
-                                # Close. We are lacking the previous balance so cannot reliably figure the
-                                # average.
-                                print(f'''There is a  trade for {ft[rc.ticker]} that lacks a transaction in this statement''')
+                                print('or else')
                         conn.commit()
                         break
                             #######
@@ -543,7 +524,8 @@ class StatementDB:
                                 # side = LONG if quantity >= 0 else SHORT
                                 ft[rc.bal] = balance
 
-                            if isNumeric([ft[rc.PL], ft[rc.bal], ft[rc.avg]])and ft[rc.PL] !=0 and not pastPrimo:
+                            if isNumeric([ft[rc.PL], ft[rc.bal], ft[rc.avg]]) and (
+                                          ft[rc.PL] != 0 and not pastPrimo):
                                 # found a good trade closer
                                 pastPrimo = True
                                 side = LONG if ft[rc.shares] < 0 else SHORT
@@ -576,17 +558,19 @@ class StatementDB:
                                 # A badTrade -
 
                                 if (side is LONG and ft[rc.shares] >= 0) or (
-                                    side is SHORT and ft[rc.shares] < 0):
+                                        side is SHORT and ft[rc.shares] < 0):
                                     # Opener
-                                    # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance 
-                                    newAverage = ((average * balance) + (ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
+                                    # newAverage = ((prevAverage * prevBalance) +
+                                    #                (quantity * price)) / balance
+                                    newAverage = ((average * balance) + (
+                                                   ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
                                     average = newAverage
                                     balance = ft[rc.bal]
                                     ft[rc.avg] = average
                                     ft[rc.oc] = 'O'
                                     self.updateAvgOC(cur, ft, average, 'O')
                                 elif average:
-                                    # Closer. Enter PL and check for last trade -- 
+                                    # Closer. Enter PL and check for last trade --
                                     pl = (average - ft[rc.price]) * ft[rc.shares]
                                     ft[rc.oc] = 'C'
                                     # if ft[rc.bal] == 0:
@@ -637,7 +621,7 @@ class StatementDB:
             for nt in nextTrades:
                 uncovered = self.getUncoveredDays(bt[rc.acct], bt[rc.date], nt[rc.date])
                 if uncovered:
-                    break 
+                    break
                 fixthese.append(nt)
             for i, ft in enumerate(fixthese):
                 if isNumeric(ft[rc.bal]) and ft[rc.shares] == ft[rc.bal]:
@@ -672,7 +656,7 @@ class StatementDB:
 
     def processStatement(self, tdf, account, begin, end, openPos=None):
         '''
-        Processs the trade, positions, ancd covered tables using the Trades table and the 
+        Processs the trade, positions, ancd covered tables using the Trades table and the
         OpenPositions table.
         '''
         rc = self.rc
@@ -750,24 +734,24 @@ class StatementDB:
         day = pd.Timestamp(day)
         begin = day.strftime('%Y%m%d')
         end = day.strftime('%Y%m%d;99')
-        count = 0
+        trades = None
         if account == 'all':
             trades = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-                   {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+                   {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm} FROM ib_trades
                 where datetime > ?
                 and datetime < ?
             ''', (begin, end))
         else:
             trades = cur.execute(f'''
                 SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-                       {rc.PL}, {rc.acct}, {rc.oc}, id FROM ib_trades
+                       {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm} FROM ib_trades
                     where datetime > ?
                     and datetime < ?
                     and Account = ?
             ''', (begin, end, account))
-        if count:
-            trades = count.fetchall()
+        if trades:
+            trades = trades.fetchall()
         return trades
 
 
@@ -799,10 +783,10 @@ class StatementDB:
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cols = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.comm, rc.acct,
-                rc.oc, rc.PL]
+                rc.oc, rc.PL, 'id']
         x = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-            {rc.comm}, {rc.acct}, {rc.oc}, {rc.PL}
+            {rc.comm}, {rc.acct}, {rc.oc}, {rc.PL},  id
                     FROM ib_trades
                     WHERE datetime >= ?
                     AND datetime <= ?
@@ -866,17 +850,16 @@ class StatementDB:
         '''Get all the missing market days between the min and max covered days'''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        cur.execute('''SELECT min(day), max(day) 
+        cur.execute('''SELECT min(day), max(day)
             FROM ib_covered
             WHERE account = ?''', (account,))
         days = cur.fetchone()
         if days and days[0]:
             uncovered = self.getUncoveredDays(account, days[0], days[1])
-            return {'min': pd.Timestamp(days[0]).date(), 
+            return {'min': pd.Timestamp(days[0]).date(),
                     'max': pd.Timestamp(days[1]).date(),
                     'uncovered': uncovered}
         # print()
-        
     def getTradesByDates(self, account, sym, daMin, daMax):
         '''
         Get trades between  times min and max for a ticker/account
@@ -919,4 +902,3 @@ def local():
 if __name__ == '__main__':
     # notmain()
     local()
-

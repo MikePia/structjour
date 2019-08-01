@@ -22,8 +22,9 @@ Local utility functions shared by some stock modules and test code.
 @creation_date: 2019-01-17
 '''
 
-import datetime as dt
 from collections import OrderedDict
+import datetime as dt
+import math
 import os
 import random
 import sqlite3
@@ -35,6 +36,22 @@ from PyQt5.QtCore import QSettings, QUrl, QDate, QDateTime, Qt
 
 
 # pylint: disable = C0103
+
+
+def isNumeric(l):
+    '''
+    Not to be confused with str.isnumeric. Takes an arg or a list and tests if all members are
+    numeric types and not NAN.
+    '''
+    ll = list()
+    if not isinstance(l, list):
+        ll.append(l)
+    else:
+        ll = l
+    for t in ll:
+        if t is None or not isinstance(t, (int, float)) or math.isnan(t):
+            return False
+    return True
 
 def qtime2pd(qdt):
     '''Return a pandas Timestamp from a QDateTime'''

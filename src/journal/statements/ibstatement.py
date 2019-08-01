@@ -799,7 +799,7 @@ class IbStatement:
             self.endDate = pd.Timestamp(end).date()
         except ValueError:
             msg = f'Unknown date format error: {beg}, {end}'
-            return dict(), 
+            return dict(), dict()
         df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares})
         x = self.cheatForBAPL(df)
         if not x.empty:
@@ -807,7 +807,7 @@ class IbStatement:
             ibdb.processStatement(x, self.account, self.beginDate, self.endDate)
             df = x.copy()
             return {'Trades': df}, {'Trades': 'Trades'}
-        
+
         print("Trades are not added to the database")
         return {'Trades': df}, {'Trades': 'Trades'}
 
@@ -819,14 +819,14 @@ class IbStatement:
         broker's execution. When found, both of these orders were charged commission despite having
         the same order time.
         '''
-        rc  = self.rc
+        rc = self.rc
         newdf = pd.DataFrame()
         for account in t[rc.acct].unique():
             if not account:
                 return t
             accountdf = t[t[rc.acct] == account]
             for symbol in accountdf[rc.ticker].unique():
-                tickerdf = accountdf[accountdf[rc.ticker] == symbol]  
+                tickerdf = accountdf[accountdf[rc.ticker] == symbol]
                 for datetime in tickerdf['DateTime'].unique():
                     ticketdf = tickerdf[tickerdf['DateTime'] == datetime]
                     if len(ticketdf) > 1:
