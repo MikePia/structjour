@@ -269,7 +269,7 @@ class StatementDB:
         while current <= end:
             if not self.isDateCovered(cur, account, current):
                 d = current.strftime('%Y%m%d')
-                cursor = cur.execute('''
+                cur.execute('''
                     INSERT INTO ib_covered(day, covered, account)
                     VALUES(?, ?, ?)''',  (d, 'true', account))
             current = current + delt
@@ -334,33 +334,42 @@ class StatementDB:
     ########################################################################################
 
     def DBfigureUnbalancedPL(self, cur, prevTrades, bt):
+        '''
+        A secondary attempt to get balance for the badTrade bt. bt has a PL but lacks
+        balance.
+        First set it as a closer and set the average (just incase).
+        Look for an adjacent previous opener  (set average and open) and if the averages of 
+            that opener == price (within a tolerance) set balances
+
+        Programming note: This is similar to refigureAPL_backwards. Can they combine? share code?
+        '''
         rc = self.rc
         pTrades = [self.makeTradeDict(x) for x in prevTrades]
         tdict = pTrades.copy()
         tdict.append(bt)
 
-        # Going to iterate backwards from most recent to previous. 
+        # Going to iterate backwards from most recent to previous.
         tdict = list(reversed(tdict))
 
         LONG = True
         SHORT = False
 
         # First trade in the list is the last trade chronologically
-        preOmega = False
+        postOmega = False
         for i in range(len(tdict)):
-            if not preOmega:
+            if not postOmega:
                 # First trade is a closer or this was called in error, figure out the average
                 # average = (pl/qty) + price
                 assert isNumeric(tdict[0][rc.PL]) and tdict[0][rc.PL] != 0
                 tdict[0][rc.oc] = 'C'
-                average = (tdict[0][rc.PL] / tdict[0][rc.shares] ) + tdict[0][rc.price]
+                average = (tdict[0][rc.PL] / tdict[0][rc.shares]) + tdict[0][rc.price]
                 tdict[0][rc.avg] = average
 
                 side = LONG if tdict[0][rc.shares] < 0 else SHORT
-                preOmega = True
+                postOmega = True
 
-            elif (preOmega and side == LONG and tdict[i][rc.shares] > 0) or (
-                    preOmega and side == SHORT and tdict[i][rc.shares] < 0):
+            elif (postOmega and side == LONG and tdict[i][rc.shares] > 0) or (
+                    postOmega and side == SHORT and tdict[i][rc.shares] < 0):
                 # opener
                 # If just before a closer, then the average is shared
                 if tdict[i-1][rc.oc] == 'C':
@@ -370,18 +379,17 @@ class StatementDB:
                 # and we can now set all the balances
                 if math.isclose(tdict[i][rc.price], average, abs_tol=1e-2):
                     # Found a Trade beginning opener balance = quantity
+                    # TODO don't leave this in.
+                    raise ValueError('Programming note: Not sure what I was thinking here.')
                     balance = tdict[i][rc.shares]
                     tdict[i][rc.bal] = balance
                     for j in range(i-1, -1, -1):
                         balance = balance - tdict[j+1][rc.shares]
                         if j == 0:
-                            self.updateAvgBalPlOC(cur, tdict[j], tdict[j][rc.avg], balance, tdict[j][rc.PL], tdict[j][rc.oc])
+                            self.updateAvgBalPlOC(cur, tdict[j], tdict[j][rc.avg], balance,
+                                                  tdict[j][rc.PL], tdict[j][rc.oc])
                             return True
-                    
-
         return False
-        
-        
 
     def makeTradeDict(self, atrade):
         '''
@@ -390,10 +398,14 @@ class StatementDB:
         '''
         rc = self.rc
         t = dict()
-        t[rc.ticker], t[rc.date], t[rc.shares], t[rc.bal], t[rc.price], t[rc.avg], t[rc.PL], t[rc.acct], t[rc.oc], t['id'], t[rc.comm] = atrade
+        (t[rc.ticker], t[rc.date], t[rc.shares], t[rc.bal], t[rc.price], t[rc.avg], t[rc.PL],
+         t[rc.acct], t[rc.oc], t['id'], t[rc.comm]) = atrade
         return t
 
     def getBadTrades(self):
+        '''
+        Retrive all trades in ib_trades missing either average or balance
+        '''
         rc = self.rc
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -407,7 +419,12 @@ class StatementDB:
         badTrades = found.fetchall()
         return badTrades
 
-    def getPreviousTrades(self, cur, bt):
+    def getPreviousTrades(self, cur, t):
+        '''
+        Given the trade bt, retrieve the previou trades from the same symbol/account
+        :cur: A cursor
+        :bt: Dict representing a trade containing keys for symbol, date and account
+        '''
         rc = self.rc
         prevTrades = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
@@ -416,11 +433,16 @@ class StatementDB:
                 AND datetime < ?
                 AND {rc.acct} = ?
                 ORDER BY datetime DESC
-                ''', (bt[rc.ticker], bt[rc.date], bt[rc.acct]))
+                ''', (t[rc.ticker], t[rc.date], t[rc.acct]))
         prevTrades = prevTrades.fetchall()
         return prevTrades
 
-    def getNextTrades(self, cur, bt):
+    def getNextTrades(self, cur, t):
+        '''
+        Given the trade bt, retrieve the next trades from the same symbol/account
+        :cur: A cursore
+        :t: Dict representing a trade containing keys for symbol, date and account
+        '''
         rc = self.rc
         prevTrades = cur.execute(f'''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
@@ -429,25 +451,37 @@ class StatementDB:
                 AND datetime > ?
                 AND {rc.acct} = ?
                 ORDER BY datetime
-                ''', (bt[rc.ticker], bt[rc.date], bt[rc.acct]))
+                ''', (t[rc.ticker], t[rc.date], t[rc.acct]))
         prevTrades = prevTrades.fetchall()
         return prevTrades
 
     def updateBal(self, cur, atrade, balance):
+        '''
+        DB update ib_trades balance
+        '''
         cur.execute(f''' UPDATE ib_trades SET {self.rc.bal} = ?
-                WHERE  id = ?''' , (balance, atrade['id']))
+                WHERE  id = ?''', (balance, atrade['id']))
 
     def updateAvgOC(self, cur, atrade, average, oc):
+        '''
+        DB update ib_trades for average and OpenClose
+        '''
         rc = self.rc
         cur.execute(f'''UPDATE ib_trades SET {rc.avg} = ?, {rc.oc} = ?
                 WHERE id = ?''', (average, oc, atrade['id']))
 
     def updateAvgPlOC(self, cur, atrade, avg, pl, oc):
+        '''
+        DB update ib_trades for average, PnL and OpenClose
+        '''
         rc = self.rc
         cur.execute(f'''UPDATE ib_trades SET {rc.avg} = ?, {rc.PL} = ?, {rc.oc} = ?
                 WHERE id = ?''', (avg, pl, oc, atrade['id']))
 
     def updateAvgBalPlOC(self, cur, atrade, avg, bal, pl, oc):
+        '''
+        DB update ib_trades for average, balance, PnL and OpenClose
+        '''
         rc = self.rc
         cur.execute(f'''UPDATE ib_trades SET {rc.avg} = ?, {rc.bal} = ?, {rc.PL} = ?, {rc.oc} = ?
                 WHERE id = ?''', (avg, bal, pl, oc, atrade['id']))
@@ -481,12 +515,12 @@ class StatementDB:
                 else:
                     # We have continuous coverage...
                     # We can update badTrade if we found a trade that has either
-                    # 1) both average and PL (PL tells us if we are long or short-(closing trade)) 
+                    # 1) both average and PL (PL tells us if we are long or short-(closing trade))
                     # or 2) A trade opener identified by quantity == balance
                     # print()
                     LONG = True
                     SHORT = False
-                    
+
                     # if pt[rc.avg] and pt[rc.shares] == pt[rc.bal]:
                     if pt[rc.avg] and pt[rc.bal] == pt[rc.shares]:
                         # Found Trade opener good trade
@@ -499,7 +533,7 @@ class StatementDB:
                         #Discriminator for first opening transaction
                         pastPrimo = False
                         side = LONG
-                        
+
                         for fixthis in fixthese_r:
                             ft = self.makeTradeDict(fixthis)
 
@@ -508,19 +542,19 @@ class StatementDB:
                             balance = balance + ft[rc.shares]
 
                             if not ft[rc.bal]:
-                                self.updateBal(cur, ft, balance )
+                                self.updateBal(cur, ft, balance)
                                 ft[rc.bal] = balance
 
-                            # Check for a flipped position. The flipper is figured as an Opener; the average
-                            # changes, and no PL is taken.
+                            # Check for a flipped position. The flipper is figured as an Opener;
+                            # the average changes, and no PL is taken.
                             if pastPrimo and side == LONG and balance < 0:
                                 side = SHORT
                             elif pastPrimo and side == SHORT and balance > 0:
                                 side = LONG
 
-                            # This the first trade Open; average == price and set the side- 
+                            # This the first trade Open; average == price and set the side-
                             if not pastPrimo and ft[rc.bal] == ft[rc.shares]:
-                                
+
                                 pastPrimo = True
                                 average = ft[rc.price]
                                 assert math.isclose(ft[rc.price], ft[rc.avg], abs_tol=1e-5)
@@ -530,9 +564,9 @@ class StatementDB:
                                 side = LONG if ft[rc.shares] >= 0 else SHORT
 
                             # Here are openers -- adding to the trade; average changes
-                            # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
+                            # newAvg = ((prevAverage * prevBalance) + (quantity * price)) / balance
                             elif (pastPrimo and side is LONG and ft[rc.shares] >= 0) or (
-                                pastPrimo and side is SHORT and ft[rc.shares] < 0):
+                                    pastPrimo and side is SHORT and ft[rc.shares] < 0):
                                 newAverage = ((average * prevBalance) + (ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
                                 average = newAverage
                                 ft[rc.oc] = 'O'
@@ -576,7 +610,7 @@ class StatementDB:
                                 ft[rc.bal] = balance
 
                             if isNumeric([ft[rc.PL], ft[rc.bal], ft[rc.avg]]) and (
-                                          ft[rc.PL] != 0 and not pastPrimo):
+                                    ft[rc.PL] != 0 and not pastPrimo):
                                 # found a good trade closer
                                 pastPrimo = True
                                 side = LONG if ft[rc.shares] < 0 else SHORT
@@ -614,7 +648,7 @@ class StatementDB:
                                     # newAverage = ((prevAverage * prevBalance) +
                                     #                (quantity * price)) / balance
                                     newAverage = ((average * balance) + (
-                                                   ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
+                                        ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
                                     average = newAverage
                                     balance = ft[rc.bal]
                                     ft[rc.avg] = average
@@ -648,12 +682,16 @@ class StatementDB:
                             conn.commit()
                             break
                     else:
-                         fixthese.append(prevTrade)
+                        fixthese.append(prevTrade)
         self.reFigureAPL_backwards()
 
     def reFigureAPL_backwards(self):
         '''
-        A second algorithm to try to fill in some blanks
+        A second algorithm to try to fill in some blanks. A bad trade is missing average and/or
+        balance.
+        A trade where balance == shares can set avg = price and is an opener (OC = O).
+        A trade with a PL value != 0  is a closer and we can figure average. An adjacent and
+            previous opener will have the same average.
         '''
         rc = self.rc
         conn = sqlite3.connect(self.db)
@@ -668,7 +706,7 @@ class StatementDB:
             nextTrades = self.getNextTrades(cur, bt)
             fixthese = [bt]
             nextTrades = [self.makeTradeDict(x) for x in nextTrades]
-            pastPrimo = False
+            # pastPrimo = False
             for nt in nextTrades:
                 uncovered = self.getUncoveredDays(bt[rc.acct], bt[rc.date], nt[rc.date])
                 if uncovered:
@@ -684,14 +722,14 @@ class StatementDB:
                         conn.commit()
                         return
                 elif isNumeric(ft[rc.PL]) and ft[rc.PL] != 0:
-                    pastPrimo = True
+                    # pastPrimo = True
                     average = ((ft[rc.PL] / ft[rc.shares]) + ft[rc.price])
                     if not ft[rc.avg] or not isNumeric(ft[rc.avg]):
                         ft[rc.avg] = average
                     else:
                         assert math.isclose(average, ft[rc.avg], abs_tol=1e-2)
                     ft[rc.oc] = 'C'
-                    side = LONG if ft[rc.shares] < 0 else SHORT
+                    # side = LONG if ft[rc.shares] < 0 else SHORT
                     if isNumeric(ft[rc.bal]):
                         balance = ft[rc.bal]
                         for j in range(i-1, -1, -1):
@@ -700,10 +738,6 @@ class StatementDB:
                             if j == 0:
                                 conn.commit()
                                 return
-
-                    pass
-
-
 
     def processStatement(self, tdf, account, begin, end, openPos=None):
         '''
@@ -759,8 +793,8 @@ class StatementDB:
             cur = conn.cursor()
             cur.execute('''
                 SELECT day FROM holidays ORDER BY day''')
-            all = cur.fetchall()
-            self.holidays = [pd.Timestamp(x[0]).date() for x in all]
+            days = cur.fetchall()
+            self.holidays = [pd.Timestamp(x[0]).date() for x in days]
         d = pd.Timestamp(d).date()
         if d in self.holidays:
             return True
@@ -779,6 +813,11 @@ class StatementDB:
         return True
 
     def getStatement(self, day, account='all'):
+        '''
+        Get the trades from a single day
+        :day: A date string or timestamp. The day to retrieve trades from.min
+        :account: Fill in to retrieve trades from only one account
+        '''
         rc = self.rc
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -804,9 +843,6 @@ class StatementDB:
         if trades:
             trades = trades.fetchall()
         return trades
-
-
-        pass
 
     def getStatementDays(self, account, beg, end=None):
         '''
@@ -865,12 +901,12 @@ class StatementDB:
             end = pd.Timestamp.now()
         else:
             end = pd.Timestamp(end)
-        if not self.covered or usecache == False:
+        if not self.covered or not usecache:
             conn = sqlite3.connect(self.db)
             cur = conn.cursor()
             strbeg = beg.strftime('%Y%m%d')
             strend = end.strftime('%Y%m%d')
-            all = cur.execute('''
+            days = cur.execute('''
                 SELECT day FROM ib_covered
                     WHERE covered = 'true'
                     AND day >= ?
@@ -878,8 +914,8 @@ class StatementDB:
                     AND account = ?
                     ORDER BY day''', (strbeg, strend, account))
 
-            all = all.fetchall()
-            self.covered = [pd.Timestamp(x[0]).date() for x in all]
+            days = days.fetchall()
+            self.covered = [pd.Timestamp(x[0]).date() for x in days]
         notcovered = []
         current = beg.date()
         delt = pd.Timedelta(days=1)
@@ -929,6 +965,7 @@ class StatementDB:
         return found
 
 def notmain():
+    '''Run some local code for devel'''
     settings = QSettings('zero_substance', 'structjour')
     account = settings.value('account')
     db = StatementDB()
@@ -942,6 +979,7 @@ def notmain():
     print()
 
 def local():
+    '''Run some local code for devel'''
     d = pd.Timestamp('2018-12-03')
     e = pd.Timestamp('2018-12-31')
     print(d.strftime("%B, %A %d %Y"))
@@ -951,6 +989,7 @@ def local():
     print(x, "tickets")
 
 def main():
+    '''Tun some local code for devel'''
     x = StatementDB()
     print()
 
