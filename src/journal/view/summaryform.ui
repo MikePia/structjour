@@ -99,6 +99,13 @@
              </widget>
             </item>
             <item>
+             <widget class="QRadioButton" name="dbTEMP">
+              <property name="text">
+               <string>TEMP DB</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QRadioButton" name="dasImport">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

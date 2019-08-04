@@ -398,7 +398,7 @@ class DasStatement:
             return pd.DataFrame()
         pos = os.path.split(self.infile)
         self.positions = os.path.join(pos[0], self.positions)
-        self.settings.setValue('dasInfile', self.infile)
+        # self.settings.setValue('dasInfile', self.infile)
 
         df = pd.DataFrame()
         if not os.path.exists(self.positions):

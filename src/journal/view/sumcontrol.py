@@ -110,6 +110,7 @@ class SumControl(QMainWindow):
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.useDatabase.clicked.connect(self.dbDefault)
+        self.ui.dbTEMP.clicked.connect(self.dbTemp)
     
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.lost.textEdited.connect(self.setMstkVal)
@@ -739,17 +740,28 @@ class SumControl(QMainWindow):
     def dasDefault(self, b):
         '''Set the self.settings value for input type to DAS'''
         self.settings.setValue('inputType', 'DAS')
+        self.settings.setValue('dbTemp', 'off')
         self.loadFromDate()
 
     def ibDefault(self, b):
         '''Set the self.settings value for input type to IB'''
         self.settings.setValue('inputType', 'IB_HTML')
+        self.settings.setValue('dbTemp', 'off')
         self.loadFromDate()
 
     def dbDefault(self, b):
         print('dbDefault called with', b)
         self.settings.setValue('dboutput', 'on')
         self.settings.setValue('inputType', 'DB')
+        self.settings.setValue('dbTemp', 'off')
+        self.loadFromDate()
+
+    def dbTemp(self, b):
+        pass
+        inputType = self.settings.value('inputType')
+        print('in dbTemp, inputype is', inputType)
+        self.settings.setValue('dboutput', 'on')
+        self.settings.setValue('dbTemp', 'on')
         self.loadFromDate()
 
     def loadFromDate(self):

@@ -73,8 +73,10 @@ class Statement_DAS(object):
         if 'Date' not in self.df.columns:
             self.df['Date'] = jf.theDate
         if 'P / L' in self.df.columns:
-            self.df = self.df.rename(columns={'P / L': rc.PnL})
-        DataFrameUtil.checkRequiredInputFields(self.df, rc.columns)
+            self.df = self.df.rename(columns={'P / L': rc.PL})
+        reqcol = rc.columns.copy()
+        reqcol.append('Cloid')
+        DataFrameUtil.checkRequiredInputFields(self.df, reqcol)
 
     def _checkUniqueSIMTX(self):
         '''
@@ -493,6 +495,10 @@ class Statement_IBActivity:
         soup = BeautifulSoup(readit(url), 'html.parser')
         tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tblTransactions'))
         account = self.getId_IBActivity(soup)
+
+        if not tbldivs:
+            print('This statement lacks trade information')
+            return pd.DataFrame()
 
         assert len(tbldivs) == 1
 

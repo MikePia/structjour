@@ -99,7 +99,7 @@ class WeGot:
         '''
         d = self.getIndir()
         if not d[0]:
-            print(f'Cannot locate directory "{d[1]}".')
+            # print(f'Cannot locate directory "{d[1]}".')
             return []
 
         sglob = self.settings.value('ibInfile')
@@ -446,21 +446,21 @@ def getCSVStatements(dirname):
             continue
 
 
-    #     s, d1, d2 = s
-    #     d2, ext = os.path.splitext(d2)
-    #     pat = 'U[\d]{7,7}'
-    #     r = re.findall(pat, fn)
-    #     if not r:
-    #         continue
+        s, d1, d2 = s
+        d2, ext = os.path.splitext(d2)
+        pat = 'U[\d]{7,7}'
+        r = re.findall(pat, fn)
+        if not r:
+            continue
 
-    #     try:
-    #         beg = pd.Timestamp(d1)
-    #         end = pd.Timestamp(d2)
-    #     except ValueError:
-    #         print('try another')
-    #         continue
+        try:
+            beg = pd.Timestamp(d1)
+            end = pd.Timestamp(d2)
+        except ValueError:
+            print('try another')
+            continue
 
-    # files.append(fn)
+        files.append(fn)
     return
 
 def somethingelse():
@@ -504,5 +504,5 @@ def notmain():
 if __name__ == '__main__':
     # b = pd.Timestamp('2018-10-01')
     # reportIBExcelFiles(b)
-    # notmain()
-    somethingelse()
+    notmain()
+    # somethingelse()

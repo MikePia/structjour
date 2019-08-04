@@ -31,7 +31,9 @@ from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox
 
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.pandasutil import InputDataFrame
+from journal.statements.dasstatement import DasStatement
 from journal.statements.ibstatementdb import StatementDB
+from journal.statements.ibstatement import IbStatement
 from journal.statement import Statement_DAS as Ticket
 from journal.statement import Statement_IBActivity
 from journal.view.layoutforms import LayoutForms
@@ -123,6 +125,10 @@ class runController:
         df[rc.time] = ''
         for i, row in df.iterrows():
             df.at[i, rc.time] = row[rc.date][9:11] + ':' + row[rc.date][11:13] + ':' + row[rc.date][13:15]
+            if row[rc.shares] > 0:
+                df.at[i, rc.side] = 'B'
+            else:
+                df.at[i, rc.side] = 'S'
         # df[rc.time] = df[rc.time].map(str) + df[rc.date][:6]
         df[rc.date] = pd.to_datetime(df[rc.date], format='%Y%m%d;%H%M%S')
 
@@ -139,12 +145,11 @@ class runController:
         lf.pickleitnow()
         tradeSummaries = lf.runTtoSummaries(ldf)
 
-
-    def runnit(self):
+    def runnitDB(self):
         '''
         Load an initial input file and process it.
         '''
-        print('gonna runnit gonna runnit')
+        print('gonna runnitDB gonna runnitDB')
         self.initialize()
         if not self.indir:
             print('What file is supposed to load?')
@@ -152,11 +157,123 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
+        local = os.path.normpath(self.ui.infileEdit.text())
+        if os.path.normpath(jf.inpathfile) != local:
+            if os.path.exists(local):
+                d, jf.infile = os.path.split(local)
+                jf.inpathfile = local
+            
+        x =[]    
+
+        if self.inputtype == 'IB_HTML':
+            jf.inputType = 'IB_HTML'
+            statement = IbStatement()
+            x = statement.openIBStatement(jf.inpathfile)
+        elif self.inputtype == 'DAS':
+            theDate = self.settings.value('theDate')
+            ds = DasStatement(jf.infile, self.settings, theDate)
+            df = ds.getTrades()
+
+        
+            
+            print(x)
+            # for key in x[0]:
+            #     print(key, list(x[0][key].columns), len(x[0][key]))
+
+
+        # if x[1] and not x[0]:
+        #     badfiles.append([f, x[1]])
+        #     print("\nBAD", f, '\n', x[1])
+
+
+
+
+
+
+        #     df = statement.getTrades_IBActivity(jf.inpathfile)
+        #     if df.empty:
+        #         msg = '<h3>No trades found inf the file:</h3><ul> '
+        #         msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
+        #         msgbx = QMessageBox()
+        #         msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+        #         msgbx.setText(msg)
+        #         msgbx.exec()
+        #         return
+        # elif  self.inputtype == 'DAS':
+        #     try:
+        #         tkt = Ticket(jf)
+        #     except ValueError as ex:
+        #         msg = '<h3>The input file has caused a ValueError:</h3><ul> '
+        #         msg = msg + '<div><strong>' + ex.__str__() + '</strong></div>'
+        #         msg = msg + '<div>Did you export the trades window?</div>'
+        #         msg = msg + '<div>If so, please configure the table in DAS to have the necessary fields and re-export it.</div>'
+        #         msgbx = QMessageBox()
+        #         msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+        #         msgbx.setText(msg)
+        #         msgbx.exec()
+        #         return
+
+        #     df, jf = tkt.getTrades()
+        # # trades = pd.read_csv(jf.inpathfile)
+        # else:
+        #     #Temporary
+        #     print('Opening a non standard file name in DAS')
+        #     tkt = Ticket(jf)
+        #     df, jf = tkt.getTrades()
+
+        # print('check for multiday')
+
+        # idf = InputDataFrame()
+        # trades, success = idf.processInputFile(df, jf.theDate, jf)
+        # if not success:
+        #     return
+
+        # tu = DefineTrades(self.inputtype)
+        # inputlen, dframe, ldf = tu.processOutputDframe(trades)
+        # self.inputlen = inputlen
+
+        # # images and Trade Summaries.
+        # margin = 25
+
+        # lf = LayoutForms(self.sc, jf, dframe)
+        # lf.pickleitnow()
+        # tradeSummaries = lf.runTtoSummaries(ldf)
+        # # self.ldf = ldf
+
+    def runnit(self):
+        '''
+        Load an initial input file and process it.
+        '''
+        print('gonna runnit gonna runnit')
+        if self.settings.value('dbTemp') == 'on':
+            return self.runnitDB()
+        self.initialize()
+        if not self.indir:
+            print('What file is supposed to load?')
+            return
+        jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
+                          infile=self.infile, inputType=self.inputtype, infile2=self.positions,
+                          mydevel=True)
+        local = os.path.normpath(self.ui.infileEdit.text())
+        if os.path.normpath(jf.inpathfile) != local:
+            if os.path.exists(local):
+                d, jf.infile = os.path.split(local)
+                jf.inpathfile = local
+            
+            
 
         if self.inputtype == 'IB_HTML':
             jf.inputType = 'IB_HTML'
             statement = Statement_IBActivity(jf)
             df = statement.getTrades_IBActivity(jf.inpathfile)
+            if df.empty:
+                msg = '<h3>No trades found inf the file:</h3><ul> '
+                msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
+                msgbx = QMessageBox()
+                msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+                msgbx.setText(msg)
+                msgbx.exec()
+                return
         elif  self.inputtype == 'DAS':
             try:
                 tkt = Ticket(jf)
@@ -178,6 +295,8 @@ class runController:
             print('Opening a non standard file name in DAS')
             tkt = Ticket(jf)
             df, jf = tkt.getTrades()
+
+        print('check for multiday')
 
         idf = InputDataFrame()
         trades, success = idf.processInputFile(df, jf.theDate, jf)

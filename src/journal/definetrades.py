@@ -138,7 +138,7 @@ class DefineTrades(object):
         # nt = self.writeShareBalance(nt)
         nt = self.addStartTimeDB(nt)
         # nt.Date = pd.to_datetime(nt.Date)
-        nt = nt.sort_values([rc.ticker, rc.acct, rc.start, rc.date, rc.time], ascending=True)
+        nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
@@ -281,25 +281,44 @@ class DefineTrades(object):
         non-transaction rows have been inserted to account for todays' activities.)
         '''
 
-        c = self._frc
+        rc = self._frc
 
-        TCount = 1
-        prevEndTrade = -1
+        TCount = 0
+        prevEndTrade = True
+        prevTicker = ''
+        prevAccount = ''
 
         for i, row in dframe.iterrows():
-            if len(row[c.ticker]) < 1:
+            if len(row[rc.ticker]) < 1:
                 break
+            if prevEndTrade or prevTicker != row[rc.ticker] or prevAccount != row[rc.acct]:
+                TCount += 1
             tradeIndex = "Trade " + str(TCount)
-            if prevEndTrade == 0:
-                TCount = TCount + 1
-                prevEndTrade = -1
-            tradeIndex = "Trade " + str(TCount)
-            dframe.at[i, c.tix] = tradeIndex
-            if row[c.bal] == 0:
-                prevEndTrade = 0
+            dframe.at[i, rc.tix] = tradeIndex
+
+            prevEndTrade = False
+            prevTicker = row[rc.ticker]
+            prevAccount = row[rc.acct]
+            # tradeIndex = "Trade " + str(TCount)
+            if row[rc.bal] == 0:
+                prevEndTrade = True
         return dframe
 
     def addTradePL(self, dframe):
+        ''' Add a trade summary P/L. That is total the transaction P/L and write a summary P/L for the trade in the c.sum column '''
+
+        rc = self._frc
+        newtrade = pd.DataFrame()
+        for tindex in dframe[rc.tix].unique():
+            t = dframe[dframe[rc.tix] == tindex]
+            ixs = t.index
+            sum = t[rc.PL].sum()
+            t.at[ixs[-1], rc.sum] = sum
+            print()
+            newtrade = newtrade.append(t)
+        return newtrade
+
+    def addTradePLold(self, dframe):
         ''' Add a trade summary P/L. That is total the transaction P/L and write a summary P/L for the trade in the c.sum column '''
 
         c = self._frc
@@ -336,6 +355,7 @@ class DefineTrades(object):
                 dframe.at[i, c.dur] = diff
         return dframe
 
+
     def addTradeNameDB(self, dframe):
         '''
         Create a name for this trade like 'AMD Short'. Place it in the c.name column. If this is
@@ -345,19 +365,22 @@ class DefineTrades(object):
         '''
 
         rc = self._frc
-
-        for i, row in dframe.iterrows():
-
-            longShort = " Long"
-            if not isNumeric(row[rc.bal]):
-
-                continue
-            if row[rc.bal] == 0:
-                assert row[rc.oc].find('C') >= 0
-                if row[rc.shares] > 0: 
-                    longShort = " Short"
-                dframe.at[i, rc.name] = row[rc.ticker] + longShort
-        return dframe
+        newtrade = pd.DataFrame()
+        for tindex in dframe[rc.tix].unique():
+            t = dframe[dframe[rc.tix] == tindex]
+            ixs = t.index
+            side = ''
+            if (t.iloc[-1][rc.oc].find('O') >= 0 and t.iloc[-1][rc.shares] > 0) or (
+                t.iloc[-1][rc.oc].find('C') >= 0 and t.iloc[-1][rc.shares] < 0):
+                side = ' Long'
+            else:
+                side = ' Short'
+            name = t[rc.ticker].unique()[0]
+            name += side
+            t.at[ixs[-1], rc.name] = name
+            print()
+            newtrade = newtrade.append(t)
+        return newtrade
 
 
     def addTradeName(self, dframe):
