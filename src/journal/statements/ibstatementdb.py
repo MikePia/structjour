@@ -117,7 +117,58 @@ class StatementDB:
             CREATE TABLE if not exists holidays(
                 day TEXT NOT NULL,
                 name TEXT)''')
+
+        cur.execute('''
+            CREATE TABLE if not exists chart(
+                id	INTEGER,
+                symb INTEGER,
+                name TEXT NOT NULL,
+                start TEXT NOT NULL,
+                end TEXT NOT NULL,
+                interval INTEGER,
+                PRIMARY KEY(id))''')
+
+        cur.execute('''
+            CREATE TABLE if not exists entries (
+                ib_trades_id INTEGER UNIQUE,
+                trade_sum_id INTEGER,
+                open_close TEXT NOT NULL,
+                diff NUMERIC NOT NULL,
+                PRIMARY KEY(ib_trades_id, trade_sum_id),
+                FOREIGN KEY(ib_trades_id) REFERENCES ib_trades(id),
+                FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id))''') 
+
+        cur.execute('''
+
+            CREATE TABLE if not exists trade_sum (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                strategy TEXT,
+                link1 NUMERIC,
+                pnl NUMERIC,
+                start TEXT NOT NULL UNIQUE,
+                duration INTEGER NOT NULL,
+                shares INTEGER NOT NULL,
+                mktval NUMERIC NOT NULL,
+                target NUMERIC,
+                targdiff NUMERIC,
+                stoploss NUMERIC,
+                sldiff NUMERIC,
+                rr NUMERIC,
+                maxloss NUMERIC,
+                mstkval NUMERIC,
+                mstknote TEXT,
+                explain TEXT,
+                notes TEXT,
+                clean TEXT,
+                chart1_id INTEGER,
+                chart2_id INTEGER,
+                chart3_id INTEGER,
+                FOREIGN KEY(chart1_id) REFERENCES chart(id),
+                FOREIGN KEY(chart2_id) REFERENCES chart(id),
+                FOREIGN KEY(chart3_id) REFERENCES chart(id))''')
         conn.commit()
+
 
     def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
         rc = self.rc
@@ -899,6 +950,11 @@ def local():
     x = db.getNumTicketsforDay(d)
     print(x, "tickets")
 
+def main():
+    x = StatementDB()
+    print()
+
 if __name__ == '__main__':
     # notmain()
-    local()
+    # local()
+    main()
