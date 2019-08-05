@@ -23,6 +23,10 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+
+from PyQt5.QtCore import QSettings
+
+from journal import time as mkmonth
 # pylint: disable=C0103, R0913
 
 
@@ -101,8 +105,11 @@ class JournalFiles:
             self.infile2 = None
             self.inpathfile2 = None
         
-
-        self._checkPaths()
+        try:
+            self._checkPaths()
+        except NameError as ex:
+            print('Directory ERROR', ex)
+            print()
 
     # TODO: add a journalroot variable and write it to db or pickle or something and expand
     # MyDevel to a general file structure for all users and fix that ffnn hard coded path
@@ -164,7 +171,36 @@ class JournalFiles:
         if not os.path.exists(self.indir):
             print('fixme')
         
-        if not os.path.exists(self.outdir):
+
+        if self.inputType == 'DB':
+            
+            if not os.path.exists(self.outdir):
+                if not os.path.exists(self.indir):
+                    monthdir = os.path.join(self.indir, '..')
+                    monthdir = os.path.abspath(monthdir)
+                    if not os.path.exists(monthdir):
+                        msg = f'''The folder {monthdir} does not exist. Structjour must create the
+                        folder in order to continue. Creating the directories now.'''
+                        print(msg)
+                        settings = QSettings('zero_substance', 'structjour')
+                        journal = settings.value('journal')
+                        if os.path.exists(journal):
+                            scheme = settings.value('scheme')
+                            ix = scheme.find('/')
+                            if ix < 0:
+                                ix = scheme.find('\\')
+                            if ix < 0:
+                                raise NameError('Please set the journal directory. Go to the file settings dialog.')
+                            dayScheme = scheme[ix+1:]
+                            dayScheme = dayScheme.format(DAY='%A', month='%m', day='%d')
+                            scheme = scheme[:ix]
+                            monthdir = os.path.join(journal, scheme)
+                            monthdir = self.theDate.strftime(monthdir.format(Year='%Y', month='%m', MONTH='%B'))
+                            mkmonth.createDirs(self.theDate, monthdir, frmt=dayScheme)
+                            return
+                    # TODO Decide whether to put qt dialog here.
+                    raise NameError('Please set the journal directory. Go to the file settings dialog.')
+            
 
             checkUpOne = os.path.split(self.outdir)[0]
             if not checkUpOne:

@@ -45,7 +45,10 @@ def createDirs(theDate, theDir, frmt="_%m%d_%A"):
     '''
     # theDate = dt.datetime(2019, 6, 3)
     cwd = os.getcwd()
+    theDate = pd.Timestamp(theDate)
+    theDate = pd.Timestamp(theDate.year, theDate.month, 1)
     month = theDate.month
+
     delt = dt.timedelta(1)
     if os.path.exists(theDir):
         raise ValueError('Directory Already exists:', theDir)
@@ -131,9 +134,11 @@ def getFirstWeekday(theMonth=None, theDir=None):
 
 def main():
     # outdir = os.getcwd()
-    journaldir = os.getcwd()
+    # journaldir = os.getcwd()
+    journaldir = 'C:/trader/journal'
     # theDate = pd.Timestamp()
-    theDate, journaldir = getFirstWeekday()
+    # theDate, journaldir = getFirstWeekday()
+    theDate = pd.Timestamp('20180318')
 
     monthDir = os.path.join(journaldir, theDate.strftime("_%Y%m_%B"))
     createDirs(theDate, monthDir)
