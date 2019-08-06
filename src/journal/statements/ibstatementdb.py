@@ -31,6 +31,7 @@ from PyQt5.QtCore import QSettings
 
 from journal.definetrades import FinReqCol
 from journal.stock.utilities import isNumeric
+from journal.thetradeobject import SumReqFields
 
 # pylint: disable = C0103
 
@@ -44,6 +45,7 @@ class StatementDB:
         '''Initialize and set the db location'''
         settings = QSettings('zero_substance', 'structjour')
         jdir = settings.value('journal')
+        self.settings = settings
         if not db:
             db = 'structjour_test.db'
         self.source = source
@@ -81,6 +83,7 @@ class StatementDB:
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         rc = self.rc
+        sf = SumReqFields()
         cur.execute(f'''
             CREATE TABLE if not exists ib_trades (
                 id	INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,7 +98,10 @@ class StatementDB:
                 {rc.oc}	TEXT,
                 DAS TEXT,
                 IB TEXT,
-                {rc.acct}	TEXT NOT NULL);''')
+                {rc.acct}	TEXT NOT NULL,
+                trade_sum_id INTEGER,
+                FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id)
+                );''')
 
         cur.execute('''
             CREATE TABLE if not exists ib_positions (
@@ -121,54 +127,188 @@ class StatementDB:
         cur.execute('''
             CREATE TABLE if not exists chart(
                 id	INTEGER,
-                symb INTEGER,
+                symb TEXT,
+                path TEXT NOT NULL,
                 name TEXT NOT NULL,
+                source TEXT,
                 start TEXT NOT NULL,
                 end TEXT NOT NULL,
                 interval INTEGER,
                 PRIMARY KEY(id))''')
 
+
         cur.execute('''
-            CREATE TABLE if not exists entries (
-                ib_trades_id INTEGER UNIQUE,
+            CREATE TABLE if not exists "chart_sum" (
                 trade_sum_id INTEGER,
-                open_close TEXT NOT NULL,
-                diff NUMERIC NOT NULL,
-                PRIMARY KEY(ib_trades_id, trade_sum_id),
-                FOREIGN KEY(ib_trades_id) REFERENCES ib_trades(id),
-                FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id))''') 
+                chart_id INTEGER NOT NULL,
+                slot INTEGER CHECK(slot > 0 and slot < 4),
+                FOREIGN KEY(chart_id) REFERENCES chart_sum(id),
+                FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id),
+                PRIMARY KEY(trade_sum_id,slot)
+            )''')
 
-        cur.execute('''
-
+        cur.execute(f'''
             CREATE TABLE if not exists trade_sum (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                strategy TEXT,
-                link1 NUMERIC,
-                pnl NUMERIC,
-                start TEXT NOT NULL UNIQUE,
-                duration INTEGER NOT NULL,
-                shares INTEGER NOT NULL,
-                mktval NUMERIC NOT NULL,
-                target NUMERIC,
-                targdiff NUMERIC,
-                stoploss NUMERIC,
-                sldiff NUMERIC,
-                rr NUMERIC,
-                maxloss NUMERIC,
-                mstkval NUMERIC,
-                mstknote TEXT,
-                explain TEXT,
-                notes TEXT,
-                clean TEXT,
-                chart1_id INTEGER,
-                chart2_id INTEGER,
-                chart3_id INTEGER,
-                FOREIGN KEY(chart1_id) REFERENCES chart(id),
-                FOREIGN KEY(chart2_id) REFERENCES chart(id),
-                FOREIGN KEY(chart3_id) REFERENCES chart(id))''')
+                {sf.name} TEXT NOT NULL,
+                {sf.strat} TEXT,
+                {sf.link1} TEXT,
+                {sf.pl} NUMERIC,
+                {sf.start} TEXT NOT NULL,
+                {sf.date} TEXT NOT NULL,
+                {sf.dur} TEXT NOT NULL,
+                {sf.shares} INTEGER NOT NULL,
+                {sf.mktval} NUMERIC NOT NULL,
+                {sf.targ} NUMERIC,
+                {sf.targdiff} NUMERIC,
+                {sf.stoploss} NUMERIC,
+                {sf.sldiff} NUMERIC,
+                {sf.rr} NUMERIC,
+                {sf.maxloss} NUMERIC,
+                {sf.mstkval} NUMERIC,
+                {sf.mstknote} TEXT,
+                {sf.explain} TEXT,
+                {sf.notes} TEXT,
+                clean TEXT)''')
+
+
+        cur.execute('''CREATE UNIQUE INDEX if not exists date_start on trade_sum('Date', 'Start')''')
         conn.commit()
 
+    def findTradeSummary(self, ts):
+        sf = SumReqFields()
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        start = ts[sf.start].unique()[0]
+        cursor = cur.execute(f'''
+            SELECT * FROM trade_sum WHERE {sf.start} = ? ''',
+            (start, ))
+        x = cursor.fetchall()
+        if x:
+            return x
+
+        return False
+
+    def formatDate(self, daDate, frmt='%Y%m%d'):
+        daDate = pd.Timestamp(daDate)
+        daDate = daDate.strftime(frmt)
+        return daDate
+
+    def addCharts(self, cur, ts, symb, ts_id):
+        dtfrmt = '%Y%m%d;%H%M%S'
+        for i in range(3):
+            chart = 'chart' + str(i+1)
+            start = chart + 'Start'
+            end = chart + 'End'
+            interval = chart + 'Interval'
+            chart = ts[chart].unique()[0]
+            start = ts[start].unique()[0]
+            end = ts[end].unique()[0]
+            interval = int(ts[interval].unique()[0])
+            path = self.settings.value('outdir')
+            if not path:
+                raise ValueError('Fix this with better programming practices for your health and benefit')
+            try:
+                start = self.formatDate(start, dtfrmt)
+                end = self.formatDate(end, dtfrmt)
+            except ValueError:
+                continue
+
+            source = ''
+            cursor = cur.execute('''SELECT * from chart WHERE path = ? and name = ? ''', (path, chart))
+            cursor = cursor.fetchall()
+            if cursor:
+                continue
+
+            cursor = cur.execute('''
+                INSERT INTO chart(symb, path, name, source, start, end, interval) 
+                    VALUES(?, ?, ?, ?, ?, ?, ?)''',
+                    (symb, path, chart, source, start, end, interval))
+            
+            assert cursor.rowcount == 1
+            chart_id = cursor.lastrowid
+
+
+
+            cursor = cur.execute('''
+                INSERT INTO chart_sum (trade_sum_id, chart_id, slot)
+                    VALUES(?, ?, ?)''', (ts_id, chart_id, i+1))
+
+            
+            
+    def addEntries(self, cur,  ts_id, tdf):
+        rc = self.rc
+        entry = 0
+        tdf.sort_values([rc.date, rc.time], inplace=True)
+        for i, row in tdf.iterrows():
+            cur.execute(f''' UPDATE ib_trades SET trade_sum_id = ?
+                WHERE  id = ?''', (ts_id, row['id']))
+
+
+            
+
+
+    def addTradeSummaries(self, tradeSummaries, ldf):
+        '''Create DB entries in trade_sum and its relations they do not already exist'''
+        #Summary Fields
+        sf = SumReqFields()
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        for ts, tdf in zip(tradeSummaries, ldf):
+            daDay = self.formatDate(ts[sf.start].unique()[0])
+            if not self.findTradeSummary(ts):
+                clean = ''
+                x = cur.execute(f'''
+                    INSERT INTO trade_sum(
+                        {sf.name},
+                        {sf.strat},
+                        {sf.link1},
+                        {sf.pl},
+                        {sf.start},
+                        {sf.date},
+                        {sf.dur},
+                        {sf.shares},
+                        {sf.mktval},
+                        {sf.targ},
+                        {sf.targdiff},
+                        {sf.stoploss},
+                        {sf.sldiff},
+                        {sf.rr},
+                        {sf.maxloss},
+                        {sf.mstkval},
+                        {sf.mstknote},
+                        {sf.explain},
+                        {sf.notes},
+                        clean) 
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                        (ts[sf.name].unique()[0],
+                         ts[sf.strat].unique()[0],
+                         ts[sf.link1].unique()[0],
+                         ts[sf.pl].unique()[0],
+                         ts[sf.start].unique()[0],
+                         daDay,
+                         ts[sf.dur].unique()[0],
+                         ts[sf.shares].unique()[0],
+                         ts[sf.mktval].unique()[0],
+                         ts[sf.targ].unique()[0],
+                         ts[sf.targdiff].unique()[0],
+                         ts[sf.stoploss].unique()[0],
+                         ts[sf.sldiff].unique()[0],
+                         ts[sf.rr].unique()[0],
+                         ts[sf.maxloss].unique()[0],
+                         ts[sf.mstkval].unique()[0],
+                         ts[sf.mstknote].unique()[0],
+                         ts[sf.explain].unique()[0],
+                         ts[sf.notes].unique()[0],
+                         clean))
+                print('inserted something')
+                assert x.rowcount == 1
+                ts['id'] = x.lastrowid
+                x = x.fetchone()
+
+                self.addCharts(cur, ts, ldf[0][self.rc.ticker].unique()[0], int(ts['id'].unique()[0]))
+                self.addEntries(cur, int(ts['id'].unique()[0]), tdf)
+                conn.commit()
 
     def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
         rc = self.rc
@@ -459,8 +599,15 @@ class StatementDB:
         '''
         DB update ib_trades balance
         '''
-        cur.execute(f''' UPDATE ib_trades SET {self.rc.bal} = ?
+        cursor = cur.execute(f'''
+            SELECT {self.rc.bal} FROM ib_trades
+            WHERE id = ?''', (atrade['id'], ))
+        bal = cursor.fetchone()
+        if not isNumeric(bal[0]):
+            cur.execute(f''' UPDATE ib_trades SET {self.rc.bal} = ?
                 WHERE  id = ?''', (balance, atrade['id']))
+        else:
+            assert balance == bal[0]
 
     def updateAvgOC(self, cur, atrade, average, oc):
         '''
@@ -980,7 +1127,7 @@ def notmain():
 
 def local():
     '''Run some local code for devel'''
-    d = pd.Timestamp('2018-12-03')
+    d = pd.Timestamp('2018-03-23')
     e = pd.Timestamp('2018-12-31')
     print(d.strftime("%B, %A %d %Y"))
     db = StatementDB()
@@ -995,5 +1142,5 @@ def main():
 
 if __name__ == '__main__':
     # notmain()
-    # local()
-    main()
+    local()
+    # main()
