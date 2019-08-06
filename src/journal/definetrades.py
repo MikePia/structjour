@@ -132,7 +132,10 @@ class DefineTrades(object):
 
         # Process the output file DataFrame
         trades = self.addFinReqCol(trades)
-        newTrades = trades[rc.columns]
+        rccolumns = rc.columns.copy()
+        if 'id' not in rc.columns:
+            rccolumns.append('id')
+        newTrades = trades[rccolumns]
         newTrades.copy()
         nt = newTrades.sort_values([rc.ticker, rc.acct, rc.time])
         # nt = self.writeShareBalance(nt)
@@ -141,7 +144,7 @@ class DefineTrades(object):
         nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
-        nt = self.addTradeDuration(nt)
+        nt = self.addTradeDurationDB(nt)
         nt = self.addTradeNameDB(nt)
         # ldf is a list of DataFrames, one per trade
         ldf = self.getTradeList(nt)
@@ -335,6 +338,26 @@ class DefineTrades(object):
                 dframe.at[i, c.sum] = sumtotal
                 tradeTotal = 0
         return dframe
+
+    def addTradeDurationDB(self, dframe):
+        '''
+        Get a time delta beween the time of the first and last transaction. Place it in the
+        c.dur column on the last transaction of the trade'''
+
+        c = self._frc
+        ldf = self.getTradeList(dframe)
+        newdf = pd.DataFrame()
+        for tdf in ldf:
+            assert len(tdf[c.start].unique()==1)
+            ixs = tdf.index
+            timeEnd = pd.Timestamp(tdf.at[ixs[-1], c.time])
+            timeStart = pd.Timestamp(tdf.at[ixs[-1], c.start])
+            dur = timeEnd - timeStart
+            tdf.at[ixs[-1], c.dur] = dur
+            # dur = tdf.at[ixs[-1], c.time] - tdf.at[ixs[-1], c.start]
+            newdf = newdf.append(tdf)
+
+        return newdf
 
     def addTradeDuration(self, dframe):
         ''' Get a time delta beween the time of the first and last transaction. Place it in the c.dur column'''

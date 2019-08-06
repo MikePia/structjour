@@ -386,7 +386,7 @@ class DailyControl(QDialogWClose):
         row = [cell]
         self.modelM.appendRow(row)
         row = []
-        for d in ['Name', 'P / L', 'Lost Plays', 'Mistake or pertinent feature of trade']:
+        for d in ['Name', 'PnL', 'Lost Plays', 'Mistake or pertinent feature of trade']:
             cell = QStandardItem(d)
             cell.setFont(QFont('Arial Narrow', pointSize=16, weight=63))
             row.append(cell)
@@ -399,7 +399,7 @@ class DailyControl(QDialogWClose):
                 row = []
                 row.append(QStandardItem(trade))
 
-                pl = self.ts[trade]['P / L'].unique()[0]
+                pl = self.ts[trade]['PnL'].unique()[0]
                 if pl and isinstance(pl, (np.floating, float)):
                     totalpl += pl
                     pl = fc(pl)

@@ -59,34 +59,39 @@ class Test_StatementDB(unittest.TestCase):
         cur = conn.cursor()
         x = cur.execute('''SELECT name FROM sqlite_master WHERE type='table'; ''')
         x = x.fetchall()
-        tabnames = ['holidays', 'ib_trades', 'ib_positions', 'ib_covered']
+        tabnames = ['chart', 'chart_sum','holidays', 'ib_covered', 'ib_trades', 'ib_positions', 'trade_sum']
         self.assertTrue(set(tabnames).issubset(set([y[0] for y in x])))
 
     def clearTables(self):
         conn = sqlite3.connect(self.fulldb)
         cur = conn.cursor()
+        cur.execute('''delete from chart''')
+        cur.execute('''delete from chart_sum''')
+        # cur.execute('''delete from holidays''')
+        cur.execute('''delete from ib_covered''')
         cur.execute('''delete from ib_trades''')
         cur.execute('''delete from ib_positions''')
-        cur.execute('''delete from ib_covered''')
+        cur.execute('''delete from trade_sum''')
         conn.commit()
 
 
     def test_insertTrade(self):
         '''
         Test the method insertTrade. Verifys that it inserts a trade and then, with an
-        identical trade, it does not insert the trade
+        identical trade, it does not insert the trade. The col DateTime requires fxn.
         '''
+        rc = FinReqCol()
         row = dict()
-        row['Symbol'] = 'AAPL'
+        row[rc.ticker] = 'AAPL'
         row['DateTime'] = '20190101;123045'
-        row['Quantity'] = 450
-        row['Price'] = 205.43
-        row['Commission'] = .75
-        row['Codes'] = 'O'
-        row['Account'] = 'U1234567'
-        row['Balance'] = 450
-        row['Average'] = 205.43
-        row['PL'] = 0
+        row[rc.shares] = 450
+        row[rc.price] = 205.43
+        row[rc.comm] = .75
+        row[rc.oc] = 'O'
+        row[rc.acct] = 'U1234567'
+        row[rc.bal] = 450
+        row[rc.avg] = 205.43
+        row[rc.PL] = 0
 
         ibdb = StatementDB(self.db)
 
@@ -110,8 +115,8 @@ class Test_StatementDB(unittest.TestCase):
 
     def openStuff(self, allofit=None):
         '''Site specific testing stuff-- open a multi  day statement'''
-
-        # Site specific stuff here Open a monthly or yearly statemnet into the test db 
+        # Site specific stuff here Open a monthly or yearly statemnet into the test db.
+        # Currently set to search the journal root dir, so it will load an annual or two.
         bdir = ff.getBaseDir()
         fs = ff.findFilesInDir(bdir, 'U242.csv', True)
         ibs = IbStatement(db=self.db)
@@ -143,9 +148,9 @@ class Test_StatementDB(unittest.TestCase):
     def test_getStatementDays(self):
         '''
         Test the method StatementDB.getStatementDays. Exercises getUncovered. Specifically test that
-        when it returns data, it has the correct fields required in FinReqCol. And the the trades
-        all occur within the specified dates (this tests on a single day). There is no good way to
-        test that we have all available trades beyond opening statemnets/DAS exports and looking.
+        when it returns data, it has the correct fields required in FinReqCol. And that the trades
+        all occur within the specified dates (this tests on a single day). Noticd that openStuff
+        exercises a bunch of stuff.
         '''
         frc = FinReqCol()
         ibs, x = self.openStuff()
@@ -159,7 +164,7 @@ class Test_StatementDB(unittest.TestCase):
             s = ibdb.getStatementDays(ibs.account, beg=day)
             if not s.empty:
                 cols = [frc.ticker, frc.date, frc.shares, frc.bal, frc.price,
-                        frc.avg, frc.comm, frc.acct, frc.oc, frc.PL]
+                        frc.avg, frc.comm, frc.acct, frc.oc, frc.PL, 'id']
                 self.assertTrue(set(cols) == set(list(s.columns)))
                 for daDate  in s[frc.date].unique():
                     self.assertEqual(day.date(), pd.Timestamp(daDate).date())
@@ -171,7 +176,8 @@ def main():
 def notmain():
     t = Test_StatementDB()
     # t.test_getUncoveredDays()
-    t.test_getStatementDays()
+    # t.test_getStatementDays()
+    t.test_insertTrade()
 
 
 if __name__ == '__main__':

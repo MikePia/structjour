@@ -43,7 +43,7 @@ class MistakeSummary:
         mistakeFields = {
             'title': [[(1, 1), (12, 2)], 'titleStyle', 'Mistake Summary'],
             'headname': [[(1, 3), (2, 3)], 'normStyle', 'Name'],
-            'headpl': [(3, 3), 'normStyle', "P / L"],
+            'headpl': [(3, 3), 'normStyle', "PnL"],
             'headLossPL': [(4, 3), 'normStyle', "Lost P/L"],
             'headmistake': [[(5, 3), (12, 3)], 'normStyle',
                             "Mistake or pertinent feature of trade."],
@@ -53,7 +53,7 @@ class MistakeSummary:
         # Create the data structure to create a styled shape for the Daily Summary Form
         # 'key':[rng, style, value] 
         dailySummaryFields = {
-            'title': [[(1, 1), (12, 2)], 'titleStyle', "Daily P / L Summary"],
+            'title': [[(1, 1), (12, 2)], 'titleStyle', "Daily PnL Summary"],
             'headlivetot': [[(1, 3), (2, 3)], 'normStyle', "Live Total"],
             'headsimtot': [[(1, 4), (2, 4)], 'normStyle', "Sim Total"],
             'headhighest': [[(1, 5), (2, 5)], 'normStyle', "Highest Profit"],

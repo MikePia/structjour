@@ -32,7 +32,7 @@ class DisReqCol(object):
     def __init__(self, thedate=dt.date.today()):
         self.thedate = thedate
         rcvals = ["Date", "Time", "Long/Short", "Ticker", "Entry Price", "Account Balance", "Position",
-                  "Stop Loss", "Target", "Average Exit", "P / L", "Strategy", "Trade Notes"]
+                  "Stop Loss", "Target", "Average Exit", "PnL", "Strategy", "Trade Notes"]
 
         rckeys = ["date", "time", "side", "symb", "entry1", "acctbal", "shares",
                   "stoploss", "targ", "avgexit", "pl", "strat", "notes"]

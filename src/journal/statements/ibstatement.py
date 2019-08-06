@@ -150,7 +150,8 @@ class IbStatement:
                     else:
                         # This should be the first trades for this statmenet/Symbol. 
                         # We are lacking the previous average so cannot reliably figure the
-                        # average.
+                        # average or PL. (IB uses Cost basis accounting and their PL may be wrong
+                        #  for our purposes)
                         print(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
 
 

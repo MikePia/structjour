@@ -81,7 +81,7 @@ class SumReqFields:
         # leaving the rest
         # pylint: disable = C0301
         rcvals = ['Name', 'Account', 'Strategy', 'Link1',
-                  'P/LHead', 'P / L', 'StartHead', 'Start', 'DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
+                  'P/LHead', 'PnL', 'StartHead', 'Start', 'DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
                   'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff', 'RRHead', 'RR', 'MaxHead', 'MaxLoss',
                   'MstkHead', 'MstkVal', 'MstkNote',
 
@@ -91,7 +91,7 @@ class SumReqFields:
                   'EShare1', 'EShare2', 'EShare3', 'EShare4', 'EShare5', 'EShare6', 'EShare7', 'EShare8',
                   'Diff1', 'Diff2', 'Diff3', 'Diff4', 'Diff5', 'Diff6', 'Diff7', 'Diff8',
                   'PL1', 'PL2', 'PL3', 'PL4', 'PL5', 'PL6', 'PL7', 'PL8',
-                  'Explain', 'Notes'
+                  'Explain', 'Notes', 'Date'
                   ]
 
         rckeys = ['name', 'acct', 'strat', 'link1',
@@ -105,7 +105,7 @@ class SumReqFields:
                   'eshare1', 'eshare2', 'eshare3', 'eshare4', 'eshare5', 'eshare6', 'eshare7', 'eshare8',
                   'diff1', 'diff2', 'diff3', 'diff4', 'diff5', 'diff6', 'diff7', 'diff8',
                   'pl1', 'pl2', 'pl3', 'pl4', 'pl5', 'pl6', 'pl7', 'pl8',
-                  'explain', 'notes'
+                  'explain', 'notes', 'date'
                   ]
         # rckeys2 = ['stratnote', 'link5', 'link6']
 
@@ -211,6 +211,7 @@ class SumReqFields:
 
         self.explain = rc['explain']
         self.notes = rc['notes']
+        self.date = rc['date']
 
         self.rc = rc
         self.columns = rc.values()
@@ -407,7 +408,8 @@ class TheTradeObject:
         '''
 
         self.interview = interview
-        col = srf.tfcolumns.keys()
+        col = list(srf.tfcolumns.keys())
+        col.append('Date')
         TheTrade = pd.DataFrame(columns=col)
         TheTrade = DataFrameUtil.addRows(TheTrade, 1)
         self.srf = srf
@@ -481,6 +483,7 @@ class TheTradeObject:
 
     def __setStart(self):
         self.TheTrade[self.srf.start] = self.df.loc[self.ix][frc.start]
+        self.TheTrade[self.srf.date] = self.df.loc[self.ix][frc.date]
         return self.TheTrade
 
     # HACK ALERT The duration came out as an empty string on an older file so I added the

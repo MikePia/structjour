@@ -609,7 +609,7 @@ class DasStatement:
 
 def notmain():
     '''Run some local code'''
-    d = "20181101"
+    d = "20180101"
     settings = QSettings('zero_substance', 'structjour')
     # fs = findFilesInDir(trades[1], trades[0], searchParts=False)
     fs = findFilesSinceMonth(d, 'trades.csv', searchParts=False, DAS=True)
@@ -626,7 +626,7 @@ def local():
     fn = "C:/journal/trader/_20181203_December/_1203_Monday/trades.csv"
     if not os.path.exists(fn):
         print('try again')
-    theDate = '20181203'
+    theDate = '20180323'
     settings = QSettings('zero_substance', 'structjour')
     ds = DasStatement('trades.csv', settings, theDate)
     df = ds.getTrades()

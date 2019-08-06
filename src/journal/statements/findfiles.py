@@ -109,8 +109,6 @@ def findFilesInDir(direct, fn, searchParts):
     Find the files in direct that match fn, either exactly or including the same parts.
     :direct: The directory to search
     :fn: A filename or file pattern with parts seperated by '.'
-    :freq: Either DaiyDir or MonthlyDir. DailyDir will search the daily directories and MonthlyDir
-            will search the Monthly directories.
     :searchParts: If False, search for the precise filename. If True search parts seperated by
             '.' and ending with the same extension
     '''
