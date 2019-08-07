@@ -21,7 +21,7 @@ Created on April 8, 2019
 
 @author: Mike Petersen
 '''
-
+import datetime as dt
 import os
 import sqlite3.test.transactions
 import sys
@@ -71,8 +71,9 @@ class DailyControl(QDialogWClose):
         super().__init__(parent=None)
         self.ui = DailyForm()
         self.ui.setupUi(self)
-
-        self.date = daDate
+        self.date = None
+        if daDate:
+            self.date = pd.Timestamp(daDate)
         apiset = QSettings('zero_substance/stockapi', 'structjour')
         self.db = apiset.value('dbsqlite')
         if not self.db:
@@ -195,7 +196,7 @@ class DailyControl(QDialogWClose):
         '''
         if not self.date:
             if 'Date' in df.columns:
-                self.date = df.Date[0]
+                self.date = pd.Timestamp(df.Date[0])
 
         self.ts = tradeSum
         self.modelT = PandasModel(df)

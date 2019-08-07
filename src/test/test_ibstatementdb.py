@@ -32,10 +32,12 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from journal.definetrades import FinReqCol
+from journal.definetrades import DefineTrades, FinReqCol
 from journal.statements import findfiles as ff
 from journal.statements.ibstatementdb import StatementDB
 from journal.statements.ibstatement import IbStatement
+from journal.thetradeobject import runSummaries
+from journal.view.layoutforms import LayoutForms
 # pylint: disable = C0103
 
 class Test_StatementDB(unittest.TestCase):
@@ -51,6 +53,50 @@ class Test_StatementDB(unittest.TestCase):
         jdir = self.settings.value('journal')
 
         self.fulldb = os.path.join(jdir, self.db)
+
+    def test_findTradeSummary(self):
+        pass
+    def test_formatDate(self):
+        pass
+
+    def test_addCharts(self):
+        pass
+
+    def test_addEntries(self):
+        pass
+
+    def test_addTradeSummaries(self):
+        '''
+        Tests addTradeSummaries
+        ''' 
+        pass
+        self.clearTables()
+        ibdb = StatementDB(self.db)
+        ibs, x = self.openStuff()
+        # ibdb.getUncoveredDays
+        covered = ibdb.getCoveredDays()
+    
+        for day in covered:
+            rc = FinReqCol()
+            df = ibdb.getStatement(day)
+            if df:
+
+                tu = DefineTrades("DB")
+                inputlen, dframe, ldf = tu.processDBTrades(df)
+                tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
+                print()
+
+    def test_findTrades(self):
+        pass
+
+    def test_find_Trade(self):
+        pass
+    
+    def test_insertPositions(self):
+        pass
+    
+    def test_getNumTicketsForDay(self):
+        pass
 
     def test_StatementDB(self):
         '''Test table creation'''
@@ -177,9 +223,10 @@ def notmain():
     t = Test_StatementDB()
     # t.test_getUncoveredDays()
     # t.test_getStatementDays()
-    t.test_insertTrade()
+    # t.test_insertTrade()
+    t.test_addTradeSummaries()
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

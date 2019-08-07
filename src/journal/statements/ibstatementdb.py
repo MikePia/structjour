@@ -68,17 +68,6 @@ class StatementDB:
         self.holidays = None
         self.covered = None
 
-    def account(self):
-        '''Create account table'''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cur.execute('''
-            CREATE TABLE if not exists account_information (
-            id	INTEGER PRIMARY KEY AUTOINCREMENT,
-            ClientAccountID TEXT, 
-            AccountAlias TEXT);''')
-        conn.commit()
-
     def createTradeTables(self):
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -233,8 +222,6 @@ class StatementDB:
             cursor = cur.execute('''
                 INSERT INTO chart_sum (trade_sum_id, chart_id, slot)
                     VALUES(?, ?, ?)''', (ts_id, chart_id, i+1))
-
-            
             
     def addEntries(self, cur,  ts_id, tdf):
         rc = self.rc
@@ -243,10 +230,6 @@ class StatementDB:
         for i, row in tdf.iterrows():
             cur.execute(f''' UPDATE ib_trades SET trade_sum_id = ?
                 WHERE  id = ?''', (ts_id, row['id']))
-
-
-            
-
 
     def addTradeSummaries(self, tradeSummaries, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
@@ -961,9 +944,12 @@ class StatementDB:
 
     def getStatement(self, day, account='all'):
         '''
-        Get the trades from a single day
-        :day: A date string or timestamp. The day to retrieve trades from.min
-        :account: Fill in to retrieve trades from only one account
+        Get the trades from a single day. This is the default and corresponds with tradeSummaries
+        with numbered trades from a single day. Create a DataFrame with minimal columns, Format
+        Date and Time and add Side 
+        :day: A date string or timestamp. The statement day
+        :account: Leave blank to get all accounts. Fill in to get a single account.
+        :return: DataFrame.
         '''
         rc = self.rc
         conn = sqlite3.connect(self.db)
@@ -989,6 +975,20 @@ class StatementDB:
             ''', (begin, end, account))
         if trades:
             trades = trades.fetchall()
+            
+            columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id', rc.comm]
+            df = pd.DataFrame(data=trades, columns=columns)
+
+            df[rc.time] = ''
+            for i, row in df.iterrows():
+                df.at[i, rc.time] = row[rc.date][9:11] + ':' + row[rc.date][11:13] + ':' + row[rc.date][13:15]
+                if row[rc.shares] > 0:
+                    df.at[i, rc.side] = 'B'
+                else:
+                    df.at[i, rc.side] = 'S'
+            # df[rc.time] = df[rc.time].map(str) + df[rc.date][:6]
+            # df[rc.date] = pd.to_datetime(df[rc.date], format='%Y%m%d;%H%M%S')
+            return df
         return trades
 
     def getStatementDays(self, account, beg, end=None):
@@ -1031,6 +1031,24 @@ class StatementDB:
             return df
         # print()
         return pd.DataFrame()
+
+    def getCoveredDays(self):
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        cursor = cur.execute('''
+            SELECT min(day), max(day) from ib_covered ORDER BY day''')
+        days = cursor.fetchall()
+        returnMe = list()
+        current = days[0][0]
+        last = days[0][-1]
+        last = pd.Timestamp(last)
+        delt = pd.Timedelta(days=1)
+        current = pd.Timestamp(current)
+        while current <= last:
+            if current.weekday() < 5 and not self.isHoliday(current):
+                returnMe.append(current)
+            current = current + delt
+        return returnMe
 
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
         '''
