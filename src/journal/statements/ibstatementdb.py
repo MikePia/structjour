@@ -68,17 +68,6 @@ class StatementDB:
         self.holidays = None
         self.covered = None
 
-    def account(self):
-        '''Create account table'''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cur.execute('''
-            CREATE TABLE if not exists account_information (
-            id	INTEGER PRIMARY KEY AUTOINCREMENT,
-            ClientAccountID TEXT, 
-            AccountAlias TEXT);''')
-        conn.commit()
-
     def createTradeTables(self):
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -175,14 +164,65 @@ class StatementDB:
         cur.execute('''CREATE UNIQUE INDEX if not exists date_start on trade_sum('Date', 'Start')''')
         conn.commit()
 
-    def findTradeSummary(self, ts):
+    def findTradeSummariesByDay(self, date):
+        '''
+        Get a trade summary record by date and time
+        :date: A Date string or Timestamp for the date to find.
+        :start: A Time string or Timestamp for the time to find
+        '''
         sf = SumReqFields()
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        start = ts[sf.start].unique()[0]
+        
+        date = pd.Timestamp(date)
+        date = date.strftime("%Y%m%d")
+
         cursor = cur.execute(f'''
-            SELECT * FROM trade_sum WHERE {sf.start} = ? ''',
-            (start, ))
+            SELECT * FROM trade_sum
+                WHERE {sf.date} = ?''',
+            (date, ))
+        x = cursor.fetchall()
+        if x:
+            return x
+
+        return False
+
+    def makeTradeSumDict(self, ts):
+        '''
+        Using the db order of trade_summaries create a dict
+        :ts: a trade_sum record as retrieved by 'SELECT *'
+        '''
+        sf = SumReqFields()
+        ts = list(ts)
+        
+        t = dict()
+        (t['id'], t[sf.name], t[sf.strat], t[sf.link1], t[sf.pl], t[sf.start], t[sf.date],
+            t[sf.dur], t[sf.shares], t[sf.mktval], t[sf.targ], t[sf.targdiff], t[sf.stoploss],
+            t[sf.sldiff], t[sf.rr], t[sf.maxloss], t[sf.mstkval], t[sf.mstknote], t[sf.explain],
+            t[sf.notes], t['clean']) = ts
+        return t
+
+        
+    def findTradeSummary(self, date, start):
+        '''
+        Get a trade summary record by date and time
+        :date: A Date string or Timestamp for the date to find.
+        :start: A Time string or Timestamp for the time to find
+        '''
+        sf = SumReqFields()
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        
+        date = pd.Timestamp(date)
+        date = date.strftime("%Y%m%d")
+        start = pd.Timestamp(start)
+        start = start.strftime("%H:%M:%S")
+
+        cursor = cur.execute(f'''
+            SELECT * FROM trade_sum
+                WHERE {sf.start} = ?
+                AND {sf.date} = ?''',
+            (date, start ))
         x = cursor.fetchall()
         if x:
             return x
@@ -190,9 +230,20 @@ class StatementDB:
         return False
 
     def formatDate(self, daDate, frmt='%Y%m%d'):
+        '''
+        Format the date into a string for uniform DB format
+        '''
         daDate = pd.Timestamp(daDate)
         daDate = daDate.strftime(frmt)
         return daDate
+
+    def formatTime(self, daTime, frmt='%H:%M:%S'):
+        '''
+        Format the time into a string for uniform DB format
+        '''
+        daTime = pd.Timestamp(daTime)
+        daTime = daTime.strftime(frmt)
+        return daTime
 
     def addCharts(self, cur, ts, symb, ts_id):
         dtfrmt = '%Y%m%d;%H%M%S'
@@ -233,8 +284,6 @@ class StatementDB:
             cursor = cur.execute('''
                 INSERT INTO chart_sum (trade_sum_id, chart_id, slot)
                     VALUES(?, ?, ?)''', (ts_id, chart_id, i+1))
-
-            
             
     def addEntries(self, cur,  ts_id, tdf):
         rc = self.rc
@@ -244,8 +293,19 @@ class StatementDB:
             cur.execute(f''' UPDATE ib_trades SET trade_sum_id = ?
                 WHERE  id = ?''', (ts_id, row['id']))
 
-
-            
+    def getEntryTrades(self, ts_id):
+        '''
+        Get the transactions for for a trade by trade_sum_id
+        '''
+        #Summary Fields
+        sf = SumReqFields()
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        cursor = cur.execute('''
+            SELECT * from ib_trades
+                WHERE trade_sum_id = ?''', (ts_id, ))
+        x = cursor.fetchall()
+        return x
 
 
     def addTradeSummaries(self, tradeSummaries, ldf):
@@ -255,8 +315,9 @@ class StatementDB:
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         for ts, tdf in zip(tradeSummaries, ldf):
-            daDay = self.formatDate(ts[sf.start].unique()[0])
-            if not self.findTradeSummary(ts):
+            daDay = self.formatDate(ts[sf.date].unique()[0])
+            daTime = self.formatTime(ts[sf.start].unique()[0])
+            if not self.findTradeSummary(daDay, daTime):
                 clean = ''
                 x = cur.execute(f'''
                     INSERT INTO trade_sum(
@@ -285,7 +346,7 @@ class StatementDB:
                          ts[sf.strat].unique()[0],
                          ts[sf.link1].unique()[0],
                          ts[sf.pl].unique()[0],
-                         ts[sf.start].unique()[0],
+                         daTime,
                          daDay,
                          ts[sf.dur].unique()[0],
                          ts[sf.shares].unique()[0],
@@ -308,7 +369,7 @@ class StatementDB:
 
                 self.addCharts(cur, ts, ldf[0][self.rc.ticker].unique()[0], int(ts['id'].unique()[0]))
                 self.addEntries(cur, int(ts['id'].unique()[0]), tdf)
-                conn.commit()
+        conn.commit()
 
     def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
         rc = self.rc
@@ -961,9 +1022,12 @@ class StatementDB:
 
     def getStatement(self, day, account='all'):
         '''
-        Get the trades from a single day
-        :day: A date string or timestamp. The day to retrieve trades from.min
-        :account: Fill in to retrieve trades from only one account
+        Get the trades from a single day. This is the default and corresponds with tradeSummaries
+        with numbered trades from a single day. Create a DataFrame with minimal columns, Format
+        Date and Time and add Side 
+        :day: A date string or timestamp. The statement day
+        :account: Leave blank to get all accounts. Fill in to get a single account.
+        :return: DataFrame.
         '''
         rc = self.rc
         conn = sqlite3.connect(self.db)
@@ -989,7 +1053,21 @@ class StatementDB:
             ''', (begin, end, account))
         if trades:
             trades = trades.fetchall()
-        return trades
+            
+            columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id', rc.comm]
+            df = pd.DataFrame(data=trades, columns=columns)
+
+            df[rc.time] = ''
+            for i, row in df.iterrows():
+                df.at[i, rc.time] = row[rc.date][9:11] + ':' + row[rc.date][11:13] + ':' + row[rc.date][13:15]
+                if row[rc.shares] > 0:
+                    df.at[i, rc.side] = 'B'
+                else:
+                    df.at[i, rc.side] = 'S'
+            # df[rc.time] = df[rc.time].map(str) + df[rc.date][:6]
+            # df[rc.date] = pd.to_datetime(df[rc.date], format='%Y%m%d;%H%M%S')
+            return df
+        return pd.DataFrame()
 
     def getStatementDays(self, account, beg, end=None):
         '''
@@ -1031,6 +1109,24 @@ class StatementDB:
             return df
         # print()
         return pd.DataFrame()
+
+    def getCoveredDays(self):
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        cursor = cur.execute('''
+            SELECT min(day), max(day) from ib_covered ORDER BY day''')
+        days = cursor.fetchall()
+        returnMe = list()
+        current = days[0][0]
+        last = days[0][-1]
+        last = pd.Timestamp(last)
+        delt = pd.Timedelta(days=1)
+        current = pd.Timestamp(current)
+        while current <= last:
+            if current.weekday() < 5 and not self.isHoliday(current):
+                returnMe.append(current)
+            current = current + delt
+        return returnMe
 
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
         '''
@@ -1094,6 +1190,7 @@ class StatementDB:
                     'max': pd.Timestamp(days[1]).date(),
                     'uncovered': uncovered}
         # print()
+   
     def getTradesByDates(self, account, sym, daMin, daMax):
         '''
         Get trades between  times min and max for a ticker/account

@@ -119,28 +119,10 @@ class runController:
         daDate = qtime2pd(daDate)
 
         rc = FinReqCol()
-        data = statement.getStatement(daDate)
-        columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id', rc.comm]
-        df = pd.DataFrame(data=data, columns=columns)
-        df[rc.time] = ''
-        for i, row in df.iterrows():
-            df.at[i, rc.time] = row[rc.date][9:11] + ':' + row[rc.date][11:13] + ':' + row[rc.date][13:15]
-            if row[rc.shares] > 0:
-                df.at[i, rc.side] = 'B'
-            else:
-                df.at[i, rc.side] = 'S'
-        # df[rc.time] = df[rc.time].map(str) + df[rc.date][:6]
-        df[rc.date] = pd.to_datetime(df[rc.date], format='%Y%m%d;%H%M%S')
-
+        df = statement.getStatement(daDate)
 
         tu = DefineTrades(self.inputtype)
-        # inputlen, dframe, ldf = tu.processOutputDframe(df)
         inputlen, dframe, ldf = tu.processDBTrades(df)
-        # self.inputlen = inputlen
-
-        # images and Trade Summaries.
-        # margin = 25
-
         lf = LayoutForms(self.sc, jf, dframe)
         lf.pickleitnow()
         tradeSummaries = lf.runTtoSummaries(ldf)

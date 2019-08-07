@@ -644,7 +644,7 @@ class TheTradeObject:
             diff = 0
 
             tm = pd.Timestamp(row[frc.time])
-            d = row[frc.date]
+            d = pd.Timestamp(row[frc.date])
             dtime = pd.Timestamp(d.year, d.month, d.day, tm.hour, tm.minute, tm.second)
             price = row[frc.price]
             shares = row[frc.shares]
