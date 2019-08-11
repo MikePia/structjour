@@ -229,9 +229,15 @@ class FinPlot:
             violatedRules.append(
                 'Barchart free data will not yesterdays data after 12 till today at  16:30')
 
-        # Rule 2 No support any charts greater than 7 days prior till today
+        # Rule 2 No support any charts greater than 7 days prior till today for Alphavantage
+        # Rule 2 No support any charts greater than 30 days for Barchart
         if n > start:
             delt = n - start
+            if delt.days > 31 and 'bc' in suggestedApis:
+                suggestedApis.remove('bc')
+                lastday = n-pd.Timedelta(days=31)
+                violatedRules.append('Barchart data before {} is unavailable.'.format(
+                lastday.strftime("%b %d")))
             if delt.days > 6 and 'av' in suggestedApis:
                 suggestedApis.remove('av')
                 lastday = n-pd.Timedelta(days=6)
