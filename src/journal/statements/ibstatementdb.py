@@ -30,7 +30,7 @@ import pandas as pd
 from PyQt5.QtCore import QSettings
 
 from journal.definetrades import FinReqCol
-from journal.stock.utilities import isNumeric
+from journal.stock.utilities import isNumeric, qtime2pd
 from journal.thetradeobject import SumReqFields
 
 # pylint: disable = C0103
@@ -51,6 +51,7 @@ class StatementDB:
         self.source = source
         self.db = os.path.join(jdir, db)
         self.rc = FinReqCol()
+        self.sf = SumReqFields()
         self.createTradeTables()
 
         self.holidays = [ 
@@ -72,7 +73,7 @@ class StatementDB:
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         rc = self.rc
-        sf = SumReqFields()
+        sf = self.sf
         cur.execute(f'''
             CREATE TABLE if not exists ib_trades (
                 id	INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -123,18 +124,10 @@ class StatementDB:
                 start TEXT NOT NULL,
                 end TEXT NOT NULL,
                 interval INTEGER,
-                PRIMARY KEY(id))''')
-
-
-        cur.execute('''
-            CREATE TABLE if not exists "chart_sum" (
+                slot INTEGER, 
                 trade_sum_id INTEGER,
-                chart_id INTEGER NOT NULL,
-                slot INTEGER CHECK(slot > 0 and slot < 4),
-                FOREIGN KEY(chart_id) REFERENCES chart_sum(id),
                 FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id),
-                PRIMARY KEY(trade_sum_id,slot)
-            )''')
+                PRIMARY KEY(id))''')
 
         cur.execute(f'''
             CREATE TABLE if not exists trade_sum (
@@ -142,6 +135,7 @@ class StatementDB:
                 {sf.name} TEXT NOT NULL,
                 {sf.strat} TEXT,
                 {sf.link1} TEXT,
+                {sf.acct} TEXT,
                 {sf.pl} NUMERIC,
                 {sf.start} TEXT NOT NULL,
                 {sf.date} TEXT NOT NULL,
@@ -170,7 +164,7 @@ class StatementDB:
         :date: A Date string or Timestamp for the date to find.
         :start: A Time string or Timestamp for the time to find
         '''
-        sf = SumReqFields()
+        sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         
@@ -192,14 +186,14 @@ class StatementDB:
         Using the db order of trade_summaries create a dict
         :ts: a trade_sum record as retrieved by 'SELECT *'
         '''
-        sf = SumReqFields()
+        sf = self.sf
         ts = list(ts)
         
         t = dict()
-        (t['id'], t[sf.name], t[sf.strat], t[sf.link1], t[sf.pl], t[sf.start], t[sf.date],
-            t[sf.dur], t[sf.shares], t[sf.mktval], t[sf.targ], t[sf.targdiff], t[sf.stoploss],
-            t[sf.sldiff], t[sf.rr], t[sf.maxloss], t[sf.mstkval], t[sf.mstknote], t[sf.explain],
-            t[sf.notes], t['clean']) = ts
+        (t['id'], t[sf.name], t[sf.strat], t[sf.link1], t[sf.acct], t[sf.pl], t[sf.start],
+            t[sf.date], t[sf.dur], t[sf.shares], t[sf.mktval], t[sf.targ], t[sf.targdiff],
+            t[sf.stoploss], t[sf.sldiff], t[sf.rr], t[sf.maxloss], t[sf.mstkval], t[sf.mstknote],
+            t[sf.explain], t[sf.notes], t['clean']) = ts
         return t
 
         
@@ -209,7 +203,7 @@ class StatementDB:
         :date: A Date string or Timestamp for the date to find.
         :start: A Time string or Timestamp for the time to find
         '''
-        sf = SumReqFields()
+        sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         
@@ -222,10 +216,12 @@ class StatementDB:
             SELECT * FROM trade_sum
                 WHERE {sf.start} = ?
                 AND {sf.date} = ?''',
-            (date, start ))
+            (start, date ))
         x = cursor.fetchall()
         if x:
-            return x
+            if len(x) > 1:
+                print(f'ERROR: multiple trade summaries found with date:{date}, start: {start}')
+            return x[0]
 
         return False
 
@@ -245,7 +241,23 @@ class StatementDB:
         daTime = daTime.strftime(frmt)
         return daTime
 
+    def findChart(self, cur, ts_id, slot):
+        cursor = cur.execute(''' SELECT * from chart WHERE trade_sum_id = ? and slot = ?''',
+                (ts_id, slot))
+        cursor = cursor.fetchone()
+        return cursor
+
+    def addChart(self, ts):
+        '''
+        symb, path, name, source, start, end, interval, slot, trade_sum_id
+        '''
+        pass
+
+        def updateCharts(self, trade):
+            print()
+
     def addCharts(self, cur, ts, symb, ts_id):
+        '''Generic creation of chart names'''
         dtfrmt = '%Y%m%d;%H%M%S'
         for i in range(3):
             chart = 'chart' + str(i+1)
@@ -265,25 +277,16 @@ class StatementDB:
             except ValueError:
                 continue
 
-            source = ''
+            source = "generic"
             cursor = cur.execute('''SELECT * from chart WHERE path = ? and name = ? ''', (path, chart))
             cursor = cursor.fetchall()
             if cursor:
                 continue
 
             cursor = cur.execute('''
-                INSERT INTO chart(symb, path, name, source, start, end, interval) 
-                    VALUES(?, ?, ?, ?, ?, ?, ?)''',
-                    (symb, path, chart, source, start, end, interval))
-            
-            assert cursor.rowcount == 1
-            chart_id = cursor.lastrowid
-
-
-
-            cursor = cur.execute('''
-                INSERT INTO chart_sum (trade_sum_id, chart_id, slot)
-                    VALUES(?, ?, ?)''', (ts_id, chart_id, i+1))
+                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id) 
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    (symb, path, chart, source, start, end, interval, i+1, ts_id))
             
     def addEntries(self, cur,  ts_id, tdf):
         rc = self.rc
@@ -298,7 +301,7 @@ class StatementDB:
         Get the transactions for for a trade by trade_sum_id
         '''
         #Summary Fields
-        sf = SumReqFields()
+        sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cursor = cur.execute('''
@@ -306,12 +309,107 @@ class StatementDB:
                 WHERE trade_sum_id = ?''', (ts_id, ))
         x = cursor.fetchall()
         return x
+    
+    def doctorTheTrade(self, trade):
+        '''
+        Basically this fixes up my stuff (developer) and should be unnecessary by release time
+        Fix up the legacy objects (which is every object that was ever saved as an
+        object [currently 8/8/19])
+        '''
+        sf = self.sf
+        if sf.date not in trade.columns:
+            theDate = self.settings.value('theDate')
+            theDate = qtime2pd(theDate)
+            theDate = theDate.strftime("%Y%m%d")
+            trade[sf.date] = theDate
+        if sf.clean not in trade.columns:
+            trade[sf.clean] = ''
+        if sf.id not in trade.columns:
+            trade[sf.id] = None
+        return trade
+        
+    def updateTradeSummaries(self, ts):
+        '''
+        Update the table trad_sum and its relations for the trades in ts.
+        :ts: A dict of dict. The keys for the outer dict are found in the list widget.
+        The inner dicts are the trade object with keys and db fields common to the 
+        SumReqFields.columns 
+        '''
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        sf = self.sf
+        tcols = sf.tcols
+        newts = dict()
+        for dkey in ts:
+            trade = ts[dkey]
+            trade = self.doctorTheTrade(trade)
+            tradesum = self.findTradeSummary(trade[sf.date].unique()[0], trade[sf.start].unique()[0])
+            if not tradesum:
+                return
+            trade[sf.id] = tradesum[0]
+                
+            cur.execute(f''' UPDATE trade_sum SET 
+                {sf.name} = ?,
+                {sf.strat} = ?,
+                {sf.link1} = ?,
+                {sf.acct} = ?,
+                {sf.pl} = ?,
+                {sf.start} = ?,
+                {sf.date} = ?,
+                {sf.dur} = ?,
+                {sf.shares} = ?,
+                {sf.mktval} = ?,
+                {sf.targ} = ?,
+                {sf.targdiff} = ?,
+                {sf.stoploss} = ?,
+                {sf.sldiff} = ?,
+                {sf.rr} = ?,
+                {sf.maxloss} = ?,
+                {sf.mstkval} = ?,
+                {sf.mstknote} = ?,
+                {sf.explain} = ?,
+                {sf.notes} = ?,
+                {sf.clean} = ?
+                WHERE  id = ?''', (
+                        trade[sf.name].unique()[0],
+                        trade[sf.strat].unique()[0],
+                        trade[sf.link1].unique()[0],
+                        trade[sf.acct].unique()[0],
+                        trade[sf.pl].unique()[0],
+                        trade[sf.start].unique()[0],
+                        trade[sf.date].unique()[0],
+                        trade[sf.dur].unique()[0],
+                        trade[sf.shares].unique()[0],
+                        trade[sf.mktval].unique()[0],
+                        trade[sf.targ].unique()[0],
+                        trade[sf.targdiff].unique()[0],
+                        trade[sf.stoploss].unique()[0],
+                        trade[sf.sldiff].unique()[0],
+                        trade[sf.rr].unique()[0],
+                        trade[sf.maxloss].unique()[0],
+                        trade[sf.mstkval].unique()[0],
+                        trade[sf.mstknote].unique()[0],
+                        trade[sf.explain].unique()[0],
+                        trade[sf.notes].unique()[0],
+                        trade[sf.clean].unique()[0],
+                        trade[sf.id].unique()[0]))
+            newts[dkey] = trade
+
+        print()
+        return newts
+        # for tkey in tcols:
+        #     print('{:10}{}'.format(tkey, trade[sf[tkey]].unique()[0]))
+
+        # self.updateCharts(trade)
+
+            
+
 
 
     def addTradeSummaries(self, tradeSummaries, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
         #Summary Fields
-        sf = SumReqFields()
+        sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         for ts, tdf in zip(tradeSummaries, ldf):
@@ -324,6 +422,7 @@ class StatementDB:
                         {sf.name},
                         {sf.strat},
                         {sf.link1},
+                        {sf.acct},
                         {sf.pl},
                         {sf.start},
                         {sf.date},
@@ -341,10 +440,11 @@ class StatementDB:
                         {sf.explain},
                         {sf.notes},
                         clean) 
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                         (ts[sf.name].unique()[0],
                          ts[sf.strat].unique()[0],
                          ts[sf.link1].unique()[0],
+                         ts[sf.acct].unique()[0],
                          ts[sf.pl].unique()[0],
                          daTime,
                          daDay,
