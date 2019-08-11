@@ -400,6 +400,11 @@ class DailyControl(QDialogWClose):
                 row = []
                 row.append(QStandardItem(trade))
 
+                #Legacy saved object thing
+                if 'P / L' in self.ts[trade].keys():
+                    self.ts[trade].rename(columns={'P / L': 'PnL'}, inplace=True)
+                    self.setStatusTip('Legacy object, open each trade, then save then load')
+
                 pl = self.ts[trade]['PnL'].unique()[0]
                 if pl and isinstance(pl, (np.floating, float)):
                     totalpl += pl

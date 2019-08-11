@@ -32,7 +32,9 @@ import pandas as pd
 
 from journal.view.sumcontrol import qtime2pd
 
+from journal.statements.ibstatementdb import StatementDB
 from journal.thetradeobject import SumReqFields, runSummaries
+
 
 # pylint: disable=C0103, C1801
 
@@ -164,6 +166,9 @@ class LayoutForms:
         '''pickle tto list'''
         assert self.ts
         assert self.entries
+        ibdb = StatementDB()
+        self.ts = ibdb.updateTradeSummaries(self.ts)
+
 
         df = None
         dfname = self.getStoredTradeName()
@@ -252,6 +257,10 @@ class LayoutForms:
         '''
 
         tto = self.ts[key]
+        # Catch legacy object fix
+        if 'P / L' in tto.keys():
+            tto.rename(columns={'P / L': 'PnL'}, inplace=True)
+            self.sc.setStatusTip('Legacy object. Please save and re-load')
         for wkey in self.wd:
             daVal = tto[wkey].unique()[0]
             if isinstance(daVal, (np.floating, float)):

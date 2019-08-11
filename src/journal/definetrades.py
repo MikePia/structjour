@@ -137,7 +137,7 @@ class DefineTrades(object):
             rccolumns.append('id')
         newTrades = trades[rccolumns]
         newTrades.copy()
-        nt = newTrades.sort_values([rc.ticker, rc.acct, rc.time])
+        nt = newTrades.sort_values([rc.ticker, rc.acct, rc.date])
         # nt = self.writeShareBalance(nt)
         nt = self.addStartTimeDB(nt)
         # nt.Date = pd.to_datetime(nt.Date)
@@ -173,7 +173,9 @@ class DefineTrades(object):
         nt = self.writeShareBalance(nt)
         nt = self.addStartTime(nt)
         nt.Date = pd.to_datetime(nt.Date)
-        nt = nt.sort_values([c.ticker, c.acct, c.start, c.date, c.time], ascending=True)
+        # nt = nt.sort_values([c.ticker, c.start, c.acct, c.date, c.time], ascending=True)
+        nt = nt.sort_values([c.start, c.date, c.time], ascending=True)
+        nt.reset_index(drop=True, inplace=True)
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
         nt = self.addTradeDuration(nt)
@@ -308,8 +310,9 @@ class DefineTrades(object):
         return dframe
 
     def addTradePL(self, dframe):
-        ''' Add a trade summary P/L. That is total the transaction P/L and write a summary P/L for the trade in the c.sum column '''
-
+        '''
+        Add a trade summary P/L. That is total the transaction P/L and write a summary P/L for the
+        trade in the c.sum column '''
         rc = self._frc
         newtrade = pd.DataFrame()
         for tindex in dframe[rc.tix].unique():
@@ -586,9 +589,9 @@ class DefineTrades(object):
                 x0 = tdf.index[0]
                 xl = tdf.index[-1]
                 if tdf.at[x0, c.side].startswith('HOLD') or tdf.at[xl, c.side].startswith('HOLD'):
+                    tdf.at[xl, c.name] = tdf.at[xl, c.name] + " OVERNIGHT"
                     # Apparent double testing to cover trades with holds both before and after
                     if tdf.at[xl, c.side].startswith('HOLD'):
-                        tdf.at[xl, c.name] = tdf.at[xl, c.name] + " OVERNIGHT"
                         tdf.at[xl, c.bal] = 0
                     if tdf.at[x0, c.side].startswith('HOLD'):
                         sharelist = list()

@@ -69,8 +69,8 @@ class Test_StatementDB(unittest.TestCase):
         '''
         Tests addTradeSummaries
         ''' 
-        self.clearTables()
         ibdb = StatementDB(self.db)
+        self.clearTables()
         ibs, x = self.openStuff()
         # ibdb.getUncoveredDays
         covered = ibdb.getCoveredDays()
@@ -116,14 +116,13 @@ class Test_StatementDB(unittest.TestCase):
         cur = conn.cursor()
         x = cur.execute('''SELECT name FROM sqlite_master WHERE type='table'; ''')
         x = x.fetchall()
-        tabnames = ['chart', 'chart_sum','holidays', 'ib_covered', 'ib_trades', 'ib_positions', 'trade_sum']
+        tabnames = ['chart', 'holidays', 'ib_covered', 'ib_trades', 'ib_positions', 'trade_sum']
         self.assertTrue(set(tabnames).issubset(set([y[0] for y in x])))
 
     def clearTables(self):
         conn = sqlite3.connect(self.fulldb)
         cur = conn.cursor()
         cur.execute('''delete from chart''')
-        cur.execute('''delete from chart_sum''')
         # cur.execute('''delete from holidays''')
         cur.execute('''delete from ib_covered''')
         cur.execute('''delete from ib_trades''')

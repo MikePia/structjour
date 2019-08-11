@@ -69,6 +69,8 @@ class SumReqFields:
     in tfcolumns with the others. Excel cell formulas (tfformulas) are created seperately and
     usually require cell translation, done just after the style creation usually. If no cell
     translation is required, the workbook insertion can be handled as a regular rc entry.
+
+    :Expanding to include trade_sum db columns
     '''
 
     def __init__(self):
@@ -91,7 +93,7 @@ class SumReqFields:
                   'EShare1', 'EShare2', 'EShare3', 'EShare4', 'EShare5', 'EShare6', 'EShare7', 'EShare8',
                   'Diff1', 'Diff2', 'Diff3', 'Diff4', 'Diff5', 'Diff6', 'Diff7', 'Diff8',
                   'PL1', 'PL2', 'PL3', 'PL4', 'PL5', 'PL6', 'PL7', 'PL8',
-                  'Explain', 'Notes', 'Date'
+                  'Explain', 'Notes', 'Date', 'Clean', 'id'
                   ]
 
         rckeys = ['name', 'acct', 'strat', 'link1',
@@ -105,9 +107,19 @@ class SumReqFields:
                   'eshare1', 'eshare2', 'eshare3', 'eshare4', 'eshare5', 'eshare6', 'eshare7', 'eshare8',
                   'diff1', 'diff2', 'diff3', 'diff4', 'diff5', 'diff6', 'diff7', 'diff8',
                   'pl1', 'pl2', 'pl3', 'pl4', 'pl5', 'pl6', 'pl7', 'pl8',
-                  'explain', 'notes', 'date'
+                  'explain', 'notes', 'date', 'clean', 'id'
                   ]
-        # rckeys2 = ['stratnote', 'link5', 'link6']
+
+        dbvals = ['Name', 'Account', 'Strategy', 'Link1', 'PnL', 'Start', 'Duration', 'Shares',
+                 'MktVal', 'Target', 'TargDiff', 'StopLoss', 'SLDiff', 'RR', 'MaxLoss', 'MstkVal',
+                 'MstkNote', 'Explain', 'Notes', 'Date', 'id']
+
+        dbkeys = ['name', 'acct', 'strat', 'link1', 'pl', 'start', 'dur', 'shares',
+        'mktval', 'targ', 'targdiff', 'stoploss', 'sldiff', 'rr', 'maxloss', 'mstkval',
+        'mstknote', 'explain', 'notes', 'date', 'id']
+
+        self.tcols = dict(zip(dbkeys, dbvals))
+
 
         # This includes all the locations that are likely to have data associated with them.
         # Blank cells are added to tfcolumns. Tese have style, but no data. Each of the data
@@ -212,6 +224,8 @@ class SumReqFields:
         self.explain = rc['explain']
         self.notes = rc['notes']
         self.date = rc['date']
+        self.clean = rc['clean']
+        self.id = rc['id']
 
         self.rc = rc
         self.columns = rc.values()
