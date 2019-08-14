@@ -1191,7 +1191,9 @@ class StatementDB:
             return dict()
 
         tradeSummary = dict()
+        entriesd = dict()
         for i, ts in enumerate(tsums):
+            entries = list()
             ts = self.makeTradeSumDict(ts)
             ts_id = ts[sf.id]
             key = str(i+1) + ' ' + ts[sf.name]
@@ -1202,6 +1204,7 @@ class StatementDB:
                     LEFT JOIN chart AS c ON c.trade_sum_id = ts.id
                     WHERE ts.id = ?''', (ts_id, ))
 
+            
             sumCharts = sumCharts.fetchall()
             for sumChart in sumCharts:
                 schart = dict()
@@ -1213,9 +1216,11 @@ class StatementDB:
 
                 chart = 'chart' + str(schart['slot'])
                 name = os.path.join(schart['path'], schart['name'])
+                start = pd.Timestamp(schart['start'])
+                end = pd.Timestamp(schart['end'])
                 ts[chart] = name
-                ts[chart + 'Start'] = schart['start']
-                ts[chart + 'End'] = schart['end']
+                ts[chart + 'Start'] = start
+                ts[chart + 'End'] = end
                 ts[chart + 'Interval'] = schart['interval']
             
             sumTrades = cur.execute('''
@@ -1237,7 +1242,7 @@ class StatementDB:
                     LEFT JOIN ib_trades AS t ON t.trade_sum_id = ts.id
                     WHERE trade_sum_id = ?''', (ts_id, ))
             sumTrades = sumTrades.fetchall()
-            entries = list()
+            
             for i in range(0, 8):
                 ii = str(i+1)
                 if i < len(sumTrades):
@@ -1260,7 +1265,8 @@ class StatementDB:
                     else:
                         ts['Exit' + ii] = strade['price']
                         ts['Entry' + ii] = None
-                    ts['Time' + ii] = strade['datetime']
+                    
+                    ts['Time' + ii] = time
                     ts['EShare' + ii] = strade['shares']
                     diff = strade['price'] - strade['avg']
                     ts['Diff' + ii] = diff
@@ -1276,8 +1282,9 @@ class StatementDB:
                     ts['Avg' + ii] = None
 
             tdf = pd.DataFrame(data=[ts.values()], columns=ts.keys())
+            entriesd[key] = entries
             tradeSummary[key] = tdf
-        return tradeSummary, entries
+        return tradeSummary, entriesd
         
 
     def getStatement(self, day, account='all'):
