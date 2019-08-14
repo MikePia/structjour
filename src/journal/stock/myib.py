@@ -385,11 +385,11 @@ def isConnected():
 
 def main():
     '''test run'''
-    start = dt.datetime(2019, 7, 15, 9, 19)
-    end = dt.datetime(2019, 7, 15, 15, 5)
-    minutes = 1
+    start = dt.datetime(2019, 1, 3, 9, 0)
+    end = dt.datetime(2019, 1, 3, 17, 0)
+    minutes = 30
     x, ddf, maDict = getib_intraday('SQ', start, end, minutes)
-    print(x, ddf.tail(3))
+    print(x, ddf)
 
 def notmain():
     '''Run some local code'''

@@ -242,7 +242,7 @@ class StatementDB:
         return daTime
 
     def findChart(self, cur, ts_id, slot):
-        cursor = cur.execute(''' SELECT * from chart WHERE trade_sum_id = ? and slot = ?''',
+        cursor = cur.execute('''SELECT * from chart WHERE trade_sum_id = ? and slot = ?''',
                 (ts_id, slot))
         cursor = cursor.fetchone()
         return cursor
@@ -253,8 +253,41 @@ class StatementDB:
         '''
         pass
 
-        def updateCharts(self, trade):
-            print()
+    def updateCharts(self, cur, trade):
+        sf = self.sf
+        trade_sum_id = int(trade['id'].unique()[0])
+        name = trade[sf.name].unique()[0]
+        ticker = name.split(' ')[0]
+        for i in range(0, 3):
+            chart = 'chart' + str(i+1)
+            start = chart + 'Start'
+            end = chart + 'End'
+            interval = chart + 'Interval'
+            chart = trade[chart].unique()[0]
+            start = trade[start].unique()[0]
+            end = trade[end].unique()[0]
+            start = qtime2pd(start)
+            end = qtime2pd(end)
+            start = self.formatDate(start, frmt='%Y%m%d;%H%M%S')
+            end = self.formatDate(end, frmt='%Y%m%d;%H%M%S')
+            interval = int(trade[interval].unique()[0])
+            path, name = os.path.split(chart)
+
+            cursor = self.findChart(cur, trade_sum_id, i+1)
+
+            if cursor:
+                id = cursor[0]
+                cur.execute(f'''
+                UPDATE chart set symb = ?, path = ?, name = ?, start = ?, end = ?, 
+                    interval = ?
+                    WHERE id = ?''', (ticker, path, name, start, end, interval, id))
+            else:
+                source = 'user'
+                cursor = cur.execute('''
+                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id) 
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    (ticker, path, name, source, start, end, interval, i+1, trade_sum_id))
+
 
     def addCharts(self, cur, ts, symb, ts_id):
         '''Generic creation of chart names'''
@@ -288,7 +321,12 @@ class StatementDB:
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                     (symb, path, chart, source, start, end, interval, i+1, ts_id))
             
-    def addEntries(self, cur,  ts_id, tdf):
+    def updateEntries(self, cur,  ts_id, tdf):
+        '''
+        Set the foreign key in ib_trades to point to the trade_sum to which this transaction belongs.
+        :ts_id: the trade_sum_id for this transaction as part of a trade.
+        :tdf: The dataframe that represents this ib_trade db object.
+        '''
         rc = self.rc
         entry = 0
         tdf.sort_values([rc.date, rc.time], inplace=True)
@@ -338,14 +376,17 @@ class StatementDB:
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         sf = self.sf
+        rc = self.rc
         tcols = sf.tcols
         newts = dict()
         for dkey in ts:
             trade = ts[dkey]
             trade = self.doctorTheTrade(trade)
+            daDay = self.formatDate(trade[sf.date].unique()[0])
             tradesum = self.findTradeSummary(trade[sf.date].unique()[0], trade[sf.start].unique()[0])
+            newts[dkey] = trade
             if not tradesum:
-                return
+                continue
             trade[sf.id] = tradesum[0]
                 
             cur.execute(f''' UPDATE trade_sum SET 
@@ -377,7 +418,7 @@ class StatementDB:
                         trade[sf.acct].unique()[0],
                         trade[sf.pl].unique()[0],
                         trade[sf.start].unique()[0],
-                        trade[sf.date].unique()[0],
+                        daDay,
                         trade[sf.dur].unique()[0],
                         trade[sf.shares].unique()[0],
                         trade[sf.mktval].unique()[0],
@@ -392,16 +433,32 @@ class StatementDB:
                         trade[sf.explain].unique()[0],
                         trade[sf.notes].unique()[0],
                         trade[sf.clean].unique()[0],
-                        trade[sf.id].unique()[0]))
-            newts[dkey] = trade
+                        tradesum[0]))
+            self.updateCharts(cur, trade)
 
-        print()
+            # A litte programming test here. Cannot think of an instance where the
+            # ib_trade.trade_sum_id should need updated. But I think I am missing something in
+            # the way things can be updated.
+            id = int(trade[sf.id].unique()[0])
+            tradesDB = cur.execute(f'''
+                SELECT id, datetime, {rc.ticker}, {rc.acct}, trade_sum_id from ib_trades
+                    WHERE trade_sum_id = ?''', (id, ))
+            if tradesDB:
+                tradesDB = tradesDB.fetchall()
+                for tradeDB in tradesDB:
+                    tradeDF = pd.DataFrame(data=tradesDB, columns=['id', 'datetime', 'Symb', 'Acct', 'ts_id'])
+                    assert len(tradeDF['Symb'].unique()) == 1
+                    assert len(tradeDF['Acct'].unique()) == 1
+                    assert len(tradeDF['ts_id'].unique()) == 1
+                    assert tradeDF['ts_id'].unique()[0] == trade[sf.id].unique()[0]
+            else:
+                raise ValueError('Found an instance that requires updating ib_trade.trade_sum_id.')
+
+
+            
+            
+        conn.commit()
         return newts
-        # for tkey in tcols:
-        #     print('{:10}{}'.format(tkey, trade[sf[tkey]].unique()[0]))
-
-        # self.updateCharts(trade)
-
             
 
 
@@ -468,7 +525,7 @@ class StatementDB:
                 x = x.fetchone()
 
                 self.addCharts(cur, ts, ldf[0][self.rc.ticker].unique()[0], int(ts['id'].unique()[0]))
-                self.addEntries(cur, int(ts['id'].unique()[0]), tdf)
+                self.updateEntries(cur, int(ts['id'].unique()[0]), tdf)
         conn.commit()
 
     def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
@@ -1120,6 +1177,109 @@ class StatementDB:
             return False
         return True
 
+    def getTradeSummaries(self, daDate):
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        sf = self.sf
+
+        daDate = self.formatDate(daDate)
+        tsums = cur.execute('''
+            SELECT * FROM trade_sum WHERE date = ?
+                ORDER BY Start''', (daDate,))
+        tsums = tsums.fetchall()
+        if not tsums:
+            return dict()
+
+        tradeSummary = dict()
+        for i, ts in enumerate(tsums):
+            ts = self.makeTradeSumDict(ts)
+            ts_id = ts[sf.id]
+            key = str(i+1) + ' ' + ts[sf.name]
+            sumCharts = cur.execute('''
+                SELECT c.symb, c.path, c.name, c.start, c.end, c.interval, c.slot, c.id, ts.id,
+                        ts.Name, ts.Start, ts.Duration, ts.Date
+                    FROM trade_sum as ts
+                    LEFT JOIN chart AS c ON c.trade_sum_id = ts.id
+                    WHERE ts.id = ?''', (ts_id, ))
+
+            sumCharts = sumCharts.fetchall()
+            for sumChart in sumCharts:
+                schart = dict()
+                (schart['symb'], schart['path'], schart['name'], schart['start'], schart['end'],
+                 schart['interval'], schart['slot'], schart['c_id'], schart['ts_id'],
+                 schart['t_name'], schart['t_start'], schart['t_dur'], schart['date']) = sumChart
+
+
+
+                chart = 'chart' + str(schart['slot'])
+                name = os.path.join(schart['path'], schart['name'])
+                ts[chart] = name
+                ts[chart + 'Start'] = schart['start']
+                ts[chart + 'End'] = schart['end']
+                ts[chart + 'Interval'] = schart['interval']
+            
+            sumTrades = cur.execute('''
+                SELECT t.Symb, 
+                        t.datetime, 
+                        t.Qty, 
+                        t.Average, 
+                        t.Balance, 
+                        t.Price, 
+                        t.PnL as tPnL, 
+                        t.Commission, 
+                        t.OC, 
+                        t.Account, 
+                        t.id as t_id, 
+                        ts.id as ts_id, 
+                        ts.Name, 
+                        ts.Date 
+                    FROM trade_sum AS ts
+                    LEFT JOIN ib_trades AS t ON t.trade_sum_id = ts.id
+                    WHERE trade_sum_id = ?''', (ts_id, ))
+            sumTrades = sumTrades.fetchall()
+            entries = list()
+            for i in range(0, 8):
+                ii = str(i+1)
+                if i < len(sumTrades):
+                    strade = dict()
+                    (strade['symb'], strade['datetime'], strade['shares'], strade['avg'],
+                     strade['bal'], strade['price'], strade['pl'], strade['comm'], strade['oc'],
+                     strade['acct'], strade['t_id'], strade['ts_id'], strade['name'],
+                     strade['date']) = sumTrades[i]
+
+
+                    BS = 'B' if  strade['shares'] >= 0 else 'S'
+                    time = pd.Timestamp(strade['datetime'])
+                    entry = [strade['price'], '', BS, time]
+                    entries.append(entry)
+
+                    # 9 is OC, 5 is price
+                    if strade['oc'].find('O') > -1:
+                        ts['Entry' + ii] = strade['price']
+                        ts['Exit' + ii] = None
+                    else:
+                        ts['Exit' + ii] = strade['price']
+                        ts['Entry' + ii] = None
+                    ts['Time' + ii] = strade['datetime']
+                    ts['EShare' + ii] = strade['shares']
+                    diff = strade['price'] - strade['avg']
+                    ts['Diff' + ii] = diff
+                    ts['PL' + ii] = strade['pl']
+                    ts['Avg' + ii] = strade['avg']
+                else:
+                    ts['Exit' + ii] = None
+                    ts['Entry' + ii] = None
+                    ts['Time' + ii] = None
+                    ts['EShare' + ii] = None
+                    ts['Diff' + ii] = None
+                    ts['PL' + ii] = None
+                    ts['Avg' + ii] = None
+
+            tdf = pd.DataFrame(data=[ts.values()], columns=ts.keys())
+            tradeSummary[key] = tdf
+        return tradeSummary, entries
+        
+
     def getStatement(self, day, account='all'):
         '''
         Get the trades from a single day. This is the default and corresponds with tradeSummaries
@@ -1335,9 +1495,13 @@ def local():
 def main():
     '''Tun some local code for devel'''
     x = StatementDB()
-    print()
+    daDate = '20190103'
+    ts, entries= x.getTradeSummaries(daDate)
+    print(ts.keys())
+    print(ts.values())
+    print(entries)
 
 if __name__ == '__main__':
     # notmain()
-    local()
-    # main()
+    # local()
+    main()

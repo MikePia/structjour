@@ -190,26 +190,37 @@ class LayoutForms:
         with open(name, "wb") as f:
             pickle.dump((self.ts, self.entries, self.df), f)
 
-    def loadSavedFile(self):
+
+    def loadDBSummaries(self, ts):
+
+        return ts
+
+    def loadSavedFile(self, inputtype=None, theDate=None):
         '''
         Depickle a saved tto list. Clear then repopulate the tradeList widget. The first append
         will trigger the loading mechanism from tto to QT widgets
         '''
-        name = self.sc.getSaveName()
-        if not os.path.exists(name):
-            print(f'Save file does not exist "{name}".')
-            return None
-        with open(name, "rb") as f:
-            test = pickle.load(f)
-            if len(test) == 2:
-                print('Save is in the wrong format. Save and load it again to correct it')
-                (self.ts, self.entries) = test
-                # self.ts = test
-            elif len(test) != 3:
-                print('Something is wrong with this file')
-                return
-            else:
-                (self.ts, self.entries, self.df) = test
+        if inputtype == 'DB':
+            ibdb = StatementDB()
+            self.df = ibdb.getStatement(theDate)
+            self.ts, self.entries = ibdb.getTradeSummaries(theDate)
+            print()
+        else:
+            name = self.sc.getSaveName()
+            if not os.path.exists(name):
+                print(f'Save file does not exist "{name}".')
+                return None
+            with open(name, "rb") as f:
+                test = pickle.load(f)
+                if len(test) == 2:
+                    print('Save is in the wrong format. Save and load it again to correct it')
+                    (self.ts, self.entries) = test
+                    # self.ts = test
+                elif len(test) != 3:
+                    print('Something is wrong with this file')
+                    return
+                else:
+                    (self.ts, self.entries, self.df) = test
 
         print('load up the trade names now')
         tradeSummaries = []

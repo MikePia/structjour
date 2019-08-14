@@ -95,6 +95,7 @@ class runController:
         inputType = self.settings.value('inputType')
             
         daDate = self.ui.dateEdit.date()
+        daDate = qtime2pd(daDate)
         self.settings.setValue('theDate', daDate)
         self.initialize()
 
@@ -104,12 +105,10 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
-        if inputType == 'DB':
-            self.runDBInput(daDate, jf)
-            return
+        
 
         lf = LayoutForms(self.sc, jf, None)
-        lf.loadSavedFile()
+        lf.loadSavedFile(inputType, daDate)
         if lf.df is None:
             print('Did not load up correctly. Try pressing Go, Load, Save')
 
@@ -128,6 +127,8 @@ class runController:
         tradeSummaries = lf.runTtoSummaries(ldf)
         ts = lf.ts
         statement.addTradeSummaries(tradeSummaries, ldf)
+        # ts = statement.loadDBSummaries(ts)
+        print()
 
 
     def runnitDB(self):
@@ -175,63 +176,10 @@ class runController:
 
 
 
-        #     df = statement.getTrades_IBActivity(jf.inpathfile)
-        #     if df.empty:
-        #         msg = '<h3>No trades found inf the file:</h3><ul> '
-        #         msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
-        #         msgbx = QMessageBox()
-        #         msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
-        #         msgbx.setText(msg)
-        #         msgbx.exec()
-        #         return
-        # elif  self.inputtype == 'DAS':
-        #     try:
-        #         tkt = Ticket(jf)
-        #     except ValueError as ex:
-        #         msg = '<h3>The input file has caused a ValueError:</h3><ul> '
-        #         msg = msg + '<div><strong>' + ex.__str__() + '</strong></div>'
-        #         msg = msg + '<div>Did you export the trades window?</div>'
-        #         msg = msg + '<div>If so, please configure the table in DAS to have the necessary fields and re-export it.</div>'
-        #         msgbx = QMessageBox()
-        #         msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
-        #         msgbx.setText(msg)
-        #         msgbx.exec()
-        #         return
-
-        #     df, jf = tkt.getTrades()
-        # # trades = pd.read_csv(jf.inpathfile)
-        # else:
-        #     #Temporary
-        #     print('Opening a non standard file name in DAS')
-        #     tkt = Ticket(jf)
-        #     df, jf = tkt.getTrades()
-
-        # print('check for multiday')
-
-        # idf = InputDataFrame()
-        # trades, success = idf.processInputFile(df, jf.theDate, jf)
-        # if not success:
-        #     return
-
-        # tu = DefineTrades(self.inputtype)
-        # inputlen, dframe, ldf = tu.processOutputDframe(trades)
-        # self.inputlen = inputlen
-
-        # # images and Trade Summaries.
-        # margin = 25
-
-        # lf = LayoutForms(self.sc, jf, dframe)
-        # lf.pickleitnow()
-        # tradeSummaries = lf.runTtoSummaries(ldf)
-        # # self.ldf = ldf
-
     def runnit(self):
         '''
         Load an initial input file and process it.
         '''
-        print('gonna runnit gonna runnit')
-        if self.settings.value('dbTemp') == 'on':
-            return self.runnitDB()
         self.initialize()
         if not self.indir:
             print('What file is supposed to load?')
@@ -239,6 +187,12 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
+        print('gonna runnit gonna runnit')
+        if self.inputtype == 'DB':
+            self.runDBInput(self.theDate, jf)
+            return
+        if self.settings.value('dbTemp') == 'on':
+            return self.runnitDB()
         local = os.path.normpath(self.ui.infileEdit.text())
         if os.path.normpath(jf.inpathfile) != local:
             if os.path.exists(local):

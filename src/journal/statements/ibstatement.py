@@ -1213,20 +1213,20 @@ def localStuff():
     '''Run local stuff'''
     d = pd.Timestamp('2018-03-03')
     files = dict()
-    # files['annual'] = ['U242.csv', getBaseDir]
+    files['annual'] = ['U242.csv', getBaseDir]
 
-    files['stuff'] = ['U2.csv', getDirectory]
-    files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
-    files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
-    files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
-    files['U242'] = ['U242.csv', getDirectory]
-    files['csvtrades'] = ['644223.csv', getDirectory]
-    files['multi'] = ['MULTI', getDirectory]
-    files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    files['dtr'] = ['DailyTradeReport.html', getDirectory]
-    files['act'] = ['ActivityStatement.html', getDirectory]
-    files['atrade'] = ['trades.643495.html', getDirectory]
+    # files['stuff'] = ['U2.csv', getDirectory]
+    # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
+    # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
+    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
+    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    # files['U242'] = ['U242.csv', getDirectory]
+    # files['csvtrades'] = ['644223.csv', getDirectory]
+    # files['multi'] = ['MULTI', getDirectory]
+    # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
+    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    # files['act'] = ['ActivityStatement.html', getDirectory]
+    # files['atrade'] = ['trades.643495.html', getDirectory]
 
     das = 'trades.csv'                          # Search verbatim with searchParts=False
                                                 # TODO How to reconcile IB versus DAS input?
@@ -1234,8 +1234,8 @@ def localStuff():
     badfiles = []
     goodfiles = []
     for filekey in files:
-        # fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
-        fs = findFilesSinceMonth(d, files[filekey][0])
+        fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
+        # fs = findFilesSinceMonth(d, files[filekey][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)

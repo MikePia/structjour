@@ -62,7 +62,7 @@ class Test_StatementDB(unittest.TestCase):
     def test_addCharts(self):
         pass
 
-    def test_addEntries(self):
+    def test_updateEntries(self):
         pass
 
     def test_addTradeSummaries(self):
