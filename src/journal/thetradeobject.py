@@ -893,6 +893,31 @@ def imageData(ldf):
         imageNames.append(imageName)
     return imageNames
 
+def setTradeSummaryHeaders(ts):
+    '''
+    A utility created to add the header fields for the tto object as stored in
+    the DB trade_sum table. Stuff the blank fields ex1 and ex2 so they are styled 
+    '''
+    sf = SumReqFields()
+    newts = dict()
+    for key in ts:
+        trade = ts[key]
+        trade[sf.plhead] = "P/L"
+        trade[sf.starthead] = "Start"
+        trade[sf.durhead] = "Dur"
+        trade[sf.sharehead] = "Pos"
+        trade[sf.mkthead] = "Mkt"
+        trade[sf.entryhead] = 'Entries and Exits'
+        trade[sf.targhead] = 'Target'
+        trade[sf.stophead] = 'Stop'
+        trade[sf.rrhead] = 'R:R'
+        trade[sf.maxhead] = 'Max Loss'
+        trade[sf.mstkhead] = "Proceeds Lost"
+        trade['ex1'] = ''
+        trade['ex2'] = ''
+        # newts[key] = trade
+    return ts
+
 def runSummaries(ldf):
     '''
     This script creates the tto object for each trade in the input file and appends it to a

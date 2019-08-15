@@ -802,16 +802,20 @@ class SumControl(QMainWindow):
             # dbDate = daDate.strftime('%Y%m%d')
             statementDb = StatementDB()
             account = self.settings.value('account')
-            count = statementDb.getNumTicketsforDay(daDate)
+            count, t_count = statementDb.getNumTicketsforDay(daDate)
             s = f"{count} DB tickets for {daDate.strftime('%A, %B %d, %Y')}"
             self.ui.infileEdit.setText(s)
-            statusstring = "Ready to load trades"
-            if count:
-                self.ui.infileEdit.setStyleSheet('color: green;')
+            statusstring = "Ready to load transactions"
+            if t_count:
+                self.ui.infileEdit.setStyleSheet('color: blue;')
                 self.ui.loadBtn.setStyleSheet('color: blue;')
+            elif count:
+                self.ui.infileEdit.setStyleSheet('color: green;')
+                self.ui.goBtn.setStyleSheet('color: green;')
             else:
                 self.ui.infileEdit.setStyleSheet('color: red;')
                 self.ui.loadBtn.setStyleSheet('color: black;')
+                self.ui.goBtn.setStyleSheet('color: black;')
             # statement = statementDb.getStatementDays(account, beg=daDate)
             return
 

@@ -364,6 +364,12 @@ class StatementDB:
             trade[sf.clean] = ''
         if sf.id not in trade.columns:
             trade[sf.id] = None
+        
+        if sf.pl not in trade.columns:
+            if 'P / L' in trade.columns:
+                trade =trade.rename(columns={'P / L': sf.pl})
+        if trade[sf.mktval].unique()[0] is None:
+            trade[sf.mktval] = 0
         return trade
         
     def updateTradeSummaries(self, ts):
@@ -669,12 +675,14 @@ class StatementDB:
         begin = day.strftime('%Y%m%d')
         end = day.strftime('%Y%m%d;99')
         count = 0
+        countt = 0
         if account == 'all':
             count = cur.execute(f'''
             SELECT count() FROM ib_trades
                 where datetime > ?
                 and datetime < ?
             ''', (begin, end))
+
         else:
             count = cur.execute(f'''
                 SELECT count() FROM ib_trades
@@ -683,8 +691,16 @@ class StatementDB:
                 and Account = ?
             ''', (begin, end, account))
         if count:
-            count = count.fetchone()[0]
-        return count
+            count = count.fetchone()
+            count = count[0] if count else 0
+
+        countt = cur.execute('''
+            SELECT count() FROM trade_sum
+                WHERE Date = ?''', (begin, ))
+        if countt:
+            countt = countt.fetchone()
+            countt = countt[0] if countt else 0
+        return count, countt
 
     
     ########################################################################################
@@ -1261,10 +1277,10 @@ class StatementDB:
                     # 9 is OC, 5 is price
                     if strade['oc'].find('O') > -1:
                         ts['Entry' + ii] = strade['price']
-                        ts['Exit' + ii] = None
+                        ts['Exit' + ii] = ''
                     else:
                         ts['Exit' + ii] = strade['price']
-                        ts['Entry' + ii] = None
+                        ts['Entry' + ii] = ''
                     
                     ts['Time' + ii] = time
                     ts['EShare' + ii] = strade['shares']
@@ -1273,13 +1289,13 @@ class StatementDB:
                     ts['PL' + ii] = strade['pl']
                     ts['Avg' + ii] = strade['avg']
                 else:
-                    ts['Exit' + ii] = None
-                    ts['Entry' + ii] = None
-                    ts['Time' + ii] = None
-                    ts['EShare' + ii] = None
-                    ts['Diff' + ii] = None
-                    ts['PL' + ii] = None
-                    ts['Avg' + ii] = None
+                    ts['Exit' + ii] = ''
+                    ts['Entry' + ii] = ''
+                    ts['Time' + ii] = ''
+                    ts['EShare' + ii] = ''
+                    ts['Diff' + ii] = ''
+                    ts['PL' + ii] = ''
+                    ts['Avg' + ii] = ''
 
             tdf = pd.DataFrame(data=[ts.values()], columns=ts.keys())
             entriesd[key] = entries
@@ -1496,19 +1512,21 @@ def local():
     print(d.strftime("%B, %A %d %Y"))
     db = StatementDB()
     # df = db.getStatementDays('U2429974', d, e)
-    x = db.getNumTicketsforDay(d)
+    x, y = db.getNumTicketsforDay(d)
     print(x, "tickets")
+    print (y, "trades")
 
 def main():
     '''Tun some local code for devel'''
     x = StatementDB()
     daDate = '20190103'
     ts, entries= x.getTradeSummaries(daDate)
+        
     print(ts.keys())
     print(ts.values())
     print(entries)
 
 if __name__ == '__main__':
     # notmain()
-    # local()
-    main()
+    local()
+    # main()

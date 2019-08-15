@@ -231,6 +231,8 @@ class ExportToExcel:
                     continue
                 if isinstance(tradeval, (pd.Timestamp, dt.datetime, np.datetime64)):
                     tradeval = pd.Timestamp(tradeval)
+                elif isinstance(tradeval, bytes):
+                    tradeval = None
 
 
                 ws[tcell(cell, anchor=(1, loc[0][0][1]))] = tradeval

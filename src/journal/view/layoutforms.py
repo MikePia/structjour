@@ -30,10 +30,11 @@ import pickle
 import numpy as np
 import pandas as pd
 
+from journal.definetrades import DefineTrades
 from journal.view.sumcontrol import qtime2pd
 
 from journal.statements.ibstatementdb import StatementDB
-from journal.thetradeobject import SumReqFields, runSummaries
+from journal.thetradeobject import SumReqFields, runSummaries, setTradeSummaryHeaders
 
 
 # pylint: disable=C0103, C1801
@@ -202,8 +203,12 @@ class LayoutForms:
         '''
         if inputtype == 'DB':
             ibdb = StatementDB()
-            self.df = ibdb.getStatement(theDate)
-            self.ts, self.entries = ibdb.getTradeSummaries(theDate)
+            df = ibdb.getStatement(theDate)
+            tu = DefineTrades('DB')
+            inputlen, self.df, ldf = tu.processDBTrades(df)
+
+            ts, self.entries = ibdb.getTradeSummaries(theDate)
+            self.ts = setTradeSummaryHeaders(ts)
             print()
         else:
             name = self.sc.getSaveName()
@@ -283,6 +288,10 @@ class LayoutForms:
                 daVal = daVal.strftime(self.timeFormat)
             elif wkey == "Strategy":
                 continue
+            elif not isinstance(daVal, str):
+                print(f"WARNING:  {wkey} is {str(type(daVal))}: {daVal}. Changing to empty str")
+                daVal = ''
+                # raise TypeError(msg)
             self.wd[wkey].setText(daVal)
             # print(wkey)
 

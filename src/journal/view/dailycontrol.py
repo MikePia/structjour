@@ -413,9 +413,11 @@ class DailyControl(QDialogWClose):
 
 
                 mVal = self.ts[trade]['MstkVal'].unique()[0]
-                if mVal and isinstance(mVal, (np.floating, float)):
+                if mVal and isinstance(mVal, (np.floating, float, np.float)):
                     totalPlays = mVal + totalPlays
                     mVal = fc(mVal)
+                if mVal and isinstance(mVal, bytes):
+                    mVal = 0
                 row.append(QStandardItem(mVal))
 
                 row.append(QStandardItem(self.ts[trade]['MstkNote'].unique()[0]))
