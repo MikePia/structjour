@@ -29,6 +29,8 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
+from PyQt5.QtCore import QSettings
+
 from journal.definetrades import FinReqCol
 from journal.dfutil import DataFrameUtil
 from journal.stock.graphstuff import FinPlot
@@ -37,9 +39,10 @@ from journal.stock.graphstuff import FinPlot
 
 
 # Use to access columns in the (altered) input dataframe, known on this page as df.
-# Use srf (SumReqFields instance) to access
+# Use sf (SumReqFields instance) to access
 # columns/data for the summary trade dataframe, known on this page as TheTrade.
 frc = FinReqCol()
+
 
 
 class SumReqFields:
@@ -396,7 +399,7 @@ class SumReqFields:
 
 
 # global variable for use in this module
-# srf = SumReqFields()
+sf = SumReqFields()
 
 
 class TheTradeObject:
@@ -412,7 +415,7 @@ class TheTradeObject:
         may provide 20 transactions for a single ticket purchase. No one likes to see that.
     '''
 
-    def __init__(self, df, interview, srf):
+    def __init__(self, df, interview, sf):
         '''
         Create a dataframe that includes all the summary material for review. Some
         of this data comes from the program and some of it comes from the user. The
@@ -422,11 +425,11 @@ class TheTradeObject:
         '''
 
         self.interview = interview
-        col = list(srf.tfcolumns.keys())
+        col = list(sf.tfcolumns.keys())
         col.append('Date')
         TheTrade = pd.DataFrame(columns=col)
         TheTrade = DataFrameUtil.addRows(TheTrade, 1)
-        self.srf = srf
+        self.sf = sf
 
         ix = df.index[-1]
         ix0 = df.index[0]
@@ -446,6 +449,7 @@ class TheTradeObject:
         self.chartSlot1 = None
         self.chartSlot2 = None
         self.chartSlot3 = None
+        self.settings = QSettings('zero_substance', 'structjour')
 
     def runSummary(self, imageName):
         '''
@@ -466,7 +470,7 @@ class TheTradeObject:
         self.__blandSpaceInMstkNote()
         ret = self.__setEntries(imageName)
 
-        # print("Side = ", self.df.loc[self.ix0][frc.side])
+        print("Side = ", self.df.loc[self.ix0][frc.side])
         if self.interview:
             self.__setStrategy()
             self.__setTarget()
@@ -480,24 +484,24 @@ class TheTradeObject:
 
     def getName(self):
         ''' Get df.Name column'''
-        return self.TheTrade[self.srf.name]
+        return self.TheTrade[self.sf.name]
 
     def __setName(self):
-        self.TheTrade[self.srf.name] = self.df.loc[self.ix][frc.name]
+        self.TheTrade[self.sf.name] = self.df.loc[self.ix][sf.name]
         return self.TheTrade
 
     def __setAcct(self):
-        self.TheTrade[self.srf.acct] = 'Live' if self.df.loc[self.ix][frc.acct].startswith(
+        self.TheTrade[self.sf.acct] = 'Live' if self.df.loc[self.ix][sf.acct].startswith(
             'U') else 'SIM'
         return self.TheTrade
 
     def __setSum(self):
-        self.TheTrade[self.srf.pl] = self.df.loc[self.ix][frc.sum]
+        self.TheTrade[self.sf.pl] = self.df.loc[self.ix][frc.sum]
         return self.TheTrade
 
     def __setStart(self):
-        self.TheTrade[self.srf.start] = self.df.loc[self.ix][frc.start]
-        self.TheTrade[self.srf.date] = self.df.loc[self.ix][frc.date]
+        self.TheTrade[self.sf.start] = self.df.loc[self.ix][sf.start]
+        self.TheTrade[self.sf.date] = self.df.loc[self.ix][sf.date]
         return self.TheTrade
 
     # HACK ALERT The duration came out as an empty string on an older file so I added the
@@ -509,7 +513,7 @@ class TheTradeObject:
         :raise: A couple of assertions could raise AssertionError. (Temporary for development)
         '''
 
-        time = self.df.loc[self.ix][frc.dur]
+        time = self.df.loc[self.ix][sf.dur]
         if isinstance(time, str):
             dur = time
 
@@ -532,7 +536,7 @@ class TheTradeObject:
             dur = str(h) + ' hours, ' if h > 1 else str(h) + \
                 ' hour, ' if h == 1 else ''
             dur += str(m) + ':' + str(s)
-        self.TheTrade[self.srf.dur] = dur
+        self.TheTrade[self.sf.dur] = dur
         return self.TheTrade
 
     def __getStrategy(self):
@@ -562,22 +566,49 @@ class TheTradeObject:
 
         if reply == 9:
             response = input("What do you want to call the strategy?")
-            self.TheTrade[self.srf.strat] = response
+            self.TheTrade[self.sf.strat] = response
         elif reply == 10:
             pass
         elif reply > -1 and reply < len(self.strats):
-            self.TheTrade[self.srf.strat] = self.strats[reply]
+            self.TheTrade[self.sf.strat] = self.strats[reply]
         else:
             print("WTF?  reply out of bounds. 'reply' = {0}".format(reply))
             raise ValueError
         return self.TheTrade
 
+    def getSharesDB(self):
+        '''
+        The DB statement has gotten rid of the 'Hold' entries. Determining a value for 
+        how many shares a trade has to be re thought
+        '''
+        sf = self.sf
+        ocs = self.df[frc.oc].unique()
+        opens = list()
+        Long = True if (self.df.iloc[0][frc.oc].find('O') >= 0 and (self.df.iloc[0][frc.shares] > 0)) or (
+                        self.df.iloc[0][frc.oc].find('C') >= 0 and (self.df.iloc[0][frc.shares] < 0)) else False
+
+        for oc in ocs:
+            if oc.find('O') >= 0:
+                if Long:
+                    self.shares = self.shares = self.df[frc.bal].max()
+                else:
+                    self.shares = self.df[frc.bal].min()
+                return self.shares
+
+        self.shares = -self.df.iloc[0][frc.shares]
+        return self.shares
+
+
+
     def getShares(self):
         '''
-        Utility to get the number of shares in this Trade. (Each TradeObject object represents a
-        single trade, uusuall with at least 2 transactions
+        Utility to get the number of shares in this Trade. Each TradeObject object represents a
+        single trade, or the part of a trade that happens on one day, with at least 1 
+        transaction/ticket. 
         '''
-        if self.shares == 0:
+        if self.settings.value('inputType') == 'DB':
+            return self.getSharesDB()
+        elif self.shares == 0:
             if self.side.startswith("B") or self.side.startswith("HOLD+"):
                 self.shares = self.df[frc.bal].max()
             else:
@@ -594,19 +625,58 @@ class TheTradeObject:
         return self.TheTrade
 
     def __setHeaders(self):
-        self.TheTrade[self.srf.plhead] = "P/L"
-        self.TheTrade[self.srf.starthead] = "Start"
-        self.TheTrade[self.srf.durhead] = "Dur"
-        self.TheTrade[self.srf.sharehead] = "Pos"
-        self.TheTrade[self.srf.mkthead] = "Mkt"
-        self.TheTrade[self.srf.entryhead] = 'Entries and Exits'
-        self.TheTrade[self.srf.targhead] = 'Target'
-        self.TheTrade[self.srf.stophead] = 'Stop'
-        self.TheTrade[self.srf.rrhead] = 'R:R'
-        self.TheTrade[self.srf.maxhead] = 'Max Loss'
-        self.TheTrade[self.srf.mstkhead] = "Proceeds Lost"
-        return self.TheTrade[[self.srf.entryhead, self.srf.targhead, self.srf.stophead,
-                              self.srf.rrhead, self.srf.maxhead]]
+        self.TheTrade[self.sf.plhead] = "P/L"
+        self.TheTrade[self.sf.starthead] = "Start"
+        self.TheTrade[self.sf.durhead] = "Dur"
+        self.TheTrade[self.sf.sharehead] = "Pos"
+        self.TheTrade[self.sf.mkthead] = "Mkt"
+        self.TheTrade[self.sf.entryhead] = 'Entries and Exits'
+        self.TheTrade[self.sf.targhead] = 'Target'
+        self.TheTrade[self.sf.stophead] = 'Stop'
+        self.TheTrade[self.sf.rrhead] = 'R:R'
+        self.TheTrade[self.sf.maxhead] = 'Max Loss'
+        self.TheTrade[self.sf.mstkhead] = "Proceeds Lost"
+        return self.TheTrade[[self.sf.entryhead, self.sf.targhead, self.sf.stophead,
+                              self.sf.rrhead, self.sf.maxhead]]
+
+    def __setEntriesDB(self, imageName):
+        Long = True if (self.df.iloc[0][frc.oc].find('O') >= 0 and (self.df.iloc[0][frc.shares] > 0)) or (
+                        self.df.iloc[0][frc.oc].find('C') >= 0 and (self.df.iloc[0][frc.shares] < 0)) else False
+
+        entries = list()
+        fpentries = list()
+        # exits = list()
+        long = False
+        entry1 = 0
+        count = 0
+
+        for i, row in self.df.iterrows():
+            # ix0 is the index of the first row in df (df is a dataframe holding one trade in at
+            # least 1 row (1 row per ticket)
+            diff = 0
+
+            tm = pd.Timestamp(row[frc.time])
+            d = pd.Timestamp(row[sf.date])
+            dtime = pd.Timestamp(d.year, d.month, d.day, tm.hour, tm.minute, tm.second)
+            price = row[frc.price]
+            shares = row[frc.shares]
+            average = row[frc.avg]
+            if count == 0:
+                entry1 = price
+                average1 = average
+                diff = average1-price
+            else:
+                diff = average1 - price
+
+            fpentries.append([price, 'deprecated', row[frc.side], dtime])
+            count += 1
+
+            if row[frc.oc].find('O') >= 0:
+                entries.append([price, dtime, shares, 0, diff, "Entry"])
+            else:
+                entries.append([price, dtime, shares, row[sf.pl], diff, "Exit"])
+            count = count + 1     
+        
 
     def __setEntries(self, imageName=None):
         '''
@@ -616,6 +686,8 @@ class TheTradeObject:
         eventually) and saves it, not in the dataFrame but as self.entries to be gathered into
         a dict using parallel keys to lf.ts.
         '''
+        if self.settings.value('inputType') == 'DB':
+            return self.__setEntriesDB(imageName=None)
         entries = list()
         fpentries = list()
         # exits = list()
@@ -658,7 +730,7 @@ class TheTradeObject:
             diff = 0
 
             tm = pd.Timestamp(row[frc.time])
-            d = pd.Timestamp(row[frc.date])
+            d = pd.Timestamp(row[sf.date])
             dtime = pd.Timestamp(d.year, d.month, d.day, tm.hour, tm.minute, tm.second)
             price = row[frc.price]
             shares = row[frc.shares]
@@ -674,10 +746,10 @@ class TheTradeObject:
                 if (row[frc.side]).startswith('B') or (row[frc.side]).lower().startswith("hold+"):
                     entries.append([price, dtime, shares, 0, diff, "Entry"])
                 else:
-                    entries.append([price, dtime, shares, row[frc.PL], diff, "Exit"])
+                    entries.append([price, dtime, shares, row[sf.pl], diff, "Exit"])
             else:
                 if (row[frc.side]).startswith('B'):
-                    entries.append([price, dtime, shares, row[frc.PL], diff, "Exit"])
+                    entries.append([price, dtime, shares, row[sf.pl], diff, "Exit"])
                 else:
                     entries.append([price, dtime, shares, 0, diff, "Entry"])
             count = count + 1
@@ -688,7 +760,7 @@ class TheTradeObject:
 
         if len(entries) > 8:
             more = len(entries) - 8
-            self.TheTrade[self.srf.pl8] = "Plus {} more.".format(more)
+            self.TheTrade[self.sf.pl8] = "Plus {} more.".format(more)
             # If this triggered check that the input file processed into tickets.
             # If not, there are probably fewer ticketts than it appears-- check for repeated
             # time entries
@@ -739,9 +811,9 @@ class TheTradeObject:
     def __setTarget(self):
         '''Interview the user for the target. targdiff is handled as a formula elsewhere'''
         target = 0
-        shares = self.TheTrade[self.srf.shares].unique()[0]
+        shares = self.TheTrade[self.sf.shares].unique()[0]
         try:
-            p = float(self.TheTrade[self.srf.entry1])
+            p = float(self.TheTrade[self.sf.entry1])
             p = f'{p:.3f}'
         except ValueError:
             question = '''
@@ -749,7 +821,7 @@ class TheTradeObject:
             What was your target?
                  '''.format(shares)
         else:
-            side = self.TheTrade[self.srf.name].unique()[0].split()[1].lower()
+            side = self.TheTrade[self.sf.name].unique()[0].split()[1].lower()
 
             question = '''
                 Your entry was {0} at {1}.
@@ -773,15 +845,15 @@ class TheTradeObject:
                 continue
             break
 
-        pd.to_numeric(self.TheTrade[self.srf.targ], errors='coerce')
-        self.TheTrade[self.srf.targ] = target
+        pd.to_numeric(self.TheTrade[self.sf.targ], errors='coerce')
+        self.TheTrade[self.sf.targ] = target
 
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
             return self.TheTrade
 
         # Although we will use an excel formula, place it in the df for our use.
-        diff = target - self.TheTrade[self.srf.entry1]
-        self.TheTrade[self.srf.targdiff] = diff
+        diff = target - self.TheTrade[self.sf.entry1]
+        self.TheTrade[self.sf.targdiff] = diff
 
         return self.TheTrade
 
@@ -791,9 +863,9 @@ class TheTradeObject:
         '''
         stop = 0
 
-        shares = self.TheTrade[self.srf.shares].unique()[0]
+        shares = self.TheTrade[self.sf.shares].unique()[0]
         try:
-            p = float(self.TheTrade[self.srf.entry1])
+            p = float(self.TheTrade[self.sf.entry1])
             p = f'{p:.3f}'
         except ValueError:
             question = '''
@@ -801,7 +873,7 @@ class TheTradeObject:
             What was your stop?
                  '''.format(shares)
         else:
-            side = self.TheTrade[self.srf.name].unique()[0].split()[1].lower()
+            side = self.TheTrade[self.sf.name].unique()[0].split()[1].lower()
             question = '''
                 Your entry was {0} at {1}.
                 your position was {2}.
@@ -822,14 +894,14 @@ class TheTradeObject:
                 continue
             break
 
-        self.TheTrade[self.srf.stoploss] = stop
+        self.TheTrade[self.sf.stoploss] = stop
 
         # If this is a trade with a privious holding, the diff in price of the stophas no meaning
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
             return self.TheTrade
 
         # Although we will use an excel formula, place it in the df for our use.
-        self.TheTrade[self.srf.sldiff] = stop - self.TheTrade[self.srf.entry1]
+        self.TheTrade[self.sf.sldiff] = stop - self.TheTrade[self.sf.entry1]
         return self.TheTrade
 
     def __setMaxLoss(self):
@@ -850,24 +922,24 @@ class TheTradeObject:
         for any mistake and should be filled in by the user if, for example, the its sold before a
         target and the trade never approached the stoploss.
         '''
-        if isinstance(self.TheTrade[self.srf.maxloss].unique()[0], str):
+        if isinstance(self.TheTrade[self.sf.maxloss].unique()[0], str):
             # There is no entry in entry1 so maxLoss has no meaning here.
             return
-        if self.TheTrade[self.srf.pl].unique()[0] < 0:
-            pl = self.TheTrade[self.srf.pl].unique()[0]
-            maxloss = self.TheTrade[self.srf.maxloss].unique()[0]
+        if self.TheTrade[self.sf.pl].unique()[0] < 0:
+            pl = self.TheTrade[self.sf.pl].unique()[0]
+            maxloss = self.TheTrade[self.sf.maxloss].unique()[0]
             if abs(pl) > abs(maxloss):
-                self.TheTrade[self.srf.mstkval] = abs(self.TheTrade[self.srf.maxloss].unique()[
-                    0]) - abs(self.TheTrade[self.srf.pl].unique()[0])
-                self.TheTrade[self.srf.mstknote] = "Exceeded Stop Loss!"
+                self.TheTrade[self.sf.mstkval] = abs(self.TheTrade[self.sf.maxloss].unique()[
+                    0]) - abs(self.TheTrade[self.sf.pl].unique()[0])
+                self.TheTrade[self.sf.mstknote] = "Exceeded Stop Loss!"
 
     def __blandSpaceInMstkNote(self):
         pass
-        # self.TheTrade[self.srf.mstknote] = "Final note"
+        # self.TheTrade[self.sf.mstknote] = "Final note"
 
     def __setExplainNotes(self):
-        # self.TheTrade[self.srf.explain] = "Technical description of the trade"
-        # self.TheTrade[self.srf.notes] = "Evaluation of the trade"
+        # self.TheTrade[self.sf.explain] = "Technical description of the trade"
+        # self.TheTrade[self.sf.notes] = "Evaluation of the trade"
         pass
 
 def imageData(ldf):
@@ -931,7 +1003,7 @@ def runSummaries(ldf):
 
     tradeSummaries = list()
 
-    srf = SumReqFields()
+    sf = SumReqFields()
     initialImageNames = imageData(ldf)
     assert len(ldf) == len(initialImageNames)
     # self.sc.ui.tradeList.clear()
@@ -939,12 +1011,12 @@ def runSummaries(ldf):
     entries = dict()
     for i, (imageName, tdf) in enumerate(zip(initialImageNames, ldf)):
 
-        tto = TheTradeObject(tdf, False, srf)
+        tto = TheTradeObject(tdf, False, sf)
         tto.runSummary(imageName)
         tradeSummaries.append(tto.TheTrade)
         # for key in self.wd.keys():
         #     print(key, tto.TheTrade[key].unique()[0])
-        tkey = f'{i+1} {tto.TheTrade[srf.name].unique()[0]}'
+        tkey = f'{i+1} {tto.TheTrade[sf.name].unique()[0]}'
         ts[tkey] = tto.TheTrade
         entries[tkey] = tto.entries
         # self.sc.ui.tradeList.addItem(tkey)
@@ -959,10 +1031,10 @@ def runSummaries(ldf):
 
 def notmain():
     '''Run some local code'''
-    srf = SumReqFields()
+    sf = SumReqFields()
 
-    print('\n', srf.maxcol(), '\n')
-    print('\n', srf.maxrow(), '\n')
+    print('\n', sf.maxcol(), '\n')
+    print('\n', sf.maxrow(), '\n')
 
 
 if __name__ == '__main__':
