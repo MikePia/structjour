@@ -1263,7 +1263,7 @@ class Ui_MainWindow(object):
         self.dbTEMP.setText(_translate("MainWindow", "TEMP DB"))
         self.dasImport.setText(_translate("MainWindow", "DAS import"))
         self.ibImport.setText(_translate("MainWindow", "IB import"))
-        self.goBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#00aa00;\">Load the file shown in the file edit box.</span></p></body></html>"))
+        self.goBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#00aa00;\">Load the transactions shown in the file edit box.</span></p></body></html>"))
         self.goBtn.setText(_translate("MainWindow", "GO"))
         self.loadBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#2d04fa;\">Load the saved data.</span></p></body></html>"))
         self.loadBtn.setText(_translate("MainWindow", "Load"))

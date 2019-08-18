@@ -805,18 +805,23 @@ class SumControl(QMainWindow):
             count, t_count = statementDb.getNumTicketsforDay(daDate)
             s = f"{count} DB tickets for {daDate.strftime('%A, %B %d, %Y')}"
             self.ui.infileEdit.setText(s)
-            statusstring = "Ready to load transactions"
             if t_count:
                 self.ui.infileEdit.setStyleSheet('color: blue;')
                 self.ui.loadBtn.setStyleSheet('color: blue;')
+                statusstring = "Ready to load trades (press load or change the date)"
             elif count:
                 self.ui.infileEdit.setStyleSheet('color: green;')
                 self.ui.goBtn.setStyleSheet('color: green;')
+                statusstring = "Ready to process transactions (press go or change the date)"
             else:
                 self.ui.infileEdit.setStyleSheet('color: red;')
                 self.ui.loadBtn.setStyleSheet('color: black;')
                 self.ui.goBtn.setStyleSheet('color: black;')
+                statusstring = "No tickets or trades have been saved to the DB for this date"
             # statement = statementDb.getStatementDays(account, beg=daDate)
+            self.setStatusTip(statusstring)
+            self.ui.dateEdit.setToolTip(statusstring)
+            self.ui.infileEdit.setToolTip(statusstring)
             return
 
         if not indir or not infile:
