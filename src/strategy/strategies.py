@@ -143,7 +143,7 @@ class Strategy:
     def setPreferred(self, name, pref):
         x = self.cur.execute('''UPDATE strategy
             SET preferred = ?
-            WHERE name = ?''', (0, name))
+            WHERE name = ?''', (pref, name))
         self.conn.commit()
     
     def getPreferred(self, pref=1):
