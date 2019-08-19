@@ -656,7 +656,7 @@ class TheTradeObject:
             diff = 0
 
             tm = pd.Timestamp(row[frc.time])
-            d = pd.Timestamp(row[sf.date])
+            d = pd.Timestamp(row[frc.date])
             dtime = pd.Timestamp(d.year, d.month, d.day, tm.hour, tm.minute, tm.second)
             price = row[frc.price]
             shares = row[frc.shares]
@@ -669,13 +669,35 @@ class TheTradeObject:
                 diff = average1 - price
 
             fpentries.append([price, 'deprecated', row[frc.side], dtime])
-            count += 1
+            
 
-            if row[frc.oc].find('O') >= 0:
-                entries.append([price, dtime, shares, 0, diff, "Entry"])
-            else:
-                entries.append([price, dtime, shares, row[sf.pl], diff, "Exit"])
-            count = count + 1     
+
+            # Entry Price
+            col = 'Entry' + str(count+1) if row[frc.oc].find('O') >= 0 else 'Exit' + str(count+1)
+            self.TheTrade[col] = price
+
+            # Entry Time
+            col = "Time" + str(count+1)
+            # self.TheTrade[col] = pd.Timestamp(price[1])
+            self.TheTrade[col] = dtime
+
+
+            # Entry Shares
+            col = "EShare" + str(count+1)
+            self.TheTrade[col] = shares
+
+            # Entry P/L
+            col = "PL" + str(count+1)
+            self.TheTrade[col] = row[frc.PL]
+
+            # Entry diff
+            col = "Diff" + str(count+1)
+            self.TheTrade[col] = diff
+            count += 1
+        self.entries = fpentries
+        if imageName:
+            self.setChartDataDefault(entries, imageName)
+        return self.TheTrade
         
 
     def __setEntries(self, imageName=None):
