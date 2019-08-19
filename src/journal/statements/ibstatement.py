@@ -929,6 +929,11 @@ class IbStatement:
         elif 'DateTime' in t.columns:
             pass
         elif 'TradeDate' and 'TradeTime' in t.columns:
+            # The Time string in *some* IB statements lacks a beginning '0' for 9:30 etc. 
+            for i, row in t.iterrows():
+                if len(row['TradeTime']) == 5:
+                    t.at[i, 'TradeTime'] = '0' + row['TradeTime']
+
             t['DateTime'] = t['TradeDate'].map(str) + ';' + t['TradeTime']
             t = t.drop(['TradeDate', 'TradeTime'], axis=1)
         else:
@@ -1211,11 +1216,12 @@ def notmain():
 
 def localStuff():
     '''Run local stuff'''
-    d = pd.Timestamp('2018-03-03')
+    d = pd.Timestamp('2019-01-03')
     files = dict()
-    files['annual'] = ['U242.csv', getBaseDir]
+    # files['annual'] = ['U242.csv', getBaseDir]
 
     # files['stuff'] = ['U2.csv', getDirectory]
+    files['stuff'] = ['FlexMonth.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
     # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
@@ -1224,7 +1230,7 @@ def localStuff():
     # files['csvtrades'] = ['644223.csv', getDirectory]
     # files['multi'] = ['MULTI', getDirectory]
     # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    files['dtr'] = ['DailyTradeReport.html', getDirectory]
     # files['act'] = ['ActivityStatement.html', getDirectory]
     # files['atrade'] = ['trades.643495.html', getDirectory]
 
@@ -1234,8 +1240,8 @@ def localStuff():
     badfiles = []
     goodfiles = []
     for filekey in files:
-        fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
-        # fs = findFilesSinceMonth(d, files[filekey][0])
+        # fs = findFilesInDir(files[filekey][1](d), files[filekey][0], searchParts=True)
+        fs = findFilesSinceMonth(d, files[filekey][0])
         for f in fs:
             ibs = IbStatement()
             x = ibs.openIBStatement(f)
