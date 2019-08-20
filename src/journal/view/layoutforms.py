@@ -332,7 +332,7 @@ class LayoutForms:
         for c, interval in zip(['chart1', 'chart2', 'chart3'], [1, 5, 15]):
             for key in self.ts:
                 if c not in self.ts[key].keys():
-                    self.ts[key][c] = 'AnimatedParrotComplaintDepartmet'
+                    self.ts[key][c] = ''
                     start = pd.Timestamp('2175-01-02')
                     end = pd.Timestamp('2175-01-01')
                     self.ts[key][c+'Start'] = start
@@ -346,12 +346,26 @@ class LayoutForms:
         :params ckey: The widget name of the clickLabel will be one of 'chart1', 'chart2', or
                     'chart3'
         '''
+        rc = self.rc
         from PyQt5.QtCore import QDate
 
         assert ckey in ('chart1', 'chart2', 'chart3')
         tto = self.ts[key]
         if 'chart1' not in tto.keys():
             self.updateTsDictionary()
+        if ckey not in tto.columns:
+            # Set some default vals for begin, end and interval if no chart entry exists
+            begin = tto['Time1'].unique()[0]
+            end = None
+            for i in range(1,9):
+                x = tto['Time' + str(i)].unique()[0]
+                if x:
+                    end = x
+                else:
+                    break
+            interval = 1 if ckey == 'chart1' else 5 if ckey == 'chart2' else 15
+
+            return ['', begin, end, interval]
             
         name = tto[ckey].unique()[0]
         begin = tto[ckey + 'Start'].unique()[0]
@@ -361,7 +375,7 @@ class LayoutForms:
             print('WARNING: date type is not standard', type(begin))
             return None
 
-        interval = tto[ckey + 'Interval'].unique()[0]
+        interval = int(tto[ckey + 'Interval'].unique()[0])
 
         return [name, begin, end, interval]
 

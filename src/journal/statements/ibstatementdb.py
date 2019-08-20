@@ -1231,6 +1231,8 @@ class StatementDB:
 
 
                 chart = 'chart' + str(schart['slot'])
+                if not schart['path'] or not schart['name']:
+                    continue
                 name = os.path.join(schart['path'], schart['name'])
                 start = pd.Timestamp(schart['start'])
                 end = pd.Timestamp(schart['end'])

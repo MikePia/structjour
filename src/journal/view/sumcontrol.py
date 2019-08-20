@@ -243,7 +243,7 @@ class SumControl(QMainWindow):
         Load the image named name into the QLable widget widg. Loads a default image if name does
         not exist. Used to initialize the form.
         '''
-        if not os.path.exists(name):
+        if not os.path.exists(name) or not os.path.isfile(name):
             name = self.defaultImage
 
         pixmap = QPixmap(name)
