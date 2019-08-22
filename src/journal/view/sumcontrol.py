@@ -474,7 +474,7 @@ class SumControl(QMainWindow):
         elif c == 'chart2':
             widgs = [self.ui.chart2Start, self.ui.chart2End,
                      self.ui.chart2Interval, self.ui.chart2Name]
-        if c == 'chart3':
+        elif c == 'chart3':
             widgs = [self.ui.chart3Start, self.ui.chart3End,
                      self.ui.chart3Interval, self.ui.chart3Name]
         return widgs
@@ -502,6 +502,7 @@ class SumControl(QMainWindow):
         pi3 = cmenu.addAction("starry night 3")
         pastePic = cmenu.addAction("Paste from clipboard")
         browsePic = cmenu.addAction("Browse for chart")
+        resetTimes = cmenu.addAction("Reset chart times")
 
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
@@ -576,6 +577,15 @@ class SumControl(QMainWindow):
                 self.lf.setChartData(key, data, x.objectName())
                 # p, fname = os.path.split(pname)
                 widgs[3].setText(path[0])
+        elif action == resetTimes:
+            entries = self.lf.getEntries(key)
+            start = entries[0][3]
+            end = entries[-1][3]
+
+            widgs = self.getChartWidgets(x.objectName())
+            widgs[0].setDateTime(pd2qtime(start))
+            widgs[1].setDateTime(pd2qtime(end))
+            self.lf.setChartTimes(key, x.objectName(), [start, end])
 
     def pasteToLabel(self, widg, name):
         '''Set the given name, to the  QLabel widg. Rather than actually paste, we open the an

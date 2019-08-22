@@ -379,6 +379,19 @@ class LayoutForms:
 
         return [name, begin, end, interval]
 
+    def setChartTimes(self, key, ckey, data):
+        '''
+        Store the chart begin and end times with the trade info
+        :key: Trade name from the tradeList
+        :ckey: The widget name of the clickLabel. Will be one of ['chart1', 'chart2', 'chart3']
+        :data: (start, end) timestring or timestamps
+        '''
+        data[0] = pd.Timestamp(data[0])
+        data[1] = pd.Timestamp(data[1])
+        self.ts[key][ckey + 'Start'] = data[0]
+        self.ts[key][ckey + 'End'] = data[1]
+
+
     def setChartData(self, key, data, ckey):
         '''
         Store the chart data in the trade object
