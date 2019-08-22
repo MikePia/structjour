@@ -470,7 +470,7 @@ class TheTradeObject:
         self.__blandSpaceInMstkNote()
         ret = self.__setEntries(imageName)
 
-        print("Side = ", self.df.loc[self.ix0][frc.side])
+        # print("Side = ", self.df.loc[self.ix0][frc.side])
         if self.interview:
             self.__setStrategy()
             self.__setTarget()
@@ -695,8 +695,11 @@ class TheTradeObject:
             self.TheTrade[col] = diff
             count += 1
         self.entries = fpentries
+        
         if imageName:
-            self.setChartDataDefault(entries, imageName)
+            start = self.df.iloc[0][frc.date]
+            end = self.df.iloc[-1][frc.date]
+            self.setChartDataDefault(start, end, imageName)
         return self.TheTrade
         
 
@@ -709,7 +712,7 @@ class TheTradeObject:
         a dict using parallel keys to lf.ts.
         '''
         if self.settings.value('inputType') == 'DB':
-            return self.__setEntriesDB(imageName=None)
+            return self.__setEntriesDB(imageName)
         entries = list()
         fpentries = list()
         # exits = list()
@@ -808,21 +811,24 @@ class TheTradeObject:
             # Entry diff
             col = "Diff" + str(i+1)
             self.TheTrade[col] = price[4]
-        if imageName:
-            self.setChartDataDefault(entries, imageName)
+        imageName = imageName if imageName else ''
+        start = entries[0][1]
+        end = entries[-1][1]
+        self.setChartDataDefault(start, end, imageName)
         return self.TheTrade
 
-    def setChartDataDefault(self, entries, imageName):
+    def setChartDataDefault(self, start, end, imageName):
         '''Set up default times and intervals for charts'''
-        start = entries[0][1]
-        for entry in entries:
-            if isinstance(entry[1], pd.Timestamp):
-                end = entry[1]
+        # start = entries[0][1]
+        # end = entries[-1][1]
         defaultIntervals = [1, 5, 15]
         fp = FinPlot()
         for i, di in enumerate(defaultIntervals):
-            iName, ext = os.path.splitext(imageName)
-            iName = '{}_{:02d}min{}'.format(iName, di, ext)
+            if imageName:
+                iName, ext = os.path.splitext(imageName)
+                iName = '{}_{:02d}min{}'.format(iName, di, ext)
+            else:
+                iName = ''
             begin, finish = fp.setTimeFrame(start, end, di)
 
             self.TheTrade['chart'+ str(i+1)] = iName
