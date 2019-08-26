@@ -270,9 +270,7 @@ class DailyControl(QDialogWClose):
                     try:
                         pl = float(pl)
                     except NameError:
-                        raise ValueError(
-                            'Malformed float for variable pl in createDailySummary')
-
+                        raise ValueError('Malformed float for variable pl in createDailySummary')
             if float(pl) > maxTrade[0]:
                 maxTrade = (pl, "Trade{0}, {1}, {2}".format(
                     count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
@@ -409,6 +407,9 @@ class DailyControl(QDialogWClose):
                 if pl and isinstance(pl, (np.floating, float)):
                     totalpl += pl
                     pl = fc(pl)
+                elif isinstance(pl, (bytes, str)):
+                    self.ts[trade]['PnL'] = 0.0
+                    pl = 0.0
                 row.append(QStandardItem(pl))
 
 

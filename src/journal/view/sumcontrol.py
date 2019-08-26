@@ -197,7 +197,6 @@ class SumControl(QMainWindow):
             if ok == QMessageBox.Yes:
                 strat.addStrategy(text)
 
-                print('yes clicked.')
             else:
                 key = self.ui.tradeList.currentText()
                 self.lf.setStrategy(key, text)
@@ -453,7 +452,6 @@ class SumControl(QMainWindow):
             self.lf.timeFormat = '%m/%d %H:%M:%S'
         else:
             self.lf.timeFormat = '%H:%M:%S'
-        print(self.lf.timeFormat)
         key = self.ui.tradeList.currentText()
         self.lf.toggleTimeFormat(key)
 
@@ -492,7 +490,6 @@ class SumControl(QMainWindow):
         the only argument to mapTo() that didn't fail quietly-crashing the program. The fact that
         it failed without comment is weird. I am expecting their undocumented code to change.
         '''
-        print('loadIm1ge1', x.objectName(), event.pos(), event.globalPos())
         img = x
         cmenu = QMenu(img)
         key = self.ui.tradeList.currentText()
@@ -760,7 +757,6 @@ class SumControl(QMainWindow):
         self.loadFromDate()
 
     def dbDefault(self, b):
-        print('dbDefault called with', b)
         self.settings.setValue('dboutput', 'on')
         self.settings.setValue('inputType', 'DB')
         self.settings.setValue('dbTemp', 'off')
@@ -769,7 +765,6 @@ class SumControl(QMainWindow):
     def dbTemp(self, b):
         pass
         inputType = self.settings.value('inputType')
-        print('in dbTemp, inputype is', inputType)
         self.settings.setValue('dboutput', 'on')
         self.settings.setValue('dbTemp', 'on')
         self.loadFromDate()
@@ -873,7 +868,6 @@ class SumControl(QMainWindow):
                 tm = os.path.getmtime(savename)
                 modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
                 statusstring = f'[{os.path.split(savename)[1]} ({modstring})]   '
-                print('got one\n     ', statusstring)
                 self.ui.loadBtn.setStyleSheet('color: blue;')
                 statusstrine = statusstring + ' or saved object ready to load.'
             else:
@@ -898,7 +892,6 @@ class SumControl(QMainWindow):
 
         self.setStatusTip(statusstring)
         self.ui.dateEdit.setToolTip(statusstring)
-        print('UPDATING', statusstring)
         if self.settings.value('outdirPolicy') == 'default':
             outdir = self.getDirectory()
             outdir = os.path.join(outdir, 'out/')
@@ -1085,7 +1078,6 @@ class SumControl(QMainWindow):
         the current settings (QSetting), define the dialog actions, and store the new settings.
         '''
         w = FileSetCtrl(self.settings)
-        print('the modal dialog waits to call')
         if not self.lf:
             print('No trades loaded')
             return

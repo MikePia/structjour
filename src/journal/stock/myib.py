@@ -385,8 +385,8 @@ def isConnected():
 
 def main():
     '''test run'''
-    start = dt.datetime(2019, 1, 3, 9, 0)
-    end = dt.datetime(2019, 1, 3, 17, 0)
+    start = dt.datetime(2019, 8, 23, 9, 0)
+    end = dt.datetime(2019, 8, 23, 17, 0)
     minutes = 30
     x, ddf, maDict = getib_intraday('SQ', start, end, minutes)
     print(x, ddf)

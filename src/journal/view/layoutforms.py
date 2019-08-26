@@ -571,8 +571,8 @@ class LayoutForms:
         # if not data:
         #     raise ValueError('Raise the error to call attention to programming deficit')
 
-        b = pd.Timestamp(data[1])
-        e = pd.Timestamp(data[2])
+        b = pd.Timestamp(qtime2pd(data[1]))
+        e = pd.Timestamp(qtime2pd(data[2]))
 
         delt = e - b
         bstring = b.strftime('%H%M%S')

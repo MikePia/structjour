@@ -30,6 +30,7 @@ import pandas as pd
 from PyQt5.QtCore import QSettings
 
 from journal.definetrades import FinReqCol
+from journal.statements.findfiles import getDirectory
 from journal.stock.utilities import isNumeric, qtime2pd
 from journal.thetradeobject import SumReqFields
 
@@ -1231,8 +1232,11 @@ class StatementDB:
 
 
                 chart = 'chart' + str(schart['slot'])
-                if not schart['path'] or not schart['name']:
+                if not schart['name']:
                     continue
+                if not schart['path']:
+                    path = getDirectory(schart['date'])
+                    schart['path'] = os.path.join(path, 'out/')
                 name = os.path.join(schart['path'], schart['name'])
                 start = pd.Timestamp(schart['start'])
                 end = pd.Timestamp(schart['end'])
@@ -1286,7 +1290,9 @@ class StatementDB:
                     
                     ts['Time' + ii] = time
                     ts['EShare' + ii] = strade['shares']
-                    diff = strade['price'] - strade['avg']
+                    diff = None
+                    if isinstance(strade['avg'], float):
+                        diff = strade['price'] - strade['avg']
                     ts['Diff' + ii] = diff
                     ts['PL' + ii] = strade['pl']
                     ts['Avg' + ii] = strade['avg']

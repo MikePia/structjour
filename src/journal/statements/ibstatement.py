@@ -1216,21 +1216,21 @@ def notmain():
 
 def localStuff():
     '''Run local stuff'''
-    d = pd.Timestamp('2019-01-03')
+    d = pd.Timestamp('2019-04-01')
     files = dict()
     # files['annual'] = ['U242.csv', getBaseDir]
 
     # files['stuff'] = ['U2.csv', getDirectory]
-    files['stuff'] = ['FlexMonth.csv', getDirectory]
+    # files['stuff'] = ['FlexMonth.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
     # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
     # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
     # files['U242'] = ['U242.csv', getDirectory]
-    # files['csvtrades'] = ['644223.csv', getDirectory]
+    files['csvtrades'] = ['644223.csv', getDirectory]
     # files['multi'] = ['MULTI', getDirectory]
     # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    files['dtr'] = ['DailyTradeReport.html', getDirectory]
+    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
     # files['act'] = ['ActivityStatement.html', getDirectory]
     # files['atrade'] = ['trades.643495.html', getDirectory]
 
