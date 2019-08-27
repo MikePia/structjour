@@ -104,6 +104,7 @@ class SumControl(QMainWindow):
         quote = inspire.getrandom().replace("\t", "        ")
         self.ui.inspireQuote.setText(quote)
         # Create connections for widgets on this form
+        self.ui.inFileBtn.pressed.connect(self.browseInfile)
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
         self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
@@ -161,6 +162,13 @@ class SumControl(QMainWindow):
     # ==================== Main Form  methods =========================
     # =================================================================
 
+    def browseInfile(self):
+        indir = self.getDirectory()
+        path = QFileDialog.getOpenFileName(self, "Select Chart", indir,
+                                               f'Statements(*.html *.csv))')
+        if path[0]:
+            self.ui.infileEdit.setText(path[0])
+            self.ui.infileEdit.setStyleSheet('color: green;')            
 
     def exportExcel(self):
         ''' Signal callback when the exportBtn is pressed. Initiates an export to excel.'''
