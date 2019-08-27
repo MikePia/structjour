@@ -324,6 +324,9 @@ class Inspire:
         quotes.append(["Robert H", "On Motivation", "Robert H, BBT moderator",
             '''Trade management is more important than pattern identification.'''
         ])
+        quotes.append(["O'Neil", "On Trading", "William O'Neil, American Entrepreneur",
+            '''Successful trading is about finding rules that work and then sticking to those rules'''
+        ])
 
         df = pd.DataFrame(data=quotes, columns=['name', 'on', 'who', 'quote'])
         self.df = df
