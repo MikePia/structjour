@@ -201,19 +201,30 @@ class runController:
             
             
 
-        if self.inputtype == 'IB_HTML':
-            jf.inputType = 'IB_HTML'
-            statement = Statement_IBActivity(jf)
-            df = statement.getTrades_IBActivity(jf.inpathfile)
-            if df.empty:
-                msg = '<h3>No trades found inf the file:</h3><ul> '
+        if self.inputtype == 'IB_HTML' or self.inputtype == 'IB_CSV':
+            jf.inputType = self.inputtype
+            ibs = IbStatement()
+            x = ibs.openIBStatement(jf.inpathfile)
+            if x[0]:
+
+                self.runDBInput(self.theDate, jf)
+                return
+            elif x[1]:
+
+
+                msg = '<h3>No trades found in the file:</h3><ul> '
                 msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
+                msg = msg + f'<div>{x[1]}</div>'
                 msgbx = QMessageBox()
                 msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
                 msgbx.setText(msg)
                 msgbx.exec()
                 return
         elif  self.inputtype == 'DAS':
+            ds = DasStatement(jf.infile, self.settings, self.theDate)
+            df = ds.getTrades()
+            self.runDBInput(self.theDate, jf)
+            return
             try:
                 tkt = Ticket(jf)
             except ValueError as ex:
