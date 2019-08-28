@@ -27,21 +27,39 @@ import sys
 import pandas as pd
 from PyQt5.QtCore import QDate, QDateTime
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox
+from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox, QInputDialog, QLineEdit
 
 from journal.definetrades import DefineTrades, FinReqCol
 from journal.pandasutil import InputDataFrame
 from journal.statements.dasstatement import DasStatement
+from journal.statements.findfiles import checkDateDir
 from journal.statements.ibstatementdb import StatementDB
 from journal.statements.ibstatement import IbStatement
+from journal.statements.statement import getStatementType
 from journal.statement import Statement_DAS as Ticket
 from journal.statement import Statement_IBActivity
+from journal.stock.utilities import pd2qtime
 from journal.view.layoutforms import LayoutForms
 from journal.view.sumcontrol import SumControl, qtime2pd
 from journalfiles import JournalFiles
 
 # pylint: disable = C0103
 
+
+def getDate(msg):
+    while True:
+        text, okPressed = QInputDialog.getText(None, "Get text", msg, QLineEdit.Normal, "")
+        if okPressed and text != '':
+            if text.lower().startswith('q'):
+                return None
+            try:
+                text = pd.Timestamp(text)
+                return text
+            except ValueError:
+                continue
+        else:
+            break
+    return None
 
 class runController:
     '''
@@ -160,21 +178,6 @@ class runController:
             ds = DasStatement(jf.infile, self.settings, theDate)
             df = ds.getTrades()
 
-        
-            
-            print(x)
-            # for key in x[0]:
-            #     print(key, list(x[0][key].columns), len(x[0][key]))
-
-
-        # if x[1] and not x[0]:
-        #     badfiles.append([f, x[1]])
-        #     print("\nBAD", f, '\n', x[1])
-
-
-
-
-
 
     def runnit(self):
         '''
@@ -187,7 +190,6 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
-        print('gonna runnit gonna runnit')
         if self.inputtype == 'DB':
             self.runDBInput(self.theDate, jf)
             return
@@ -199,7 +201,10 @@ class runController:
                 d, jf.infile = os.path.split(local)
                 jf.inpathfile = local
             
-            
+        x, inputType = getStatementType(jf.inpathfile)
+        if not inputType:
+            return
+        self.inputtype = inputType
 
         if self.inputtype == 'IB_HTML' or self.inputtype == 'IB_CSV':
             jf.inputType = self.inputtype
@@ -221,6 +226,18 @@ class runController:
                 msgbx.exec()
                 return
         elif  self.inputtype == 'DAS':
+            x = checkDateDir(jf.inpathfile)
+            if not x:
+                msg = "<h3>The date for this DAS statement is not clear</h3>"
+                msg += "<div>Please enter the date for this statement</div>"
+                msg += f'<div><strong>{jf.inpathfile}</strong></div>'
+                msg +=  '<div>(YYYYMMDD) ex: 20190113</div>'
+                theDate = getDate(msg)
+                if theDate:
+                    self.settings.setValue('theDate', theDate)
+                    self.sc.ui.dateEdit.setDate(pd2qtime(theDate, qdate=True))
+                else:
+                    return
             ds = DasStatement(jf.infile, self.settings, self.theDate)
             df = ds.getTrades()
             self.runDBInput(self.theDate, jf)
