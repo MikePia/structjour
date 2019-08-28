@@ -31,12 +31,12 @@ from journal.dfutil import DataFrameUtil
 
 from journal.statements.findfiles import findFilesSinceMonth
 from journal.statements.dasstatement import DasStatement
-from journal.statements.findfiles import getDirectory
+from journal.statements.findfiles import getDirectory, checkDateDir
 from journal.statements.ibstatement import IbStatement, readit
 from journal.definetrades import ReqCol
 
 
-def getStatement(infile):
+def getStatementType(infile):
     '''
     Determine if infile is a statement. If it is return a tuple (data, type)
     If it is a DAS statement, determine if it matches the current date. As DAS statements do not
@@ -53,7 +53,7 @@ def getStatement(infile):
         if df.iloc[0][0] == 'BOF'  or df.iloc[0][0] == 'HEADER' or (
                 df.iloc[0][0] == 'ClientAccountID') or (
                 df.iloc[0][0] == 'Statement'):
-            return df, "IB_CVS"
+            return df, "IB_CSV"
         df = pd.read_csv(infile)
         if not df.empty:
             requiredFields = list(ReqCol().columns)
@@ -78,16 +78,6 @@ def getStatement(infile):
             return tbldivs, 'IB_HTML'
     return None, None
 
-def checkDateDir(infile, frmt=4444):
-    '''
-    Get the date from the path
-    '''
-    settings = QSettings('zero_substance', 'structjour')
-    directory = getDirectory()
-    indir = os.path.split(infile)
-    if not os.path.normpath(directory) == os.path.normpath(indir[0]):
-        return False
-    return True
     
 
 
@@ -99,7 +89,7 @@ def notmain():
     d = '20190601'
     fs = findFilesSinceMonth(d, '', searchParts=True, DAS=True)
     for f, dd in fs:
-        x, inputtype = getStatement(f)
+        x, inputtype = getStatementType(f)
         print(f, inputtype)
         if inputtype == 'DAS':
             if x is None:

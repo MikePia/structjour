@@ -21,6 +21,7 @@ Find file utilities to locate statements
 '''
 
 import os
+import re
 
 import pandas as pd
 from PyQt5.QtCore import QSettings, QDate, QDateTime
@@ -36,7 +37,62 @@ class FindFiles:
     def __init__(self):
         self.settings = QSettings('zero_substance', 'structjour')
 
+def checkDateDir(infile):
+    '''
+    Get the date from the path
+    '''
+    settings = QSettings('zero_substance', 'structjour')
+    directory = getDirectory()
+    indir, f = os.path.split(infile)
+    if not os.path.normpath(directory) == os.path.normpath(indir):
+        return False
+    return True
 
+
+def parseDate(fn, lenJournalDir, scheme):
+    '''
+    Parse the date in a structjour directory name. Parses the directory structure after the journal
+    directory. Relies on the Qsettings values: journal and scheme
+    :fn: The complete pathfile name
+    :lenJournalDir: The length of the  journal directory (normpath)
+    :scheme: Value from settings that describes the path name wrt date information
+    '''
+    fn = os.path.normpath(fn)
+    directory, f = os.path.split(fn)
+    vals = re.findall('\{(.+?)\}', scheme)
+    vals2 = re.findall('\d+', directory)
+    vals2 = ''.join(vals2)
+    removeme = ['YEAR', 'MONTH', 'DAY']
+    for r in removeme:
+        if r in vals:
+            vals.remove(r)
+    year = month = day = None
+    while True:
+        try:
+            s = vals.pop(0)
+            if s == 'Year':
+                year = int(vals2[:4])
+                vals2 = vals2[4:]
+            elif s == 'year':
+                year = int(vals2[:2])
+                vals2 = vals2[2:]
+            elif s == 'month':
+                month = int(vals2[:2])
+                vals2 = vals2[2:]
+            elif s == 'day':
+                day = int(vals2[:2])
+                vals2 = vals2[2:]
+            else:
+                raise ValueError(f'Missed something {s}')
+            if year and month and day:
+                break
+
+        except IndexError:
+            break
+    if not year or not month or not day:
+        return None
+    d = pd.Timestamp(year, month, day)
+    return d
 
 def getBaseDir(nothing=None):
     '''Get the journal base directory using settings'''
