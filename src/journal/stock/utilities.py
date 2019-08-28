@@ -70,12 +70,21 @@ def qtime2pd(qdt):
         return qdt
     return d
 
-def pd2qtime(pdt):
-    '''Return a QDateTime from a time objet of Timestamp'''
+def pd2qtime(pdt, qdate=False):
+    '''
+    Return a QDateTime or a QDate from a time object of Timestamp
+    :qdate: Return QDateTime if False (by default) and QDate if True
+    '''
+    if not qdate:
+        if isinstance(pdt, (QDate, QDateTime)):
+            return QDateTime(pdt)
+        pdt = pd.Timestamp(pdt)
+        return QDateTime(pdt.year, pdt.month, pdt.day, pdt. hour, pdt.minute, pdt.second)
     if isinstance(pdt, (QDate, QDateTime)):
-        return QDateTime(pdt)
+        return QDate(pdt)
     pdt = pd.Timestamp(pdt)
-    return QDateTime(pdt.year, pdt.month, pdt.day, pdt. hour, pdt.minute, pdt.second)
+    return QDate(pdt.year, pdt.month, pdt.day)
+    
 
 def getMAKeys():
     cc1 = ['chart1ma1', 'chart1ma2', 'chart1ma3', 'chart1ma4', 'chart1vwap', 'chart1ma1spin',
