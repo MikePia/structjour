@@ -44,6 +44,7 @@ from journal.view.dailycontrol import DailyControl
 from journal.view.sapicontrol import StockApi
 from journal.view.stratcontrol import StratControl
 from journal.view.summaryform import Ui_MainWindow
+from journal.statements.findfiles import checkDateDir, parseDate
 from journal.stock.graphstuff import FinPlot
 from journal.stock.utilities import getMAKeys, qtime2pd, pd2qtime
 from journal.view.synccontrol import SyncControl
@@ -168,7 +169,16 @@ class SumControl(QMainWindow):
                                                f'Statements(*.html *.csv))')
         if path[0]:
             self.ui.infileEdit.setText(path[0])
-            self.ui.infileEdit.setStyleSheet('color: green;')            
+            self.ui.infileEdit.setStyleSheet('color: green;')
+            if not checkDateDir(path[0]):
+                jdir = self.settings.value('journal')
+                jdir = os.path.normpath(jdir)
+
+                scheme = self.settings.value('scheme')
+                if not jdir or not scheme:
+                    return
+                d = parseDate(path[0], len(jdir), scheme)
+                self.ui.dateEdit.setDate(pd2qtime(d, qdate=True))         
 
     def exportExcel(self):
         ''' Signal callback when the exportBtn is pressed. Initiates an export to excel.'''
@@ -754,12 +764,14 @@ class SumControl(QMainWindow):
 
     def dasDefault(self, b):
         '''Set the self.settings value for input type to DAS'''
+        self.ui.infileEdit.setText('')
         self.settings.setValue('inputType', 'DAS')
         self.settings.setValue('dbTemp', 'off')
         self.loadFromDate()
 
     def ibDefault(self, b):
         '''Set the self.settings value for input type to IB'''
+        self.ui.infileEdit.setText('')
         self.settings.setValue('inputType', 'IB_HTML')
         self.settings.setValue('dbTemp', 'off')
         self.loadFromDate()
@@ -792,24 +804,34 @@ class SumControl(QMainWindow):
         indir = self.getDirectory()
         inputType = self.settings.value('inputType')
         if inputType == 'DAS':
-            dasinfile = self.settings.value('dasInfile')
-            infile = self.settings.value('dasInfile')
+            lineName = self.ui.infileEdit.text()
+            if os.path.exists(lineName):
+                self.settings.setValue('dasInfil', lineName)
+                infile = lineName
+            else:
+                dasinfile = self.settings.value('dasInfile')
+                infile = self.settings.value('dasInfile')
         elif inputType == 'IB_HTML' or inputType == 'IB_CVS':
-            ibinfile = self.settings.value('ibInfile')
-            infile = self.settings.value('ibInfile')
-            sglob = ibinfile
-            rgx = re.sub('{\*}', '.*', sglob)
+            lineName = self.ui.infileEdit.text()
+            if os.path.exists(lineName):
+                self.settings.setValue('ibInfileName', lineName)
+                infile = lineName
+            else:
+                ibinfile = self.settings.value('ibInfile')
+                infile = self.settings.value('ibInfile')
+                sglob = ibinfile
+                rgx = re.sub('{\*}', '.*', sglob)
 
-            fs = list()
-            if os.path.exists(indir):
-                for f in os.listdir(indir):
-                    x = re.search((rgx), f)
-                    if x:
-                        fs.append(x.string)
-                if fs:
-                    ibinfile = fs[0]
-                    infile = fs[0]
-                    self.settings.setValue('ibInfileName', ibinfile)
+                fs = list()
+                if os.path.exists(indir):
+                    for f in os.listdir(indir):
+                        x = re.search((rgx), f)
+                        if x:
+                            fs.append(x.string)
+                    if fs:
+                        ibinfile = fs[0]
+                        infile = fs[0]
+                        self.settings.setValue('ibInfileName', ibinfile)
         elif inputType == 'DB':
             infile = 'DB'
             # dbDate = daDate.strftime('%Y%m%d')
