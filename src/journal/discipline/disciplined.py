@@ -152,6 +152,8 @@ def loadTradeSummaries(loc, trades):
     for i, rowNum in enumerate(loc):
         newdf = DataFrameUtil.createDf(newdf, 1)
         for key in reqCol.keys():
+            if key in ['date', 'clean', 'id']:
+                continue
             cell = colFormat[reqCol[key]][0]
             if isinstance(cell, list):
                 cell = cell[0]
@@ -513,7 +515,18 @@ def registerTrades(tsList, wb):
                     break
 
 
-if __name__ == '__main__':
+
+
+def local():
+    daDate = pd.Timestamp('20181217')
+    fn = 'c:/trader/journal/_201812_December/_1217_Monday/out/tradesMonday_1217.xlsx'
+    if not os.path.exists(fn):
+        print('try again')
+    else:
+        ldf, ts, fpentries = getTradeSummary(fn, daDate)
+        print()
+
+def notmain():
 
     import sys
     disPath = os.path.normpath("Disciplined.xlsx")
@@ -548,3 +561,8 @@ if __name__ == '__main__':
 # for x in flist :
 #     print(x)
 # print('done!')
+
+
+
+if __name__ == '__main__':
+    local()

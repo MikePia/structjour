@@ -198,6 +198,36 @@ class LayoutForms:
 
     def loadSavedFile(self, inputtype=None, theDate=None):
         '''
+        Will rename. Load trade from the Database. inputtype is no longer an issue
+        Keep it around for a bit in case some objects need depickled
+        '''
+        ibdb = StatementDB()
+        df = ibdb.getStatement(theDate)
+        tu = DefineTrades('DB')
+        inputlen, self.df, ldf = tu.processDBTrades(df)
+
+        ts, self.entries = ibdb.getTradeSummaries(theDate)
+        self.ts = setTradeSummaryHeaders(ts)
+
+
+        print('load up the trade names now')
+        tradeSummaries = []
+        self.sc.ui.tradeList.clear()
+        for key in self.ts:
+            self.sc.ui.tradeList.addItem(key)
+            tradeSummaries.append(self.ts[key])
+        try:
+            self.sc.dControl.runDialog(self.df, self.ts)
+        except AttributeError as e:
+            print(e)
+
+        # In prep to do the mistake summary and excel export, return the list it uses now
+        # It might be good to use the dict self.ts instead
+        return tradeSummaries
+
+    def loadSavedFileOLD(self, inputtype=None, theDate=None):
+        '''
+        Keep it around for a bit in case some objects need depickled. New just takes out the pickle
         Depickle a saved tto list. Clear then repopulate the tradeList widget. The first append
         will trigger the loading mechanism from tto to QT widgets
         '''
