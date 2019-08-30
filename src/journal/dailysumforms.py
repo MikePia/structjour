@@ -92,7 +92,7 @@ class MistakeSummary:
 
         mistakeFields['blank1'] = [
             [(1, 4 + numTrades), (2, 4 + numTrades)], 'normStyle']
-        mistakeFields['blank3'] = [(3, 4 + numTrades), 'normalNumber']
+        mistakeFields['total2'] = [(3, 4 + numTrades), 'normalNumber']
         mistakeFields['total'] = [(4, 4 + numTrades), 'normalNumber']
         mistakeFields['blank2'] = [
             [(5, 4 + numTrades), (12, 4 + numTrades)], 'normStyle']
@@ -148,7 +148,7 @@ class MistakeSummary:
                     # ws[tcell(rng, anchor=a)] = headers[key]
                     ws[tcell(rng, anchor=a)] = self.mistakeFields[key][2]
 
-        # The total sum formula is done here. It is self contained to references to the Mistake
+        # The total sum formulas are done here. It is self contained to references to the Mistake
         # Summary form
         totcell = self.mistakeFields['total'][0]
         begincell = (totcell[0], totcell[1] - self.numTrades)
@@ -157,6 +157,15 @@ class MistakeSummary:
         totcell = tcell(totcell, anchor=a)
         f = '=SUM({0})'.format(rng)
         ws[totcell] = f
+
+        totcell2 = self.mistakeFields['total2'][0]
+        begincell = (totcell2[0], totcell2[1] - self.numTrades)
+        endcell = (totcell2[0], totcell2[1] - 1)
+        rng = tcell(begincell, endcell, anchor=a)
+        totcell2 = tcell(totcell2, anchor=a)
+        f = '=SUM({0})'.format(rng)
+        ws[totcell2] = f
+
 
     def dailySumStyle(self, ws, tf, anchor=(1, 1)):
         '''
