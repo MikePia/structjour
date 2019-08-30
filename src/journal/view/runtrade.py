@@ -137,6 +137,8 @@ class runController:
 
         rc = FinReqCol()
         df = statement.getStatement(daDate)
+        if df.empty:
+            return False
 
         tu = DefineTrades(self.inputtype)
         inputlen, dframe, ldf = tu.processDBTrades(df)
@@ -146,7 +148,7 @@ class runController:
         ts = lf.ts
         statement.addTradeSummaries(tradeSummaries, ldf)
         # ts = statement.loadDBSummaries(ts)
-        print()
+        return True
 
 
     def runnitDB(self):
@@ -167,8 +169,6 @@ class runController:
                 d, jf.infile = os.path.split(local)
                 jf.inpathfile = local
             
-        x =[]    
-
         if self.inputtype == 'IB_HTML':
             jf.inputType = 'IB_HTML'
             statement = IbStatement()
@@ -178,7 +178,7 @@ class runController:
             ds = DasStatement(jf.infile, self.settings, theDate)
             df = ds.getTrades()
 
-
+ 
     def runnit(self):
         '''
         Load an initial input file and process it.
@@ -203,6 +203,12 @@ class runController:
             
         x, inputType = getStatementType(jf.inpathfile)
         if not inputType:
+            msg = f'<h3>No trades found. File does not appear to be a statement</h3><ul> '
+            msg += f'<div><strong>{jf.inpathfile}</strong></div>'
+            msgbx = QMessageBox()
+            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setText(msg)
+            msgbx.exec()
             return
         self.inputtype = inputType
 
@@ -210,21 +216,31 @@ class runController:
             jf.inputType = self.inputtype
             ibs = IbStatement()
             x = ibs.openIBStatement(jf.inpathfile)
+            msg = ''
             if x[0]:
+                tkey = 'Trades' if 'Trades' in x[0].keys() else 'TRNT' if 'TRNT' in x[0].keys() else None
+                if not tkey:
+                    raise ValueError(f'Error in processing statemnt {jf.inpathfile}')
+                numtickets = len(x[0][tkey])
+                gotToday = self.runDBInput(self.theDate, jf)
+                
+                if gotToday:
+                    return
+                else:
+                    msg = f'<h3>No trades found on date {self.theDate.date()}</h3><ul> '
+                    msg += f'<div><strong>{jf.inpathfile}</strong></div>'
+                    msg += f'<div>Found {numtickets} tickets. They are now in DB</div>'
+                    msg += f'<div>{list(x[1].keys())}</div>'
 
-                self.runDBInput(self.theDate, jf)
-                return
-            elif x[1]:
-
-
-                msg = '<h3>No trades found in the file:</h3><ul> '
+            else:
+                msg = f'<h3>No trades recorded from the file:</h3><ul> '
                 msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
                 msg = msg + f'<div>{x[1]}</div>'
-                msgbx = QMessageBox()
-                msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
-                msgbx.setText(msg)
-                msgbx.exec()
-                return
+            msgbx = QMessageBox()
+            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setText(msg)
+            msgbx.exec()
+            return
         elif  self.inputtype == 'DAS':
             x = checkDateDir(jf.inpathfile)
             if not x:

@@ -37,9 +37,9 @@ class FinReqCol(object):
 
     def __init__(self, source='DAS'):
 
-        if source not in ['DAS', 'IB_HTML', 'DB']:
+        if source not in ['DAS', 'IB_HTML', 'IB_CSV', 'DB']:
             print("Only DAS IB_HTML and DB are implemented")
-            raise ValueError
+            raise ValueError('ERROR: source is not recognized: {source')
 
         # frcvals are the actual column titles (to be abstracted when we add new input files)
         # frckeys are the abstracted names for use with all file types
@@ -117,9 +117,8 @@ class DefineTrades(object):
         '''
         Constructor
         '''
-        self.sources = {'das': 'DAS', 'ib': 'IB_HTML', 'db': 'DB'}
         self.source = source
-        assert self.source in self.sources.values()
+        assert self.source in ['DAS', 'IB_HTML', 'IB_CSV', 'DB']
 
         self._frc = FinReqCol(source)
 

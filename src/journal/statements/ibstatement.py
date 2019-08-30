@@ -381,7 +381,7 @@ class IbStatement:
             df = df[0]  # .replace(np.nan, '')
             tables[tabKey] = df
         if 'Transactions' not in tables.keys() and 'Trades' not in tables.keys():
-            msg = 'The statment lacks a trades table; it has no information of interest.'
+            msg = 'The statment lacks a trades table.'
             return dict(), msg
         self.doctorHtmlTables(tables)
 
@@ -481,7 +481,7 @@ class IbStatement:
 
     def combinePartialsDefaultCSV(self, t):
         if 'order' in t['DataDiscriminator'].str.lower().unique():
-            t = t[t['DataDiscriminator'].str.lower() == 'order']
+            t = t[t['DataDiscriminator'].str.lower() == 'order'].copy()
         elif 'execution' in t['DataDiscriminator'].str.lower():
             # TODO
             raise ValueError('Need to implement combine partials for the default statement')
@@ -1216,7 +1216,7 @@ def notmain():
 
 def localStuff():
     '''Run local stuff'''
-    d = pd.Timestamp('2019-04-01')
+    d = pd.Timestamp('2019-06-01')
     files = dict()
     # files['annual'] = ['U242.csv', getBaseDir]
 
