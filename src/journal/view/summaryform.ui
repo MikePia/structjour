@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1868</width>
-    <height>1526</height>
+    <height>1545</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -33,41 +33,6 @@
             <property name="sizeConstraint">
              <enum>QLayout::SetMaximumSize</enum>
             </property>
-            <item row="1" column="1" colspan="2">
-             <widget class="QLineEdit" name="infileEdit">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>400</width>
-                <height>0</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0" colspan="2">
-             <widget class="QComboBox" name="tradeList">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QDateEdit" name="dateEdit">
-              <property name="font">
-               <font>
-                <family>Arial Rounded MT Bold</family>
-               </font>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="0">
              <widget class="QPushButton" name="inFileBtn">
               <property name="sizePolicy">
@@ -87,6 +52,48 @@
               </property>
              </widget>
             </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QLineEdit" name="infileEdit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>400</width>
+                <height>0</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QDateEdit" name="dateEdit">
+              <property name="font">
+               <font>
+                <family>Arial Rounded MT Bold</family>
+               </font>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="2">
+             <widget class="QComboBox" name="tradeList">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1" colspan="2">
+             <widget class="QLabel" name="loadedfile">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -95,13 +102,6 @@
              <widget class="QRadioButton" name="useDatabase">
               <property name="text">
                <string>Database</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="dbTEMP">
-              <property name="text">
-               <string>TEMP DB</string>
               </property>
              </widget>
             </item>

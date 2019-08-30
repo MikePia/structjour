@@ -193,8 +193,6 @@ class runController:
         if self.inputtype == 'DB':
             self.runDBInput(self.theDate, jf)
             return
-        if self.settings.value('dbTemp') == 'on':
-            return self.runnitDB()
         local = os.path.normpath(self.ui.infileEdit.text())
         if os.path.normpath(jf.inpathfile) != local:
             if os.path.exists(local):
