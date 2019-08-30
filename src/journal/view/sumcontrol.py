@@ -72,6 +72,7 @@ class SumControl(QMainWindow):
         Retrieve and load settings, and  create action signals for the SumControl Form.
         :params ui: The QT designer object created from summaryform.ui
         '''
+        self.oldDate = None
         super().__init__()
 
         self.defaultImage = 'C:/python/E/structjour/src/images/ZeroSubstanceCreation_500x334.png'
@@ -108,7 +109,8 @@ class SumControl(QMainWindow):
         self.ui.inFileBtn.pressed.connect(self.browseInfile)
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
-        self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
+        self.ui.dateEdit.dateChanged.connect(self.theDateChanged)
+        # self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.useDatabase.clicked.connect(self.dbDefault)
@@ -784,6 +786,14 @@ class SumControl(QMainWindow):
         self.loadFromDate()
 
     # def getDBInfileEdTxt(self):
+
+    def theDateChanged(self, val):
+        
+        if self.oldDate and val != self.oldDate:
+             self.ui.infileEdit.setText('')
+        print(val)
+        self.oldDate = val
+        self.loadFromDate()
 
     def loadFromDate(self):
         '''

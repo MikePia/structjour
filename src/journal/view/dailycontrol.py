@@ -404,7 +404,7 @@ class DailyControl(QDialogWClose):
                     self.setStatusTip('Legacy object, open each trade, then save then load')
 
                 pl = self.ts[trade]['PnL'].unique()[0]
-                if pl and isinstance(pl, (np.floating, float, np.integer)):
+                if pl and isinstance(pl, (np.floating, float, np.integer, int)):
                     totalpl += pl
                     pl = fc(pl)
                 elif isinstance(pl, (bytes, str)):

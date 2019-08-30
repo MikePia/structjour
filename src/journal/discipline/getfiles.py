@@ -91,6 +91,10 @@ class manageSavedStuff:
 
 
     def loadXlFileAsTS(self, sumList):
+        '''
+        Utility to load up the tradeSummary objects from the exported excel file and pickle them
+        '''
+
         from journal.thetradeobject import TheTradeObject, SumReqFields
 
         ldflist = list()
