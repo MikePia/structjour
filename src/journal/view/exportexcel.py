@@ -240,7 +240,11 @@ class ExportToExcel:
         return
 
     def getImageNamesFromTS(self):
-        '''Gathers specific image names as stored in self.ts[tradekey][chartkey]'''
+        '''
+        Gathers specific image names as stored in self.ts[tradekey][chartkey]
+        :return: A dict of all image names in self.ts organized by trade with the keys 'Trade n'
+            These keys are shared by the index names of Tindex column of the statement DataFrame
+        '''
         imageNames = dict()
         for key in self.ts:
             images = []

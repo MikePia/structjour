@@ -36,6 +36,7 @@ class manageSavedStuff:
 
     def getIbInfiles(self,  indir):
         '''
+        Using the glob for ib files in settings, search for ib files in the directory indir
         '''
         sglob = self.ibInfile
 
@@ -92,7 +93,12 @@ class manageSavedStuff:
 
     def loadXlFileAsTS(self, sumList):
         '''
-        Utility to load up the tradeSummary objects from the exported excel file and pickle them
+        Deprecated
+        Utility to load up the tradeSummary objects from the exported excel file and pickle them.
+        Deprecated; the pickled objects are going away and in the DB exclusive storage, don't want
+        to load to databse from a secondary source like an Excel file. This should morph to a
+        emergency utility to load lost info into structjour and try to sync to db info if any.
+        Finally let the user load it to DB.
         '''
 
         from journal.thetradeobject import TheTradeObject, SumReqFields
@@ -132,6 +138,7 @@ class manageSavedStuff:
 
     def gatherDailySumList(self, begin):
         '''
+        Utility
         Gets a dictionary of all input file and all saved files associated with each input file.
         Relies on the structjour file layout implemented using the 'scheme' and 'journal' settings.
         :begin: Earliest input file day
@@ -185,7 +192,7 @@ def main():
 
     t = manageSavedStuff(settings)
     l = t.gatherDailySumList(begin)
-    everything = t.loadXlFileAsTS(l)
+    # everything = t.loadXlFileAsTS(l)
     # df = get
 
 # os.listdir()

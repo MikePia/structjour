@@ -152,7 +152,6 @@ class ChartControl(QDialog):
         for key in self.widgDict:
             widg = self.widgDict[key]
             if isinstance(widg, QLineEdit) and 'color' in widg.objectName().lower():
-                print(widg.objectName())
                 val = widg.text()
                 origval = val
                 val = val.strip()
@@ -161,12 +160,6 @@ class ChartControl(QDialog):
                         val = 'b'
                 if not val == origval:
                     widg.setText(val)
-        # if val not in x.keys():
-        #     return x['b']
-
-        print()
-
-
         
 
     def setChart3VWAPColor(self, val):
