@@ -87,12 +87,12 @@ class FileSetCtrl(QDialog):
         fui.journal.textChanged.connect(self.setJournalDir)
 
         fui.schemeBtn.pressed.connect(self.setSchemeDefault)
-        fui.scheme.textChanged.connect(self.setScheme)
+        fui.scheme.editingFinished.connect(self.setScheme)
 
-        fui.dasInfileBtn.pressed.connect(self.setDASInfile)
+        fui.dasInfileBtn.pressed.connect(self.setDASInfileDefault)
         fui.dasInfile.textChanged.connect(self.setDASInfile)
 
-        fui.dasInfile2Btn.pressed.connect(self.setDASInfile2)
+        fui.dasInfile2Btn.pressed.connect(self.setDASInfile2Default)
         fui.dasInfile2.textChanged.connect(self.setDASInfile2)
 
         fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
@@ -266,10 +266,12 @@ class FileSetCtrl(QDialog):
         self.fui.dasInfile2.setText(fname)
         self.fui.dasInfile2.setStyleSheet("color: black;")
 
+    def setDASInfile2Default(self):
+        '''Set the default name of 'positions.csv'''
+        self.fui.dasInfile2.setText('positions.csv')
+    
     def setDASInfile2(self):
-        '''
-        Set the label from the text widget
-        '''
+        '''Set the default name of positions.csv'''
         fname = self.fui.dasInfile2.text()
         dasInfile2Lbl = os.path.join(self.getDirectory(), fname)
         self.fui.dasInfile2Lbl.setText(dasInfile2Lbl)
@@ -279,8 +281,14 @@ class FileSetCtrl(QDialog):
             self.fui.dasInfile2Lbl.setStyleSheet("color: red;")
         self.settings.setValue('dasInfile2', fname)
 
+    def setDASInfileDefault(self):
+        '''Set the default name of trades.csv'''
+        self.fui.dasInfile.setText('trades.csv')
+
     def setDASInfile(self):
-        ''' Set the lable widget from the text widget and color the label to show existance/not '''
+        '''
+        Set the lable widget from the text widget and color the label to show existance/not
+        '''
         fname = self.fui.dasInfile.text()
         dasInfileLbl = os.path.join(self.getDirectory(), fname)
         self.fui.dasInfileLbl.setText(dasInfileLbl)

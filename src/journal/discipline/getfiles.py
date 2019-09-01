@@ -40,7 +40,7 @@ class manageSavedStuff:
         '''
         sglob = self.ibInfile
 
-        rgx = re.sub('{\*}', '.*', sglob)
+        rgx = re.sub('{\\*}', '.*', sglob)
         rgx = rgx + '$'
         d = indir
 
