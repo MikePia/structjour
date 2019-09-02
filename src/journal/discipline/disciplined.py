@@ -20,7 +20,10 @@ import os
 from openpyxl import load_workbook
 
 
+from journal.definetrades import DefineTrades
 from journal.dfutil import DataFrameUtil
+from journal.statements.findfiles import getDirectory
+from journal.statements.ibstatementdb import StatementDB
 from journal.thetradeobject import SumReqFields
 from journal.tradestyle import c as tcell
 
@@ -32,10 +35,10 @@ class DisReqCol(object):
     def __init__(self, thedate=dt.date.today()):
         self.thedate = thedate
         rcvals = ["Date", "Time", "Long/Short", "Ticker", "Entry Price", "Account Balance", "Position",
-                  "Stop Loss", "Target", "Average Exit", "PnL", "Strategy", "Trade Notes"]
+                  "Stop Loss", "Target", "Average Exit", "PnL", "Strategy", "Trade Notes", 'TS ID']
 
         rckeys = ["date", "time", "side", "symb", "entry1", "acctbal", "shares",
-                  "stoploss", "targ", "avgexit", "pl", "strat", "notes"]
+                  "stoploss", "targ", "avgexit", "pl", "strat", "notes", 'id']
 
         rc = dict(zip(rckeys, rcvals))
 
@@ -52,6 +55,7 @@ class DisReqCol(object):
         self.pl = rc['pl']
         self.strat = rc['strat']
         self.notes = rc['notes']
+        self.id = rc['id']
 
         # We really don't need to manage the styles but just let these
         # sit here for uniformity-- or finding we actually do need them.
@@ -68,7 +72,8 @@ class DisReqCol(object):
             "avgexit": [(10, 1), 'currencyStyle'],
             "pl": [(11, 1), 'currencyStyle'],
             "strat": [(12, 1), 'normal'],
-            "notes": [(16, 1), 'normal']}
+            "notes": [(16, 1), 'normal'],
+            "id": [(17, 1), 'normal']}
 
         self.rc = rc
         self.tfcolumns = tfcolumns
@@ -243,42 +248,22 @@ def getWeekCount(theDate):
 
 def getDevelDailyJournalList(prefix, begin):
     '''
-    Gets a list of Daily trade files as created by Structjour in the MyDevel directories.
-    :params:prefix: The directory that holds all the journal files.
-    :params:date: A datetime.date object identifying the earliest file. All files up to today 
-                    are in the list with the date of the file 
+    
     :return: A list of filenames with dates[[filename, date], [filename2, date2]]...
     '''
     thelist = list()
-    # prefix=prefix
-    weekCount = getWeekCount(begin)
-    now = dt.date.today()
-    theDate = begin
-    delt = dt.timedelta(1)
-    oldmonth = theDate.month
-
-    while now >= theDate:
-        newmonth = theDate.month
-        if theDate.weekday() == 6:
-            weekCount = weekCount + 1
-        if newmonth != oldmonth:
-            weekCount = 1
-        oldmonth = newmonth
-
-        filename = "{}{}/Week_{}/{}".format(prefix,
-                                            theDate.strftime("_%m_%B"),
-                                            weekCount,
-                                            theDate.strftime(
-                                                "_%m%d_%A/out/Trades_%A_%m%d.xlsx")
-                                            )
-        filename = os.path.normpath(filename)
-        if theDate.weekday() < 5:
-            if not os.path.exists(filename):
-                print("no file for ", filename)
-            else:
-                thelist.append([filename, theDate])
-        theDate = theDate+delt
-
+    current = pd.Timestamp(begin)
+    now = pd.Timestamp.today()
+    delt = pd.Timedelta(days=1)
+    while current < now:
+        outdir = getDirectory(current)
+        outdir = os.path.join(outdir, 'out')
+        fn = current.strftime("trades%A_%m%d.xlsx")
+        fn = os.path.join(outdir, fn)
+        if os.path.exists(fn):
+            thelist.append([fn, current])
+            # print(current.strftime('%A, %B %d, %Y'), fn)
+        current += delt
     return thelist
 
 def recreateFPEntries(ts):
@@ -402,7 +387,7 @@ def getTradeTable(fname, daDate):
     dframe = doctorThetable(dframe, daDate)
     return dframe, notes
 
-def registerTrades(tsList, wb):
+def registerTradesOLD(tsList, wb):
     for fname, theDate in tsList:
         # print(fname, theDate)
         wb2 = load_workbook(fname)
@@ -514,6 +499,157 @@ def registerTrades(tsList, wb):
                 if ix == len(ldf):
                     break
 
+def registerTrades(wb, theDate):
+
+    ibdb = StatementDB()
+    df = ibdb.getStatement(theDate)
+    x = ibdb.getNumTicketsforDay(theDate)
+    if not x[0] or not x[1]:
+        print(f'found {x[0]} tickets and {x[1]} trades. Nothing to process in the DB')
+        print('     ', end='')
+        return
+    tu = DefineTrades('DB')
+    inputlen, df, ldf = tu.processDBTrades(df)
+
+    ts, entries = ibdb.getTradeSummaries(theDate)
+    # self.ts = setTradeSummaryHeaders(ts)
+    
+        
+    drc = DisReqCol(theDate)
+
+    tlog = wb["Trade Log"]
+    account = tlog['I1'].value
+
+    startSearch = False
+    ix = -2
+    cols = drc.tfcolumns
+    # Here is a list of the keys to use cols.keys() of the trade log DataFrame
+    #['date', 'time', 'side', 'symb', 'entry1', 'acctbal', 'shares',
+    #'stoploss', 'targ', 'avgexit', 'pl', 'notes'])
+    # Not bothering with the abstraction (drc.name) because this is entirely ours.
+
+    srf = SumReqFields()
+
+    ids = list()
+
+    for row in tlog.iter_rows():
+        #Unconventional loop stuff 
+        anchor = (1, row[0].row)
+        keys = list(ts.keys())
+        if startSearch == True:
+            idcol = cols['id'][0][0] - 1
+            if row[idcol].value:
+                ids.append(row[idcol].value)
+            if not row[0].value:
+                startSearch = False
+                ix = 0
+
+        if row[0].value == 'Date':
+            startSearch = True
+        
+
+        if ix >= 0 and ix < len(keys):
+            
+            while True and ix < len(keys):
+                key = keys[ix]
+                tdf = ts[key]
+                if not gotAnyExits(tdf) or tdf['id'].unique()[0] in ids or (
+                    tdf['Account'].unique()[0] != account):
+                    if tdf['Account'].unique()[0] not in ['SIM', 'Live']:
+                        raise ValueError('Programmer exception in search of weird data')
+                    # Continue the inner loop -- keep row from the outer loop loop
+                    ix += 1
+                    continue
+
+                #date
+                cell = tcell(cols['date'][0], anchor=anchor)
+                tlog[cell] = theDate
+
+                #time
+                cell = tcell(cols['time'][0], anchor=anchor)
+                tim = tdf[srf.start].unique()[0]
+                tlog[cell] = tim
+
+                #side
+                name = tdf[srf.name].unique()[0]
+                if name:
+                    cell = tcell(cols['side'][0], anchor=anchor)
+                    tlog[cell] = name.split()[1]
+
+                #symb
+                cell = tcell(cols['symb'][0], anchor=anchor)
+                tlog[cell] = name.split()[0]
+
+                #entry1
+                cell = tcell(cols['entry1'][0], anchor=anchor)
+                tlog[cell] = tdf[srf.entry1].unique()[0]
+
+                #Account Balance (setting an excel formula)
+                cell = tcell(cols['acctbal'][0], anchor=anchor)
+                formula = "=$M$3+SUM($N$7:$N{})".format(row[0].row-1)
+                tlog[cell] = formula
+
+                # "shares"
+                cell = tcell(cols['shares'][0], anchor=anchor)
+                shares = tdf[srf.shares].unique()[0].split()[0]
+                if len(shares) > 0:
+                    try:
+                        ishares = int(shares)
+                    except:
+                        ishares = 0
+                tlog[cell] = ishares
+
+                #stoploss
+                cell = tcell(cols['stoploss'][0], anchor=anchor)
+                sl = tdf[srf.stoploss].unique()[0]
+                if isinstance(sl, bytes):
+                    sl = None
+                tlog[cell] = sl
+
+                #target
+                cell = tcell(cols['targ'][0], anchor=anchor)
+                target = tdf[srf.targ].unique()[0]
+                if isinstance(target, bytes):
+                    target = None
+                tlog[cell] = target
+
+                #avgExit
+                cell = tcell(cols['avgexit'][0], anchor=anchor)
+                tlog[cell] = getAvgExit(tdf)
+
+                # P/L
+                cell = tcell(cols['pl'][0], anchor=anchor)
+                pl = tdf[srf.pl].unique()[0]
+
+                # Don't know how these are sneaking through-- Is it only on legacy files?
+                if isinstance(pl, bytes):
+                    pl = 0.0
+                tlog[cell] = pl
+
+                # Strategy
+                cell = tcell(cols['strat'][0], anchor=anchor)
+                strat = tdf[srf.strat].unique()[0]
+                tlog[cell] = strat
+
+
+                # notes (from the mistake note field)
+                cell = tcell(cols['notes'][0], anchor=anchor)
+                note = tdf[srf.mstknote].unique()[0]
+                tlog[cell] = note
+
+                # id (from the database)
+                cell = tcell(cols['id'][0], anchor=anchor)
+                id = tdf['id'].unique()[0]
+                tlog[cell] = id
+
+                # break the inner loop
+                break
+
+
+            ix += 1
+            if ix >= len(keys):
+                # done with outer loop
+                break
 
 
 
@@ -529,7 +665,7 @@ def local():
 def notmain():
 
     import sys
-    disPath = os.path.normpath("Disciplined.xlsx")
+    disPath = os.path.normpath("C:/trader/journal/Disciplined.xlsx")
     if os.path.exists(disPath):
         wb = load_workbook(disPath)
     else:
@@ -537,10 +673,16 @@ def notmain():
         sys.exit(0)
 
 
-    begin = dt.date(2018, 10, 15)
+    begin = pd.Timestamp(2018, 11, 5)
     prefix = "C:/trader/journal/"
-    flist = getDevelDailyJournalList(prefix, begin)
-    registerTrades(flist, wb)
+    # flist = getDevelDailyJournalList(prefix, begin)
+    current = begin
+    now = pd.Timestamp.today()
+    delt = pd.Timedelta(days=1)
+    while now > current:
+        registerTrades(wb, current)
+        print('Processed date', current.strftime('%A, %B %d, %Y'))
+        current += delt
     wb.save(disPath)
     print('done!')
 
@@ -565,4 +707,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    local()
+    # local()
+    notmain()
