@@ -319,7 +319,6 @@ class DefineTrades(object):
             ixs = t.index
             sum = t[rc.PL].sum()
             t.at[ixs[-1], rc.sum] = sum
-            print()
             newtrade = newtrade.append(t)
         return newtrade
 
@@ -403,7 +402,6 @@ class DefineTrades(object):
             name = t[rc.ticker].unique()[0]
             name += side
             t.at[ixs[-1], rc.name] = name
-            print()
             newtrade = newtrade.append(t)
         return newtrade
 
