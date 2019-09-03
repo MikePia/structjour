@@ -24,11 +24,11 @@ Created on September 2, 2019
 
 import os
 import sys
-from PyQt5.QtCore import QSettings, Qt
-from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget, QDialog
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QDialog
 
 from journal.view.duplicatetrade import Ui_Dialog as DupDialog
+# pylint: disable = C0103
 
 class DupControl(QDialog):
     '''
@@ -40,6 +40,8 @@ class DupControl(QDialog):
         super().__init__(parent=None)
         self.ui = DupDialog()
         self.ui.setupUi(self)
+        self.setWindowTitle('Database Tool')
+        self.setWindowIcon(QPixmap("../../images/ZSLogo.png"))
 
 
 
@@ -53,9 +55,9 @@ if __name__ == '__main__':
     # dff = pd.read_csv(fn)
 
     # d1 = pd.Timestamp(2030, 6, 6)
-    
+
     w = DupControl()
     # w.runDialog(dff)
     w.show()
-    
+
     sys.exit(app.exec_())

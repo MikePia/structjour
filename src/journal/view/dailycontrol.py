@@ -21,7 +21,6 @@ Created on April 8, 2019
 
 @author: Mike Petersen
 '''
-import datetime as dt
 import os
 import sqlite3.test.transactions
 import sys
@@ -31,7 +30,7 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QWidget, QDialog, QMessageBox
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBox
 
 from journal.thetradeobject import SumReqFields
 from journal.view.dailyform import Ui_Form as DailyForm
@@ -52,14 +51,17 @@ def fc(val):
     return val
 
 class QDialogWClose(QDialog):
-   def closeEvent(self, event):
-    print("X is clicked")
-    t = self.windowTitle()
-    if t.find('text edited') > 0:
-        msg = 'Daily notes contents has changed. Would you like to save it?\n'
-        ok = QMessageBox.question(self, 'Save Notes?', msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if ok == QMessageBox.Yes:
-            self.commitNote()
+    '''A message box with a close event handler'''
+    def closeEvent(self, event):
+        '''Overridden event handler'''
+        print("X is clicked")
+        t = self.windowTitle()
+        if t.find('text edited') > 0:
+            msg = 'Daily notes contents has changed. Would you like to save it?\n'
+            ok = QMessageBox.question(self, 'Save Notes?', msg,
+                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if ok == QMessageBox.Yes:
+                self.commitNote()
 
 class DailyControl(QDialogWClose):
     '''
@@ -109,8 +111,10 @@ class DailyControl(QDialogWClose):
         conn.commit()
 
     def commitNote(self, note=None):
-        '''Save or update the db file for the notes field. This commits the text in the dailyNotes widget.
-        Use setNote for a vanilla db commit'''
+        '''
+        Save or update the db file for the notes field. This commits the text in the dailyNotes
+        widget. Use setNote for a vanilla db commit
+        '''
         if not self.date:
             print('Cannot save without a date')
             return
@@ -189,7 +193,7 @@ class DailyControl(QDialogWClose):
     def dNotesChanged(self):
         ''' daily notes field changed. Set the edited flag. '''
         self.setWindowTitle('Daily Summary ... text edited')
-    
+
     def runDialog(self, df, tradeSum=None):
         '''
         Top level script for this form. Populate the widgets.
@@ -230,12 +234,12 @@ class DailyControl(QDialogWClose):
         '''
         self.commitNote()
 
-        self.setWindowTitle('Daily Summary')   
-    
+        self.setWindowTitle('Daily Summary')
+
     def gatherDSumData(self, ts=None):
         '''Put together inot a dictionary the data for populating the Daily Summary
         :ts: TradeSummary dictionary. If called without running runDialog, this must be provided
-             If this is called from within the dialog, leave it blank. 
+             If this is called from within the dialog, leave it blank.
         '''
         if ts:
             self.ts = ts
@@ -441,9 +445,9 @@ if __name__ == '__main__':
     dff = pd.read_csv(fn)
 
     d1 = pd.Timestamp(2030, 6, 6)
-    
+
     w = DailyControl(daDate=d1)
     w.runDialog(dff)
     w.show()
-    
+
     sys.exit(app.exec_())

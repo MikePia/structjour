@@ -138,7 +138,7 @@ def main():
     journaldir = 'C:/trader/journal'
     # theDate = pd.Timestamp()
     # theDate, journaldir = getFirstWeekday()
-    theDate = pd.Timestamp('20180318')
+    theDate = pd.Timestamp('20190918')
 
     monthDir = os.path.join(journaldir, theDate.strftime("_%Y%m_%B"))
     createDirs(theDate, monthDir)
