@@ -20,14 +20,15 @@ Find and correct db errors
 @creation_data: 07/03/19
 '''
 
-# from journal.statements.ibstatementdb import StatementDB
-from PyQt5.QtCore import QSettings
-import pandas as pd
 import os
-import math
 import sqlite3
 
+import pandas as pd
+# from journal.statements.ibstatementdb import StatementDB
+from PyQt5.QtCore import QSettings
+
 # pylint: disable = C0103
+
 
 class DbDoctor:
     '''
@@ -45,8 +46,22 @@ class DbDoctor:
         self.source = source
         self.db = os.path.join(jdir, db)
 
+def deleteTradeById(tid):
+    '''
+    Leaving off the commit till Im nearly done programming it
+    '''
+    dbd = DbDoctor()
+    x = dbd.db
+    print(x)
+    conn = sqlite3.connect(x)
+    cur = conn.cursor()
+    cur.execute('''DELETE from ib_trades WHERE id = ?''', (tid, ))
 
-def getChartsForTSID(id):
+def getChartsForTSID(tid):
+    '''
+    Retrieve the the records from the chart table that have the foreign key tid to the
+    trade_sum table
+    '''
     dbd = DbDoctor()
     x = dbd.db
     print(x)
@@ -56,11 +71,11 @@ def getChartsForTSID(id):
         select c.id
         from trade_sum as ts
         left join chart as c on c.trade_sum_id = ts.id
-        where ts.id = ?''', (id, ))
+        where ts.id = ?''', (tid, ))
     cursor = cursor.fetchall()
     return cursor
-    
-def getTradesForTSID(id):
+
+def getTradesForTSID(tsid):
     ibdb = DbDoctor()
     x = ibdb.db
     conn = sqlite3.connect(x)
@@ -69,11 +84,52 @@ def getTradesForTSID(id):
         select t.id
         from trade_sum as ts
         left join ib_trades as t on t.trade_sum_id = ts.id
-        where ts.id = ?''', (id,))
+        where ts.id = ?''', (tsid,))
     cursor = cursor.fetchall()
     return cursor
-    
-    
+
+def getTradesByID(tid):
+    '''
+    Get the trade and return a dict
+    '''
+    ibdb = DbDoctor()
+    x = ibdb.db
+    conn = sqlite3.connect(x)
+    cur = conn.cursor()
+    cursor = cur.execute('''
+        select *
+        from ib_trades
+        where id = ?''', (tid,))
+    cursor = cursor.fetchone()
+    t = dict()
+    if cursor:
+        (t['id'], t['sym'], t['dt'], t['qty'], t['bal'], t['p'], t['avg'],
+         t['pl'], t['com'], t['oc'], t['das'], t['ib'], t['acct'], t['ts_id']) = cursor
+        return t
+
+    return None
+
+def getTradeSumByID(tid):
+    '''
+    Get the trade and return a dict
+    '''
+    ibdb = DbDoctor()
+    x = ibdb.db
+    conn = sqlite3.connect(x)
+    cur = conn.cursor()
+    cursor = cur.execute('''
+        select id, Name, Strategy, Account, PnL, Start, Date, Duration, Shares
+        from trade_sum
+        where id = ?''', (tid,))
+    cursor = cursor.fetchone()
+    t = dict()
+    if cursor:
+        (t['id'], t['name'], t['strat'], t['accnt'], t['pl'],
+         t['start'], t['date'], t['dur'], t['qty']) = cursor
+        return t
+
+    return None
+
 def getTicketsWoTrades(account, theDate):
     ibdb = DbDoctor()
     x = ibdb.db
@@ -89,16 +145,18 @@ def getTicketsWoTrades(account, theDate):
     print(cursor)
 
 def makeDupDict(dup):
+    '''
+    Create 2 dicts for the data returned from getDuplicateTrades query
+    '''
     t1 = dict()
     t2 = dict()
     (t1['id'], t2['id'],
      t1['bal'], t2['bal'],
-     t1['dt'], t2['dt'], 
-     t1['das'], t1['ib'], 
+     t1['dt'], t2['dt'],
+     t1['das'], t1['ib'],
      t2['das'], t2['ib'],
      t1['tsid'], t2['tsid']) = dup
     return t1, t2
-
 
 def getDuplicateTrades(account):
     '''
@@ -132,7 +190,7 @@ def getDuplicateTrades(account):
             AND (((t.DAS is NULL or t.DAS = "") and (t2.IB is NULL or t2.IB = ""))
                 or ((t.IB is NULL or t.IB = "") and (t2.DAS is NULL or t2.DAS = "")))
             ORDER BY t.datetime''', (account, ))
-    
+
     cursor = cursor.fetchall()
     if not cursor:
         return None
@@ -142,9 +200,12 @@ def doDups():
     '''
     Search for duplicate trades and determine which records from ib_trades and trade_sum
     should be removed
-    :return: List of tuples (ib_trade_id, trade_sum_id) to remove
+    :return: List of tuples (ib_trade_id, trade_sum_id) to remove, and the c_dups object, a
+        list with info about the duplicated trades. Read with makeDupDict
     '''
     dups = getDuplicateTrades("U2429974")
+    if not dups:
+        return None, None
     print(f"found {len(dups)} suspected duplicates")
     print(dups[0])
     c_dups = dups.copy()
@@ -154,17 +215,18 @@ def doDups():
         t1, t2 = makeDupDict(dup)
         t1['dt'] = pd.Timestamp(t1['dt'])
         t2['dt'] = pd.Timestamp(t2['dt'])
-        delt = t1['dt'] - t2['dt'] if t1['dt'] > t2['dt'] else t2['dt'] - t1['dt']
+        delt = t1['dt'] - \
+            t2['dt'] if t1['dt'] > t2['dt'] else t2['dt'] - t1['dt']
         if delt.total_seconds() > 2:
             c_dups.remove(dup)
-
+            continue
         deleteTSum = None
-            
+
         if t1['tsid'] != t2['tsid']:
             # Recommend deletion of trade if one has no associalted trade_sum_id
-            deleteTrade = t1['id'] if t1['tsid'] == None else t2['id'] if t2['tsid'] == None else None
+            deleteTrade = t1['id'] if t1['tsid'] is None else t2['id'] if t2['tsid'] is None else None
 
-            # Else if they have different trade_sum_id and one has only one ib_trade 
+            # Else if they have different trade_sum_id and one has only one ib_trade
             # Delete the single assocition along with the tradeSum record
             if not deleteTrade:
                 trades1 = len(getTradesForTSID(t1['tsid']))
@@ -175,11 +237,18 @@ def doDups():
                 elif trades2 == 1 and trades1 > 1:
                     deleteTrade = t2['id']
                     deleteTSum = t2['tsid']
-        
-        # Else if they have the same assocaiated trade_sum_id, 
+                else:
+                    raise ValueError('Programmer Exception. How does this happen and what should I do?')
+
+        # Else if they have the same assocaiated trade_sum_id,
         # recommend deletion of the DAS  ('Keep the broker version')
         else:
-            deleteTrade = t1['id'] if t1['das'] == 'DAS' else t2['tsid'] 
+            deleteTrade = t1['id'] if t1['das'] == 'DAS' else t2['id']
+            len_t = getTradesForTSID(t1['tsid'])
+            if len_t:
+                len_t = len(len_t)
+                if(len_t) < 2:
+                    deleteTSum = t1['tsid']
         if not deleteTrade:
             print('No clue which to  delete ', t1['id'], t2['id'])
         else:
@@ -187,17 +256,16 @@ def doDups():
         if deleteTSum:
             print(f'     Delete TradeSum record {deleteTSum}')
         deleteMe.append([deleteTrade, deleteTSum])
-    return deleteMe
-        
-        
-
+    return deleteMe, c_dups
 
 def notmain():
-    
+    '''Run some local code'''
+
     getChartsForTSID(560)
     getTradesForTSID(560)
     getTicketsWoTrades("U2429974", "201811")
     doDups()
+
 
 if __name__ == '__main__':
     notmain()

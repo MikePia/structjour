@@ -24,10 +24,12 @@ Created on September 2, 2019
 
 import os
 import sys
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog
 
 from journal.view.duplicatetrade import Ui_Dialog as DupDialog
+from journal.statements.dbdoctor import (doDups, makeDupDict, getTradesByID, getTradeSumByID,
+                                         getTradesForTSID, deleteTradeById)
 # pylint: disable = C0103
 
 class DupControl(QDialog):
@@ -41,13 +43,173 @@ class DupControl(QDialog):
         self.ui = DupDialog()
         self.ui.setupUi(self)
         self.setWindowTitle('Database Tool')
-        self.setWindowIcon(QPixmap("../../images/ZSLogo.png"))
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+        self.nextRecord = None
+        self.numDups = None
+        self.deletMe = None
+        self.dups = None
+
+        # Format of actionTaken:
+        # [[[done, action],[done, action)]], ...]
+        # Keep track of action taken on [[[dups], [deleteMe]], ...]
+        self.actionTaken = list() 
+
+        self.ui.deleteTxBtn.setEnabled(False)
+        self.ui.deleteTradeBtn.setEnabled(False)
+        self.ui.keepRecordsBtn.setEnabled(False)
+        self.ui.showDupPrevBtn.setEnabled(False)
+
+        self.ui.showDupBtn.pressed.connect(self.showNext)
+        self.ui.showDupPrevBtn.pressed.connect(self.showPrev)
+        self.ui.deleteTxBtn.pressed.connect(self.deleteTx)
+
+
+    def deleteTx(self):
+        t_id = self.ui.deleteTxEdit.text()
+        id1 = self.dups[self.nextRecord][0]
+        id2 = self.dups[self.nextRecord][1]
+
+        if int(t_id) not in [id1, id2]:
+            print('''Fire up a messgage box saying you eh, eh , eh, Simon says you can't do that''')
+            return
+        deleteTradeById(int(t_id))
+        self.actionTaken[self.nextRecord][0] = [True, int(t_id)]
+        self.showTrades()
+
+        
+
+        # delMe = self.deleteMe[self.nextRecord]
+        
+
+    def initialize(self):
+        deleteMe, dups = doDups()
+        if dups:
+            self.nextRecord = 0
+            self.numDups = len(dups)
+            self.deleteMe = deleteMe
+            self.dups = dups
+            self.actionTaken = [[[False,None], [False,None]] for i in range(self.numDups)]
+
+    def dictToTable(self, d):
+        '''
+        Create an html table that displays the dict d
+        :d: A dict or a list of dict of the same type
+        '''
+
+        if not isinstance(d, list):
+            d = [d]
+        columns = list(d[0].keys())
+        msg = '''<table style="width100%"><tr>'''
+        for col in columns:
+            msg += f'<th>{col}</th>'
+        msg += '</tr>'
+
+        for dic in d:
+            msg += '<tr>'
+            for col in columns:
+                msg += f'<td>{dic[col]}</td>'
+            msg += '</tr>'
+        msg += '</table>'
+        return msg
+
+    def showPrev(self):
+        if self.dups is None:
+            self.initialize()
+        if not self.dups:
+            self.ui.showDuplicate.setHtml('<h2>No duplicates have been found.</h2>')
+            return
+
+        if self.nextRecord > 0:
+            self.nextRecord -= 1
+            if self.nextRecord == 0:
+                self.ui.showDupPrevBtn.setEnabled(False)
+            else:
+                self.ui.showDupPrevBtn.setEnabled(True)
+            if self.nextRecord < self.numDups - 1:
+                self.ui.showDupBtn.setEnabled(True)
+        self.showTrades()
+
+    def showNext(self):
+        if self.dups is None:
+            self.initialize()
+        if not self.dups:
+            self.ui.showDuplicate.setHtml('<h2>No duplicates have been found.</h2>')
+            return
+        if self.nextRecord < self.numDups - 1:
+            self.nextRecord += 1
+            if self.nextRecord == self.numDups -1:
+                self.ui.showDupBtn.setEnabled(False)
+            else:
+                self.ui.showDupBtn.setEnabled(True)
+            if self.nextRecord > 0:
+                self.ui.showDupPrevBtn.setEnabled(True)
+            else:
+                self.ui.showDupPrevBtn.setEnabled(False)
+        self.showTrades()
+
+    def showTrades(self):
+        id1 = self.dups[self.nextRecord][0]
+        id2 = self.dups[self.nextRecord][1]
+        delMe = self.deleteMe[self.nextRecord]
+
+        # head and stylesheet
+        msg = '<!DOCTYPE html<!DOCTYPE HTML> <html> <head> <meta charset="utf-8"> <style type="text/css">'
+        msg += '''table, th, td { border: 1px solid black; border-collapse: collapse; }'''
+        msg += '</style></head><body>'
+
+        # Beginning of doc
+        msg += f'<h2>The records {id1} and {id2} appear to be duplicates.</h2>'
+        msg += f'<h3>Trade {self.nextRecord+1} of {self.numDups}.      Recommend to delete {delMe[0]}</h3>'
+        t1 = getTradesByID(id1)
+        t2 = getTradesByID(id2)
+
+        if self.actionTaken[self.nextRecord][0][0]:
+            msg += f'<h4>Action has been taken. Deleted record {self.actionTaken[self.nextRecord][0][1]}'
+            self.ui.deleteTxBtn.setEnabled(False)
+            self.ui.deleteTxEdit.setText('')
+        else:
+            self.ui.deleteTxEdit.setText(str(delMe[0]))
+            self.ui.deleteTxBtn.setEnabled(True)
+            # Display both duplicate records as html table
+            msg += self.dictToTable([t1, t2])
+
+        if delMe[1]:
+            msg += f'<h3>Recommend to delete trade_sum record {delMe[1]}</h4>'
+            self.ui.deleteTradeBtn.setText(str(delMe[1]))
+
+            tstab = list()
+            ts1 = getTradeSumByID(t1['ts_id']) if t1['ts_id'] else None
+            t1_ids = getTradesForTSID(t1['ts_id'])
+            if t1_ids:
+                t1_ids = [x[0] for x in t1_ids]
+                ts1['RelTrades'] = t1_ids
+                tstab.append(ts1)
+            t1_ids = None
+            if t1['ts_id'] != t2['ts_id']:
+                ts2 = getTradeSumByID(t2['ts_id']) if t2['ts_id'] else None
+                t2_ids = getTradesForTSID(t2['ts_id'])
+                t2_ids = [x[0] for x in t2_ids]
+                ts2['RelTrades'] = t2_ids
+                tstab.append(ts2)
+            msg += self.dictToTable(tstab)
+            
+        msg += '</body></html>'
+        
+        self.ui.showDuplicate.setHtml(msg)
+        
+        # self.ui.deleteTxBtn.setEnabled(True)
+
+        
+
+                
 
 
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     # fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'
     # if not os.path.exists(fn):
@@ -57,7 +219,7 @@ if __name__ == '__main__':
     # d1 = pd.Timestamp(2030, 6, 6)
 
     w = DupControl()
-    # w.runDialog(dff)
     w.show()
+    # w.runDialog()
 
     sys.exit(app.exec_())
