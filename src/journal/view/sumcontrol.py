@@ -47,6 +47,7 @@ from journal.view.summaryform import Ui_MainWindow
 from journal.statements.findfiles import checkDateDir, parseDate
 from journal.stock.graphstuff import FinPlot
 from journal.stock.utilities import getMAKeys, qtime2pd, pd2qtime
+from journal.view.duplicatecontrol import DupControl
 from journal.view.synccontrol import SyncControl
 from journal.xlimage import XLImage
 
@@ -146,6 +147,7 @@ class SumControl(QMainWindow):
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
         self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
         self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
+        self.ui.actionDB_Doctor.triggered.connect(self.dbDoctor)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
         self.ui.actionSynchronize_Saved_files.triggered.connect(self.syncFiles)
 
@@ -1128,6 +1130,11 @@ class SumControl(QMainWindow):
         settings = QSettings('zero_substance/stockapi', 'structjour')
         sapi = StockApi(settings)
         sapi.exec()
+
+    def dbDoctor(self):
+        # app = QApplication(sys.argv)
+        w = DupControl()
+        w.exec()
 
     def stratBrowseDlg(self):
         '''Show the strategy dialog'''

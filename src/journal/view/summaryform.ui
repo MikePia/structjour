@@ -2199,6 +2199,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionSynchronize_Saved_files"/>
     <addaction name="separator"/>
     <addaction name="actionStrategy_Browser"/>
+    <addaction name="actionDB_Doctor"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -2229,6 +2230,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionSynchronize_Saved_files">
    <property name="text">
     <string>Synchronize Saved Files</string>
+   </property>
+  </action>
+  <action name="actionDB_Doctor">
+   <property name="text">
+    <string>DB Doctor</string>
    </property>
   </action>
  </widget>
