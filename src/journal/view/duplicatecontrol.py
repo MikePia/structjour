@@ -34,9 +34,7 @@ from journal.statements.dbdoctor import (doDups, makeDupDict, getTradesByID, get
 
 class DupControl(QDialog):
     '''
-    Controller for the daily summary form. The form includes a user notes saved in db, 2 daily
-    summary forms and processed input file showing the days transactions. The daily summaryies
-    are driven by data and are not saved.
+    Controller for the duplicatetrade.ui
     '''
     def __init__(self):
         super().__init__(parent=None)

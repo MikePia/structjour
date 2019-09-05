@@ -63,6 +63,9 @@ class FileSetCtrl(QDialog):
         fui.ibInfile.setText(self.settings.value('ibInfile'))
         self.setIBInfile()
 
+        fui.disciplinedEdit.setText(self.settings.value('disciplined'))
+        self.setDisciplined()
+
         if self.settings.value('outdirPolicy') == 'static':
             self.fui.outdirStatic.setChecked(True)
             outdir = self.settings.value('outdir')
@@ -102,6 +105,9 @@ class FileSetCtrl(QDialog):
         fui.outdirStatic.clicked.connect(self.setOutdir)
         fui.outdir.textChanged.connect(self.setOutdir)
 
+        fui.disciplinedBtn.pressed.connect(self.setDisciplinedBrowse)
+        fui.disciplinedEdit.textChanged.connect(self.setDisciplined)
+
         fui.theDateCbox.clicked.connect(self.setTodayBool)
         fui.theDateBtn.pressed.connect(self.setToday)
         fui.theDate.dateChanged.connect(self.setDialogDate)
@@ -112,6 +118,29 @@ class FileSetCtrl(QDialog):
         # d = self.settings.value()
 
         self.exec()
+
+    def setDisciplinedBrowse(self):
+        '''
+        Open a file browse dialog and set the results to 'disciplinedEdit'. 
+        '''
+
+        # path = QFileDialog.getExistingDirectory(None, "Select Directory")
+        jdir = self.settings.value('journal')
+        path = QFileDialog.getOpenFileName(self, "Select Disciplined", jdir, f'Excel(*xlsx))')
+        self.fui.disciplinedEdit.setText(path[0])
+        self.settings.setValue('disciplined', path[0])
+
+    def setDisciplined(self):
+        '''
+        Set the disciplined settings from the widget and color the widget text showing existance/not.
+        '''
+        path = self.fui.disciplinedEdit.text()
+        if not os.path.exists(path):
+            self.fui.disciplinedEdit.setStyleSheet("color: red;")
+        else:
+            self.fui.disciplinedEdit.setStyleSheet("color: green;")
+            self.settings.setValue('disciplined', path)
+
 
     def closeit(self):
         '''Nothing done here'''

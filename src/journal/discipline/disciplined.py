@@ -505,9 +505,8 @@ def registerTrades(wb, theDate):
     df = ibdb.getStatement(theDate)
     x = ibdb.getNumTicketsforDay(theDate)
     if not x[0] or not x[1]:
-        print(f'found {x[0]} tickets and {x[1]} trades. Nothing to process in the DB')
-        print('     ', end='')
-        return
+        msg = f'''found {x[0]} tickets and {x[1]} trades. Nothing to process for the date {theDate.strftime('%A %d, %Y')}in the DB'''
+        return msg
     tu = DefineTrades('DB')
     inputlen, df, ldf = tu.processDBTrades(df)
 
@@ -650,6 +649,7 @@ def registerTrades(wb, theDate):
             if ix >= len(keys):
                 # done with outer loop
                 break
+    return None
 
 
 
@@ -686,23 +686,6 @@ def notmain():
     wb.save(disPath)
     print('done!')
 
-
-# wb.save
-# wb.save(disPath)
-# disPath = os.path.normpath("Disciplined.xlsx")
-# if os.path.exists(disPath) :
-#     wb = load_workbook(disPath)
-#     print("so far...")
-# else:
-#     print("Does not exist", disPath)
-#     quit(0)
-
-# begin=dt.date(2018, 10, 15)
-# prefix="C:/trader/journal/"
-# flist = getDevelDailyJournalList(prefix, begin)
-# for x in flist :
-#     print(x)
-# print('done!')
 
 
 
