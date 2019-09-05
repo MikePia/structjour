@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QApplication, QDialog
 
 from journal.view.duplicatetrade import Ui_Dialog as DupDialog
 from journal.statements.dbdoctor import (doDups, makeDupDict, getTradesByID, getTradeSumByID,
-                                         getTradesForTSID, deleteTradeById)
+                                         getTradesForTSID, deleteTradeById, deleteTradeSumById)
 # pylint: disable = C0103
 
 class DupControl(QDialog):
@@ -60,13 +60,28 @@ class DupControl(QDialog):
 
         self.ui.deleteTxBtn.setEnabled(False)
         self.ui.deleteTradeBtn.setEnabled(False)
-        self.ui.keepRecordsBtn.setEnabled(False)
         self.ui.showDupPrevBtn.setEnabled(False)
 
         self.ui.showDupBtn.pressed.connect(self.showNext)
         self.ui.showDupPrevBtn.pressed.connect(self.showPrev)
         self.ui.deleteTxBtn.pressed.connect(self.deleteTx)
+        self.ui.deleteTradeBtn.pressed.connect(self.deleteTrade)
 
+
+    def deleteTrade(self):
+        ts_id = self.ui.deleteTradeEdit.text()
+        tsid1 = self.dups[self.nextRecord][10]
+        tsid2 = self.dups[self.nextRecord][11]
+
+        if int(ts_id) not in [tsid1, tsid2]:
+            print('''Fire up a messgage box saying you eh, eh , eh, Simon says you can't do that''')
+            return
+        if deleteTradeSumById(int(ts_id)):
+            self.actionTaken[self.nextRecord][1] = [True, int(ts_id)]
+            self.showTrades()
+            self.ui.deleteTradeEdit.setText('')
+            self.ui.deleteTradeBtn.setEnabled(False)
+            self.ui.deleteTxBtn.setEnabled(False)
 
     def deleteTx(self):
         t_id = self.ui.deleteTxEdit.text()
@@ -76,14 +91,13 @@ class DupControl(QDialog):
         if int(t_id) not in [id1, id2]:
             print('''Fire up a messgage box saying you eh, eh , eh, Simon says you can't do that''')
             return
-        deleteTradeById(int(t_id))
-        self.actionTaken[self.nextRecord][0] = [True, int(t_id)]
-        self.showTrades()
-
-        
-
-        # delMe = self.deleteMe[self.nextRecord]
-        
+        if deleteTradeById(int(t_id)):
+            self.actionTaken[self.nextRecord][0] = [True, int(t_id)]
+            self.showTrades()
+            sid = self.ui.deleteTradeEdit.text()
+            if sid:
+                self.ui.deleteTradeBtn.setEnabled(True)
+                self.ui.deleteTxBtn.setEnabled(False)
 
     def initialize(self):
         deleteMe, dups = doDups()
@@ -178,24 +192,38 @@ class DupControl(QDialog):
             msg += self.dictToTable([t1, t2])
 
         if delMe[1]:
+            # Show trade_sum record or action taken
             msg += f'<h3>Recommend to delete trade_sum record {delMe[1]}</h4>'
-            self.ui.deleteTradeBtn.setText(str(delMe[1]))
+            if self.actionTaken[self.nextRecord][1][0]:
+                msg += f'<h4>Action has been taken. Deleted trade sum record {self.actionTaken[self.nextRecord][1][1]}'
+            else:
+                self.ui.deleteTradeEdit.setText(str(delMe[1]))
 
-            tstab = list()
-            ts1 = getTradeSumByID(t1['ts_id']) if t1['ts_id'] else None
-            t1_ids = getTradesForTSID(t1['ts_id'])
-            if t1_ids:
-                t1_ids = [x[0] for x in t1_ids]
-                ts1['RelTrades'] = t1_ids
-                tstab.append(ts1)
-            t1_ids = None
-            if t1['ts_id'] != t2['ts_id']:
-                ts2 = getTradeSumByID(t2['ts_id']) if t2['ts_id'] else None
-                t2_ids = getTradesForTSID(t2['ts_id'])
-                t2_ids = [x[0] for x in t2_ids]
-                ts2['RelTrades'] = t2_ids
-                tstab.append(ts2)
-            msg += self.dictToTable(tstab)
+                tstab = list()
+
+                # Get 1 or 2 records to show and and a column showing the related trade ids for each
+                ts_1 = getTradeSumByID(delMe[1])
+                t1_ids = getTradesForTSID(delMe[1])
+                if t1_ids:
+                    t1_ids = [x[0] for x in t1_ids]
+                ts_1['RelTrades'] = t1_ids
+                tstab.append(ts_1)
+
+                ts2_id = None
+                # t1 or t2 may have been deleted but we still want to show any the trade_sums records
+                if t1 and t1['ts_id'] != delMe[1]:
+                    ts2_id = t1['ts_id']
+                elif t2 and t2['ts_id'] != delMe[1]:
+                    ts2_id = t2['ts_id']
+                if ts2_id:
+                    ts_2 = getTradeSumByID(ts2_id)
+                    t2_ids = getTradesForTSID(ts2_id)
+                    if t2_ids:
+                        t2_ids = [x[0] for x in t2_ids]
+                    ts_2['RelTrades'] = t2_ids
+                    tstab.append(ts_2)
+
+                msg += self.dictToTable(tstab)
             
         msg += '</body></html>'
         
