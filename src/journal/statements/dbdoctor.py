@@ -55,7 +55,22 @@ def deleteTradeById(tid):
     print(x)
     conn = sqlite3.connect(x)
     cur = conn.cursor()
-    cur.execute('''DELETE from ib_trades WHERE id = ?''', (tid, ))
+    cursor = cur.execute('''DELETE from ib_trades WHERE id = ?''', (tid, ))
+    conn.commit()
+    return cursor.rowcount 
+
+def deleteTradeSumById(tid):
+    '''
+    Leaving off the commit till Im nearly done programming it
+    '''
+    dbd = DbDoctor()
+    x = dbd.db
+    print(x)
+    conn = sqlite3.connect(x)
+    cur = conn.cursor()
+    cursor = cur.execute('''DELETE from trade_sum WHERE id = ?''', (tid, ))
+    conn.commit()
+    return cursor.rowcount 
 
 def getChartsForTSID(tid):
     '''
