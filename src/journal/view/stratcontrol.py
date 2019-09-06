@@ -24,7 +24,7 @@ import os
 import sys
 from PyQt5 import QtWebEngineWidgets
 from PyQt5.QtWidgets import QApplication, QMenu, QMessageBox, QDialog
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import QSettings, QUrl
 
 from journal.xlimage import XLImage
@@ -43,7 +43,15 @@ class StratControl(QDialog):
         self.settings = QSettings('zero_substance', 'structjour')
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
         self.justloaded = False
-        defimage = "C:/python/E/structjour/src/images/ZeroSubstanceCreation_220.png"
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+        self.setWindowIcon(QIcon('images/ZSLogo.png'))
+
+
+        defimage = "images/ZeroSubstanceCreation_220.png"
         if not os.path.exists(defimage):
             print('========== its not there', defimage)
         self.settings.setValue("defaultImage", defimage)
@@ -113,25 +121,26 @@ class StratControl(QDialog):
         img = x
         cmenu = QMenu(img)
 
-        pi1 = cmenu.addAction("psych 1")
-        pi2 = cmenu.addAction("fractal 2")
-        pi3 = cmenu.addAction("starry night 3")
+        # pi1 = cmenu.addAction("psych 1")
+        # pi2 = cmenu.addAction("fractal 2")
+        # pi3 = cmenu.addAction("starry night 3")
         pi4 = cmenu.addAction("Paste from clipboard")
+        pi5 = cmenu.addAction("Browse for picture")
 
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
 
-        if action == pi1:
-            fn = 'C:/python/E/structjour/src/images/psych.jpg'
-            x.setPixmap(QPixmap(fn))
+        # if action == pi1:
+        #     fn = 'C:/python/E/structjour/src/images/psych.jpg'
+        #     x.setPixmap(QPixmap(fn))
 
-        if action == pi2:
-            fn = 'C:/python/E/structjour/src/images/fractal-art-fractals.jpg'
-            x.setPixmap(QPixmap(fn))
+        # if action == pi2:
+        #     fn = 'C:/python/E/structjour/src/images/fractal-art-fractals.jpg'
+        #     x.setPixmap(QPixmap(fn))
 
-        if action == pi3:
-            fn = 'C:/python/E/structjour/src/images/van_gogh-starry-night.jpg'
-            x.setPixmap(QPixmap(fn))
+        # if action == pi3:
+        #     fn = 'C:/python/E/structjour/src/images/van_gogh-starry-night.jpg'
+        #     x.setPixmap(QPixmap(fn))
         if action == pi4:
             key = self.ui.strategyCb.currentText()
             print('Are we ready?', key, x.objectName())

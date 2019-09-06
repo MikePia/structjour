@@ -1247,6 +1247,10 @@ class Ui_MainWindow(object):
         self.actionSynchronize_Saved_files.setObjectName("actionSynchronize_Saved_files")
         self.actionDB_Doctor = QtWidgets.QAction(MainWindow)
         self.actionDB_Doctor.setObjectName("actionDB_Doctor")
+        self.actionExport_to_Disciplined_TradeLog = QtWidgets.QAction(MainWindow)
+        self.actionExport_to_Disciplined_TradeLog.setObjectName("actionExport_to_Disciplined_TradeLog")
+        self.actionExport_TradeLog = QtWidgets.QAction(MainWindow)
+        self.actionExport_TradeLog.setObjectName("actionExport_TradeLog")
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
         self.menuFile.addAction(self.actionStock_API)
@@ -1254,6 +1258,7 @@ class Ui_MainWindow(object):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionStrategy_Browser)
         self.menuFile.addAction(self.actionDB_Doctor)
+        self.menuFile.addAction(self.actionExport_TradeLog)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -1331,6 +1336,8 @@ class Ui_MainWindow(object):
         self.actionStrategy_Browser.setText(_translate("MainWindow", "Strategy Browser"))
         self.actionSynchronize_Saved_files.setText(_translate("MainWindow", "Synchronize Saved Files"))
         self.actionDB_Doctor.setText(_translate("MainWindow", "DB Doctor"))
+        self.actionExport_to_Disciplined_TradeLog.setText(_translate("MainWindow", "Export to TradeLog"))
+        self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
 
 
 from journal.view.clicklabel import ClickLabel

@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file '.\strategybrowser.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.12.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -151,7 +152,7 @@ class Ui_Form(object):
         self.horizontalLayout_3.addWidget(self.removeLinkBtn)
         self.verticalLayout_4.addLayout(self.horizontalLayout_3)
         self.strategyBrowse = QtWebEngineWidgets.QWebEngineView(self.layoutWidget)
-        self.strategyBrowse.setEnabled(False)
+        self.strategyBrowse.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -164,7 +165,7 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.stackedWidget, 1, 0, 1, 1)
 
         self.retranslateUi(Form)
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -188,7 +189,8 @@ class Ui_Form(object):
         self.label_4.setText(_translate("Form", "Links"))
         self.addLinkBtn.setText(_translate("Form", "Add link"))
         self.removeLinkBtn.setText(_translate("Form", "Remove Link"))
-        self.strategyBrowse.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:12pt; color:#aa0000;\">As of now, this widget is too unstable. Browsing documents will crash the program. It has been disabled. In the future it may be removed.</span></p></body></html>"))
+        self.strategyBrowse.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:12pt; color:#aa0000;\">This widget was crashing the program. I believe it is fixed at least on my machine. </span></p></body></html>"))
+
 
 from PyQt5 import QtWebEngineWidgets
 from journal.view.clicklabel import ClickLabel

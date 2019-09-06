@@ -24,6 +24,7 @@ Created on May 8, 2019
 
 import os
 import sys
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings
 
@@ -45,6 +46,12 @@ class EJControl(QDialog):
         self.ui = ui
         self.ui.browseBtn.pressed.connect(self.browse)
         self.settings = QSettings('zero_substance', 'structjour')
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+        self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
         ok = self.exec()
         if ok:

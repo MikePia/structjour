@@ -30,7 +30,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
-from PyQt5.QtGui import QDoubleValidator, QPixmap
+from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon
 
 import pandas as pd
 
@@ -49,6 +49,7 @@ from journal.stock.graphstuff import FinPlot
 from journal.stock.utilities import getMAKeys, qtime2pd, pd2qtime
 from journal.view.duplicatecontrol import DupControl
 from journal.view.synccontrol import SyncControl
+from journal.view.disciplinedcontrol import DisciplineControl
 from journal.xlimage import XLImage
 
 from strategy.strategies import Strategy
@@ -76,9 +77,16 @@ class SumControl(QMainWindow):
         self.oldDate = None
         super().__init__()
 
-        self.defaultImage = 'C:/python/E/structjour/src/images/ZeroSubstanceCreation_500x334.png'
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+
+        defimage = "images/ZeroSubstanceCreation_220.png"
+        self.defaultImage = 'images/ZeroSubstanceCreation.png'
         ui = Ui_MainWindow()
         ui.setupUi(self)
+        self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
         self.lf = None
         self.ui = ui
@@ -102,6 +110,10 @@ class SumControl(QMainWindow):
             elif intype == 'DB':
                 self.ui.useDatabase.setChecked(True)
 
+        pixmap = QPixmap(self.defaultImage)
+        self.ui.chart1.setPixmap(pixmap)
+        self.ui.chart2.setPixmap(pixmap)
+        self.ui.chart3.setPixmap(pixmap)
         # Minimal implementation
         inspire = Inspire()
         quote = inspire.getrandom().replace("\t", "        ")
@@ -150,6 +162,7 @@ class SumControl(QMainWindow):
         self.ui.actionDB_Doctor.triggered.connect(self.dbDoctor)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
         self.ui.actionSynchronize_Saved_files.triggered.connect(self.syncFiles)
+        self.ui.actionExport_TradeLog.triggered.connect(self.disciplineTradeLog)
 
         # Set the file related widgets
         d = pd.Timestamp.today()
@@ -368,7 +381,7 @@ class SumControl(QMainWindow):
             if not rule:
                 msg = msg + '<div>Please select Chart API from the menu</div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
             msgbx.setText(msg)
             msgbx.exec()
             return None
@@ -1164,6 +1177,9 @@ class SumControl(QMainWindow):
         self.w = SyncControl(settings)
         self.w.show()
 
+    def disciplineTradeLog(self):
+        self.w = DisciplineControl()
+        self.w.show()
 
 def verifyNameInfo(daDate, s):
     '''

@@ -60,13 +60,14 @@ class SyncControl(QDialog):
             msg = msg + f'''<div>{ibname} from {result[1].strftime('%m/%d/%y')}''' 
             msg = msg + ''' Please open and save the Ib Activity statement from that date</div>'''
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
+            
             msgbx.setText(msg)
             msgbx.exec()
         elif result[0] == WeGot.ERROR_MULTIPLE_IB:
             msg = f'<h3>{WeGot.ERROR_MULTIPLE_IB}</h3>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
             msgbx.setText(msg)
             msgbx.exec()
 

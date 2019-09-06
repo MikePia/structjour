@@ -27,7 +27,7 @@ import sys
 
 from matplotlib import style, colors as mplcolors
 from PyQt5.QtCore import QSettings
-from PyQt5.QtGui import QDoubleValidator
+from PyQt5.QtGui import QDoubleValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
 
 from journal.view.chartform import Ui_Form as ChartDlg
@@ -47,6 +47,14 @@ class ChartControl(QDialog):
         self.widgDict = None
         self.mplcolors = None
         self.loadStyles()
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+
+
 
         self.ui.styleCb.currentTextChanged.connect(self.setStyle)
         self.ui.gridhCb.clicked.connect(self.setGridh)

@@ -24,7 +24,7 @@ import os
 import sys
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QIntValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QApplication
 
 from journal.view.stockapi import Ui_Dialog as SapiDlg
@@ -45,6 +45,12 @@ class StockApi(QDialog):
         ui = SapiDlg()
         ui.setupUi(self)
         self.ui = ui
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+        self.setWindowIcon(QIcon('images/ZSLogo.png'))
 
         self.ui.ibRealCb.clicked.connect(self.ibClicked)
         self.ui.ibPaperCb.clicked.connect(self.ibPaperclicked)

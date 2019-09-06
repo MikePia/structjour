@@ -4,6 +4,8 @@
 Untitled*
 __pycache__
 data/
+build/
+dist/
 out/
 ./images
 src/strategy/images

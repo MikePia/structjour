@@ -72,6 +72,11 @@ class runController:
         self.sc = sc
         self.ui = self.sc.ui
 
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+
         self.initialize()
 
         self.ui.goBtn.pressed.connect(self.runnit)
@@ -204,7 +209,7 @@ class runController:
             msg = f'<h3>No trades found. File does not appear to be a statement</h3><ul> '
             msg += f'<div><strong>{jf.inpathfile}</strong></div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
             msgbx.setText(msg)
             msgbx.exec()
             return
@@ -235,7 +240,7 @@ class runController:
                 msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
                 msg = msg + f'<div>{x[1]}</div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
             msgbx.setText(msg)
             msgbx.exec()
             return
@@ -264,7 +269,7 @@ class runController:
                 msg = msg + '<div>Did you export the trades window?</div>'
                 msg = msg + '<div>If so, please configure the table in DAS to have the necessary fields and re-export it.</div>'
                 msgbx = QMessageBox()
-                msgbx.setIconPixmap(QPixmap("../../images/ZSLogo.png"));
+                msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
                 msgbx.setText(msg)
                 msgbx.exec()
                 return

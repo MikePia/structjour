@@ -2200,6 +2200,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="separator"/>
     <addaction name="actionStrategy_Browser"/>
     <addaction name="actionDB_Doctor"/>
+    <addaction name="actionExport_TradeLog"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -2235,6 +2236,16 @@ p, li { white-space: pre-wrap; }
   <action name="actionDB_Doctor">
    <property name="text">
     <string>DB Doctor</string>
+   </property>
+  </action>
+  <action name="actionExport_to_Disciplined_TradeLog">
+   <property name="text">
+    <string>Export to TradeLog</string>
+   </property>
+  </action>
+  <action name="actionExport_TradeLog">
+   <property name="text">
+    <string>Export TradeLog</string>
    </property>
   </action>
  </widget>

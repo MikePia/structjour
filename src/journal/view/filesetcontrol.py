@@ -25,6 +25,7 @@ import re
 import sys
 
 import pandas as pd
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 
@@ -47,6 +48,12 @@ class FileSetCtrl(QDialog):
         fui = FileSettingsDlg()
         fui.setupUi(self)
         self.fui = fui
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../../'))
+
+        self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
         fui.journal.setText(self.settings.value('journal'))
         self.setJournalDir()
