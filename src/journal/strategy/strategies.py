@@ -26,7 +26,7 @@ import sqlite3
 
 from PyQt5.QtCore import QSettings
 
-from strategy.strat import TheStrategyObject
+from journal.strategy.strat import TheStrategyObject
 
 # pylint: disable = C0103
 

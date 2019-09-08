@@ -29,7 +29,7 @@ from PyQt5.QtCore import QSettings, QUrl
 
 from journal.xlimage import XLImage
 from journal.view.strategybrowser import Ui_Form 
-from strategy.strategies import Strategy
+from journal.strategy.strategies import Strategy
 
 # pylint: disable = C0103
 

@@ -35,8 +35,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.styles import Font, colors
 
-# from inspiration.inspire import Inspire
-from inspiration.inspire import Inspire
+from journal.inspiration.inspire import Inspire
 from journal.dfutil import DataFrameUtil
 from journal.definetrades import FinReqCol
 from journal.xlimage import XLImage

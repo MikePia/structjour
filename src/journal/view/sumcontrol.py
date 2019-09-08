@@ -34,7 +34,7 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon
 
 import pandas as pd
 
-from inspiration.inspire import Inspire
+from journal.inspiration.inspire import Inspire
 from journal.statements.ibstatementdb import StatementDB
 from journal.view.chartcontrol import ChartControl
 from journal.view.filesetcontrol import FileSetCtrl
@@ -52,7 +52,7 @@ from journal.view.synccontrol import SyncControl
 from journal.view.disciplinedcontrol import DisciplineControl
 from journal.xlimage import XLImage
 
-from strategy.strategies import Strategy
+from journal.strategy.strategies import Strategy
 
 
 # pylint: disable = C0103, W0612, W0613, R0904, R0912, R0914, R0915

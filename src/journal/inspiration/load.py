@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 import sqlite3
-from inspiration.inspire import Inspire
+from journal.inspiration.inspire import Inspire
 # import pandas as pd
 
 conn = sqlite3.connect('t1.sqlite')
