@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QApplication
 
 from journal.discipline.disciplined import getTradeSummary, getTradeTable
 from journal.view.dailycontrol import DailyControl
+from journal.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable = C0103
 
@@ -100,8 +101,6 @@ class manageSavedStuff:
         emergency utility to load lost info into structjour and try to sync to db info if any.
         Finally let the user load it to DB.
         '''
-
-        from journal.thetradeobject import TheTradeObject, SumReqFields
 
         ldflist = list()
         dframelist = list()

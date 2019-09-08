@@ -21,27 +21,10 @@ Created on Apr 1, 2019
 '''
 
 
-import os
-import sys
-
-from PyQt5.QtWidgets import QApplication, QStyleFactory
-from journal.view.runtrade import runController
-from journal.view.sumcontrol import SumControl
-
-# pylint: disable = C0103
+from journal.view.runtrade import main
 
 
 
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-
-    # Paths used in summaryform.ui rely on cwd .
-    os.chdir(os.path.realpath(ddiirr))
-    app = QApplication(sys.argv)
-    s = QStyleFactory.create('Fusion')
-    app.setStyle(s)
-    w = SumControl()
-    rc = runController(w)
-    w.show()
-    sys.exit(app.exec_())
+    main()

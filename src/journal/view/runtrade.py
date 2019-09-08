@@ -303,8 +303,7 @@ class runController:
         # self.dframe = dframe
 
 
-
-if __name__ == '__main__':
+def main():
     ddiirr = os.path.dirname(__file__)
 
     # Paths used in summaryform.ui rely on cwd .
@@ -316,3 +315,6 @@ if __name__ == '__main__':
     rc = runController(w)
     w.show()
     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()    
