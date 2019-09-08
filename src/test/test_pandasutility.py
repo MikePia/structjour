@@ -32,7 +32,7 @@ import pandas as pd
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS
 from journal.definetrades import ReqCol
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from test.rtg import randomTradeGenerator2
 
 # pylint: disable = C0103

@@ -39,7 +39,7 @@ from openpyxl import load_workbook
 
 from PyQt5.QtCore import QSettings
 
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS
 from journal.definetrades import DefineTrades, FinReqCol

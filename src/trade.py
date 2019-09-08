@@ -23,7 +23,7 @@ Top level module currently.
 import os
 from PyQt5.QtCore import QSettings
 
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS as Ticket
 from journal.statement import Statement_IBActivity

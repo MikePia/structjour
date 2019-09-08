@@ -33,7 +33,7 @@ import pandas as pd
 
 from test.rtg import getRandGenTradeStuff
 
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 
 from journal.dailysumforms import MistakeSummary
 from journal.layoutsheet import LayoutSheet

@@ -38,7 +38,7 @@ import pandas as pd
 
 from journal.view.layoutforms import LayoutForms
 from journal.view.sumcontrol import SumControl
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from test.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
 
 from PyQt5.QtWidgets import QApplication

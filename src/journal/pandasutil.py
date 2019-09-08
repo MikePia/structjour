@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QMessageBox
 from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
 from journal.statement import Statement_IBActivity, Statement_DAS
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from journal.view.unbalancedcontrol import UnbalControl as Ubc
 
 # pylint: disable = C0103

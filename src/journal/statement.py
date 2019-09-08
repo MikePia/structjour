@@ -48,7 +48,7 @@ from bs4 import BeautifulSoup, __version__ as bs4v
 from journal.definetrades import ReqCol
 from journal.dfutil import DataFrameUtil
 
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 
 print ('Python version ' + sys.version)
 print('Pandas version ' + pd.__version__)

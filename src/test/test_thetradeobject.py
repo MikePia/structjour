@@ -29,7 +29,7 @@ import unittest
 import types
 from random import randint
 
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_DAS
 from journal.definetrades import DefineTrades

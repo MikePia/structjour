@@ -37,7 +37,7 @@ from PyQt5.QtCore import Qt, QSettings
 
 
 from journal.view.dailycontrol import DailyControl
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 from journal.definetrades import DefineTrades
 from journal.pandasutil import InputDataFrame
 from journal.statement import Statement_IBActivity

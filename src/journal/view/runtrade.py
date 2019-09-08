@@ -41,7 +41,7 @@ from journal.statement import Statement_IBActivity
 from journal.stock.utilities import pd2qtime
 from journal.view.layoutforms import LayoutForms
 from journal.view.sumcontrol import SumControl, qtime2pd
-from journalfiles import JournalFiles
+from journal.journalfiles import JournalFiles
 
 # pylint: disable = C0103
 
