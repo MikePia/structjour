@@ -25,7 +25,7 @@ The state of the software is pre-alpha. I created it for my own use based on wha
 
 Database support is in the queue. Future versions will include more long term analysis tools. Currently, there is an export to a pre-existing Excel tool called DisciplinedTrader, lightly tweaked. It gives a longer term analysis view of trades. Alternately to implementing analysis tools in Qt, structjour could support any arbitray Excel analysis tool by request.
 
-There is currently no release. An alpha release is planned within a couple months. Its written entirely in python3 using recent versions of PyQt5, pandas, matplotlib, BeautifulSoup, and openpyxl. There will be a release but if you want to see it on your desktop now and you have some experience in python the main program is currently run from the script at src/journal/view/runtrade.py. The directory structure required to store the files can be created by running src/journal/time.py in your journal directory. The script will ask for a month and create subdirs for each day.
+There is currently no release. An alpha release is planned within a couple months. Its written entirely in python3 using recent versions of PyQt5, pandas, matplotlib, BeautifulSoup, and openpyxl. There will be a release but if you want to see it on your desktop now and you have some experience in python the main program is currently run from the script at structjour/view/runtrade.py. The directory structure required to store the files can be created by running structjour/time.py in your journal directory. The script will ask for a month and create subdirs for each day.
 
 If you are interested in contributing, I would welcome your help and input in any and all areas of design, implementation and bug reports.
 

@@ -40,7 +40,7 @@ class TestStrategy(TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
         self.somestrats = ['ABCD', 'Bull Flag', 'Fallen Angel', 'VWAP Support', 'VWAP Reversal']
-        self.strat = Strategy(create=True, testdb='C:/python/E/structjour/src/test/testdb.sqlite')
+        self.strat = Strategy(create=True, testdb='C:/python/E/structjour/test/testdb.sqlite')
 
     def test_removeLink(self):
         strat = self.strat

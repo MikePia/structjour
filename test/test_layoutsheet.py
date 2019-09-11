@@ -591,7 +591,7 @@ class TestLayoutSheet(TestCase):
             # :::::::::::::: SETUP ::::::::::::::
             # theDate = '2018-11-05'
             outdir = 'out/'
-            indir = 'C:/python/E/structjour/src/data/'
+            indir = 'C:/python/E/structjour/data/'
             mydevel = False
             jf = JournalFiles(infile=infile, outdir=outdir, indir=indir, mydevel=mydevel)
 

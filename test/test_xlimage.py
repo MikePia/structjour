@@ -104,7 +104,7 @@ class TestXLImage(TestCase):
 
         xli = XLImage()
         origname = 'FredsEmporium.potter'
-        outdir = 'C:/python/E/structjour/src/out'
+        outdir = 'C:/python/E/structjour/out'
         name, dummy = xli.getResizeName(origname, outdir)
         outdir, newname = os.path.split(name)
         torig, dummy = os.path.splitext(origname)

@@ -58,7 +58,7 @@ class TestDailyCtrl(TestCase):
 
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
-        self.testdb = 'C:/python/E/structjour/src/test/testdb.sqlite'
+        self.testdb = 'C:/python/E/structjour/test/testdb.sqlite'
         self.conn = sqlite3.connect(self.testdb)
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
         self.realdb = self.apiset.value('dbsqlite') 
@@ -66,7 +66,7 @@ class TestDailyCtrl(TestCase):
 
 
     def setUp(self):
-        indir = 'C:/python/E/structjour/src/data'
+        indir = 'C:/python/E/structjour/data'
         f2 = 'ActivityStatement.20190313_PL.html'
         f1 = 'ActivityStatement.20190404.html'
         theDate = pd.Timestamp('2019-04-04')

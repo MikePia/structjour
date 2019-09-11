@@ -8,7 +8,6 @@ build/
 dist/
 out/
 ./images
-src/strategy/images
 .project
 .settings
 *.pyc
@@ -21,8 +20,7 @@ doodles
 *.sql*
 *.db
 *.txt
-src/run.py
-src/DisciplinedCopy1.xlsx
 .coverage
 TODO*
 *.zst
+*egg-info*

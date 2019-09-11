@@ -279,7 +279,7 @@ class InputDataFrame:
 
     def figureOvernightTransactions(self, dframe, jf):
         '''
-        Determine how of the unbalanced shares were held:  before, after or both. In the conslose
+        Determine how of the unbalanced shares were held:  before, after or both. In the console
         version is an ugly interview. The Qt version is nicer but the exit back to the window here
         is not a good design. Note that the DAS input using Qt is the only one that requires this
         dialog and then only if the user does not provide a positions.csv input file.

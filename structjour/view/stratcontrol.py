@@ -130,17 +130,6 @@ class StratControl(QDialog):
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
 
-        # if action == pi1:
-        #     fn = 'C:/python/E/structjour/src/images/psych.jpg'
-        #     x.setPixmap(QPixmap(fn))
-
-        # if action == pi2:
-        #     fn = 'C:/python/E/structjour/src/images/fractal-art-fractals.jpg'
-        #     x.setPixmap(QPixmap(fn))
-
-        # if action == pi3:
-        #     fn = 'C:/python/E/structjour/src/images/van_gogh-starry-night.jpg'
-        #     x.setPixmap(QPixmap(fn))
         if action == pi4:
             key = self.ui.strategyCb.currentText()
             print('Are we ready?', key, x.objectName())
