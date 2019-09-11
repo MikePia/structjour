@@ -1,7 +1,6 @@
 .ipynb*
 *.ipynb
 keys.pickle
-pickle*
 *.css
 *.swp
 .vscode

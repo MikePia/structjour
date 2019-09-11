@@ -46,6 +46,8 @@ class StockApi(QDialog):
         ui.setupUi(self)
         self.ui = ui
 
+        self.checkForIbapi()
+
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../../'))
@@ -85,6 +87,18 @@ class StockApi(QDialog):
         # self.orderApis()
 
         self.show()
+
+    def checkForIbapi(self):
+        '''
+        If the ibapi is not installed or available, disable its use.
+        '''
+        try:
+            import ibapi
+            gotibapi = True
+            self.apiset.setValue('gotibapi', True)
+
+        except ImportError:
+            self.apiset.setValue('gotibapi', False)
 
     def initFromSettings(self):
         val = self.apiset.value('ibRealPort', '')
@@ -147,13 +161,20 @@ class StockApi(QDialog):
         self.orderApis()
         self.close()
 
-    def orderApis(self):
+    def orderApis(self): 
         val = self.ui.APIPref.text()
         self.apiset.setValue('APIPref', val)
         self.sortIt(None)
     
 
     def ibClicked(self, b):
+        if self.apiset.value('gotibapi') == 'false':
+            self.apiset.setValue('ibRealCb', False)
+            self.apiset.setValue('ibPaperCb', False)
+            self.ui.ibRealCb.setChecked(False)
+            self.ui.ibPaperCb.setChecked(False)
+            return
+        # if self.apiset.value()
         self.apiset.setValue('ibRealCb', b)
         if b:
             self.apiset.setValue('ibPaperCb', not b)
@@ -161,6 +182,14 @@ class StockApi(QDialog):
         self.sortIt('ib')
 
     def ibPaperclicked(self, b):
+        if self.apiset.value('gotibapi') == 'false':
+            self.apiset.setValue('ibRealCb', False)
+            self.apiset.setValue('ibPaperCb', False)
+            self.ui.ibRealCb.setChecked(False)
+            self.ui.ibPaperCb.setChecked(False)
+            return
+
+
         # self.ui.ibPaperCb.setChecked(b)
         self.apiset.setValue('ibPaperCb', b)
         if b:
