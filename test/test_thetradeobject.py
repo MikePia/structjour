@@ -29,11 +29,11 @@ import unittest
 import types
 from random import randint
 
-from journal.journalfiles import JournalFiles
-from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS
-from journal.definetrades import DefineTrades
-from journal.thetradeobject import TheTradeObject, SumReqFields
+from structjour.journalfiles import JournalFiles
+from structjour.pandasutil import InputDataFrame
+from structjour.statement import Statement_DAS
+from structjour.definetrades import DefineTrades
+from structjour.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable = C0103, W0212, C0111
 

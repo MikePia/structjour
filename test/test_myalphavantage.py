@@ -27,8 +27,8 @@ import types
 
 import pandas as pd
 
-from journal.stock import myalphavantage as mav
-from journal.stock import utilities as util
+from structjour.stock import myalphavantage as mav
+from structjour.stock import utilities as util
 # pylint: disable = C0103
 
 class TestMyalphavantage(unittest.TestCase):

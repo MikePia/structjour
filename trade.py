@@ -23,15 +23,15 @@ Top level module currently.
 import os
 from PyQt5.QtCore import QSettings
 
-from journal.journalfiles import JournalFiles
-from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS as Ticket
-from journal.statement import Statement_IBActivity
-from journal.definetrades import DefineTrades
-from journal.layoutsheet import LayoutSheet
-from journal.tradestyle import TradeFormat
-from journal.dailysumforms import MistakeSummary
-# from journal.qtform import QtForm
+from structjour.journalfiles import JournalFiles
+from structjour.pandasutil import InputDataFrame
+from structjour.statement import Statement_DAS as Ticket
+from structjour.statement import Statement_IBActivity
+from structjour.definetrades import DefineTrades
+from structjour.layoutsheet import LayoutSheet
+from structjour.tradestyle import TradeFormat
+from structjour.dailysumforms import MistakeSummary
+# from structjour.qtform import QtForm
 # pylint: disable=C0103
 
 # jf = JournalFiles(theDate=dt.date(2019, 1, 25), mydevel=True)

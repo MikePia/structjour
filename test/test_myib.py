@@ -27,8 +27,8 @@ import unittest
 import pandas as pd
 import types
 
-from journal.stock import myib as ib
-from journal.stock import utilities as util
+from structjour.stock import myib as ib
+from structjour.stock import utilities as util
 # pylint: disable = C0103
 
 

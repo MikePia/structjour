@@ -32,9 +32,9 @@ from PyQt5.QtCore import QSettings
 
 from test.rtg import randomTradeGenerator2
 
-from journal.stock import mybarchart as bc
+from structjour.stock import mybarchart as bc
 
-from journal.stock import utilities as util
+from structjour.stock import utilities as util
 # pylint: disable = C0103
 
 

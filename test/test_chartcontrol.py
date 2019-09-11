@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox, QSpinBox, QCombo
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QSettings
 
-from journal.view.chartcontrol import ChartControl
+from structjour.view.chartcontrol import ChartControl
 # pylint: disable = C0103
 
 app = QApplication(sys.argv)

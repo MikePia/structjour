@@ -29,10 +29,11 @@ import types
 
 import pandas as pd
 
-from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS
-from journal.definetrades import ReqCol
-from journal.journalfiles import JournalFiles
+from structjour.pandasutil import InputDataFrame
+from structjour.statement import Statement_DAS
+from structjour.definetrades import ReqCol
+from structjour.journalfiles import JournalFiles
+
 from test.rtg import randomTradeGenerator2
 
 # pylint: disable = C0103

@@ -28,7 +28,7 @@ from shutil import rmtree
 
 import pandas as pd
 
-from journal.time import getFirstWeekday, createDirs
+from structjour.time import getFirstWeekday, createDirs
 # pylint: disable = C0103
 
 

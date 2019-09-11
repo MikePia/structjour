@@ -27,8 +27,8 @@ from unittest import TestCase
 from openpyxl import load_workbook
 from openpyxl import Workbook
 
-from journal.tradestyle import TradeFormat, c
-from journal.thetradeobject import SumReqFields
+from structjour.tradestyle import TradeFormat, c
+from structjour.thetradeobject import SumReqFields
 
 
 # pylint: disable = C0103, W0613, W0603

@@ -28,9 +28,9 @@ from unittest import TestCase
 
 from openpyxl import Workbook, load_workbook
 
-from journal.dailysumforms import MistakeSummary
-from journal.tradestyle import TradeFormat
-from journal.tradestyle import c as tcell
+from structjour.dailysumforms import MistakeSummary
+from structjour.tradestyle import TradeFormat
+from structjour.tradestyle import c as tcell
 
 # pylint: disable = C0103
 

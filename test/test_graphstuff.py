@@ -29,10 +29,10 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from journal.stock.graphstuff import FinPlot, dummyName
-from journal.stock import myib as ib
+from structjour.stock.graphstuff import FinPlot, dummyName
+from structjour.stock import myib as ib
 
-from journal.stock import utilities as util
+from structjour.stock import utilities as util
 # pylint: disable = C0103
 
 

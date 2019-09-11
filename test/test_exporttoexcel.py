@@ -33,14 +33,14 @@ import pandas as pd
 
 from test.rtg import getRandGenTradeStuff
 
-from journal.journalfiles import JournalFiles
+from structjour.journalfiles import JournalFiles
 
-from journal.dailysumforms import MistakeSummary
-from journal.layoutsheet import LayoutSheet
-from journal.thetradeobject import SumReqFields
-from journal.tradestyle import TradeFormat, c as tcell
-from journal.view.dailycontrol import DailyControl
-from journal.view.exportexcel import ExportToExcel
+from structjour.dailysumforms import MistakeSummary
+from structjour.layoutsheet import LayoutSheet
+from structjour.thetradeobject import SumReqFields
+from structjour.tradestyle import TradeFormat, c as tcell
+from structjour.view.dailycontrol import DailyControl
+from structjour.view.exportexcel import ExportToExcel
 
 from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication

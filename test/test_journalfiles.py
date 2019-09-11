@@ -25,7 +25,7 @@ import datetime as dt
 import os
 import types
 import pandas as pd
-from journal.journalfiles import JournalFiles
+from structjour.journalfiles import JournalFiles
 # pylint: disable = C0103, W0703, E1121
 
 

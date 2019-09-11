@@ -31,8 +31,9 @@ from unittest import TestCase
 
 import pandas as pd
 
-from journal.definetrades import FinReqCol, DefineTrades
-from journal.thetradeobject import runSummaries
+from structjour.colz.finreqcol import FinReqCol
+from structjour.definetrades import DefineTrades
+from structjour.thetradeobject import runSummaries
 
 # pylint: disable = C0103
 

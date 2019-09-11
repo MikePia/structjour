@@ -27,7 +27,7 @@ import os
 import sqlite3
 from unittest import TestCase
 import unittest
-from journal.strategy.strategies import Strategy
+from structjour.strategy.strategies import Strategy
 
 class TestStrategy(TestCase):
     '''

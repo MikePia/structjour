@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox
 from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QSettings
 
-from journal.view.sapicontrol import StockApi
+from structjour.view.sapicontrol import StockApi
 
 # pylint: disable = C0103
 

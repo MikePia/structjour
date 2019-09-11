@@ -31,8 +31,9 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from journal.dfutil import DataFrameUtil
-from journal.definetrades import DefineTrades, FinReqCol, ReqCol
+from structjour.dfutil import DataFrameUtil
+from structjour.colz.finreqcol import FinReqCol
+from structjour.definetrades import DefineTrades, ReqCol
 
 from test.rtg import randomTradeGenerator2, floatValue
 

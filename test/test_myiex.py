@@ -27,7 +27,7 @@ import types
 import unittest
 import pandas as pd
 
-from journal.stock import myiex as iex
+from structjour.stock import myiex as iex
 # import inspect
 # from itertools import ifilter
 # pylint: disable = C0103

@@ -36,9 +36,9 @@ import unittest
 from openpyxl import Workbook, load_workbook
 import pandas as pd
 
-from journal.view.layoutforms import LayoutForms
-from journal.view.sumcontrol import SumControl
-from journal.journalfiles import JournalFiles
+from structjour.view.layoutforms import LayoutForms
+from structjour.view.sumcontrol import SumControl
+from structjour.journalfiles import JournalFiles
 from test.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
 
 from PyQt5.QtWidgets import QApplication

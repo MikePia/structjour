@@ -26,8 +26,8 @@ import types
 import unittest
 import pandas as pd
 
-from journal.stock import mybarchart as bc
-from journal.stock import utilities as util
+from structjour.stock import mybarchart as bc
+from structjour.stock import utilities as util
 # import inspect
 # from itertools import ifilter
 # pylint: disable = C0103

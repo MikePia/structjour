@@ -36,13 +36,13 @@ from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt, QSettings
 
 
-from journal.view.dailycontrol import DailyControl
-from journal.journalfiles import JournalFiles
-from journal.definetrades import DefineTrades
-from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_IBActivity
-from journal.view.layoutforms import LayoutForms
-from journal.view.sumcontrol import SumControl
+from structjour.view.dailycontrol import DailyControl
+from structjour.journalfiles import JournalFiles
+from structjour.definetrades import DefineTrades
+from structjour.pandasutil import InputDataFrame
+from structjour.statement import Statement_IBActivity
+from structjour.view.layoutforms import LayoutForms
+from structjour.view.sumcontrol import SumControl
 
 
 

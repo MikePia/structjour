@@ -32,12 +32,13 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from journal.definetrades import DefineTrades, FinReqCol
-from journal.statements import findfiles as ff
-from journal.statements.ibstatementdb import StatementDB
-from journal.statements.ibstatement import IbStatement
-from journal.thetradeobject import runSummaries
-from journal.view.layoutforms import LayoutForms
+from structjour.colz.finreqcol import FinReqCol
+from structjour.definetrades import DefineTrades
+from structjour.statements import findfiles as ff
+from structjour.statements.ibstatementdb import StatementDB
+from structjour.statements.ibstatement import IbStatement
+from structjour.thetradeobject import runSummaries
+from structjour.view.layoutforms import LayoutForms
 # pylint: disable = C0103
 
 class Test_StatementDB(unittest.TestCase):

@@ -30,23 +30,10 @@ import types
 
 import pandas as pd
 
-from journal.pandasutil import InputDataFrame
-from journal.statement import Statement_DAS, Statement_IBActivity
-from journal.definetrades import ReqCol
-from journal.journalfiles import JournalFiles
-
-
-
-# import urllib.request, urllib.parse, urllib.error
-# from bs4 import BeautifulSoup, __version__ as bs4v
-# from journal.definetrades import ReqCol
-# from journalfiles import JournalFiles
-
-
-
-
-
-
+from structjour.pandasutil import InputDataFrame
+from structjour.statement import Statement_DAS, Statement_IBActivity
+from structjour.definetrades import ReqCol
+from structjour.journalfiles import JournalFiles
 
 
 

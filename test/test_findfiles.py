@@ -32,7 +32,7 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from journal.statements import findfiles as ff
+from structjour.statements import findfiles as ff
 # pylint: disable = C0103
 
 

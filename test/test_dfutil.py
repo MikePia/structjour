@@ -26,8 +26,9 @@ import os
 
 import pandas as pd
 
-from journal.dfutil import DataFrameUtil
-from journal.definetrades import ReqCol, FinReqCol  # , DefineTrades
+from structjour.dfutil import DataFrameUtil
+from structjour.colz.finreqcol import FinReqCol
+from structjour.definetrades import ReqCol
 
 #  pylint: disable=C0103, W0703
 

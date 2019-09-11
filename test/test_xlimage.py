@@ -31,7 +31,7 @@ import unittest
 # from PIL import ImageGrab
 # from openpyxl.drawing.image import Image
 
-from journal.xlimage import XLImage
+from structjour.xlimage import XLImage
 # pylint: disable = C0103
 
 
