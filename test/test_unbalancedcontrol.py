@@ -95,7 +95,7 @@ class TestUnbalCtrl(TestCase):
 
         QTest.mousePress(self.w.ui.okBtn, Qt.LeftButton)
         self.justtestit(self.swingTrade['shares'], self.swingTrade['after'],
-                        self.swingTrade['before'], self.balance)
+                        -self.swingTrade['before'], self.balance)
 
 
 
