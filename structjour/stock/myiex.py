@@ -25,6 +25,14 @@ import requests
 # pylint: disable=C0103
 
 
+# The system has completely changed to. 
+console = 'https://iexcloud.io/console'
+newstuff = 'https://iexcloud.io/docs/api/#rest-how-to'
+publishkey = 'pk_194005def30849edaa93d704e8bd68e2'
+secretkey = 'sk_500658eb0eb6474fbcab439b9e331b27'
+# For now-- just disable iex 9/11/19. z
+
+# None of these or anything else on this page is any good
 apiurl = 'https://api.iextrading.com/1.0/stock/aapl/chart/5y?format=json'
 newsurl = 'https://api.iextrading.com/1.0/stock/aapl/batch?types=quote,news,chart&range=1m&last=10'
 apidocs = 'https://iextrading.com/developer/docs/#getting-started'
@@ -122,7 +130,7 @@ def getiex_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         df = df[['open', 'high', 'low', 'close', 'volume']].copy(deep=True)
 
     # HACK, reurning a tuple to have the same method signature as the others-- some redesign comin
-    return len(df), df, None
+    return {'code': 200}, df, None
 
 # TODO combine these two methods on this page
 
@@ -189,12 +197,11 @@ def get_trading_chart(symb, start=None, end=None, minutes=None, filt=False, show
         print(response.url)
 
     if response.status_code != 200:
-        raise Exception(
-            f"{response.status_code}: {response.content.decode('utf-8')}")
+        return {'code': response.status_code}, pd.DataFrame, response.text
     result = response.json()
     if not result:
         # DataFrames cannot be checked for None !?!
-        return pd.DataFrame()
+        return {'code': 666}, pd.DataFrame(), 'No result'
 
     df = pd.DataFrame(result)
 
@@ -210,7 +217,7 @@ def get_trading_chart(symb, start=None, end=None, minutes=None, filt=False, show
 
     df = df.loc[df.index >= start] if start else df
     df = df.loc[df.index <= end] if end else df
-    return df
+    return {'code': response.status_code}, df, 'Success'
 
 
 BASE_URL = 'https://api.iextrading.com/1.0'

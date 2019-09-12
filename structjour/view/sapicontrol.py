@@ -132,7 +132,8 @@ class StockApi(QDialog):
         self.ui.avKey.setText(val)
 
         val = self.apiset.value('iexCb', False, bool)
-        self.ui.iexCb.setChecked(val)
+        # self.ui.iexCb.setChecked(val)
+        self.ui.iexCb.setChecked(False)
 
         val = self.apiset.value('APIPref')
         self.ui.APIPref.setText(val)
@@ -214,8 +215,10 @@ class StockApi(QDialog):
         self.mk.updateKey('av', val)
 
     def setIexCb(self, b):
-        self.apiset.setValue('iexCb', b)
-        self.sortIt('iex')
+        # self.apiset.setValue('iexCb', b)
+        self.apiset.setValue('iexCb', False)
+        self.ui.iexCb.setChecked(False)
+        # self.sortIt('iex')
 
     def reorderAPIPref(self, last):
         ul = self.ui.APIPref.text()
@@ -253,11 +256,11 @@ class StockApi(QDialog):
                 self.ui.APIPref.setStyleSheet('color: red;')
                 return
             compareList.append('av')
-        if 'iex' in ulist:
-            if not self.ui.iexCb.isChecked():
-                self.ui.APIPref.setStyleSheet('color: red;')
-                return
-            compareList.append('iex')
+        # if 'iex' in ulist:
+        #     if not self.ui.iexCb.isChecked():
+        #         self.ui.APIPref.setStyleSheet('color: red;')
+        #         return
+        #     compareList.append('iex')
 
         # Validate the string as a list and reorder last element
         if len(ulist) > len(compareList):
