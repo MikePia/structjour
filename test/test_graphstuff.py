@@ -71,8 +71,10 @@ class TestGraphstuff(unittest.TestCase):
             fp.api = api
             result = fp.apiChooserList(start, end, api)
             if result[0]:
-                dummy, df, maDict = fp.apiChooser()(symbol, start=start, end=end,
+                err, df, maDict = fp.apiChooser()(symbol, start=start, end=end,
                                             minutes=minutes, showUrl=True)
+                if err['code'] == 666:
+                    continue
                 self.assertEqual(len(df.columns), 5,
                                  f"Failed to retrieve data with the {fp.api} api.")
                 self.assertTrue(isinstance(df.index[0], dt.datetime),
@@ -277,9 +279,9 @@ def notmain():
     Local run stuff for dev
     '''
     t = TestGraphstuff()
-    # t.test_apiChooser()
+    t.test_apiChooser()
     # t.test_dummyName()
-    t.test_graph_candlestick()
+    # t.test_graph_candlestick()
     # print(getLastWorkDay(dt.datetime(2019, 1, 22)))
     # t.test_setTimeFrame()
 
