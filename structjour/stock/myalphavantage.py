@@ -219,7 +219,6 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
 
     # If we exceed the requests/min, we get a friendly html string sales pitch.
     metaj = result[keys[0]]
-    metaj['code'] = response.status_code
     if len(keys) < 2:
         global R            # pylint: disable = W0603
         if not R:

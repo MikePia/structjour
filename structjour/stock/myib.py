@@ -318,7 +318,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     df = ib.getHistorical(symb, end=end, dur=dur, interval=interval, exchange='NASDAQ')
     lendf = len(df)
     if lendf == 0:
-        return {'code': 666}, df, None
+        return 0, df, None
 
     # Normalize the date to our favorite format 
     df.index = pd.to_datetime(df.index)
@@ -335,12 +335,11 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     maDict = movingAverage(df.close, df, end)
 
     if start > df.index[0]:
-        cutoff = start - pd.Timedelta(minutes=origminutes)
         print(start, "Cutting off from: ", df.index[0])
-        df = df.loc[df.index >= cutoff]
+        df = df.loc[df.index >= start]
         if not df.high.any():
             print('WARNING: All data has been removed')
-            return {'code': 666}, pd.DataFrame(), None
+            return 0, pd.DataFrame(), None
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
     removeMe = list()
@@ -362,7 +361,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         del maDict[key]
 
     ib.disconnect()
-    return {'code': 200}, df, maDict
+    return len(df), df, maDict
 
 
 
@@ -380,9 +379,8 @@ def isConnected():
     ib = TestApp(port, clientId, host)
     ib.connect(host, port, clientId)
     connected = ib.isConnected()
-    # This seems to be causing a socket error (why did it start? It worked w/o error for months)
-    # if connected:
-    #     ib.disconnect()
+    if connected:
+        ib.disconnect()
     return connected
 
 def main():
