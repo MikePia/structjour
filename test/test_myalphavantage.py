@@ -31,6 +31,7 @@ from structjour.stock import myalphavantage as mav
 from structjour.stock import utilities as util
 # pylint: disable = C0103
 
+@unittest.skip('Leave to deal with later')
 class TestMyalphavantage(unittest.TestCase):
     '''Test methods and functions from the modulemyalphavantage'''
 
