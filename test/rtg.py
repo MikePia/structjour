@@ -229,9 +229,9 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     trade[-1][13] = duration
     # if pdbool:
     tradedf = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty',
-                                                'Balance', 'Account', 'P / L', 'Sum', 'Name', 'Date', 'Duration'])
-    if not isclose(tradedf['P / L'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
-        print(tradedf['P / L'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
+                                                'Balance', 'Account', 'PnL', 'Sum', 'Name', 'Date', 'Duration'])
+    if not isclose(tradedf['PnL'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
+        print(tradedf['PnL'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
         print()
         
     return tradedf, latest

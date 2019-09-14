@@ -35,7 +35,7 @@ from structjour.dfutil import DataFrameUtil
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades, ReqCol
 
-from test.rtg import randomTradeGenerator2, floatValue
+from rtg import randomTradeGenerator2, floatValue
 
 # pylint: disable = C0103
 
@@ -117,16 +117,19 @@ class TestDefineTrades(TestCase):
         NUMTRADES = 4   
         trades = list()
         start = pd.Timestamp('2019-01-01 09:30:00')
+        df = pd.DataFrame()
         exclude = []
-        for i in range(4):
-            t, start = randomTradeGenerator2(i+1, earliest=start, exclude=exclude)
-            trades.extend(t)
-            # print(t[0][3])
-            exclude.append(t[0][3])
+        for i in range(NUMTRADES):
+            tdf, start = randomTradeGenerator2(i+1, earliest=start,
+                                                pdbool=True, exclude=exclude)
+            df = df.append(tdf)
+            exclude.append(tdf.Symb.unique()[0])
+
+        df.reset_index(drop=True, inplace=True)
 
         frc = FinReqCol()
-        df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.ticker, frc.side, frc.shares,
-                                                frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
+        # df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.ticker, frc.side, frc.shares,
+        #                                         frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.start] = None
         
@@ -347,7 +350,7 @@ class TestDefineTrades(TestCase):
                     assert not row.Sum
                 else:
                     
-                    assert isclose(tdf['P / L'].sum(),  row.Sum, abs_tol=1e-7)
+                    assert isclose(tdf['PnL'].sum(),  row.Sum, abs_tol=1e-7)
                     assert isclose(row.Sum, tdf_gen.loc[tdf_gen.index[-1]].Sum, abs_tol=1e-7)
 
                 
@@ -393,12 +396,12 @@ class TestDefineTrades(TestCase):
                     assert not row.Sum
                 else:
                     
-                    assert isclose(tdf['P / L'].sum(), row.Sum, abs_tol=1e-7)
+                    assert isclose(tdf['PnL'].sum(), row.Sum, abs_tol=1e-7)
                     assert isclose(row.Sum, tdf_gen.loc[tdf_gen.index[-1]].Sum, abs_tol=1e-7)
 
 def notmain():
     '''Run some local code'''
-    for i in range(100):
+    for i in range(3):
         t = TestDefineTrades()
         # t.test_addStartTime()
         # t.test_addTradeIndex()

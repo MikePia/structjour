@@ -34,6 +34,7 @@ from structjour.pandasutil import InputDataFrame
 from structjour.statement import Statement_DAS
 from structjour.definetrades import DefineTrades
 from structjour.thetradeobject import TheTradeObject, SumReqFields
+from structjour.colz.finreqcol import FinReqCol
 
 # pylint: disable = C0103, W0212, C0111
 
@@ -74,7 +75,10 @@ class TestTheTradeObject(unittest.TestCase):
         '''
         srf = SumReqFields()
         theStyles = srf.getStyles()
+        skiphack = ['date', 'clean', 'id']      # these keys are not found on summary form (or tfcolumns)
         for k in srf.rc.keys():
+            if k in skiphack:
+                continue
             value = srf.rc[k]
             address = srf.tfcolumns[value][0]
             style = srf.tfcolumns[value][1]
@@ -104,8 +108,8 @@ class TestTheTradeObject(unittest.TestCase):
 
     def setupForTheTradeObject(self, getMax=False, infile="trades.8.csv"):
         '''Set up the DataFrames'''
-        jf = JournalFiles(mydevel=True, infile=infile,
-                          indir="data/", outdir="out/")
+        jf = JournalFiles(mydevel=True, infile=infile, indir="data/",
+                          outdir="out/", inputType='DAS')
 
         tkt = Statement_DAS(jf)
         trades, jf = tkt.getTrades()
@@ -117,7 +121,7 @@ class TestTheTradeObject(unittest.TestCase):
         (dummy_len, dummy_df, ldf) = tu.processOutputDframe(trades)
         srf = SumReqFields()
         maxlen=0
-        maxindex = -1           #The index that yieds the maximumbal from ldf[i]
+        maxindex = -1           #The index that yieds the most tickets from ldf[i]
         for i in range(len(ldf)):
             if len(ldf[i]) > maxlen:
                 maxlen = len(ldf[i])
@@ -251,32 +255,33 @@ class TestTheTradeObject(unittest.TestCase):
         self.assertEqual(ttomstk, "Proceeds Lost", "Failed to set head correctly")
 
     def test_TheTradeObjectSetEntries(self):
+        rc = FinReqCol()
         self.tto._TheTradeObject__setEntries()
         # if len(self.tto.df) < 4:
         #     self.fail('This test requires a longer sample of transactions to run.')
         count = 0
         x0 = self.tto.df.index[0]
-        side = self.tto.df.at[x0, 'Side']
+        side = self.tto.df.at[x0, rc.side]
         for i, row in self.tto.df.iterrows():
             count += 1
-            print (row.Price, row.Side, row['P / L'])
-            if (side.startswith('B') and row.Side.startswith('B')) or (
-                side.startswith('S') and row.Side.startswith('S')):
-                if row.Price != 0:
+            print (row[rc.price], row[rc.side], row[rc.PL])
+            if (side.startswith('B') and row[rc.side].startswith('B')) or (
+                side.startswith('S') and row[rc.side].startswith('S')):
+                if row[rc.price] != 0:
                     entry = 'Entry' + str(count)
                     ttoprice = self.tto.TheTrade[entry].unique()[0]
                     self.assertEqual(ttoprice, row.Price, "Failed to set entry correctly")
-            elif (side.startswith('B') and row.Side.startswith('S')) or (
-                side.startswith('S') and row.Side.startswith('B')):
-                if row.Price != 0:
+            elif (side.startswith('B') and row[rc.side].startswith('S')) or (
+                side.startswith('S') and row[rc.side].startswith('B')):
+                if row[rc.price] != 0:
                     entry = 'Exit' + str(count)
                     ttoprice = self.tto.TheTrade[entry].unique()[0]
-                    self.assertEqual(ttoprice, row.Price, "Failed to set exit correctly")
-            if row['P / L'] != 0:
+                    self.assertEqual(ttoprice, row[rc.price], "Failed to set exit correctly")
+            if row[rc.PL] != 0:
                 PLname = 'PL' + str(count)
                 ttopl =  self.tto.TheTrade[PLname].unique()[0]
 
-                self.assertEqual(ttopl, row['P / L'], "Failed to set pl correctly")
+                self.assertEqual(ttopl, row[rc.PL], "Failed to set pl correctly")
 
 
 def main():
@@ -304,12 +309,12 @@ def reallylocal():
     f.test_TheTradeObjectSetShares()
     f.test_TheTradeObjectSetName()
     f.test_TheTradeObjectSetMarketValue()
-    # f.setupForTheTradeObject(getMax=True)
+    f.setupForTheTradeObject(getMax=True)
     f.test_TheTradeObjectSetEntries()
     f.test_TheTradeObjectSetDur()
 
 
 if __name__ == "__main__":
     # notmain()
-    # main()
-    reallylocal()
+    main()
+    # reallylocal()

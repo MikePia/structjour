@@ -30,7 +30,7 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from test.rtg import randomTradeGenerator2
+from rtg import randomTradeGenerator2
 
 from structjour.stock import mybarchart as bc
 
@@ -51,7 +51,7 @@ class PickleSettings:
         self.apisetvals = []
 
         self.name = os.path.join(ddiirr, 'pickleset.zst')
-        print(self.name)
+        # print(self.name)
 
     def initializeSettings(self):
         self.settings.clear()
@@ -147,7 +147,7 @@ class TestUtilities(unittest.TestCase):
             d = now - dt.timedelta(i)
             dd = util.getLastWorkDay(d)
 
-            print(f'{d.strftime(fmt)} ... : ... {util.getLastWorkDay(d).strftime(fmt)}')
+            # print(f'{d.strftime(fmt)} ... : ... {util.getLastWorkDay(d).strftime(fmt)}')
             self.assertTrue(dd.isoweekday() < 6)
             self.assertTrue(dd.isoweekday() > 0)
 
@@ -183,8 +183,8 @@ class TestUtilities(unittest.TestCase):
         self.assertFalse(lll)
 
         t.restoreSettings()
-        print(apiset.allKeys())
-        print(settings.allKeys())
+        # print(apiset.allKeys())
+        # print(settings.allKeys())
         # self.assertTrue(os)
 
     def test_updateKey(self):
@@ -206,13 +206,13 @@ class TestUtilities(unittest.TestCase):
         l = apiset.value('dbsqlite')
 
         t.restoreSettings()
-        print(apiset.allKeys())
-        print(settings.allKeys())
+        # print(apiset.allKeys())
+        # print(settings.allKeys())
         os.remove(l)
 
         # self.assertTrue(os)
         mk = util.ManageKeys()
-        print(mk.getKey('bc'))
+        # print(mk.getKey('bc'))
 
     def test_ibSettings(self):
         t = PickleSettings()
@@ -232,13 +232,13 @@ class TestUtilities(unittest.TestCase):
         self.assertEqual(defport, p['port'])
 
         t.restoreSettings()
-        print(apiset.allKeys())
+        # print(apiset.allKeys())
 
 
 def notmain():
-    '''Run some local code'''
+    '''Run some local code... Careful not to remove keys'''
     t = TestUtilities()
-    t.test_makeupEntries()
+    # t.test_makeupEntries()
     # t.test_getLastWorkDay()
     # t.test_setDB()
     # t.test_updateKey()
@@ -254,6 +254,10 @@ def notmain():
     # t.restoreSettings()
 
 def main():
+    #import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()
+
+def localrun():
     '''
     test discovery is not working in vscode. Use this for debugging. Then run cl python -m unittest
     discovery
@@ -266,5 +270,5 @@ def main():
                 attr()
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()

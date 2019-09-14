@@ -181,6 +181,10 @@ class Test_Statements(unittest.TestCase):
 
             jf = JournalFiles(indir=indir, infile=infile, outdir=outdir)
 
+            if not os.path.exists(jf.inpathfile):
+                msg = os.path.realpath(jf.inpathfile)
+                raise ValueError(msg)
+
             origdframe = pd.read_csv(jf.inpathfile)
             originfile = jf.infile
 
@@ -190,7 +194,7 @@ class Test_Statements(unittest.TestCase):
             self.assertNotEqual(originfile, jf.infile)
             newdframe = pd.read_csv(jf.inpathfile)
 
-            self.assertAlmostEqual(origdframe[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
+            self.assertAlmostEqual(origdframe['P / L'].sum(), newdframe[rc.PL].sum(), places=10)
             self.assertAlmostEqual(newDF[rc.PL].sum(), newdframe[rc.PL].sum(), places=10)
 
             for symbol in origdframe[rc.ticker].unique():
@@ -277,6 +281,11 @@ class Test_Statements(unittest.TestCase):
 
 def notmain():
     t = Test_Statements()
+    # t.test_GetListOfTicketDF()
+    # t.test_CreateSingleTicket()
+    t.test_NewSingleTxPerTicket()
+    t.test_MkShortNegative()
+    t.testGetListTickerDF()
     t.test_getPositionsIB()
 
 if __name__ == '__main__':

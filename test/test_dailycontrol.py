@@ -185,7 +185,7 @@ class TestDailyCtrl(TestCase):
         for i, head in enumerate(headers):
             self.assertEqual(dc.modelS.item(i, 0).text(), head)
 
-        headers = ['Name', 'P / L', 'Lost P/L', 'Mistake or pertinent feature of trade']
+        headers = ['Name', 'PnL', 'Lost Plays', 'Mistake or pertinent feature of trade']
         for i, head in enumerate(headers):
             self.assertEqual(dc.modelM.item(1, i).text(), head)
 
@@ -196,7 +196,7 @@ class TestDailyCtrl(TestCase):
         daDate = pd.Timestamp('2021-06-06')
         dc = DailyControl(daDate)
         dc.runDialog(self.df, tradeSum = self.ts)
-        headers = ['Name', 'P / L', 'Lost P/L', 'Mistake or pertinent feature of trade']
+        headers = ['Name', 'PnL', 'Lost Plays', 'Mistake or pertinent feature of trade']
         for i, head in enumerate(headers):
             self.assertEqual(dc.modelM.item(1, i).text(), head)
 

@@ -56,7 +56,7 @@ class TestXLImage(TestCase):
         an image whether an image is specified or not. If not, the default image may not exist- fix
         that.
         '''
-        img = r'C:\python\E\structjour\src\data\defaultImage.png'
+        img = r'C:\python\E\structjour\data\defaultImage.png'
         os.path.exists(img)
 
         xli = XLImage(img)

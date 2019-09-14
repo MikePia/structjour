@@ -146,7 +146,7 @@ class DefineTrades(object):
         nt = self.addStartTime(nt)
         nt.Date = pd.to_datetime(nt.Date)
         # nt = nt.sort_values([c.ticker, c.start, c.acct, c.date, c.time], ascending=True)
-        nt = nt.sort_values([c.start, c.date, c.time], ascending=True)
+        nt = nt.sort_values([c.start, c.acct, c.date, c.time], ascending=True)
         nt.reset_index(drop=True, inplace=True)
         nt = self.addTradeIndex(nt)
         nt = self.addTradePL(nt)
@@ -580,6 +580,7 @@ class DefineTrades(object):
         c = self._frc
         dframe = pd.DataFrame()
         for count, tdf in enumerate(ldf):
+            tdf.copy()
             if tdf.iloc[-1][c.bal] == 0:
                 x0 = tdf.index[0]
                 xl = tdf.index[-1]
@@ -614,19 +615,20 @@ class DefineTrades(object):
 
                     msg = '\nFound a flipper long to short.\n'
                     msg = msg + "Use this file for devel and testing if this is an IB statement\n"
-                    print(msg)
-                    for i, row in tdf.iterrows():
-                        print(i, row)
-                        print()
+                    # print(msg)
+                    # for i, row in tdf.iterrows():
+                    #     print(i, row)
+                    #     print()
                 elif not tdf.at[x0, c.side].startswith('B') and not tdf.at[xl, c.side].startswith('B'):
                     # print("found a flipper short to long")
-                    tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
+                    # tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
+                    tdf.at[xl, c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
                     msg = '\nFound a flipper short to long.\n'
                     msg = msg + "Use this file for devel and testing if this is an IB statement\n"
-                    print(msg)
-                    for i, row in tdf.iterrows():
-                        print(i, row)
-                        print()
+                    # print(msg)
+                    # for i, row in tdf.iterrows():
+                    #     print(i, row)
+                    #     print()
 
 
 

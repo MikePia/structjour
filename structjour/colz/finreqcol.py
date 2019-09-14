@@ -1,4 +1,4 @@
-# Structjour -- a daily trade review helper
+# Structjour -- a daily trade review helper 
 # Copyright (C) 2019 Zero Substance Trading
 #
 # This program is free software; you can redistribute it and/or

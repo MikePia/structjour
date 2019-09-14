@@ -39,7 +39,7 @@ import pandas as pd
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
-from test.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
+from rtg import getRandGenTradeStuff, getRandomFuture, getLdf
 
 from PyQt5.QtWidgets import QApplication
 
@@ -80,10 +80,9 @@ class Test_LayoutForms(TestCase):
         Create a name for a pasted image. Asserts that all the right parts are in the
         expected places.
         '''
-        print(self.lf.ts.keys())
+        # print(self.lf.ts.keys())
         for key in self.lf.ts:
             n = self.lf.getImageName(key, 'chart1')
-            # print (n)
             tindex, symb, side, start, numday, x, end, widg = n.split('_');
             start = pd.Timestamp('20190101 ' + start).time()
             numday = int(numday)
@@ -103,13 +102,11 @@ class Test_LayoutForms(TestCase):
 
     def test_getImageNameX(self):
         '''Create a name for an API retrieved chart. lf.getChartData uses self.ts[key]'''
-        print(self.lf.ts.keys())
+        # print(self.lf.ts.keys())
         for key in self.lf.ts:
             n = self.lf.getImageNameX(key, 'chart1')
             tindex, symb, side, start, numday, x, end, interval = n.split('_')
 
-            print (n)
-            
             start = pd.Timestamp('20190101 ' + start).time()
             numday = int(numday)
             end = end.replace('.', '')
@@ -134,8 +131,6 @@ class Test_LayoutForms(TestCase):
             default: getDirectory()/out/)
         '''
         name = self.lf.sc.getSaveName()
-        print()
-        pass
     def test_populateTradeSumForms(self):
         '''Populates the sc widgets. Depends on self.ts, sc'''
         pass
@@ -248,7 +243,6 @@ class Test_LayoutForms_ts_data(TestCase):
 I really dont mind if you sit this one out. My word's
 but a whisper, your deafness a shout! {(i+1) * 5} times!!!
 '''
-            # print(note)
             self.lf.setExplain(key, note)
             notex = (self.lf.ts[key]['Explain'].unique()[0])
             self.assertEqual(note, notex)
@@ -262,7 +256,6 @@ Put him to a trade
 Teach him to play Monopoly
 Not to sing in the rain {(i+1) * 5} times!!!
 '''
-            # print(note)
             val = val + i*34.12
                       
             self.lf.setMstkVals(key, val, note)
@@ -277,7 +270,6 @@ Not to sing in the rain {(i+1) * 5} times!!!
 We will be geared to the average rather than the exceptional
 God is an overwhelming responsibility! {(i+1) * 5} times.
 '''
-            # print(note)
             self.lf.setNotes(key, note)
             notex = (self.lf.ts[key]['Notes'].unique()[0])
             self.assertEqual(note, notex)

@@ -109,7 +109,8 @@ class TestMybarchart(unittest.TestCase):
                 # Retrieveing todays will retrieve butkis until the magictime
                 mt = util.getLastWorkDay()
 
-                magictime = pd.Timestamp(mt.year, mt.month, mt.day, 16, 30)
+                # 4:45 EST = 2:45 MST
+                magictime = pd.Timestamp(mt.year, mt.month, mt.day, 14, 45)
                 if now < magictime:
                     msg = 'This query should be empty because barchart does not retrieve todays'
                     msg += 'data till after close. If its not empty, either we are in the cracks.'
@@ -206,5 +207,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()

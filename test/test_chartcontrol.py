@@ -109,7 +109,7 @@ class TestChartCtrl(TestCase):
 
     def test_initFromSettings(self):
         # Test that chart control is hooked up correctly to initialize from settings
-        widgs = self.w.widgdict
+        widgs = self.w.widgDict
         for key in widgs:
             widg = widgs[key]
             if isinstance(widg, QLineEdit):
@@ -129,8 +129,8 @@ class TestChartCtrl(TestCase):
 
     def test_changeByUser(self):
         '''Simulate user input, check that the widget, and settings have the value in the testSet'''
-        for key in self.w.widgdict:
-            widg = self.w.widgdict[key]
+        for key in self.w.widgDict:
+            widg = self.w.widgDict[key]
             testVal = self.testSet[key][1] 
             if isinstance(widg, QLineEdit):
                 QTest.keyClick(widg, Qt.Key_A, Qt.ControlModifier)

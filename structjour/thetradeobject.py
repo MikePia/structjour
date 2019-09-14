@@ -744,7 +744,10 @@ class TheTradeObject:
                 entryPrice = exitPrice - self.df.loc[self.ix][frc.sum]
             tmpentry = (entryPrice - partEntryPrice)
             tmpshares = self.df.loc[self.ix0][frc.shares]
-            entry1 = tmpentry / tmpshares
+            if entryPrice == 0 or tmpshares == 0:
+                entry1 = 0
+            else:
+                entry1 = tmpentry / tmpshares
             # entry1 = (entryPrice - partEntryPrice) / \
             #     self.df.loc[self.ix0][frc.shares]
             self.df.at[self.ix0, frc.price] = entry1
