@@ -131,7 +131,7 @@ class TestStructjour(TestCase):
                         'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
                         'trades190221.BHoldPreExit.csv']
 
-        self.getTestData(r'C:\python\E\structjour\src\data')
+        self.getTestData(r'data/')
 
 
     def getTestData(self, indir):
@@ -171,11 +171,12 @@ class TestStructjour(TestCase):
         self.tests = data
 
 
-    @patch('journal.xlimage.askUser', return_value='d')
-    @patch('journal.layoutsheet.askUser', return_value='n')
-    @patch('journal.pandasutil.askUser', side_effect=mock_askUser)
+    @patch('structjour.xlimage.askUser', return_value='d')
+    @patch('structjour.layoutsheet.askUser', return_value='n')
+    @patch('structjour.pandasutil.askUser', side_effect=mock_askUser)
     def test_run(self, unusedstub, unused2, unused3):
-        '''Run structjour beginning to end.'''
+        '''
+        Run structjour beginning to end. The old console version using trade.run'''
         global D
         global DD
         for count, (fred, infile, d) in enumerate(zip(DD, self.infiles, self.tests)):
@@ -237,6 +238,6 @@ def main():
 
 if __name__ == '__main__':
     # pylint: disable = E1120
-    # ttt = TestStructjour()
-    # ttt.test_run()
-    main()
+    ttt = TestStructjour()
+    ttt.test_run()
+    # main()
