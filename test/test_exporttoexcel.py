@@ -31,7 +31,7 @@ import unittest
 from openpyxl import Workbook, load_workbook
 import pandas as pd
 
-from test.rtg import getRandGenTradeStuff
+from structjour.rtg import getRandGenTradeStuff
 
 from structjour.journalfiles import JournalFiles
 
@@ -62,12 +62,14 @@ class Test_ExportToExcel(TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(Test_ExportToExcel, self).__init__(*args, **kwargs)
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
+
 
     def setUp(self):
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
         theDate = pd.Timestamp('2008-06-06')
-        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
+        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False, inputType='DAS')
         self.tradeS, self.ts, self.entries, self.imageNames, self.df, self.ldf = getRandGenTradeStuff()
         if os.path.exists(self.jf.outpathfile):
             os.remove(self.jf.outpathfile)
@@ -135,19 +137,22 @@ class Test_ExportToExcel_MistakeData(TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(Test_ExportToExcel_MistakeData, self).__init__(*args, **kwargs)
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
 
 
     def setUp(self):
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+        
         theDate = pd.Timestamp('2008-06-06')
-        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
+        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False, inputType='DAS')
         self.tradeS, self.ts, self.entries, self.imageNames, self.df, self.ldf = getRandGenTradeStuff()
         if os.path.exists(self.jf.outpathfile):
             os.remove(self.jf.outpathfile)
 
         # Setup mistake note fields to test
         note = 'Ground control to Major Tom'
+
         for i, key in enumerate(self.ts):
             tto = self.ts[key]
             notex = note + str(i+1)
@@ -205,7 +210,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
             self.assertIsNotNone(ws[link].hyperlink)
             link2 = ws[link].hyperlink.target.split('!')[1]
             self.assertEqual(cell, link2)
-        print(ws[cell].value)
+        # print(ws[cell].value)
 
     def test_populateXLMistakeForm_correctTradePL(self):
         '''This method knows way too much, but how else to deal with excel and test formula results...'''

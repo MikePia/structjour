@@ -35,7 +35,7 @@ from structjour.dfutil import DataFrameUtil
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades, ReqCol
 
-from rtg import randomTradeGenerator2, floatValue
+from structjour.rtg import randomTradeGenerator2, floatValue
 
 # pylint: disable = C0103
 
@@ -49,8 +49,10 @@ class TestDefineTrades(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestDefineTrades, self).__init__(*args, **kwargs)
 
+    def setUp(self):
         ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
 
     def test_addFinReqCol(self):
         '''
