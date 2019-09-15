@@ -39,7 +39,7 @@ import pandas as pd
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
-from rtg import getRandGenTradeStuff, getRandomFuture, getLdf
+from structjour.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
 
 from PyQt5.QtWidgets import QApplication
 
@@ -59,8 +59,8 @@ class Test_LayoutForms(TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
-
     def setUp(self):
+
         theDate = pd.Timestamp('2008-06-06')
         self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
         tradeS, ts, entries, imageNames, df, ldf = getRandGenTradeStuff()
@@ -110,6 +110,10 @@ class Test_LayoutForms(TestCase):
             start = pd.Timestamp('20190101 ' + start).time()
             numday = int(numday)
             end = end.replace('.', '')
+            if isinstance(end, dt.datetime):
+                end = end.strftime('%H%M%S')
+            if end.find('+') >= 0:
+                end = end[1:]
             end = pd.Timestamp('20190101 ' + end).time()
             interval = interval.split('.')[0]
 
@@ -314,10 +318,15 @@ God is an overwhelming responsibility! {(i+1) * 5} times.
 
 
 
-
+def notmain():
+    for i in range(100):
+        t = Test_LayoutForms()
+        t.setUp()
+        t.test_getImageNameX()
 
 def main():
     unittest.main()
 
 if __name__ == '__main__':
-    main()
+    # main()
+    notmain()
