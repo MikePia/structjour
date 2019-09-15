@@ -16,7 +16,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 '''
-This is an integration test. Maybe it doesn't belong in the unit tests. Its slow and cumbersome
+This is an integration test of the old console version.
+
+Its slow and cumbersome.
 Integration test of structjour. Especially tests on Overnight holds. Its valuable because it uses
 real data as input. Other tests a random trade generator.
 
@@ -109,8 +111,6 @@ class TestStructjour(TestCase):
         super(TestStructjour, self).__init__(*args, **kwargs)
         global DD
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
 
         self.DD = DD
         if not DD or len(D) < 11:
@@ -133,6 +133,9 @@ class TestStructjour(TestCase):
 
         self.getTestData(r'data/')
 
+    def setUp(self):
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def getTestData(self, indir):
         '''
@@ -238,6 +241,6 @@ def main():
 
 if __name__ == '__main__':
     # pylint: disable = E1120
-    ttt = TestStructjour()
-    ttt.test_run()
-    # main()
+    # ttt = TestStructjour()
+    # ttt.test_run()
+    main()

@@ -68,8 +68,6 @@ class Test_Statements(unittest.TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(Test_Statements, self).__init__(*args, **kwargs)
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
 
         # Input test files can be added here.  Should add files that should fail in another list
         self.infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
@@ -78,6 +76,10 @@ class Test_Statements(unittest.TestCase):
                         'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
                         'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
                         'trades190221.BHoldPreExit.csv']
+
+    def setUp(self):
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def test_GetListOfTicketDF(self):
         '''

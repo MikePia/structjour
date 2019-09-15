@@ -41,6 +41,7 @@ class Test_time(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test_time, self).__init__(*args, **kwargs)
 
+    def setUp(self):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -119,6 +120,10 @@ def notmain():
     # t.test_getFirstWeekday()
     t.test_createDirs()
 
+def main():
+    unittest.main()
+
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    main()

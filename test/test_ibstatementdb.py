@@ -48,12 +48,18 @@ class Test_StatementDB(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test_StatementDB, self).__init__(*args, **kwargs)
         self.settings = QSettings('zero_substance', 'structjour')
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
+
+        
         self.db = "testdb.db"
         jdir = self.settings.value('journal')
 
         self.fulldb = os.path.join(jdir, self.db)
+
+    def setUp(self):
+        
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
 
     def test_findTradeSummary(self):
         pass
@@ -90,7 +96,6 @@ class Test_StatementDB(unittest.TestCase):
                     entryTrades = ibdb.getEntryTrades(summary['id'])
                     self.assertGreater(len(entryTrades), 0)
 
-                    print()
 
                 if count == 9:
                     break
@@ -239,5 +244,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()

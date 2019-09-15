@@ -24,7 +24,9 @@ Test the methods in the module journal.dailysumforms
 @author: Mike Petersen
 '''
 import os
+import unittest
 from unittest import TestCase
+
 
 from openpyxl import Workbook, load_workbook
 
@@ -45,8 +47,10 @@ class TestMistakeSummary(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestMistakeSummary, self).__init__(*args, **kwargs)
 
+    def setUp(self):
         ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
 
     def test_mstkSumStyles(self):
         '''
@@ -134,6 +138,10 @@ def notmain():
     t.test_mstkSumStyles()
     # t.test_dailySumStyle()
 
+def main():
+    unittest.main()
+
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    main()

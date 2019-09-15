@@ -34,7 +34,7 @@ from structjour.statement import Statement_DAS
 from structjour.definetrades import ReqCol
 from structjour.journalfiles import JournalFiles
 
-from test.rtg import randomTradeGenerator2
+from structjour.rtg import randomTradeGenerator2
 
 # pylint: disable = C0103
 
@@ -51,8 +51,6 @@ class Test_Pandasutility(unittest.TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(Test_Pandasutility, self).__init__(*args, **kwargs)
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
 
         # Input test files can be added here.  Should add files that should fail in another list
         self.infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
@@ -62,7 +60,10 @@ class Test_Pandasutility(unittest.TestCase):
                         'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
                         'trades190221.BHoldPreExit.csv']
 
-    
+    def setUp(self):
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def testZeroPad(self):
         '''
@@ -219,7 +220,7 @@ class Test_Pandasutility(unittest.TestCase):
         df.reset_index(drop=True, inplace=True)
         rc=ReqCol()
 
-        df2 = df [['Time', 'Symb', 'Side', 'Qty', 'Account', 'P / L']].copy()
+        df2 = df [[rc.time, rc.ticker, rc.side, rc.shares, rc.acct, rc.PL]].copy()
         idf = InputDataFrame()
         df2 = idf.addDateField(df2, start)
 
@@ -247,13 +248,14 @@ def main():
     Test discovery is not working in vscode. Use this for debugging.
     Then run cl python -m unittest discovery
     '''
-    f = Test_Pandasutility()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
+    unittest.main()
+    # f = Test_Pandasutility()
+    # for name in dir(f):
+    #     if name.startswith('test'):
+    #         attr = getattr(f, name)
 
-            if isinstance(attr, types.MethodType):
-                attr()
+    #         if isinstance(attr, types.MethodType):
+    #             attr()
 
 
 

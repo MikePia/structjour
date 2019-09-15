@@ -30,7 +30,7 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from rtg import randomTradeGenerator2
+from structjour.rtg import randomTradeGenerator2
 
 from structjour.stock import mybarchart as bc
 
@@ -52,6 +52,14 @@ class PickleSettings:
 
         self.name = os.path.join(ddiirr, 'pickleset.zst')
         # print(self.name)
+
+    def setUp(self):
+        
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+
+    def tearDown(self):
+        self.setUp()
 
     def initializeSettings(self):
         self.settings.clear()

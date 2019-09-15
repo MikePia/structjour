@@ -43,8 +43,11 @@ class Test_DfUtil(unittest.TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(Test_DfUtil, self).__init__(*args, **kwargs)
+
+    def setUp(self):
         ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
 
     def testCheckReqColumnsWithReqColSuccess(self):
         '''Test return values of DataFrameUtil.checkRequiredInputFields'''
@@ -116,7 +119,7 @@ class Test_DfUtil(unittest.TestCase):
         try:
             DataFrameUtil.checkRequiredInputFields(fail, reqCol.columns)
         except ValueError as ex:
-            print(ex)
+            # print(ex)
             gotve = True
         finally:
             self.assertTrue(gotve, "Failed to throw value error")

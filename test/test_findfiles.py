@@ -47,6 +47,11 @@ class Test_FindFiles(unittest.TestCase):
         super(Test_FindFiles, self).__init__(*args, **kwargs)
         self.settings = QSettings('zero_substance', 'structjour')
 
+    def tearDown(self):
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
+
     def test_getBaseDir(self):
         j = self.settings.value('journal')
         jj = ff.getBaseDir()

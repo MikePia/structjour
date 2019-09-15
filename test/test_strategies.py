@@ -37,10 +37,12 @@ class TestStrategy(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestStrategy, self).__init__(*args, **kwargs)
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
         self.somestrats = ['ABCD', 'Bull Flag', 'Fallen Angel', 'VWAP Support', 'VWAP Reversal']
         self.strat = Strategy(create=True, testdb='C:/python/E/structjour/test/testdb.sqlite')
+
+    def setUp(self):
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def test_removeLink(self):
         strat = self.strat
@@ -281,17 +283,17 @@ def main():
 
 def notmain():
     t = TestStrategy()
-    # t.test_createTables()
+    t.test_createTables()
     t.test_loadDefault()
-    # t.test_getDescription()
-    # t.test_removeStrategy()
-    # t.test_addStrategy()
-    # t.test_getStrategies()
-    # t.test_setPreferred()
-    # t.test_setDescription()
-    # t.test_setImage1()
-    # t.test_removeImage()
-    # t.test_setLink()
+    t.test_getDescription()
+    t.test_removeStrategy()
+    t.test_addStrategy()
+    t.test_getStrategies()
+    t.test_setPreferred()
+    t.test_setDescription()
+    t.test_setImage1()
+    t.test_removeImage()
+    t.test_setLink()
     t.test_removeLink()
 
 if __name__ == '__main__':

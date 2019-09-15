@@ -53,6 +53,7 @@ class TestGraphstuff(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestGraphstuff, self).__init__(*args, **kwargs)
 
+    def setUp(self):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 

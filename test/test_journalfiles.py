@@ -57,9 +57,12 @@ class TestJF(unittest.TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(TestJF, self).__init__(*args, **kwargs)
+
+
+    def setUp(self):
         ddiirr = os.path.dirname(__file__)
-        theDir, dummy = os.path.split(ddiirr)
-        os.chdir(theDir)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
 
     def test_IndirCreate(self):
         '''
