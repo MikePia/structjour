@@ -72,11 +72,6 @@ class runController:
         self.sc = sc
         self.ui = self.sc.ui
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
-
         self.initialize()
 
         self.ui.goBtn.pressed.connect(self.runnit)
@@ -305,10 +300,6 @@ class runController:
 
 
 def main():
-    ddiirr = os.path.dirname(__file__)
-
-    # Paths used in summaryform.ui rely on cwd .
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     s = QStyleFactory.create('Fusion')
     app.setStyle(s)

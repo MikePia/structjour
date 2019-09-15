@@ -50,9 +50,6 @@ class DisciplineControl(QDialog):
         self.ui = DisciplineDialog()
         self.ui.setupUi(self)
         # self.setWindowTitle('Database Tool')
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
 
         self.setWindowIcon(QIcon("images/ZSLogo.png"))
 

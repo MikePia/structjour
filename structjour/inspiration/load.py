@@ -46,11 +46,3 @@ for i, row in i.df.iterrows():
                 (count, lname, subject, name, who, quote))
     count = count + 1
 conn.commit()
-#     if len(whos[-1]) < 2 :
-#         whos[-1] = whos[-1][0].split("-")
-
-print()
-print()
-# for who in whos:
-#     print("{0:35}{1}".format(who[0], who[1]))
-# #         who = who.split("-")

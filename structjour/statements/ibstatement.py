@@ -152,7 +152,8 @@ class IbStatement:
                         # We are lacking the previous average so cannot reliably figure the
                         # average or PL. (IB uses Cost basis accounting and their PL may be wrong
                         #  for our purposes)
-                        print(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
+                        # print(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
+                        pass
 
 
                 assert tdf.iloc[-1][rc.bal] == holding
@@ -251,7 +252,6 @@ class IbStatement:
                         pass
 
                     else:
-                        # print()
                         addme = []
                         curTotal = 0
 
@@ -748,7 +748,8 @@ class IbStatement:
                         # This should be a first trade for this statmenet/Symbol. Could be Open or
                         # Close. We are lacking the previous balance so cannot reliably figure the
                         # average.
-                        print(f'''There is a  trade for {row[rc.ticker]} that lacks a transaction in this statement''')
+                        # print(f'''There is a  trade for {row[rc.ticker]} that lacks a transaction in this statement''')
+                        pass
 
                 newdf = newdf.append(tdf)
             else:
@@ -815,7 +816,7 @@ class IbStatement:
             df = x.copy()
             return {'Trades': df}, {'Trades': 'Trades'}
 
-        print("Trades are not added to the database")
+        # print("Trades are not added to the database")
         return {'Trades': df}, {'Trades': 'Trades'}
 
     def combineOrdersByTime(self, t):

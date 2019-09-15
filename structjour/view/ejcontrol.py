@@ -47,10 +47,6 @@ class EJControl(QDialog):
         self.ui.browseBtn.pressed.connect(self.browse)
         self.settings = QSettings('zero_substance', 'structjour')
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
         self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
         ok = self.exec()
@@ -74,8 +70,6 @@ class EJControl(QDialog):
 
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     w = EJControl()
     # sys.exit(app.exec_())

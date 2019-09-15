@@ -44,10 +44,6 @@ class StratControl(QDialog):
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
         self.justloaded = False
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
         self.setWindowIcon(QIcon('images/ZSLogo.png'))
 
 
@@ -278,9 +274,6 @@ class StratControl(QDialog):
 
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
-    print(ddiirr)
     app = QApplication(sys.argv)
     w = StratControl()
     w.show()

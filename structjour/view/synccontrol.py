@@ -39,6 +39,7 @@ from structjour.utilities.synchronizesavedstuff import reportTwinSavedFiles, WeG
 class SyncControl(QDialog):
     def __init__(self, settings):
         super().__init__(parent=None)
+
         self.settings = settings
         self.ui = SyncForm()
         self.ui.setupUi(self)
@@ -72,12 +73,11 @@ class SyncControl(QDialog):
             msgbx.exec()
 
         else:
-            print()
+            pass
+            # print()
             
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     settings = QSettings('zero_substance', 'structjour')
     w = SyncControl(settings)

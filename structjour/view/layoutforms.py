@@ -239,7 +239,6 @@ class LayoutForms:
 
             ts, self.entries = ibdb.getTradeSummaries(theDate)
             self.ts = setTradeSummaryHeaders(ts)
-            print()
         else:
             name = self.sc.getSaveName()
             if not os.path.exists(name):

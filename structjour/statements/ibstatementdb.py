@@ -526,7 +526,6 @@ class StatementDB:
                          ts[sf.explain].unique()[0],
                          ts[sf.notes].unique()[0],
                          clean))
-                print('inserted something')
                 assert x.rowcount == 1
                 ts['id'] = x.lastrowid
                 x = x.fetchone()
@@ -553,7 +552,6 @@ class StatementDB:
         x = cursor.fetchall()
         if x:
             return x
-        # print('Adding a trade', row['Symbol'], row['DateTime'])
         return False
 
     def findTrade(self, datetime, symbol, quantity, account, cur=None):
@@ -573,10 +571,9 @@ class StatementDB:
         x = cursor.fetchall()
         if x:
             if len(x) !=1:
-                print('Duplicates ? ', symbol, datetime)
-            # print('. ', end='')
+                pass
+                # print('Duplicates ? ', symbol, datetime)
             return x
-        # print('Adding a trade', row['Symbol'], row['DateTime'])
         return False
 
     def insertTrade(self, row, cur):
@@ -897,7 +894,6 @@ class StatementDB:
             bt = self.makeTradeDict(badTrade)
 
             if isNumeric([bt[rc.avg], bt[rc.bal]]):
-                print('Already fixed this one', bt)
                 continue
             symbol = bt[rc.ticker]
             account = bt[rc.acct]
@@ -914,7 +910,6 @@ class StatementDB:
                     # We can update badTrade if we found a trade that has either
                     # 1) both average and PL (PL tells us if we are long or short-(closing trade))
                     # or 2) A trade opener identified by quantity == balance
-                    # print()
                     LONG = True
                     SHORT = False
 
@@ -980,8 +975,8 @@ class StatementDB:
                                 self.updateAvgPlOC(cur, ft, average, pl, 'C')
                                 if ft[rc.bal] == 0:
                                     pastPrimo = False
-                            else:
-                                print('or else')
+                            # else:
+                            #     print('or else')
                         conn.commit()
                         break
                             #######
@@ -995,7 +990,6 @@ class StatementDB:
                         nextTrade = False
                         pastPrimo = False
                         for fixthis in fixthese_r:
-                            print(fixthis)
                             ft = self.makeTradeDict(fixthis)
 
                             if pastPrimo and not isNumeric(ft[rc.bal]):
@@ -1074,7 +1068,6 @@ class StatementDB:
                         # average price, or the previous price, if the average price is mssing
                         # there too. This algo was worke out in DASStatement.figureUnbalancedPL
                         # (incase its possible to generalize this and share code.)
-                        print("are we there yt?")
                         if self.DBfigureUnbalancedPL(cur, prevTrades, bt):
                             conn.commit()
                             break
@@ -1111,7 +1104,6 @@ class StatementDB:
                 fixthese.append(nt)
             for i, ft in enumerate(fixthese):
                 if isNumeric(ft[rc.bal]) and ft[rc.shares] == ft[rc.bal]:
-                    print('Got the balance of a future trade with no uncovered days')
                     if not isNumeric(ft[rc.avg]):
                         ft[rc.avg] = ft[rc.price]
                         ft[rc.oc] = 'O'
@@ -1143,7 +1135,6 @@ class StatementDB:
         '''
         rc = self.rc
         assert begin
-        # print(begin, type(begin), end, type(end))
         assert isinstance(begin, dt.date)
         if end:
             assert isinstance(end, dt.date)
@@ -1159,7 +1150,8 @@ class StatementDB:
             for account in accounts:
                 self.coveredDates(begin, end, account, cur)
         else:
-            print('Not all of those trades processed')
+            pass
+            # print('Not all of those trades processed')
         self.insertPositions(cur, openPos)
         conn.commit()
         self.reFigureAPL(begin, end)
@@ -1411,7 +1403,6 @@ class StatementDB:
         if x:
             df = pd.DataFrame(data=x, columns=cols)
             return df
-        # print()
         return pd.DataFrame()
 
     def getCoveredDays(self):
@@ -1477,7 +1468,6 @@ class StatementDB:
             current = current + delt
             if current > end.date():
                 break
-        # print()
         return notcovered
 
     def getMissingCoverage(self, account):
@@ -1493,7 +1483,6 @@ class StatementDB:
             return {'min': pd.Timestamp(days[0]).date(),
                     'max': pd.Timestamp(days[1]).date(),
                     'uncovered': uncovered}
-        # print()
    
     def getTradesByDates(self, account, sym, daMin, daMax):
         '''

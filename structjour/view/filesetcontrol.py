@@ -49,10 +49,6 @@ class FileSetCtrl(QDialog):
         fui.setupUi(self)
         self.fui = fui
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
         self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
         fui.journal.setText(self.settings.value('journal'))
@@ -509,8 +505,6 @@ class FileSetCtrl(QDialog):
         return outdir
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     apisettings = QSettings('zero_substance', 'structjour')
     w = FileSetCtrl(apisettings)

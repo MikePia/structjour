@@ -71,6 +71,7 @@ class DailyControl(QDialogWClose):
     '''
     def __init__(self, daDate=None):
         super().__init__(parent=None)
+
         self.ui = DailyForm()
         self.ui.setupUi(self)
         self.date = None
@@ -436,8 +437,6 @@ class DailyControl(QDialogWClose):
         self.ui.mstkForm.resizeColumnToContents(2)
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'
     if not os.path.exists(fn):

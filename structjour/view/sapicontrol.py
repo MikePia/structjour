@@ -48,10 +48,6 @@ class StockApi(QDialog):
 
         self.checkForIbapi()
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
         self.setWindowIcon(QIcon('images/ZSLogo.png'))
 
         self.ui.ibRealCb.clicked.connect(self.ibClicked)
@@ -276,8 +272,6 @@ class StockApi(QDialog):
 
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     apisettings = QSettings('zero_substance/stockapi', 'structjour')
     w = StockApi(apisettings)

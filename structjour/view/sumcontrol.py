@@ -77,11 +77,6 @@ class SumControl(QMainWindow):
         self.oldDate = None
         super().__init__()
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
-
         defimage = "images/ZeroSubstanceCreation_220.png"
         self.defaultImage = 'images/ZeroSubstanceCreation.png'
         ui = Ui_MainWindow()
@@ -795,7 +790,6 @@ class SumControl(QMainWindow):
         
         if self.oldDate and val != self.oldDate:
              self.ui.infileEdit.setText('')
-        print(val)
         self.oldDate = val
         self.loadFromDate()
 
@@ -1059,7 +1053,7 @@ class SumControl(QMainWindow):
                 return 0.0
         elif 'short' in self.ui.tradeList.currentText().lower():
             if shares > 0:
-                print('Flipped trade retaining short maxLoss attributes', self.ui.tradeList.currentText())
+                msg = 'Flipped trade retaining short maxLoss attributes', self.ui.tradeList.currentText()
             if slDiff <= 0:
                 self.ui.maxLoss.setText('')
                 return 0.0
@@ -1224,8 +1218,6 @@ if __name__ == '__main__':
     # stng = QSettings('zero_substance', 'structjour')
     # ddate = pd.Timestamp('2019-05-24')
     # verifyNameInfo(ddate, s)
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     win = SumControl()
     win.show()

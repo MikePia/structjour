@@ -95,7 +95,7 @@ class Strategy:
         to either chart1 or chart2. Need to manually constrain only one (chart1, chart2) for each
         strategy (sqlite constraints with unique combination of cell contents?)
         '''
-        print('setting', key, name)
+        # print('setting', key, name)
         sid = self.getId(key)
         cursor = self.conn.execute('''SELECT name FROM images
             WHERE strategy_id = ? and widget = ?''', (sid, widget,))

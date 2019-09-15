@@ -120,7 +120,7 @@ def getFirstWeekday(theMonth=None, theDir=None):
     #         r=input(f"{theDay.strftime('%B %Y')} Is this the month?")
             break
     theMonth = pd.Timestamp(theMonth)
-    print(theMonth)
+    # print(theMonth)
     advancedays = 8 - theMonth.isoweekday()  if theMonth.isoweekday() > 5 else 0
 
     day = 1 + advancedays

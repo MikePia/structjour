@@ -605,7 +605,6 @@ class DefineTrades(object):
                                 originalPrice = row[c.price] + (row[c.PL] / row[c.shares])
                                 tdf.at[x0, c.price] = originalPrice
                                 break
-                        # print()
                 elif tdf.at[x0, c.side].startswith('B') and tdf.at[xl, c.side].startswith('B'):
                     # Still not sure how IB deals with flipped trades. I think they break down the
                     # shares to figure, for ex, PL from shares sold closed to 0 balance, and avg
@@ -615,30 +614,12 @@ class DefineTrades(object):
 
                     msg = '\nFound a flipper long to short.\n'
                     msg = msg + "Use this file for devel and testing if this is an IB statement\n"
-                    # print(msg)
-                    # for i, row in tdf.iterrows():
-                    #     print(i, row)
-                    #     print()
                 elif not tdf.at[x0, c.side].startswith('B') and not tdf.at[xl, c.side].startswith('B'):
                     # print("found a flipper short to long")
                     # tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
                     tdf.at[xl, c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
                     msg = '\nFound a flipper short to long.\n'
                     msg = msg + "Use this file for devel and testing if this is an IB statement\n"
-                    # print(msg)
-                    # for i, row in tdf.iterrows():
-                    #     print(i, row)
-                    #     print()
-
-
-
-
-
-                #     for i, row in tdf.iterrows():
-                #         print(i, row)
-                #         print()
-
-                # print()
             else:
                 print('This should never run. What happned in postProcessing?',
                       'It means we have a non 0 balance at the end of a trade.(!?!)',

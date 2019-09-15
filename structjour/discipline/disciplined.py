@@ -660,7 +660,6 @@ def local():
         print('try again')
     else:
         ldf, ts, fpentries = getTradeSummary(fn, daDate)
-        print()
 
 def notmain():
 

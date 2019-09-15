@@ -48,13 +48,7 @@ class ChartControl(QDialog):
         self.mplcolors = None
         self.loadStyles()
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../../'))
-
         self.setWindowIcon(QIcon("images/ZSLogo.png"))
-
-
 
         self.ui.styleCb.currentTextChanged.connect(self.setStyle)
         self.ui.gridhCb.clicked.connect(self.setGridh)
@@ -448,8 +442,6 @@ class ChartControl(QDialog):
 
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     chartsettings = QSettings('zero_substance/chart', 'structjour')
     w = ChartControl(chartsettings)

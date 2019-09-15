@@ -183,8 +183,6 @@ class UnbalControl(QDialog):
         return [str(fshares1), str(fshares2), str(fshares3), str(fshares4)]
 
 if __name__ == '__main__':
-    ddiirr = os.path.dirname(__file__)
-    os.chdir(os.path.realpath(ddiirr))
     app = QApplication(sys.argv)
     w = UnbalControl()
     # fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'
