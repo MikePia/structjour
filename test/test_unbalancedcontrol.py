@@ -44,6 +44,10 @@ class TestUnbalCtrl(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestUnbalCtrl, self).__init__(*args, **kwargs)
 
+    def setUp(self):
+        
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def justtestit(self, s, a, b, t):
         vals = [s, a, b]

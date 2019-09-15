@@ -22,6 +22,7 @@ Created on May 19, 2019
 @author: Mike Petersen
 '''
 
+import os
 import sys
 import unittest
 from  unittest import TestCase
@@ -41,6 +42,10 @@ class TestSapi(TestCase):
         super(TestSapi, self).__init__(*args, **kwargs)
 
     def setUp(self):
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+
         apisettings = QSettings('zero_substance/stockapi/test', 'structjour')
         testSet = {'ibRealPort': '1234',
                    'ibRealId': '5678',
@@ -83,6 +88,9 @@ class TestSapi(TestCase):
                 self.assertEqual(widg.text(), val)
             elif isinstance(widg, QCheckBox):
                 val = self.apiSet.value(key, False, bool)
+                # have disabled iex checkbox 9/12/19 because iex api is kaput TODO:
+                if widg.objectName() == 'iexCb':
+                    val = False
                 self.assertEqual(widg.isChecked(), val)
 
     def test_sortIt(self):

@@ -50,6 +50,11 @@ class TestXLImage(TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
+    def setUp(self):
+        
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+
     def test_getDefault(self):
         '''
         Test the method journal.xlimage.XLImage.getDefaultPILImage. Specifically test that it opens

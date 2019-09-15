@@ -52,9 +52,6 @@ class TestTheTradeObject(unittest.TestCase):
         super(TestTheTradeObject, self).__init__(*args, **kwargs)
         # global DD
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
-
         # Input test files can be added here.  Should add files that should fail in another list
         # Not using yet. Create accompanying positions.csv for files with HOLDs. Incrementally 
         # getting rid of the interview thing as much as possible at least in the testing.
@@ -66,6 +63,11 @@ class TestTheTradeObject(unittest.TestCase):
                         'trades190221.BHoldPreExit.csv']
 
         self.tto = self.setupForTheTradeObject(infile=self.infiles[2])
+
+    def setUp(self):
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def test_SumReqFields(self):
         '''
@@ -108,6 +110,11 @@ class TestTheTradeObject(unittest.TestCase):
 
     def setupForTheTradeObject(self, getMax=False, infile="trades.8.csv"):
         '''Set up the DataFrames'''
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+        # x = os.getcwd()
+        # print('===============================================================')
+        # print(" callin JournalFiles from ", x)
         jf = JournalFiles(mydevel=True, infile=infile, indir="data/",
                           outdir="out/", inputType='DAS')
 
@@ -264,7 +271,7 @@ class TestTheTradeObject(unittest.TestCase):
         side = self.tto.df.at[x0, rc.side]
         for i, row in self.tto.df.iterrows():
             count += 1
-            print (row[rc.price], row[rc.side], row[rc.PL])
+            # print (row[rc.price], row[rc.side], row[rc.PL])
             if (side.startswith('B') and row[rc.side].startswith('B')) or (
                 side.startswith('S') and row[rc.side].startswith('S')):
                 if row[rc.price] != 0:
