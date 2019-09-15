@@ -38,7 +38,7 @@ class JournalFiles:
     files to read and write.
     '''
 
-    inputType = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS', 'db': 'DB'}
+    inputTypeDict = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS', 'db': 'DB'}
 
     # As the console version has no plan for release, not to worry too much about configuration
     def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS',
@@ -63,6 +63,7 @@ class JournalFiles:
         :raise ValueError:  If theDate is not a valid time.
         :raise NameError:   If the infile is not located.
         '''
+        self.settings = QSettings('zero_substance', 'structjour')
         if theDate:
             try:
                 theDate = pd.Timestamp(theDate)
@@ -79,8 +80,9 @@ class JournalFiles:
         else:
             theDate = dt.date.today()
 
-        assert inputType in JournalFiles.inputType.values()
+        assert inputType in JournalFiles.inputTypeDict.values()
         self.inputType = inputType
+        self.settings.setValue('inputType', self.inputType)
         self.theDate = theDate
         self.monthformat = "_%Y%m_%B"
         self.dayformat = "_%m%d_%A"
@@ -180,10 +182,9 @@ class JournalFiles:
                         msg = f'''The folder {monthdir} does not exist. Structjour must create the
                         folder in order to continue. Creating the directories now.'''
                         print(msg)
-                        settings = QSettings('zero_substance', 'structjour')
-                        journal = settings.value('journal')
+                        journal = self.settings.value('journal')
                         if os.path.exists(journal):
-                            scheme = settings.value('scheme')
+                            scheme = self.settings.value('scheme')
                             ix = scheme.find('/')
                             if ix < 0:
                                 ix = scheme.find('\\')

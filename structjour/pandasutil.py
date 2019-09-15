@@ -267,11 +267,12 @@ class InputDataFrame:
         :TODO: getPositions should be a virtual method--not sure how to implement it best
         This aint java. For now just kludge solidly.
         '''
-        if jf and jf.inputType == JournalFiles.inputType['das'] and jf.inpathfile2:
+        settings = QSettings('zero_substance', 'structjour')
+        if settings.value('inputType') == 'DAS' and jf and jf.inpathfile2:
             st = Statement_DAS(jf)
             df = st.getPositions()
             return df
-        elif jf and jf.inputType == JournalFiles.inputType['ib']:
+        elif jf and settings.value('inputType') in ['IB_CVS', 'IB_HTML']:
             st = Statement_IBActivity(jf)
             df = st.getPositions()
             return df
@@ -334,7 +335,6 @@ class InputDataFrame:
                 else:
                     keepTrying = False
 
-            print()
             print(swingTrade)
         return swingTrade, True
            
