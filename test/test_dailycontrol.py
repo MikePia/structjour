@@ -29,11 +29,42 @@ from  unittest import TestCase
 
 import pandas as pd
 import sqlite3
-from PyQt5 import QtWebEngineWidgets
+
+# https://stackoverflow.com/questions/57426219/how-to-import-qtwebenginewidgets-after-qapplication-has-been-created
+# thanks to ekhumoro.
+# Strangely the import error occurs using (before installing webengine_hack here):
+# python -m unittest discover
+# But not when using from the test directory:
+# python -m unittest test_dailycontrol
+# or any other local run
+def webengine_hack():
+    from PyQt5 import QtWidgets
+    app = QtWidgets.QApplication.instance()
+    if app is not None:
+        import sip
+        app.quit()
+        sip.delete(app)
+    import sys
+    from PyQt5 import QtCore, QtWebEngineWidgets
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+    app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
+    return app
+
+try:
+    # just for testing
+    from PyQt5 import QtWidgets
+    app = QtWidgets.QApplication([''])
+    from PyQt5 import QtWebEngineWidgets
+except ImportError as exception:
+    print('\nRetrying webengine import...')
+    app = webengine_hack()
+    from PyQt5 import QtWebEngineWidgets
+
+# from PyQt5 import QtCore, QtWebEngineWidgets
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
 
 from PyQt5.QtTest import QTest
-from PyQt5.QtCore import Qt, QSettings
 
 
 from structjour.view.dailycontrol import DailyControl
@@ -56,17 +87,20 @@ class TestDailyCtrl(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestDailyCtrl, self).__init__(*args, **kwargs)
 
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
-        self.testdb = 'C:/python/E/structjour/test/testdb.sqlite'
-        self.conn = sqlite3.connect(self.testdb)
+        self.testdb = 'test/testdb.sqlite'
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
         self.realdb = self.apiset.value('dbsqlite') 
-        self.inputtype = 'IB_HTML' 
 
 
     def setUp(self):
-        indir = 'C:/python/E/structjour/data'
+
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
+        self.conn = sqlite3.connect(self.testdb)
+        self.inputtype = 'IB_HTML' 
+
+        indir = 'data/'
         f2 = 'ActivityStatement.20190313_PL.html'
         f1 = 'ActivityStatement.20190404.html'
         theDate = pd.Timestamp('2019-04-04')
