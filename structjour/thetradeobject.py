@@ -661,12 +661,13 @@ class TheTradeObject:
             price = row[frc.price]
             shares = row[frc.shares]
             average = row[frc.avg]
-            if count == 0:
-                entry1 = price
-                average1 = average
-                diff = average1-price
-            else:
-                diff = average1 - price
+            if average:
+                if count == 0:
+                    entry1 = price
+                    average1 = average
+                    diff = average1-price
+                else:
+                    diff = average1 - price
 
             fpentries.append([price, 'deprecated', row[frc.side], dtime])
             
@@ -792,7 +793,6 @@ class TheTradeObject:
             # If this triggered check that the input file processed into tickets.
             # If not, there are probably fewer ticketts than it appears-- check for repeated
             # time entries
-            print('Holy cow, save this input file as a test file and finalize setEntries code.')
         for i, price in zip(range(len(entries)), entries):
 
             # Entry Price
@@ -1054,11 +1054,6 @@ def runSummaries(ldf):
 
     # self.tradeSummaries = tradeSummaries
     return tradeSummaries, ts, entries, initialImageNames
-
-
-
-
-
 
 def notmain():
     '''Run some local code'''
