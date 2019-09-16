@@ -224,6 +224,9 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
             msg = '\nWARNING: all data has been removed.'
             msg = msg + f'\nThe Requested start was({start}).'
             msg = msg + f'\nBarchart returned data beginning {rstart} and ending {rend}'
+            msg += '''If you are seeking a chart from today, its possible Barchart has not made'''
+            msg += 'the data available yet. (Should be available by 4:45PM but they are occasionally late)'
+            msg += 'You can wait or try AlphaVantage or IB if you have them available. Open File->StockAPI'
             print(msg)
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
