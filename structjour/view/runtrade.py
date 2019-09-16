@@ -256,46 +256,13 @@ class runController:
             df = ds.getTrades()
             self.runDBInput(self.theDate, jf)
             return
-            try:
-                tkt = Ticket(jf)
-            except ValueError as ex:
-                msg = '<h3>The input file has caused a ValueError:</h3><ul> '
-                msg = msg + '<div><strong>' + ex.__str__() + '</strong></div>'
-                msg = msg + '<div>Did you export the trades window?</div>'
-                msg = msg + '<div>If so, please configure the table in DAS to have the necessary fields and re-export it.</div>'
-                msgbx = QMessageBox()
-                msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
-                msgbx.setText(msg)
-                msgbx.exec()
-                return
-
-            df, jf = tkt.getTrades()
-        # trades = pd.read_csv(jf.inpathfile)
         else:
-            #Temporary
-            print('Opening a non standard file name in DAS')
-            tkt = Ticket(jf)
-            df, jf = tkt.getTrades()
-
-        print('check for multiday')
-
-        idf = InputDataFrame()
-        trades, success = idf.processInputFile(df, jf.theDate, jf)
-        if not success:
+            msg = '<h3>Unrecognized input:</h3><ul> '
+            msgbx = QMessageBox()
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
+            msgbx.setText(msg)
+            msgbx.exec()
             return
-
-        tu = DefineTrades(self.inputtype)
-        inputlen, dframe, ldf = tu.processOutputDframe(trades)
-        self.inputlen = inputlen
-
-        # images and Trade Summaries.
-        margin = 25
-
-        lf = LayoutForms(self.sc, jf, dframe)
-        lf.pickleitnow()
-        tradeSummaries = lf.runTtoSummaries(ldf)
-        # self.ldf = ldf
-        # self.dframe = dframe
 
 
 
