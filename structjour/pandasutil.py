@@ -305,8 +305,9 @@ class InputDataFrame:
         settings = QSettings('zero_substance', 'structjour')
         runtype = settings.value('runType')
         if runtype == 'CONSOLE':
-            swingTrade = self.consoleSwing(swingTrade)
-            return swingTrade, True
+            raise ValueError("Programmers exception to catch tail tail ref to CONSOLE")
+            # swingTrade = self.consoleSwing(swingTrade)
+            # return swingTrade, True
         elif runtype == 'QT':
             return self.qtSwing(dframe, swingTrade)
         msg = '\n\nRun Type for structjour must be either CONSOLE or QT as no other types are\n'
@@ -338,100 +339,6 @@ class InputDataFrame:
             print(swingTrade)
         return swingTrade, True
            
-
-
-
-
-        # for i in range(len(swingTrade)):
-        #     tryAgain = True
-        #     while tryAgain:
-
-        #         question = '''There is an unbalanced amount of shares of {0} in the amount of {1}
-        #             in the account {2}. How many shares of {0} are you holding now? 
-        #             (Enter for {1}) '''.format(swingTrade[i]['ticker'],
-        #                                        swingTrade[i]['shares'],
-        #                                        swingTrade[i]['acct'])
-
-        #         swingTrade[i]['after'] = askUser(
-        #             swingTrade[i]['shares'], question)
-        #         swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
-        #             swingTrade[i]['after']
-
-        #         if swingTrade[i]['shares'] != 0:
-
-        #             question = '''There is now a prior unbalanced amount of shares of {0} amount
-        #             of {1} in the account {2}. How many shares of {0} were you holding before? 
-        #             (Enter for {1}) '''.format(swingTrade[i]['ticker'],
-        #                                        -swingTrade[i]['shares'],
-        #                                        swingTrade[i]['acct'])
-
-        #             swingTrade[i]['before'] = askUser(
-        #                 swingTrade[i]['shares'], question)
-        #             swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
-        #                 swingTrade[i]['before']
-
-        #         if swingTrade[i]['shares'] == 0:
-        #             # print("That works.")
-        #             tryAgain = False
-        #         else:
-        #             print()
-        #             print("There are {1} unaccounted for shares in {0}".format(
-        #                 swingTrade[i]['ticker'], swingTrade[i]['shares']))
-        #             print()
-        #             print("That does not add up. Starting over ...")
-        #             print()
-        #             print("Prior to reset version ", i, swingTrade)
-        #             swingTrade[i] = self.getOvernightTrades(dframe)[i]
-        #             print("reset version ", i, swingTrade)
-        # # print(swingTrade)
-        # return swingTrade
-
-    def consoleSwing(self, swingTrade):
-        for i in range(len(swingTrade)):
-            tryAgain = True
-            while tryAgain:
-
-                question = '''There is an unbalanced amount of shares of {0} in the amount of {1}
-                    in the account {2}. How many shares of {0} are you holding now? 
-                    (Enter for {1}) '''.format(swingTrade[i]['ticker'],
-                                               swingTrade[i]['shares'],
-                                               swingTrade[i]['acct'])
-
-                swingTrade[i]['after'] = askUser(
-                    swingTrade[i]['shares'], question)
-                swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
-                    swingTrade[i]['after']
-
-                if swingTrade[i]['shares'] != 0:
-
-                    question = '''There is now a prior unbalanced amount of shares of {0} amount
-                    of {1} in the account {2}. How many shares of {0} were you holding before? 
-                    (Enter for {1}) '''.format(swingTrade[i]['ticker'],
-                                               -swingTrade[i]['shares'],
-                                               swingTrade[i]['acct'])
-
-                    swingTrade[i]['before'] = askUser(
-                        swingTrade[i]['shares'], question)
-                    swingTrade[i]['shares'] = swingTrade[i]['shares'] - \
-                        swingTrade[i]['before']
-
-                if swingTrade[i]['shares'] == 0:
-                    # print("That works.")
-                    tryAgain = False
-                else:
-                    print()
-                    print("There are {1} unaccounted for shares in {0}".format(
-                        swingTrade[i]['ticker'], swingTrade[i]['shares']))
-                    print()
-                    print("That does not add up. Starting over ...")
-                    print()
-                    print("Prior to reset version ", i, swingTrade)
-                    swingTrade[i] = self.getOvernightTrades(dframe)[i]
-                    print("reset version ", i, swingTrade)
-        # print(swingTrade)
-        return swingTrade
-
-
     def insertOvernightRow(self, dframe, swTrade):
         '''
         Insert non-transaction rows that show overnight transactions. Set Side to one of:
