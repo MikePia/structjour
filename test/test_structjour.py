@@ -35,8 +35,6 @@ import re
 
 import pandas as pd
 
-
-from trade import run
 # pylint: disable = C0103, W0603, W0613
 
 
@@ -172,69 +170,6 @@ class TestStructjour(TestCase):
                 entry.append(trades)
                 data.append(entry)
         self.tests = data
-
-
-    @patch('structjour.xlimage.askUser', return_value='d')
-    @patch('structjour.layoutsheet.askUser', return_value='n')
-    @patch('structjour.pandasutil.askUser', side_effect=mock_askUser)
-    def test_run(self, unusedstub, unused2, unused3):
-        '''
-        Run structjour beginning to end. The old console version using trade.run'''
-        global D
-        global DD
-        for count, (fred, infile, d) in enumerate(zip(DD, self.infiles, self.tests)):
-            D = deque(fred)
-            outdir = 'out/'
-            theDate = pd.Timestamp(2019, 1, count+1)
-            # print(theDate, infile)
-            indir = 'data/'
-            mydevel = True
-            jf = run(infile=infile, outdir=outdir, theDate=theDate, indir=indir,
-                     infile2=None, mydevel=mydevel)
-            # print(jf.outpathfile)
-            # print()
-
-            # # The testdata file is found in the indir (data directory) along with the trades
-            # input files we just ran
-            # Now, however, we will test the output files found in the outdir (out dir). Those are
-            # human files. We demonstrate far too much knowledge of their idosyncracies here,
-            #  ...
-
-            trades = list()
-            indir = jf.outdir
-            f = jf.outpathfile
-            # fpname = os.path.join(indir, f)
-            numTrades = int(d[1])
-            df = pd.read_excel(f)
-            # l = len(df)
-
-            begin = False
-            finalNum = 0
-            for dummy, row in df.iterrows():
-                if row[0] == 'Tindex':
-                    begin = True
-                    continue
-                elif begin and isinstance(row[0], str) and row[0].startswith('Trade'):
-                    r = [row[0], row[1], row[2], row[3], row[4], row[5],
-                         row[6], row[7], row[8], row[9], row[10], row[11], row[12]]
-                    trades.append(r)
-                    num = row[0].split(' ')[1]
-                    # print(num)
-                    finalNum = int(num)
-                elif begin:
-                    break
-            self.assertEqual(finalNum, numTrades)
-            columns = ['Tindex', 'start', 'time', 'symb', 'side', 'price',
-                       'qty', 'bal', 'account', 'pl', 'sum', 'dur', 'name']
-            fdf = pd.DataFrame(data=trades, columns=columns)
-            trades = []
-
-        #     print(d[3][0])
-            for dd in d[3]:
-                #         print(dd)
-                x = findTrade(fdf, dd)
-                self.assertGreater(len(x), 0)
-                # print('passed')
 
 def main():
     unittest.main()
