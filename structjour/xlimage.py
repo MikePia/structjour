@@ -103,9 +103,6 @@ class XLImage:
 
         return img, name
     
-    
-    
-    
     def getPilImageNoDrama(self, name, outdir):
         '''
         Grab the contents of the clipboard to image. Warn the user if no image is retrieved. Then
@@ -143,55 +140,6 @@ class XLImage:
             return None, e.__str__()
 
         return img, pname
-
-    def getPilImage(self, msg):
-        '''
-        Retrieve the image from the clipboard, default location or filename input. Ask the user if
-        the image is ready and collect the response. The ImageGrab.grabclibboard() works on
-        Windows and MAC only. On failure to retrieve image , give the user 4 more tries. They user
-        can opt out by entering 'q'.
-        :User responses: Check only the initial letter ...
-                            '' or 'y' -> get image in clipboard
-                            'q' or 'n' -> return None
-                            '?'  or 'h' -> get help
-                            'o' -> type in an image filename
-                            'd' -> get default image
-        :params msg: Communication to the user of what to copy into the clipboard.
-        :return:     The image in as a PIL object or None
-        '''
-
-        for dummy in range(5):
-            msg_go = "{0} {1}".format(msg, "Are you ready? ('?' to display options) \n\t\t\t\t")
-            response = askUser(msg_go)
-            im = None
-            if response.startswith('?') or response.lower().startswith('h'):
-                print('''Press enter or 'y' to accept an image in the clipboard.\n''',
-                      '''Press 'q' of 'n' to enter no image for this trade\n''',
-                      '''Press '?' or 'h' to dispay this message.\n''',
-                      '''Press 'o' to type in an image filename.\n'''
-                      '''Press 'd' to use the default image.\n''')
-                response = input()
-            if response.lower().startswith('y') or response == '':
-                im = ImageGrab.grabclipboard()
-
-
-            elif response.lower().startswith('q') or response.lower().startswith('n'):
-                # return self.getDefaultPILImage()
-                return None
-            elif response.lower().startswith('o'):
-                name = askUser('Enter the name of an image.')
-                if os.path.exists(name):
-                    im = PILImage.open(name)
-
-            elif response.lower().startswith('d'):
-                return self.getDefaultPILImage()
-
-            if im is None:
-                print("Failed to get an image. Please select and copy an image (or press 'q')")
-            else:
-                return im
-        print("Moving on")
-        return self.getDefaultPILImage()
 
     def getResizeName(self, orig, outdir):
         '''
