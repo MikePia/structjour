@@ -190,76 +190,7 @@ class LayoutSheet:
         ws["A6"].style = tf.styles["explain"]
         style_range(ws, "A6:M24", border=tf.styles["explain"].border)
 
-    def runSummaries(self, imageLocation, ldf, jf, ws, tf):
-        '''
-        This is a runner script. For each trade DataFrame in the list ldf we will get and place
-        the chart image, call TheTradeObject.runSummary to gather the summary data into the
-        TradeObject. Then we will create the trade summaries, by styling the form and placing the
-        summary data/forms next to the images we just placed.
-        :params imageLocation: Data structure containing the locations to place summaries
-        :params ldf: A list of DataFrames, each representing a single trade with one or more
-                     transactions
-        :params jf: The JournalFiles object containing needed path locations
-        :params ws: The openpyx Worksheet object to work on
-        :params tf: The TradeFormat object with data and methods for creating the Trade Summaries.
-        :return tradeSummaries: A list of 1 row DataFrames created by TheTradeObject. Each has 1
-                    row representing one trade and contains multiple columns for entries and exits.
-        '''
-        tradeSummaries = list()
-        XL = XLImage()
-        srf = SumReqFields()
-
-        response = askUser("Would you like to enter strategy names, targets and stops?   ")
-        interview = True if response.lower().startswith('y') else False
-
-        for loc, tdf in zip(imageLocation, ldf):
-
-            img = XL.getAndResizeImage(loc[2], jf.outdir)
-
-            # Hidden here is the location to place the chart on the page.
-            if img:
-                col = srf.maxcol() + 1
-                col = tcell((col, 1))[0]
-                cellname = col + str(loc[0])
-                ws.add_image(img, cellname)
-
-            #Put together the trade summary info for each trade and interview the trader
-            tto = TheTradeObject(tdf, interview, srf)
-            tto.runSummary(None)
-            tradeSummaries.append(tto.TheTrade)
-
-            #Place the format shapes/styles in the worksheet
-            tf.formatTrade(ws, srf, anchor=(1, loc[0]))
-
-            #populate the trade information
-            for key in srf.tfcolumns.keys():
-                cell = srf.tfcolumns[key][0]
-                if isinstance(cell, list):
-                    cell = cell[0]
-                tradeval = tto.TheTrade[key].unique()[0]
-                # print ("{0:10} \t{3} \t{1:}\t{2} ".format(key, cell, tradeval,
-                # tcell(cell, anchor=(1, loc[0]))))
-
-                # Put some formulas in each trade Summary
-                if key in srf.tfformulas:
-
-                    anchor = (1, loc[0])
-                    formula = srf.tfformulas[key][0]
-                    args = []
-                    for c in srf.tfformulas[key][1:]:
-                        args.append(tcell(c, anchor=anchor))
-                    tradeval = formula.format(*args)
-
-                if not tradeval:
-                    continue
-                if isinstance(tradeval, (pd.Timestamp, dt.datetime, np.datetime64)):
-                    tradeval = pd.Timestamp(tradeval)
-
-
-                ws[tcell(cell, anchor=(1, loc[0]))] = tradeval
-
-        # print("Done with interview")
-        return tradeSummaries
+    
 
     def populateMistakeForm(self, tradeSummaries, mistake, ws, imageLocation):
         '''
