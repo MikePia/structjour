@@ -193,42 +193,6 @@ class XLImage:
         print("Moving on")
         return self.getDefaultPILImage()
 
-    def getAndResizeImage(self, name, outdir):
-        '''
-        Tell the user to copy an image to the clipboard then call getPilImage. A
-        script to run the image manipulation in structjour. Save it with a new name. Return the
-        name.
-        :params name: The name to save the image.
-        :param outdir: The location to save the images.
-        :return: The pathname of the image we save.
-        '''
-        img = None
-        try:
-            if not os.path.exists(outdir):
-                os.mkdir(outdir)
-            msg = '''
-            Copy an image to the clipboard using snip for {0}
-            '''.format(name)
-
-            pilImage = self.getPilImage(msg)
-            # ext = pilImage.format.lower()
-            if not pilImage:
-                return None
-            newSize = self.adjustSizeByHeight(pilImage.size)
-            pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
-
-            resizeName, ext = self.getResizeName(name, outdir)
-            pilImage.save(resizeName, ext)
-            img = Image(resizeName)
-
-        except IOError as e:
-            print("An exception occured '%s'" % e)
-            if img:
-                return img
-            return None
-
-        return img
-
     def getResizeName(self, orig, outdir):
         '''
         Set the extension and format to png. (Be sure to save it with a png format). Create the
