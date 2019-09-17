@@ -393,7 +393,7 @@ class IbStatement:
             posTab = tables['OpenPositions']
             tables['Trades'] = self.figureBAPL(tables['Trades'], posTab)
 
-            ibdb = StatementDB(source='IB')
+            ibdb = StatementDB(source='IB', db=self.db)
             ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, openPos=posTab)
             for key in tables:
                 tablenames[key] = key

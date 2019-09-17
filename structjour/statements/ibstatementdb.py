@@ -49,8 +49,17 @@ class StatementDB:
         self.settings = settings
         if not db:
             db = 'structjour_test.db'
+        else:
+            db = db
         self.source = source
-        self.db = os.path.join(jdir, db)
+        if os.path.exists(db):
+            self.db = db
+        else:
+            self.db = os.path.join(jdir, db)
+        if not os.path.exists(self.db):
+            msg = 'failed to open db: ' +  db
+            raise ValueError(msg)
+
         self.rc = FinReqCol()
         self.sf = SumReqFields()
         self.createTradeTables()
@@ -157,6 +166,25 @@ class StatementDB:
 
 
         cur.execute('''CREATE UNIQUE INDEX if not exists date_start on trade_sum('Date', 'Start')''')
+        conn.commit()
+
+    def reinitializeTradeTables(self):
+        '''
+        This is intended for testing code only. Be sure the db is initialezed to a test db.
+        '''
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        rc = self.rc
+        sf = self.sf
+        cur.execute('''DROP TABLE IF EXISTS ib_covered;''')
+        cur.execute('''DROP TABLE IF EXISTS ib_positions;''')
+        cur.execute('''DROP TABLE IF EXISTS ib_trades;''')
+        cur.execute('''DROP TABLE IF EXISTS holidays;''')
+        cur.execute('''DROP TABLE IF EXISTS chart;''')
+        cur.execute('''DROP TABLE IF EXISTS chart_sum;''')
+        cur.execute('''DROP TABLE IF EXISTS entries;''')
+        cur.execute('''DROP TABLE IF EXISTS trade_sum;''')
+        cur.execute('''DROP TABLE IF EXISTS date_start;''')
         conn.commit()
 
     def findTradeSummariesByDay(self, date):
@@ -467,9 +495,6 @@ class StatementDB:
         conn.commit()
         return newts
             
-
-
-
     def addTradeSummaries(self, tradeSummaries, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
         #Summary Fields
