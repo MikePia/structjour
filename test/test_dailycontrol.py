@@ -71,7 +71,11 @@ from structjour.view.dailycontrol import DailyControl
 from structjour.journalfiles import JournalFiles
 from structjour.definetrades import DefineTrades
 from structjour.pandasutil import InputDataFrame
+
 from structjour.statement import Statement_IBActivity
+from structjour.statements.ibstatementdb import StatementDB
+from structjour.statements.ibstatement import IbStatement
+
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 
@@ -109,25 +113,29 @@ class TestDailyCtrl(TestCase):
 
 
         jf.inputType = 'IB_HTML'
-        statement = Statement_IBActivity(jf)
-        df = statement.getTrades_IBActivity(jf.inpathfile)
+        # statement = Statement_IBActivity(jf)
+        # df = statement.getTrades_IBActivity(jf.inpathfile)
 
-        idf = InputDataFrame()
-        trades, success = idf.processInputFile(df, jf.theDate, jf)
-        if not success:
-            return
-
-        tu = DefineTrades(self.inputtype)
-        inputlen, dframe, ldf = tu.processOutputDframe(trades)
-
+        ibs = IbStatement(db=self.testdb)
+        ibdb = StatementDB(self.testdb)
+        ibdb.reinitializeTradeTables()
+        ibs.openIBStatementHtml(jf.inpathfile)
+        df2 = ibdb.getStatement(theDate)
+        if df2.empty:
+            sdate = theDate.strftime('%Y-%m-%d')
+            msg = f'In test_dailycontrol.setup: Error: found no trades in db for {sdate}'
+            self.assertTrue(not df2.empty, msg)
+        
+        tu = DefineTrades(jf.inputType)
+        inputlen, dframe, ldf = tu.processDBTrades(df2)
+        self.df = dframe
         sc = SumControl()
         lf = LayoutForms(sc, jf, dframe)
-
-
+        # lf.pickleitnow()
         tradeSummaries = lf.runTtoSummaries(ldf)
         self.ts = lf.ts
-        self.df = dframe
-        self.apiset.setValue('dbsqlite', self.testdb)
+        ibdb.addTradeSummaries(tradeSummaries, ldf)
+        print()
 
     def tearDown(self):
         self.apiset.setValue('dbsqlite', self.realdb)
@@ -139,8 +147,8 @@ class TestDailyCtrl(TestCase):
         self.conn.commit()
 
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
-        dc.runDialog(self.df, tradeSum = self.ts)
+        dc = DailyControl(daDate, db=self.testdb)
+        dc.runDialog(self.df, tradeSum=self.ts)
         dc.createTable()
         self.conn.commit()
         zilch = dc.getNote()
@@ -149,8 +157,8 @@ class TestDailyCtrl(TestCase):
 
     def test_dropTable(self):
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
-        dc.runDialog(self.df, tradeSum = self.ts)
+        dc = DailyControl(daDate, db=self.testdb)
+        dc.runDialog(self.df, tradeSum=self.ts)
         dc.createTable()
         self.conn.commit()
         zilch = dc.getNote()
@@ -160,8 +168,8 @@ class TestDailyCtrl(TestCase):
 
     def test_commitNote(self):
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
-        dc.runDialog(self.df, tradeSum = self.ts)
+        dc = DailyControl(daDate, db=self.testdb)
+        dc.runDialog(self.df, tradeSum=self.ts)
         dc.dropTable()
         dc.createTable()
         note = '''Twas all hallow's  eve and all throug the grove
@@ -182,7 +190,7 @@ class TestDailyCtrl(TestCase):
 
     def test_getnote(self):
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
+        dc = DailyControl(daDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum = self.ts)
         dc.dropTable()
         dc.createTable()
@@ -195,7 +203,7 @@ class TestDailyCtrl(TestCase):
 
     def test_populateNotes(self):
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
+        dc = DailyControl(daDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum = self.ts)
         dc.dropTable()
         dc.createTable()
@@ -212,7 +220,7 @@ class TestDailyCtrl(TestCase):
     def test_populateStuff(self):
         '''Test populateS (modelS), populateM (modelM) and the pandas modelT'''
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
+        dc = DailyControl(daDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum = self.ts)
         headers = ['Daily P / L Summary', 'Live Total', 'Sim Total', 'Highest Profit',
                    'Largest Loss', 'Average Win', 'Average Loss']
@@ -228,7 +236,7 @@ class TestDailyCtrl(TestCase):
 
     def test_populateM(self):
         daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate)
+        dc = DailyControl(daDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum = self.ts)
         headers = ['Name', 'PnL', 'Lost Plays', 'Mistake or pertinent feature of trade']
         for i, head in enumerate(headers):
@@ -237,5 +245,11 @@ class TestDailyCtrl(TestCase):
 def main():
     unittest.main()
 
+def notmain():
+    t = TestDailyCtrl()
+    t.setUp()
+
+
 if __name__ == '__main__':
     main()
+    # notmain()
