@@ -70,7 +70,6 @@ def mock_askUser(shares_unused, question_unused):
 # precarious data matching based on knowing too much, I am not going to take the time to fix it.
 # Its deprecated code- will soon remove all evidence of the console version and the cosole
 # interview. (It runs without error when run seperately)
-@unittest.skip('fnka')
 class TestLayoutSheet(TestCase):
     '''
     Run all of structjour with a collection of input files and test the outcome
@@ -139,60 +138,6 @@ class TestLayoutSheet(TestCase):
                 entry.append(trades)
                 data.append(entry)
         return data
-
-    @patch('structjour.pandasutil.askUser', side_effect=mock_askUser)
-    def test_createImageLocation(self, unusedstub):
-        '''Run structjour'''
-        #Assert the initial entry location in imageLocation is figured by these factors
-         # Assert all entries are figured by summarySize and len of the minittrade
-        # Assert the minitable locations are offset by length of the minitrade tables +
-                # ls.spacing, and the first entry in the Leftmost column starts with 'Trade'
-                 # Assert third entry of imageLocation begins with 'Trade' and contains
-                #       ['Long', 'Short']
-                # Assert the 4th entry is a timestamp
-                # Assert the 5th entry is a time delta
-        global D
-
-
-        for tdata, infile in zip(self.dadata, self.infiles):
-            # :::::::::  Setup   ::::::::
-            D = deque(tdata)
-            # infile = 'trades.8.csv'
-            # print(infile)
-            indir = 'data/'
-            mydevel = False
-            jf = JournalFiles(indir=indir, infile=infile, mydevel=mydevel)
-
-            trades, jf = Statement_DAS(jf).getTrades()
-            trades, success = InputDataFrame().processInputFile(trades)
-            inputlen, dframe, ldf = DefineTrades().processOutputDframe(trades)
-            # ::::::::::: end setup :::::::::::::
-
-            margin = 25
-            spacing = 3
-            ls = LayoutSheet(margin, inputlen, spacing=spacing)
-            imageLocation, dframe = ls.imageData(dframe, ldf)
-
-
-            for count, t in enumerate(imageLocation):
-                if count == 0:
-                    initialEntry = ls.inputlen + ls.topMargin + ls.spacing + len(ldf[0]) + 2
-                    self.assertEqual(t[0], initialEntry)
-
-                else:
-                    nextloc = imageLocation[count-1][0] + len(ldf[count]) + ls.summarySize
-                    self.assertEqual(t[0], nextloc)
-
-                t_entry = t[0] - (spacing + len(ldf[count]))
-                self.assertTrue(dframe.iloc[t_entry][0].startswith('Trade'))
-                self.assertEqual(len(dframe.iloc[t_entry-1][0]), 0)
-                self.assertTrue(t[2].startswith('Trade'))
-
-                #
-                # self.assertTrue(t[2].find('Long') > 0 or t[2].find('Short') > 0)
-                self.assertTrue(isinstance(pd.Timestamp('2019-11-11 ' + t[3]), dt.datetime))
-                self.assertTrue(isinstance(t[4], dt.timedelta))
-
 
     def test_createWorkbook(self):
         '''
@@ -349,13 +294,14 @@ def notmain():
     '''Run some local code'''
         # pylint: disable = E1120
     ttt = TestLayoutSheet()
-    ttt.test_createImageLocation()
     ttt.test_createWorkbook()
     ttt.test_styleTop()
     ttt.test_styleTopwithnothin()
-    ttt.test_populateMistakeForm()
-    ttt.test_populateDailySummaryForm()
-    ttt.test_runSummaries()
+
+    # ttt.test_populateMistakeForm()
+    # ttt.test_populateDailySummaryForm()
+    # ttt.test_runSummaries()
+    # ttt.test_createImageLocation()
 
 def main():
     '''Run unittests cl style'''
@@ -366,5 +312,5 @@ def main():
 
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()
