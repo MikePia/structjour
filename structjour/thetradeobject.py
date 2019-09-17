@@ -471,13 +471,6 @@ class TheTradeObject:
         ret = self.__setEntries(imageName)
 
         # print("Side = ", self.df.loc[self.ix0][frc.side])
-        if self.interview:
-            self.__setStrategy()
-            self.__setTarget()
-            self.__setStop()
-            self.__setMaxLoss()
-            ret = self.__setRiskReward()
-            self.__setStopLossMistake()
         # Add a column to manage the Qt mistake stuff
         self.TheTrade['clean'] = True
         return ret
@@ -537,43 +530,6 @@ class TheTradeObject:
                 ' hour, ' if h == 1 else ''
             dur += str(m) + ':' + str(s)
         self.TheTrade[self.sf.dur] = dur
-        return self.TheTrade
-
-    def __getStrategy(self):
-
-        s = "What was the strategy?"
-
-        for i, strat in zip(range(1, len(self.strats)+1), self.strats):
-            s = "{0}\n     {1}. {2}".format(s, i, strat)
-
-        s = s + "\n"
-
-        while True:
-            try:
-                reply = input(s)
-                ireply = int(reply)
-                if ireply < 1 or ireply > len(self.strats):
-                    raise ValueError
-                break
-            except ValueError:
-                print("Please enter a number between 1 and {0}".format(
-                    len(self.strats)))
-                continue
-        return ireply - 1
-
-    def __setStrategy(self):
-        reply = self.__getStrategy()
-
-        if reply == 9:
-            response = input("What do you want to call the strategy?")
-            self.TheTrade[self.sf.strat] = response
-        elif reply == 10:
-            pass
-        elif reply > -1 and reply < len(self.strats):
-            self.TheTrade[self.sf.strat] = self.strats[reply]
-        else:
-            print("WTF?  reply out of bounds. 'reply' = {0}".format(reply))
-            raise ValueError
         return self.TheTrade
 
     def getSharesDB(self):
@@ -839,42 +795,6 @@ class TheTradeObject:
             self.TheTrade['chart'+ str(i+1) + 'End'] = finish
             self.TheTrade['chart'+ str(i+1) + 'Interval'] = di
 
-    def __setTarget(self):
-        '''Interview the user for the target. targdiff is handled as a formula elsewhere'''
-        target = 0
-        shares = self.TheTrade[self.sf.shares].unique()[0]
-        try:
-            p = float(self.TheTrade[self.sf.entry1])
-            p = f'{p:.3f}'
-        except ValueError:
-            question = '''
-            Your position was {0}.
-            What was your target?
-                 '''.format(shares)
-        else:
-            side = self.TheTrade[self.sf.name].unique()[0].split()[1].lower()
-
-            question = '''
-                Your entry was {0} at {1}.
-                your position was {2}.
-                What was your target?.
-                     '''.format(side, p, shares)
-        while True:
-            try:
-
-                targ = input(question)
-                if targ.lower().startswith('q'):
-                    target = 0
-                    break
-                target = float(targ)
-            except ValueError:
-                print('''
-                Please enter a number or 'q' to skip
-                ''')
-                target = 0
-
-                continue
-            break
 
         pd.to_numeric(self.TheTrade[self.sf.targ], errors='coerce')
         self.TheTrade[self.sf.targ] = target
@@ -887,82 +807,6 @@ class TheTradeObject:
         self.TheTrade[self.sf.targdiff] = diff
 
         return self.TheTrade
-
-    def __setStop(self):
-        '''
-        Interview the user and git the stoploss. sldiff is handled elsewhere as an excel formula.
-        '''
-        stop = 0
-
-        shares = self.TheTrade[self.sf.shares].unique()[0]
-        try:
-            p = float(self.TheTrade[self.sf.entry1])
-            p = f'{p:.3f}'
-        except ValueError:
-            question = '''
-            Your position was {0}.
-            What was your stop?
-                 '''.format(shares)
-        else:
-            side = self.TheTrade[self.sf.name].unique()[0].split()[1].lower()
-            question = '''
-                Your entry was {0} at {1}.
-                your position was {2}.
-                What was your stop?.
-                     '''.format(side, p, shares)
-
-        while True:
-            try:
-                stop = input(question)
-                if stop.lower().startswith('q'):
-                    stop = 0
-                    break
-                stop = float(stop)
-            except ValueError:
-                print('''
-                Please enter a number or 'q' to skip
-                ''')
-                continue
-            break
-
-        self.TheTrade[self.sf.stoploss] = stop
-
-        # If this is a trade with a privious holding, the diff in price of the stophas no meaning
-        if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
-            return self.TheTrade
-
-        # Although we will use an excel formula, place it in the df for our use.
-        self.TheTrade[self.sf.sldiff] = stop - self.TheTrade[self.sf.entry1]
-        return self.TheTrade
-
-    def __setMaxLoss(self):
-        # Although we will use an excel formula, place it in the df for our use.
-        self.TheTrade.MaxLoss = self.TheTrade.SLDiff * self.getShares()
-        return self.TheTrade
-
-    def __setRiskReward(self):
-        # Handled as an excel formula elsewhere
-
-        # self.TheTrade.RR = self.TheTrade.StopLoss / self.TheTrade.Target
-        return self.TheTrade
-
-    def __setStopLossMistake(self):
-        '''
-        If the amount lost from a trade exceeds the Max Loss, post the difference in mstkval and
-        fill in mstknote. Note that this is not done with a formula because the space can be used
-        for any mistake and should be filled in by the user if, for example, the its sold before a
-        target and the trade never approached the stoploss.
-        '''
-        if isinstance(self.TheTrade[self.sf.maxloss].unique()[0], str):
-            # There is no entry in entry1 so maxLoss has no meaning here.
-            return
-        if self.TheTrade[self.sf.pl].unique()[0] < 0:
-            pl = self.TheTrade[self.sf.pl].unique()[0]
-            maxloss = self.TheTrade[self.sf.maxloss].unique()[0]
-            if abs(pl) > abs(maxloss):
-                self.TheTrade[self.sf.mstkval] = abs(self.TheTrade[self.sf.maxloss].unique()[
-                    0]) - abs(self.TheTrade[self.sf.pl].unique()[0])
-                self.TheTrade[self.sf.mstknote] = "Exceeded Stop Loss!"
 
     def __blandSpaceInMstkNote(self):
         pass
