@@ -29,6 +29,8 @@ import unittest
 import types
 from random import randint
 
+from PyQt5.QtCore import QSettings
+
 from structjour.journalfiles import JournalFiles
 from structjour.pandasutil import InputDataFrame
 from structjour.statement import Statement_DAS
@@ -62,6 +64,7 @@ class TestTheTradeObject(unittest.TestCase):
                         'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
                         'trades190221.BHoldPreExit.csv']
 
+        self.settings = QSettings('zero_substance', 'structjour')
         self.tto = self.setupForTheTradeObject(infile=self.infiles[2])
 
     def setUp(self):
@@ -112,6 +115,7 @@ class TestTheTradeObject(unittest.TestCase):
         '''Set up the DataFrames'''
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
+        self.settings.setValue('runType', 'QT')
         # x = os.getcwd()
         # print('===============================================================')
         # print(" callin JournalFiles from ", x)

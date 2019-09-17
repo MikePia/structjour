@@ -55,17 +55,6 @@ from structjour.thetradeobject import SumReqFields
 D = deque()
 
 
-def mock_askUser(shares_unused, question_unused):
-    '''
-    Mock the specific askUser function that asks how many shares are currently owned or owned
-    before trading today.
-    '''
-    global D
-    x = D.popleft()
-    # print("Returning from the mock ", x)
-    return x
-
-
 # Runs w/o error using discovery IFF its the first test to run. With mock, QTest, global data and 
 # precarious data matching based on knowing too much, I am not going to take the time to fix it.
 # Its deprecated code- will soon remove all evidence of the console version and the cosole

@@ -33,31 +33,6 @@ from structjour.view.unbalancedcontrol import UnbalControl as Ubc
 
 # pylint: disable = C0103
 
-
-def askUser(shares, question):
-    '''
-    Ask the user a question regarding how many shares they are holding.
-    :params:shares: The number of shares outof balance. Its inserted into the question and
-                    used as a default response.
-    :return: The number response for the number of shares.
-    '''
-    while True:
-        try:
-            response = input(question)
-            if not response:
-                response = shares
-            else:
-                response = int(response)
-        except ValueError as ex:
-            print(ex)
-            print()
-            print("please enter a number")
-            response = 0
-            continue
-
-        return response
-
-
 class InputDataFrame:
     '''Manipulation of the original import of the trade transactions. Abstract the label schema
     to a dictionary. Import from all soures is equalized here.'''
@@ -204,7 +179,7 @@ class InputDataFrame:
 
                 listOfTickers.append(ldf)
 
-        # This code is too interdependent. gtoOvernightTrade, figureOvernightTrades, askUser
+        # This code is too interdependent. gtoOvernightTrade, figureOvernightTrades,
         # and insertOvernightRow combined with the data
         return listOfTickers
 
@@ -305,7 +280,8 @@ class InputDataFrame:
         settings = QSettings('zero_substance', 'structjour')
         runtype = settings.value('runType')
         if runtype == 'CONSOLE':
-            raise ValueError("Programmers exception to catch tail tail ref to CONSOLE")
+            pass
+            # raise ValueError("Programmers exception to catch tell tail ref to CONSOLE")
             # swingTrade = self.consoleSwing(swingTrade)
             # return swingTrade, True
         elif runtype == 'QT':

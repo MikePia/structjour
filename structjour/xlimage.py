@@ -27,14 +27,6 @@ from PIL import ImageGrab
 from openpyxl.drawing.image import Image
 # pylint: disable=C0103
 
-def askUser(question):
-    '''
-    Ask the user a question. Placed in a function to facilitate automating it.
-    :return: The response
-    '''
-    response = input(question)
-    return response
-
 class XLImage:
     '''Handle image stuff'''
 

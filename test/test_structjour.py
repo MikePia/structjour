@@ -41,18 +41,6 @@ import pandas as pd
 DD = deque()
 D = deque()
 
-
-def mock_askUser(dummy, dummy2):
-    '''
-    Mock the specific askUser function that asks how many shares are currently owned or owned
-    before trading today.
-    '''
-    global D
-    x = D.popleft()
-    # print("Returning from the mock ", x)
-    return x
-
-
 def findTrade(df, t):
     '''
     Locate the trade represented by t in the dataFrame.
@@ -114,8 +102,7 @@ class TestStructjour(TestCase):
         if not DD or len(D) < 11:
             DD.clear()
 
-            # These are overnight hold shares. They are mocked user input here in mock_askUser.
-            # Each list corresponds to each infile.
+            # These are overnight hold shares.  Each list corresponds to each infile.
             DD = deque(
                 [[-4000], [3923, -750], [], [600, 241, 50], [-169],
                  [], [0, -600], [], [0, 750, 50], [-600], [0, -200]])

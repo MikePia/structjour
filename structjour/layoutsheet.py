@@ -45,15 +45,6 @@ from structjour.thetradeobject import TheTradeObject, SumReqFields
 
 # pylint: disable=C0103, C0201, W0703
 
-def askUser(question):
-    '''
-    Ask the user a question. Placed in a function to facilitate automating it.
-    :return: The response
-    '''
-    response = input(question)
-    return response
-
-
 class LayoutSheet:
     '''
     Contains methods to layout the material on the excel page. Uses both
