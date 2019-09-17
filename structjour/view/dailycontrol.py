@@ -69,7 +69,10 @@ class DailyControl(QDialogWClose):
     summary forms and processed input file showing the days transactions. The daily summaryies
     are driven by data and are not saved.
     '''
-    def __init__(self, daDate=None):
+    def __init__(self, daDate=None, db=None):
+        '''
+        Initialize the dialog ui. Optionally set a local db
+        '''
         super().__init__(parent=None)
 
         self.ui = DailyForm()
@@ -78,17 +81,20 @@ class DailyControl(QDialogWClose):
         if daDate:
             self.date = pd.Timestamp(daDate)
         apiset = QSettings('zero_substance/stockapi', 'structjour')
-        self.db = apiset.value('dbsqlite')
-        if not self.db:
-            j = self.settings.value('journal')
-            if not j:
-                print('Please set the location of the your journal directory.')
-                EJControl()
+        if db:
+            self.db=db
+        else:
+            self.db = apiset.value('dbsqlite')
+            if not self.db:
                 j = self.settings.value('journal')
                 if not j:
-                    return
-            self.db = os.path.join(j, 'structjour.sqlite')
-            apiset.setValue('dbsqlite', self.db)
+                    print('Please set the location of the your journal directory.')
+                    EJControl()
+                    j = self.settings.value('journal')
+                    if not j:
+                        return
+                self.db = os.path.join(j, 'structjour.sqlite')
+                apiset.setValue('dbsqlite', self.db)
 
     def createTable(self):
         '''create db table'''
