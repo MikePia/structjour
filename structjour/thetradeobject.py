@@ -795,16 +795,8 @@ class TheTradeObject:
             self.TheTrade['chart'+ str(i+1) + 'End'] = finish
             self.TheTrade['chart'+ str(i+1) + 'Interval'] = di
 
-
-        pd.to_numeric(self.TheTrade[self.sf.targ], errors='coerce')
-        self.TheTrade[self.sf.targ] = target
-
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
             return self.TheTrade
-
-        # Although we will use an excel formula, place it in the df for our use.
-        diff = target - self.TheTrade[self.sf.entry1]
-        self.TheTrade[self.sf.targdiff] = diff
 
         return self.TheTrade
 
