@@ -30,7 +30,6 @@ import types
 import pandas as pd
 
 from structjour.pandasutil import InputDataFrame
-from structjour.statement import Statement_DAS
 from structjour.definetrades import ReqCol
 from structjour.journalfiles import JournalFiles
 
@@ -43,7 +42,7 @@ from structjour.rtg import randomTradeGenerator2
 
 class Test_Pandasutility(unittest.TestCase):
     '''
-    Test the methods in Statement_DAS
+    Test the methods in pandasutility
     '''
 
     def __init__(self, *args, **kwargs):
@@ -65,7 +64,7 @@ class Test_Pandasutility(unittest.TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
-    def testZeroPad(self):
+    def test_ZeroPad(self):
         '''
         Test the method pandasutil.InputDataFrame.zeroPadTimeStr.
         '''
@@ -98,7 +97,7 @@ class Test_Pandasutility(unittest.TestCase):
                     self.fail('Time has a wrong value')
 
 
-    def testGetOvernightTrades(self):
+    def test_getOvernightTrades(self):
         '''
         The only way to automate this is to just figure all the same data and compare it.
         '''

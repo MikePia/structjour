@@ -37,11 +37,11 @@ from structjour.statements.findfiles import checkDateDir
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.statement import getStatementType
-from structjour.statement import Statement_DAS as Ticket
 from structjour.statement import Statement_IBActivity
 from structjour.stock.utilities import pd2qtime
 from structjour.view.layoutforms import LayoutForms
-from structjour.view.sumcontrol import SumControl, qtime2pd
+from structjour.view.sumcontrol import SumControl
+from structjour.stock.utilities import qtime2pd
 from structjour.journalfiles import JournalFiles
 # pylint: disable = C0103
 
@@ -128,7 +128,7 @@ class runController:
         lf = LayoutForms(self.sc, jf, None)
         lf.loadSavedFile(inputType, daDate)
         if lf.df is None:
-            print('Did not load up correctly. Try pressing Go, Load, Save')
+            print('Press load with useDatabase checked')
 
     def runDBInput(self, daDate, jf):
         statement = StatementDB()

@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 
 from structjour.definetrades import DefineTrades
-from structjour.view.sumcontrol import qtime2pd
+from structjour.stock.utilities import qtime2pd
 
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.thetradeobject import SumReqFields, runSummaries, setTradeSummaryHeaders
@@ -198,9 +198,16 @@ class LayoutForms:
 
     def loadSavedFile(self, inputtype=None, theDate=None):
         '''
-        Will rename. Load trade from the Database. inputtype is no longer an issue
-        Keep it around for a bit in case some objects need depickled
+        Will rename. Load trade from the Database. inputtype is no longer an issue.
+        User tweak-- if DAS or IB import files are checked when the load button is clicked,
+        Change the selected radio to useDatabase and return. Update will show if there are
+        any DB trades to load.
         '''
+        if self.sc.ui.dasImport.isChecked() or self.sc.ui.ibImport.isChecked():
+            self.sc.ui.useDatabase.setChecked(True)
+            self.sc.useDatabase(True)
+            return None
+
         ibdb = StatementDB()
         df = ibdb.getStatement(theDate)
         tu = DefineTrades('DB')
@@ -227,7 +234,7 @@ class LayoutForms:
 
     def loadSavedFileOLD(self, inputtype=None, theDate=None):
         '''
-        Keep it around for a bit in case some objects need depickled. New just takes out the pickle
+        Keep it around for a bit in case some objects need depickled. New just takes out the pickle.
         Depickle a saved tto list. Clear then repopulate the tradeList widget. The first append
         will trigger the loading mechanism from tto to QT widgets
         '''

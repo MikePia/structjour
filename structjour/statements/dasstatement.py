@@ -321,6 +321,7 @@ class DasStatement:
         # positions = pd.DataFrame(columns=reqcols)
         if self.positions and os.path.exists(self.positions):
             positions = pd.read_csv(self.positions)
+            print('Here is the DAS positions file:', self.positions)
             print(positions)
             reqcols = ['Symb', 'Account', 'Shares']
             currentcols = list(positions.columns)
@@ -524,9 +525,10 @@ class DasStatement:
         # newdf['DateTime'] = ''
         ibdb = StatementDB(source='DAS')
 
-        # TODO Horrible assumption is that the date is 'covered' when this statement could be
-        # a partial day. I think we can't fill in any covered days from a DAS export unless
-        # the user says so...maybe in the filesettings form
+        # TODO Note that the date is 'covered' in the DB if a statement is processed. That leaves
+        # the possibility that the user exported a partial day. The trades should be added if/when
+        # a broker statement is processed. Find a way to test it -- maybe an altered DAS export 
+        # with trades deleted.
         ibdb.processStatement(newdf, 'U2429974', self.theDate, self.theDate)
 
         return newdf

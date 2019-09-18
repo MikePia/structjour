@@ -17,7 +17,8 @@
 
 '''
 Utilities to synchronize, update, and manage saved objects in the structjour directotry structure
-Created on June 6, 2019
+Created on June 6, 2019 to salvage my legacy pickled objects. Should be obsolete but keeping
+justincase
 
 @author: Mike Petersen
 '''

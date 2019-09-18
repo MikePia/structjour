@@ -5,7 +5,7 @@ with open('readme.md', 'r') as fh:
 
 setuptools.setup(
     name='structjour',
-    version='0.9.5-Alpha+000',
+    version='0.9.6-Alpha+000',
     author='Mike Petersen',
     author_email='pentsok@zerosubstance.org',
     description='A structured daily journal for day traders.',

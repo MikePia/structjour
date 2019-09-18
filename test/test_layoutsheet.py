@@ -39,15 +39,8 @@ from openpyxl import load_workbook
 
 from PyQt5.QtCore import QSettings
 
-from structjour.journalfiles import JournalFiles
-from structjour.pandasutil import InputDataFrame
-from structjour.statement import Statement_DAS
-from structjour.colz.finreqcol import FinReqCol
-from structjour.definetrades import DefineTrades
 from structjour.layoutsheet import LayoutSheet
-from structjour.dailysumforms import MistakeSummary
 from structjour.tradestyle import TradeFormat, c as tcell
-from structjour.thetradeobject import SumReqFields
 ########: disable = C0103, W0613, W0603, W0212, R0914
 # pylint: disable = C0103, W0613, W0603, W0212, R0914
 

@@ -121,7 +121,7 @@ class SumControl(QMainWindow):
         # self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
-        self.ui.useDatabase.clicked.connect(self.dbDefault)
+        self.ui.useDatabase.clicked.connect(self.useDatabase)
     
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.lost.textEdited.connect(self.setMstkVal)
@@ -156,7 +156,6 @@ class SumControl(QMainWindow):
         self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
         self.ui.actionDB_Doctor.triggered.connect(self.dbDoctor)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
-        self.ui.actionSynchronize_Saved_files.triggered.connect(self.syncFiles)
         self.ui.actionExport_TradeLog.triggered.connect(self.disciplineTradeLog)
 
         # Set the file related widgets
@@ -774,7 +773,7 @@ class SumControl(QMainWindow):
         self.settings.setValue('inputType', 'IB_HTML')
         self.loadFromDate()
 
-    def dbDefault(self, b):
+    def useDatabase(self, b):
         self.settings.setValue('dboutput', 'on')
         self.settings.setValue('inputType', 'DB')
         self.loadFromDate()
@@ -808,6 +807,7 @@ class SumControl(QMainWindow):
         indir = self.getDirectory()
         inputType = self.settings.value('inputType')
         if inputType == 'DAS':
+            self.ui.goBtn.setText('Read File')
             lineName = self.ui.infileEdit.text()
             if os.path.exists(lineName):
                 self.settings.setValue('dasInfil', lineName)
@@ -816,6 +816,7 @@ class SumControl(QMainWindow):
                 dasinfile = self.settings.value('dasInfile')
                 infile = self.settings.value('dasInfile')
         elif inputType == 'IB_HTML' or inputType == 'IB_CVS':
+            self.ui.goBtn.setText('Read File')
             lineName = self.ui.infileEdit.text()
             if os.path.exists(lineName):
                 self.settings.setValue('ibInfileName', lineName)
@@ -838,6 +839,7 @@ class SumControl(QMainWindow):
                         self.settings.setValue('ibInfileName', ibinfile)
         elif inputType == 'DB':
             infile = 'DB'
+            self.ui.goBtn.setText('Read DB Data')
             # dbDate = daDate.strftime('%Y%m%d')
             statementDb = StatementDB()
             account = self.settings.value('account')
@@ -1154,11 +1156,6 @@ class SumControl(QMainWindow):
     def chartSetDlg(self):
         chartsettings = QSettings('zero_substance/chart', 'structjour')
         self.chartDlg = ChartControl(chartsettings)
-
-    def syncFiles(self):
-        settings = QSettings('zero_substance', 'structjour')
-        self.w = SyncControl(settings)
-        self.w.show()
 
     def disciplineTradeLog(self):
         self.w = DisciplineControl()
