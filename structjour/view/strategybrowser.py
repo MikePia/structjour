@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file '.\strategybrowser.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.2
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -158,14 +159,14 @@ class Ui_Form(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.strategyBrowse.sizePolicy().hasHeightForWidth())
         self.strategyBrowse.setSizePolicy(sizePolicy)
-        self.strategyBrowse.setUrl(QtCore.QUrl("about:blank"))
+        self.strategyBrowse.setProperty("url", QtCore.QUrl("about:blank"))
         self.strategyBrowse.setObjectName("strategyBrowse")
         self.verticalLayout_4.addWidget(self.strategyBrowse)
         self.stackedWidget.addWidget(self.page_2)
         self.gridLayout.addWidget(self.stackedWidget, 1, 0, 1, 1)
 
         self.retranslateUi(Form)
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -190,8 +191,6 @@ class Ui_Form(object):
         self.addLinkBtn.setText(_translate("Form", "Add link"))
         self.removeLinkBtn.setText(_translate("Form", "Remove Link"))
         self.strategyBrowse.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:12pt; color:#aa0000;\">This widget was crashing the program. I believe it is fixed at least on my machine. </span></p></body></html>"))
-
-
 from PyQt5 import QtWebEngineWidgets
 from structjour.view.clicklabel import ClickLabel
 from structjour.view.mytextedit import MyTextEdit

@@ -213,7 +213,7 @@ color: rgb(255, 255, 255);</string>
   <customwidget>
    <class>MyTextEdit</class>
    <extends>QTextEdit</extends>
-   <header location="global">journal.view.mytextedit.h</header>
+   <header location="global">structjour.view.mytextedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

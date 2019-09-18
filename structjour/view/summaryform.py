@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file '.\summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.2
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -1254,7 +1255,6 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
         self.menuFile.addAction(self.actionStock_API)
-        self.menuFile.addAction(self.actionSynchronize_Saved_files)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionStrategy_Browser)
         self.menuFile.addAction(self.actionDB_Doctor)
@@ -1272,11 +1272,11 @@ class Ui_MainWindow(object):
         self.dasImport.setText(_translate("MainWindow", "DAS import"))
         self.ibImport.setText(_translate("MainWindow", "IB import"))
         self.goBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#00aa00;\">Load the transactions shown in the file edit box.</span></p></body></html>"))
-        self.goBtn.setText(_translate("MainWindow", "GO"))
+        self.goBtn.setText(_translate("MainWindow", "Read File"))
         self.loadBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#2d04fa;\">Load the saved data.</span></p></body></html>"))
-        self.loadBtn.setText(_translate("MainWindow", "Load"))
+        self.loadBtn.setText(_translate("MainWindow", "Load User Data"))
         self.saveBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Save all current data</p></body></html>"))
-        self.saveBtn.setText(_translate("MainWindow", "Save"))
+        self.saveBtn.setText(_translate("MainWindow", "Save User Data"))
         self.exportBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Export data and graphs to an Excel file.</p></body></html>"))
         self.exportBtn.setText(_translate("MainWindow", "Export to Excel"))
         self.inspireQuote.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -1338,6 +1338,4 @@ class Ui_MainWindow(object):
         self.actionDB_Doctor.setText(_translate("MainWindow", "DB Doctor"))
         self.actionExport_to_Disciplined_TradeLog.setText(_translate("MainWindow", "Export to TradeLog"))
         self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
-
-
 from structjour.view.clicklabel import ClickLabel

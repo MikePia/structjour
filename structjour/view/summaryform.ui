@@ -141,7 +141,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#00aa00;&quot;&gt;Load the transactions shown in the file edit box.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>GO</string>
+               <string>Read File</string>
               </property>
              </widget>
             </item>
@@ -151,7 +151,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#2d04fa;&quot;&gt;Load the saved data.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Load</string>
+               <string>Load User Data</string>
               </property>
              </widget>
             </item>
@@ -165,7 +165,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save all current data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Save</string>
+               <string>Save User Data</string>
               </property>
              </widget>
             </item>
@@ -2196,7 +2196,6 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionFileSettings"/>
     <addaction name="actionChart_Settings"/>
     <addaction name="actionStock_API"/>
-    <addaction name="actionSynchronize_Saved_files"/>
     <addaction name="separator"/>
     <addaction name="actionStrategy_Browser"/>
     <addaction name="actionDB_Doctor"/>
@@ -2253,7 +2252,7 @@ p, li { white-space: pre-wrap; }
   <customwidget>
    <class>ClickLabel</class>
    <extends>QLabel</extends>
-   <header location="global">journal.view.clicklabel.h</header>
+   <header location="global">structjour.view.clicklabel.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

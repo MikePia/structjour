@@ -143,7 +143,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="page">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -281,7 +281,7 @@
          </layout>
         </item>
         <item>
-         <widget class="QWebEngineView" name="strategyBrowse">
+         <widget class="QWebEngineView" name="strategyBrowse" native="true">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -294,7 +294,7 @@
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#aa0000;&quot;&gt;This widget was crashing the program. I believe it is fixed at least on my machine. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
-          <property name="url">
+          <property name="url" stdset="0">
            <url>
             <string>about:blank</string>
            </url>
@@ -310,19 +310,19 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QWebEngineView</class>
-   <extends>QWidget</extends>
-   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
-  </customwidget>
-  <customwidget>
    <class>ClickLabel</class>
    <extends>QLabel</extends>
-   <header location="global">journal.view.clicklabel.h</header>
+   <header location="global">structjour.view.clicklabel.h</header>
   </customwidget>
   <customwidget>
    <class>MyTextEdit</class>
    <extends>QTextEdit</extends>
-   <header location="global">journal.view.mytextedit.h</header>
+   <header location="global">structjour.view.mytextedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
   </customwidget>
  </customwidgets>
  <resources/>

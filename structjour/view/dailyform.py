@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file '.\dailyform.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -115,5 +117,4 @@ class Ui_Form(object):
         self.dailyNotes.setPlaceholderText(_translate("Form", "Notes for daily summary"))
         self.mstkForm.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:12pt; color:#0000ff;\">The mistake/pertinent feature note is populated from the erroror/summarized field in the trade summaries. The lost plays is populated from the Amt Lost field.</span></p></body></html>"))
         self.label_3.setText(_translate("Form", "Trade Table"))
-
 from structjour.view.mytextedit import MyTextEdit
