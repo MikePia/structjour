@@ -48,7 +48,7 @@ from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
 from structjour.stock.utilities import getMAKeys, qtime2pd, pd2qtime
 from structjour.view.duplicatecontrol import DupControl
-from structjour.view.synccontrol import SyncControl
+
 from structjour.view.disciplinedcontrol import DisciplineControl
 from structjour.xlimage import XLImage
 

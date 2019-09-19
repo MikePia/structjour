@@ -28,7 +28,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog
 
 from structjour.view.duplicatetrade import Ui_Dialog as DupDialog
-from structjour.statements.dbdoctor import (doDups, makeDupDict, getTradesByID, getTradeSumByID,
+from structjour.statements.dbdoctor import (doDups, getTradesByID, getTradeSumByID,
                                          getTradesForTSID, deleteTradeById, deleteTradeSumById)
 # pylint: disable = C0103
 

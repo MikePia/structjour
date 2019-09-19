@@ -624,6 +624,8 @@ class StatementDB:
              codes, row[rc.acct], row[rc.bal], row[rc.avg], row[rc.PL], das, ib))
         if x.rowcount == 1:
             return True
+
+        
         return False
 
     def isDateCovered(self, cur, account, d):
@@ -1546,7 +1548,6 @@ def local():
     e = pd.Timestamp('2018-12-31')
     print(d.strftime("%B, %A %d %Y"))
     db = StatementDB()
-    # df = db.getStatementDays('U2429974', d, e)
     x, y = db.getNumTicketsforDay(d)
     print(x, "tickets")
     print (y, "trades")

@@ -29,10 +29,13 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from structjour.stock.graphstuff import FinPlot, dummyName
-from structjour.stock import myib as ib
-
 from structjour.stock import utilities as util
+if util.checkForIbapi():
+    from structjour.stock import myib as ib
+from structjour.stock.graphstuff import FinPlot, dummyName
+from PyQt5.QtCore import QSettings
+
+
 # pylint: disable = C0103
 
 
@@ -44,7 +47,6 @@ def getTicker():
                'MSFT', 'CAG', 'ACRS', 'FRED', 'NFLX', 'MU', 'AAPL']
     return tickers[random.randint(0, 12)]
 
-@unittest.skip('Leave to deal with later')
 class TestGraphstuff(unittest.TestCase):
     '''
     Test functions and methods in the graphstuff module
@@ -52,6 +54,7 @@ class TestGraphstuff(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestGraphstuff, self).__init__(*args, **kwargs)
+        self.apiset = QSettings('zero_substance/apiset', 'structjour')
 
     def setUp(self):
         ddiirr = os.path.dirname(__file__)
@@ -123,7 +126,7 @@ class TestGraphstuff(unittest.TestCase):
             n = dummyName(fp, symbol, tradenum, begin, end)
             self.assertTrue(n is None, 'Failed to raise ValueError')
         except ValueError:
-            pass
+            pass # success
 
         try:
             n is None
@@ -146,8 +149,7 @@ class TestGraphstuff(unittest.TestCase):
     def makeupEntries(self, symbol, start, end, minutes, fp):
         if not ib.isConnected():
             print()
-            print("IB Gateway is not connected. Running this test",
-                  "correctly depends on connecting IB Gateway.")
+            print("ib gateway is not connected.")
             print()
             return
 
@@ -172,9 +174,11 @@ class TestGraphstuff(unittest.TestCase):
         fp.entries = entries
         fp.exits = exits
 
+    @unittest.skipUnless(util.checkForIbapi(), 'Requires ibapi to run')
     def test_graph_candlestick(self):
         '''
-        Test the FinPlot.graph_candlestick method.
+        Test the FinPlot.graph_candlestick method. Currently requires ibapi and is too complex to 
+        be an effective test. Redo it
         '''
         fp = FinPlot()
         # fp.interactive = True
@@ -265,12 +269,13 @@ def main():
     test discovery is not working in vscode. Use this for debugging. Then run cl python -m unittest
     discovery
     '''
-    f = TestGraphstuff()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
-            if isinstance(attr, types.MethodType):
-                attr()
+    unittest.main()
+    # f = TestGraphstuff()
+    # for name in dir(f):
+    #     if name.startswith('test'):
+    #         attr = getattr(f, name)
+    #         if isinstance(attr, types.MethodType):
+    #             attr()
 
 
 def notmain():
@@ -278,13 +283,13 @@ def notmain():
     Local run stuff for dev
     '''
     t = TestGraphstuff()
-    # t.test_apiChooser()
+    t.test_apiChooser()
     # t.test_dummyName()
-    t.test_graph_candlestick()
+    # t.test_graph_candlestick()
     # print(getLastWorkDay(dt.datetime(2019, 1, 22)))
     # t.test_setTimeFrame()
 
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()

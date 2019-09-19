@@ -177,7 +177,7 @@ def getDuplicateTrades(account):
     '''
     Find duplicate trades in which one was created by a DAS export  the other 
     by an IB Statement. Price, Qty and day are the same. In most the Balance 
-    is the same. In all verified dups, the time differe by 1 second.
+    is the same. In all verified dups, the time differs by 1 second.
     This is not an exact science. Make a utility  to alert the user and let
     them verify
     Need a way to mark a trade a non dup-tho it passes all these tests...

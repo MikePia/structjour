@@ -28,7 +28,7 @@ from PyQt5.QtGui import QIntValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QApplication
 
 from structjour.view.stockapi import Ui_Dialog as SapiDlg
-from structjour.stock.utilities import ManageKeys
+from structjour.stock.utilities import ManageKeys, checkForIbapi
 
 
 class StockApi(QDialog):
@@ -46,7 +46,7 @@ class StockApi(QDialog):
         ui.setupUi(self)
         self.ui = ui
 
-        self.checkForIbapi()
+        checkForIbapi()
 
         self.setWindowIcon(QIcon('images/ZSLogo.png'))
 
@@ -79,22 +79,26 @@ class StockApi(QDialog):
 
 
         self.initFromSettings()
+        self.gotibapi = checkForIbapi()
         # self.sortIt(None)
         # self.orderApis()
 
         self.show()
 
-    def checkForIbapi(self):
-        '''
-        If the ibapi is not installed or available, disable its use.
-        '''
-        try:
-            import ibapi
-            gotibapi = True
-            self.apiset.setValue('gotibapi', True)
+    # def checkForIbapi(self):
+    #     '''
+    #     If the ibapi is not installed or available, disable its use.
+    #     '''
+    #     apisettings = QSettings('zero_substance/stockapi', 'structjour')
+    #     try:
+    #         import ibapi
+    #         gotibapi = True
+    #         apisettings.setValue('gotibapi', True)
+    #         return True
 
-        except ImportError:
-            self.apiset.setValue('gotibapi', False)
+    #     except ImportError:
+    #         apisettings.setValue('gotibapi', False)
+    #         return False
 
     def initFromSettings(self):
         val = self.apiset.value('ibRealPort', '')
@@ -165,7 +169,7 @@ class StockApi(QDialog):
     
 
     def ibClicked(self, b):
-        if self.apiset.value('gotibapi') == 'false':
+        if not self.gotibapi:
             self.apiset.setValue('ibRealCb', False)
             self.apiset.setValue('ibPaperCb', False)
             self.ui.ibRealCb.setChecked(False)
@@ -179,7 +183,7 @@ class StockApi(QDialog):
         self.sortIt('ib')
 
     def ibPaperclicked(self, b):
-        if self.apiset.value('gotibapi') == 'false':
+        if not self.gotibapi:
             self.apiset.setValue('ibRealCb', False)
             self.apiset.setValue('ibPaperCb', False)
             self.ui.ibRealCb.setChecked(False)

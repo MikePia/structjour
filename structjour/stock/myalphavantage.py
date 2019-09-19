@@ -20,8 +20,8 @@ Alphavantage  stuff using their own intraday RESTful  API. Only implemented TIME
 @creation_date:2018-12-11
 Calls the RESTapi for intraday. There is a limit on the free API of 5 calls per minute
     500 calls per day. But the data is good. The Premium option is rather pricey.
-        Free for 5/min  1 every 12 seconds.  Write a API chooser, maybe cache the data
-        $20 for 15/min  1 every 4 seconds
+        Free for 5/min  (1 every 12 seconds)  Write a API chooser, maybe cache the data
+        $20 for 15/min  (1 every 4 seconds)
 
         $100 for 120/min
         $250 for 600/min
@@ -40,11 +40,11 @@ from structjour.stock.utilities import ManageKeys, movingAverage
 
 BASE_URL = 'https://www.alphavantage.co/query?'
 EXAMPLES = {
-    'api1': 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&apikey=VPQRQR8VUQ8PFX5B',
-    'api2': 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&outputsize=full&apikey=VPQRQR8VUQ8PFX5B',
-    'api3': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=VPQRQR8VUQ8PFX5B',
-    'api4': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&outputsize=full&apikey=VPQRQR8VUQ8PFX5B',
-    'api5': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&apikey=VPQRQR8VUQ8PFX5B',
+    'api1': 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&apikey={key}',
+    'api2': 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=5min&outputsize=full&apikey={key}',
+    'api3': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey={key}',
+    'api4': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&outputsize=full&apikey={key}',
+    'api5': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&apikey={key}',
 'web_site': 'https://www.alphavantage.co/documentation/#intraday'
     }
 FUNCTION = {'intraday':  'TIME_SERIES_INTRADAY',
@@ -89,15 +89,21 @@ def getKey():
 
 
 def getkeyPickled():
-    '''My Personal key'''
+    '''
+    My Personal key pickled on my personal system
+    '''
     k = getPickledKey('alphavantage')
     return k
 
 def getapis():
     '''some RESTful APIS'''
-    return[EXAMPLES['api1'], EXAMPLES['api2'], EXAMPLES['api3'], EXAMPLES['api4'], EXAMPLES['api5']]
-
-
+    mk = ManageKeys()
+    key = mk.getKey('av')
+    return (EXAMPLES['api1'].format(key=key),
+            EXAMPLES['api2'].format(key=key),
+            EXAMPLES['api3'].format(key=key),
+            EXAMPLES['api4'].format(key=key),
+            EXAMPLES['api5'].format(key=key))
 
 def getLimits():
     '''alphavantage limits on usage'''
@@ -116,17 +122,14 @@ def getLimits():
 
 def ni(i):
     '''
-    Retrieve the correct param for Alphavantage. Limited to minute charts up to 60 minute candle.
-    Return also the int values for the request for resampling and the candle interval as an int
-    :params i: an int representing a  requested candle size. If i is below 1 or above 120 return
-        '1min' and '60min' and no resampling
-    :return (bresample, (a,b,c)): (bool, (str, int, int)).
-        :params bresample: a bool indicating the requested interval will need to be resampled
-        :params a: A str with the av param for the REST api
-        :params b: An int representing the av interval
-        :params c: an int representing the requested interval
+    Retrieve the correct interval param for Alphavantage, a str like '1min'. Limited to minute
+    charts up to 60 minute candle.
+    :return: (resamp(a,b,c))
+        :resamp: a bool indicating the requested interval will need to be resampled
+        :a: A str with the av param for the api like '1min'
+        :params b: An int -- representing the av interval to be used in the request
+        :params c: an int -- the requested interval in the arg
     '''
-    resamp = False
 
     # OK something very weird.  i > 1 was caused an exception when running unittest discover and
     # at no other time.  I placed this baby sitter here and the error disappeared. The exception
@@ -138,6 +141,8 @@ def ni(i):
         i = 1
     elif i > 120:
         i = 60
+
+    resamp = False
     if i in [1, 5, 15, 30, 60]:
         return resamp, {1: ('1min', 1, 1), 5: ('5min', 5, 5), 15: ('15min', 15, 15), 30: ('30min', 30, 30), 60: ('60min', 60, 60)}[i]
     resamp = True
@@ -164,15 +169,10 @@ class Retries:
         self.setTime = time.time()
 R = None
 
-# TODO Could increase the number of avalable free calls by caching the data. Don't ever call
-# 5,15,30, or 60 min (at least for data in the last week) and use resample to get them. For
-# charting, 500 calls would go a long way. It could translate to having all the data I need for
-# 500 stocks. that might just cover all the stocks traded in a day by all BearBulls traders.
-# Combined with the other free APIS, and I would likely have enough data to cover the day.
-# Just keep specialized in minute charts for daily review.
 def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     '''
-    Limited to getting minute data intended to chart day trades
+    Limited to getting minute data intended to chart day trades. Note that start and end are not
+    sent to the api request.
     :params symb: The stock ticker
     :params start: A date time string or datetime object to indicate the beginning time.
     :params end: A datetime string or datetime object to indicate the end time.
@@ -265,7 +265,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     df.close = pd.to_numeric(df.close)
     df.volume = pd.to_numeric(df.volume)
 
-    # Alphavantage indexes the candle ends as a time index. The JSON times are backwards.
+    # Alphavantage indexes the candle ends as a time index. So the beginninng of the daay is 9:31
     # I think that makes them off by one when processing forward. IB, and others, index candle
     # beginnings. To make the APIs harmonious, we will transalte the index time down by
     # one interval. I think the translation will always be the interval sent to mav. So
@@ -319,22 +319,23 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
                 metaj['code'] = 666
                 metaj['message'] = msg
                 return metaj, pd.DataFrame(), maDict
-    # I expect this to fail soon- when this is called with no start or end
-    # This code will not stand either through implementing user control over MAs. Its just good for today
-    for key in maDict:
+    # If we don't have a full ma, delete -- Later:, implement a 'delayed start' ma in graphstuff
+    keys = maDict.keys()
+    for key in keys:
         if len(df) != len(maDict[key]):
             del maDict[key]
 
     return metaj, df, maDict
 
 def notmain():
-    print (APIKEY)
-    print(getKey())
+    for ex in getapis():
+        print(ex)
 
 if __name__ == '__main__':
-    # df = getmav_intraday('SQ')
-    # print(df.head())
-    notmain()
+    theDate = pd.Timestamp.today().date()
+    metaj, df, maDict = getmav_intraday('SQ', minutes=5, start = theDate)
+    print(df.head())
+    # notmain()
 
     # dastart = "2019-01-11 11:30"
     # daend = "2019-01-14 18:40"

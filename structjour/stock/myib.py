@@ -26,14 +26,19 @@ from threading import Thread
 import queue
 import pandas as pd
 
+from PyQt5.QtCore import QSettings
 
+from structjour.stock.utilities import checkForIbapi
+if checkForIbapi():
 
-from ibapi import wrapper
-from ibapi.client import EClient
+    from ibapi import wrapper
+    from ibapi.client import EClient
 
-# from ibapi.wrapper import EWrapper
-from ibapi.common import TickerId
-from ibapi.contract import Contract
+    # from ibapi.wrapper import EWrapper
+    from ibapi.common import TickerId
+    from ibapi.contract import Contract
+else:
+    raise ImportError('\nIBAPI is not installed. The module myib cannot run.\n')
 
 from structjour.stock.utilities import getLastWorkDay, IbSettings, movingAverage
 
@@ -104,9 +109,6 @@ def validateDurString(s):
     except ValueError:
         return False
     return True
-
-
-
 
 
 class TestClient(EClient):
@@ -265,16 +267,19 @@ class TestApp(TestWrapper, TestClient):
 def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     '''
     An interface API to match the other getters. In this case its a substantial
-    dumbing down of the capabilities to our one specific need. Output will be limited
-    to minute candles (1,5,10,7 whatever) within a single day.
+    dumbing down of the capabilities to our one specific need. Output will be resampled
+    if necessary to return a df with intervals 1~60 minutes
     :params symbol: The stock to get
     :params start: A timedate object or time string for when to start. Defaults to the most recent
         weekday at open.
     :params end: A timedate object or time string for when to end. Defaults to the most recent biz
         day at close
-    :params minutes: The length of the candle. Defaults to 1 minute
+    :params minutes: The length of the candle, 1~60 minutes. Defaults to 1 minute
     :return (length, df):A DataFrame of the requested stuff and its length
     '''
+    apiset = QSettings('zero_structjour/apiset')
+    if not apiset.value('gotibapi', type=bool):
+        return {'message': 'ibapi is not installed', 'code': 666}, pd.DataFrame(), None
     print('***** IB *****')
     biz = getLastWorkDay()
     if not end:

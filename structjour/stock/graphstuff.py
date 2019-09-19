@@ -40,9 +40,10 @@ from PyQt5.QtCore import QSettings
 
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
-from structjour.stock import myib as ib
+from structjour.stock.utilities import getMASettings, checkForIbapi
+if checkForIbapi():
+    from structjour.stock import myib as ib
 from structjour.stock import myiex as iex
-from structjour.stock.utilities import getMASettings
 
 # pylint: disable = C0103, W0603
 
@@ -244,12 +245,17 @@ class FinPlot:
                 violatedRules.append('AlphaVantage data before {} is unavailable.'.format(
                     lastday.strftime("%b %d")))
 
-        # Rule 3 Don't call ib if its not connected
-        if 'ib' in suggestedApis and not ib.isConnected():
-            suggestedApis.remove('ib')
-            violatedRules.append('IBAPI is not connected.')
+        # Rule 3 Don't call ib if the library is not installed
+        # Rule 4 Don't call ib if its not connected
+        if self.apiset.value('gotibapi', type=bool):
+            if 'ib' in suggestedApis and not ib.isConnected():
+                suggestedApis.remove('ib')
+                violatedRules.append('IBAPI is not connected.')
+        elif 'ib' in suggestedApis:
+             suggestedApis.remove('ib')
+             violatedRules.append('IBAPI is not installed')
 
-        # Rule 4 No data is available for the future
+        # Rule 5 No data is available for the future
         if start > n:
             suggestedApis = []
             violatedRules.append('No data is available for the future.')
@@ -482,6 +488,9 @@ def localRun():
     # tdy = dt.datetime.today()
 
     fp = FinPlot()
+    x = fp.apiChooserList('20190903 093000', '20190903 091400' )
+    # fp.apiChooser()
+    print(x)
     # odate = dt.datetime(2019, 1, 19, 9, 40)
     # cdate = dt.datetime(2019, 1, 19, 16, 30)
     # interval = 60

@@ -380,6 +380,23 @@ class IbSettings:
         return d
 
 
+def checkForIbapi():
+        '''
+        If the ibapi is not installed or available, disable its use.
+        '''
+        apisettings = QSettings('zero_substance/stockapi', 'structjour')
+        try:
+            import ibapi
+            apisettings.setValue('gotibapi', True)
+            return True
+            
+
+        except ImportError:
+            apisettings.setValue('gotibapi', False)
+            return False
+        
+
+
 
 def notmain():
     # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\src\\test\\testdb.sqlite')
