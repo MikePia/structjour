@@ -2,9 +2,10 @@
 
 # Form implementation generated from reading ui file '.\duplicatetrade.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.2
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -12,9 +13,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(1457, 697)
+        Dialog.resize(1226, 698)
         self.widget = QtWidgets.QWidget(Dialog)
-        self.widget.setGeometry(QtCore.QRect(14, 24, 1441, 660))
+        self.widget.setGeometry(QtCore.QRect(15, 25, 1189, 657))
         self.widget.setObjectName("widget")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.widget)
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
@@ -44,8 +45,8 @@ class Ui_Dialog(object):
         self.verticalLayout_4.addWidget(self.showDuplicate)
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
         self.verticalLayout_6.addLayout(self.verticalLayout_5)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.deleteTxBtn = QtWidgets.QPushButton(self.widget)
@@ -54,7 +55,7 @@ class Ui_Dialog(object):
         self.deleteTradeBtn = QtWidgets.QPushButton(self.widget)
         self.deleteTradeBtn.setObjectName("deleteTradeBtn")
         self.verticalLayout_2.addWidget(self.deleteTradeBtn)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_2)
+        self.horizontalLayout_3.addLayout(self.verticalLayout_2)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setSpacing(3)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -66,7 +67,7 @@ class Ui_Dialog(object):
         self.deleteTradeEdit.setMaximumSize(QtCore.QSize(150, 16777215))
         self.deleteTradeEdit.setObjectName("deleteTradeEdit")
         self.verticalLayout_3.addWidget(self.deleteTradeEdit)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_3)
+        self.horizontalLayout_3.addLayout(self.verticalLayout_3)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -78,10 +79,21 @@ class Ui_Dialog(object):
         self.showDupPrevBtn.setObjectName("showDupPrevBtn")
         self.horizontalLayout.addWidget(self.showDupPrevBtn)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2.addLayout(self.verticalLayout)
-        spacerItem = QtWidgets.QSpacerItem(818, 68, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout_3.addLayout(self.verticalLayout)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(spacerItem)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.label = QtWidgets.QLabel(self.widget)
+        self.label.setObjectName("label")
+        self.horizontalLayout_2.addWidget(self.label)
+        self.accountEdit = QtWidgets.QLineEdit(self.widget)
+        self.accountEdit.setObjectName("accountEdit")
+        self.horizontalLayout_2.addWidget(self.accountEdit)
+        self.horizontalLayout_3.addLayout(self.horizontalLayout_2)
+        spacerItem1 = QtWidgets.QSpacerItem(368, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(spacerItem1)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_3)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -100,6 +112,5 @@ class Ui_Dialog(object):
         self.deleteTradeBtn.setText(_translate("Dialog", "Delete Trade Record"))
         self.showDupBtn.setText(_translate("Dialog", "Show Next"))
         self.showDupPrevBtn.setText(_translate("Dialog", "Show  Previous"))
-
-
+        self.label.setText(_translate("Dialog", "Account Number"))
 from PyQt5 import QtWebEngineWidgets
