@@ -105,14 +105,14 @@ class DupControl(QDialog):
 
     def initialize(self):
         if not self.dbdr:
-            self.dbdr = DbDoctor(account = self.account)
+            self.dbdr = DbDoctor(account=self.account)
         deleteMe, dups = self.dbdr.doDups()
         if dups:
             self.nextRecord = 0
             self.numDups = len(dups)
             self.deleteMe = deleteMe
             self.dups = dups
-            self.actionTaken = [[[False,None], [False,None]] for i in range(self.numDups)]
+            self.actionTaken = [[[False, None], [False, None]] for i in range(self.numDups)]
 
     def dictToTable(self, d):
         '''

@@ -32,8 +32,8 @@ from PyQt5.QtCore import QSettings
 
 class DbDoctor:
     '''
-    Methods to create and manage tables to store Activity Statements. Fields are exactly IB fields
-    from activity flex query
+    Methods to look for discrepancies in the DB. Currently, just for finding and eliminting
+    duplicate records caused by small time differences between IB and DAS transaction records.
     '''
 
     def __init__(self, db=None, account=None):
@@ -54,14 +54,20 @@ class DbDoctor:
             self.account = settings.value('account')
 
 
-    def doDups(self):
+    def doDups(self, autoDelete=False):
         '''
         Search for duplicate trades and determine which records from ib_trades and trade_sum
-        should be removed
+        should be removed. This is called in StatementDb.processStatement with autoDelete=True
         :return: List of tuples (ib_trade_id, trade_sum_id) to remove, and the c_dups object, a
             list with info about the duplicated trades. Read with makeDupDict
         '''
-        dups = self.getDuplicateTrades("U2429974")
+        if not self.account:
+            print('You must set the account to search for trades')
+            return None, None
+        if not self.db or not os.path.exists(self.db):
+            print('Database location is not set')
+            return None, None
+        dups = self.getDuplicateTrades(self.account)
         if not dups:
             return None, None
         print(f"found {len(dups)} suspected duplicates")
@@ -85,7 +91,7 @@ class DbDoctor:
                 deleteTrade = t1['id'] if t1['tsid'] is None else t2['id'] if t2['tsid'] is None else None
 
                 # Else if they have different trade_sum_id and one has only one ib_trade
-                # Delete the single assocition along with the tradeSum record
+                # Delete the single association along with the tradeSum record
                 if not deleteTrade:
                     trades1 = len(self.getTradesForTSID(t1['tsid']))
                     trades2 = len(self.getTradesForTSID(t2['tsid']))
@@ -111,10 +117,15 @@ class DbDoctor:
                 print('No clue which to  delete ', t1['id'], t2['id'])
             else:
                 print(f'{i+1}. Recommend deleting {deleteTrade}')
+                if autoDelete:
+                    self.deleteTradeById(deleteTrade)
             if deleteTSum:
                 print(f'     Delete TradeSum record {deleteTSum}')
+                if autoDelete:
+                    self.deleteTradeSumById(deleteTSum)
             deleteMe.append([deleteTrade, deleteTSum])
         return deleteMe, c_dups
+
 
     def deleteTradeById(self, tid):
         '''
@@ -289,7 +300,8 @@ def notmain():
     # getTradesForTSID(560)
     # getTicketsWoTrades("U2429974", "201811")
     dbdr = DbDoctor()
-    dbdr.doDups()
+    dbdr.doDups(autoDelete=True)
+    print()
 
 
 if __name__ == '__main__':

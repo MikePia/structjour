@@ -31,6 +31,7 @@ from PyQt5.QtCore import QSettings
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.statements.findfiles import getDirectory
+from structjour.statements.dbdoctor import DbDoctor
 from structjour.stock.utilities import isNumeric, qtime2pd
 from structjour.thetradeobject import SumReqFields
 
@@ -1182,6 +1183,9 @@ class StatementDB:
         self.insertPositions(cur, openPos)
         conn.commit()
         self.reFigureAPL(begin, end)
+        dbdr = DbDoctor()
+        dbdr.doDups(autoDelete=True)
+
 
     def popHol(self):
         '''

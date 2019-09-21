@@ -529,7 +529,7 @@ class DasStatement:
         # the possibility that the user exported a partial day. The trades should be added if/when
         # a broker statement is processed. Find a way to test it -- maybe an altered DAS export 
         # with trades deleted.
-        account = self.settings('account')
+        account = self.settings.value('account')
         if not account:
             account = ''
         ibdb.processStatement(newdf, account, self.theDate, self.theDate)
