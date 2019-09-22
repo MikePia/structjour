@@ -1,31 +1,51 @@
-# Structjour - A daily review helper for day traders
+# Structjour - A Structured Daily Journal for Day Traders of Stock Equities
 ![Image of structjour](images/structjour.png)
 
-Features include chart generation using IB API gateway or the free APIs from Barchart and  Alphavantage. The IEX API is also set up to use but the data is better suited for end of day reporting. If you have all three APIS setup, structjour will choose one based on availability and your set preference. Charts are configurable for start, end  and candle interval and can be set interactively (zoom in etc.). Generic matplotlib styles can be selected. Four configurable MAs can be shown. If you would rather use your own charts from DAS or elsewhere, charts can be opened from the file system or pasted from the clipboard. All charts are stored in a directory for that day.
+ The features of the program include 
+
+Import from DAS Trader Pro or Interactive Broker Statements. If requested I plan to include other brokers' statements.
+
+Tickets are divided into trades and displayed showing entries, exits, PnL, and the diff between initial entry and exit and some other stuff.
+
+A place to enter your initial target and stoploss can detect when the stop is violated and figures the lost PnL. The loss amount can be edited to reflect loss of real or potential PnL due to breaking your rules. 
+
+For your trade review, there is a strategey dropdown to choose from, a location to describe your trade, a location to analyze your trade, and a location to summarize your trade (which will be included in your daily summary).
+
+The strategy dropdown box on the main page can add new strategies to your list. Strategies are supported by the strategy browser where you can define your strategies and check whether to include them in the dropdown box on the front page. In the Strategy browser, you can define your strategy and provide a couple images. Additionally you can add web pages that describe each strategy
+
+
+Charts can be 1) automatically generated 2) copied from the clipboard or 3) loaded from a file. Data for automatic chart generation has three possible sources. Alphavantage and Barchart (free APIs) and Interactive Brokers python API using IB Gateway or Trader Work Station. If you have all three APIS setup, structjour will choose one based on availability and your set preference. The setup for Alphavantage and Barchart requires you get an API key (very simple and available to everyone). The ibapi data (setup more complicated) has the advantage of providing after hours data and long historical availability. Automatic chart generation can include Moving averages and VWAP. All charts are stored in a directory for that day providing easy access.
 
 Input files are limited to DAS Trader PRO exports and IB statements (Activity, Trade and Flex statements). At some point in the future, other formats will be added.
 
-Review data includes setting your original target and stop loss. Exceeding your stop loss will trigger an amount lost to be shown. The Amount lost can be used to display and explain missing potential income. Each trade has a notes and analysis section. 
+Navigation between days is done with a date widget. Just Change the date and click read or load to read a new file or load saved data. 
 
-The daily summary displays your summary notes for each trade and provides a place to describe the events of the day
+The daily summary has a place to store notes that refer to the whole day. A summary of Wins and losses is displayed that includes the summary made for each trade.
+
+Everything is stored in a light-weight sqlite database
+
+The entire day can be exported to an excel file which includes a trades table, the daily summaries, easy to read forms for each trade and the charts.
+
+All of your trades can be exported to an excel file (a tweak of 'DisciplinedTrader.xlsx) which shows monthly and yearly statistics. 
 
 ![Image of daily summary](images/dailysummary.png)
 
-Navigation between days is done with a date widget. Change the date and the file(s) for that date can be loaded.
-
-Export to Excel places all the trade summaryies and daily summaries on one sheet.
+Excel export
 ![Image of excel](images/excel.png) 
 
-A Strategy Browser supports the user's strategy descriptions. From here, you manage the strategies that are listed in the combo box on the front page.
+Strategy Browser
 ![Image of excel](images/strategybrowser.png) 
-A second tab of the Strtegy Browser should support viewing a list of html urls (local or not) but its currently disabled. I think it is a problem with a conflicting version of PyQtWebEngine. For now, I am leaving it in place (browsing/scrolling disabled) until I can remedy the conflicting PyQt5 stuff. Here is what it looks like. If you have expertise in this area (PyQtWebEngine), please help.
+
+
+Strategy web browser
 ![Image of excel](images/strategybrowserweb.png) 
 
-The state of the software is pre-alpha. I created it for my own use based on what I needed. I believe the scope of features has grown (or is growing) to be more generally useful.  It has only ever run on Windows and on my personal system. Das Trader Pro is a Windows application. Now that it also supports IB Statements, it makes sense to make it available on other systems. The only issue I am aware of is the PILLOW image library. Its used to retrieve clipboard data. I think it is a Windows specific call.  The overall design and ideas were generated from listening and studying the ideas of the moderators and members of Bear Bull traders. All shortcomings are completely my own.
+Export to an excel analysis tool
 
-Database support is in the queue. Future versions will include more long term analysis tools. Currently, there is an export to a pre-existing Excel tool called DisciplinedTrader, lightly tweaked. It gives a longer term analysis view of trades. Alternately to implementing analysis tools in Qt, structjour could support any arbitray Excel analysis tool by request.
+![Image of excel](images/disciplined.png) 
 
-There is currently no release. An alpha release is planned within a couple months. Its written entirely in python3 using recent versions of PyQt5, pandas, matplotlib, BeautifulSoup, and openpyxl. There will be a release but if you want to see it on your desktop now and you have some experience in python the main program is currently run from the script at structjour/view/runtrade.py. The directory structure required to store the files can be created by running structjour/time.py in your journal directory. The script will ask for a month and create subdirs for each day.
+
+The state of the software is pre-alpha. I created it for my own use based on what I needed. I believe the scope has grown to be more generally useful for Day-Traders of Stock Equities. 
 
 If you are interested in contributing, I would welcome your help and input in any and all areas of design, implementation and bug reports.
 

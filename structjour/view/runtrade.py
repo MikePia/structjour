@@ -267,6 +267,9 @@ class runController:
 
 
 def main():
+    ddiirr = os.path.dirname(__file__)
+    os.chdir(os.path.realpath(ddiirr))
+    os.chdir(os.path.realpath('../../'))
     app = QApplication(sys.argv)
     s = QStyleFactory.create('Fusion')
     app.setStyle(s)
