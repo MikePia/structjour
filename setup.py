@@ -22,6 +22,9 @@ setuptools.setup(
         'Operating System :: Windows',
     ],
     install_requires=[
+        'numpy>=1.16.0',
+        'pandas>=0.24.0',
+        'seaborn>=0.9.0',
         'PyQt5>=5.13.0',
         'PyQtWebEngine>=5.12.1',
         'openpyxl==2.5.14',
