@@ -25,10 +25,11 @@ import re
 import sys
 
 import pandas as pd
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 
+from structjour.time import createDirsStructjour
 from structjour.view.filesettings import Ui_Dialog as FileSettingsDlg
 
 from structjour.stock.utilities import qtime2pd
@@ -94,6 +95,14 @@ class FileSetCtrl(QDialog):
             self.settings.setValue('theDate', daDate)
         fui.theDate.setDate(daDate)
 
+        lastDir = self.settings.value('lastDirCreated')
+        if lastDir:
+            dd = pd.Timestamp(lastDir)
+            year = dd.strftime('%Y')
+            month = dd.strftime('%B')
+            fui.createDirsYear.setCurrentText(year)
+            fui.createDirsMonth.setCurrentText(month)
+
         # Define actions.
         fui.journalBtn.pressed.connect(self.setJournalDlg)
         fui.journal.textChanged.connect(self.setJournalDir)
@@ -128,12 +137,29 @@ class FileSetCtrl(QDialog):
         fui.tradeDbBtn.pressed.connect(self.tradeDbBrowse)
         fui.tradeDbEdit.textChanged.connect(self.tradeDb)
 
-
-
-        # self.contextMenus()
-        # d = self.settings.value()
+        fui.createDirsBtn.pressed.connect(self.createDirs)
 
         self.exec()
+
+    def createDirs(self):
+        '''Create the sub directories in the journal directory'''
+        m = pd.Timestamp(f'{self.fui.createDirsMonth.currentText()} {self.fui.createDirsYear.currentText()}')
+        try:
+            createDirsStructjour(m)
+        except ValueError as m:
+            if m.args[0].startswith('Directory Already'):
+                # print('Qmessage box', m.args[0], m.args[1])
+                msg = f'<h3>{m.args[0]}</h3>'
+                msg += f'<p>{m.args[1]}</p>'
+                msgbx = QMessageBox()
+                msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
+                msgbx.setText(msg)
+                msgbx.exec()
+            else:
+                raise ValueError(m)
+        else:
+            self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
+
 
     def structjourDbBrowse(self):
         '''

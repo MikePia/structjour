@@ -19,6 +19,8 @@ import datetime as dt
 import os
 import pandas as pd
 
+from PyQt5.QtCore import QSettings
+
  
 # pylint: disable = C0103, C0301
 
@@ -34,13 +36,29 @@ import pandas as pd
 # Implementing the following file structure names
 # theMonth.strftime("_%Y%m_%B")) // theDate.strftime(_%m%d_%A")
 
+def createDirsStructjour(theDate):
+    '''
+    Wrapper to createDirs take care of the structjour journal directory and naming scheme from
+    QSettings
+    '''
+    settings = QSettings('zero_substance', 'structjour')
+
+    jdir = settings.value('journal')
+    scheme = settings.value('scheme')
+    schemex = scheme.format(Year='%Y', month='%m', MONTH='%B', day='%d', DAY='%A').split('/')
+    if len(schemex) < 2 or len(schemex) > 3:
+        raise ValueError('Bad file naming scheme')
+    theDir = theDate.strftime(schemex[0])
+    theDir = os.path.join(jdir, theDir)
+    createDirs(theDate, theDir, frmt=schemex[1])
 
 def createDirs(theDate, theDir, frmt="_%m%d_%A"):
     '''
     In the directory theDir, create 1 month of directories, one for each weekday. Use the date
     theDate to and the format given to create the names.
     :params theDate: A datetime object giving the starting date for the directories.
-    :params theDir: The directory in which to create the subdirectories.
+    :params theDir: The month directory in which to create the subdirectories. This subdir will
+        generally be placed in cwd. 
     :params frmt: The strftime format used to create the directories.
     '''
     # theDate = dt.datetime(2019, 6, 3)
@@ -58,15 +76,13 @@ def createDirs(theDate, theDir, frmt="_%m%d_%A"):
 
     while True:
         if theDate.isoweekday() < 6:
-            # print(theDate.strftime(frmt))
             folder = theDate.strftime(frmt)
             os.mkdir(folder)
         theDate = theDate + delt
-        if theDate.month > month:
+        if theDate.month != month:
             break
 
     os.chdir(cwd)
-
 
 def getFirstWeekday(theMonth=None, theDir=None):
     '''
@@ -128,10 +144,6 @@ def getFirstWeekday(theMonth=None, theDir=None):
 
     return theDay, theDir
 
-
-
-
-
 def main():
     # outdir = os.getcwd()
     # journaldir = os.getcwd()
@@ -142,12 +154,6 @@ def main():
 
     monthDir = os.path.join(journaldir, theDate.strftime("_%Y%m_%B"))
     createDirs(theDate, monthDir)
-
-
-
-# os.chdir(theDir)
-# print(os.getcwd())
-# print(theDay.strftime("_%m_%B"))
 
 if __name__ == '__main__':
     main()
