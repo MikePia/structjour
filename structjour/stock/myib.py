@@ -277,7 +277,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     :params minutes: The length of the candle, 1~60 minutes. Defaults to 1 minute
     :return (length, df):A DataFrame of the requested stuff and its length
     '''
-    apiset = QSettings('zero_structjour/apiset')
+    apiset = QSettings('zero_substance/stockapi', 'structjour')
     if not apiset.value('gotibapi', type=bool):
         return {'message': 'ibapi is not installed', 'code': 666}, pd.DataFrame(), None
     print('***** IB *****')

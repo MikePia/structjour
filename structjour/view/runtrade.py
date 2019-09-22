@@ -204,7 +204,7 @@ class runController:
             msg = f'<h3>No trades found. File does not appear to be a statement</h3><ul> '
             msg += f'<div><strong>{jf.inpathfile}</strong></div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
             return

@@ -54,7 +54,7 @@ class TestGraphstuff(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestGraphstuff, self).__init__(*args, **kwargs)
-        self.apiset = QSettings('zero_substance/apiset', 'structjour')
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
 
     def setUp(self):
         ddiirr = os.path.dirname(__file__)
