@@ -250,7 +250,7 @@ class ManageKeys:
         if not self.db:
             self.setDB()
         
-        if create and self.db:
+        if self.db:
             self.createTables()
 
 
@@ -261,14 +261,13 @@ class ManageKeys:
         Arbitrarily, its in apiset only. (apiset 'belongs' to the stockapi, but the db has a range
         of things beyond that).
         '''
-        o = self.settings.value('journal')
-        if not o:
-            msg = '\nWARNING: Trying to set the db location.'
-            msg = msg +  '\nPlease set the location of your journal directory.\n'
-            print(msg)
+        self.db = self.settings.value('tradeDb')
+        msg = None
+        if not self.db:
+            msg = '\nWARNING: Trade Db location is not set.'
+            msg = msg +  '\nPlease set the location of the trade Db. Select file->filesettings\n'
+            print('QMessageBox:', msg)
             return
-        self.db = os.path.join(o, 'structjour.sqlite')
-        self.apiset.setValue('dbsqlite', self.db)
 
         if not os.path.exists(self.db):
             msg = 'No db listed-- do we recreate the default and add a setting?- or maybe pop and get the db address'
@@ -330,14 +329,9 @@ class ManageKeys:
             return k[0]
         return k
 
-
-
- 
-
-
     def getDB(self):
         '''Get the file location of the sqlite database'''
-        db = self.apiset.value('dbsqlite')
+        db = self.settings.value('tradeDb')
         if not db:
             print('WARNING: Trying to retrieve db location, the database file location is not set.')
         return db

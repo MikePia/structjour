@@ -80,11 +80,11 @@ class DailyControl(QDialogWClose):
         self.date = None
         if daDate:
             self.date = pd.Timestamp(daDate)
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
+        settings = QSettings('zero_substance', 'structjour')
         if db:
             self.db=db
         else:
-            self.db = apiset.value('dbsqlite')
+            self.db = settings.value('tradeDb')
             if not self.db:
                 j = self.settings.value('journal')
                 if not j:
@@ -94,7 +94,7 @@ class DailyControl(QDialogWClose):
                     if not j:
                         return
                 self.db = os.path.join(j, 'structjour.sqlite')
-                apiset.setValue('dbsqlite', self.db)
+                settings.setValue('tradeDb', self.db)
 
     def createTable(self):
         '''create db table'''

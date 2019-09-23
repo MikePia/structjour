@@ -52,6 +52,42 @@ class FileSetCtrl(QDialog):
 
         self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
+        # Define actions.
+        fui.journalBtn.pressed.connect(self.setJournalDlg)
+        fui.journal.textChanged.connect(self.setJournalDir)
+
+        fui.schemeBtn.pressed.connect(self.setSchemeDefault)
+        fui.scheme.editingFinished.connect(self.setScheme)
+
+        fui.dasInfileBtn.pressed.connect(self.setDASInfileDefault)
+        fui.dasInfile.textChanged.connect(self.setDASInfile)
+
+        fui.dasInfile2Btn.pressed.connect(self.setDASInfile2Default)
+        fui.dasInfile2.textChanged.connect(self.setDASInfile2)
+
+        fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
+        fui.ibInfile.editingFinished.connect(self.setIBInfile)
+
+        fui.outdirDefault.clicked.connect(self.setOutdirDefault)
+        fui.outdirStatic.clicked.connect(self.setOutdir)
+        fui.outdir.textChanged.connect(self.setOutdir)
+
+        fui.disciplinedBtn.pressed.connect(self.setDisciplinedBrowse)
+        fui.disciplinedEdit.textChanged.connect(self.setDisciplined)
+
+        fui.theDateCbox.clicked.connect(self.setTodayBool)
+        fui.theDateBtn.pressed.connect(self.setToday)
+        fui.theDate.dateChanged.connect(self.setDialogDate)
+
+        fui.okBtn.pressed.connect(self.closeit)
+
+        fui.structjourDbBtn.pressed.connect(self.structjourDbBrowse)
+        fui.structjourDbEdit.textChanged.connect(self.structjourDb)
+        fui.tradeDbBtn.pressed.connect(self.tradeDbBrowse)
+        fui.tradeDbEdit.textChanged.connect(self.tradeDb)
+
+        fui.createDirsBtn.pressed.connect(self.createDirs)
+
         fui.journal.setText(self.settings.value('journal'))
         self.setJournalDir()
 
@@ -103,41 +139,6 @@ class FileSetCtrl(QDialog):
             fui.createDirsYear.setCurrentText(year)
             fui.createDirsMonth.setCurrentText(month)
 
-        # Define actions.
-        fui.journalBtn.pressed.connect(self.setJournalDlg)
-        fui.journal.textChanged.connect(self.setJournalDir)
-
-        fui.schemeBtn.pressed.connect(self.setSchemeDefault)
-        fui.scheme.editingFinished.connect(self.setScheme)
-
-        fui.dasInfileBtn.pressed.connect(self.setDASInfileDefault)
-        fui.dasInfile.textChanged.connect(self.setDASInfile)
-
-        fui.dasInfile2Btn.pressed.connect(self.setDASInfile2Default)
-        fui.dasInfile2.textChanged.connect(self.setDASInfile2)
-
-        fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
-        fui.ibInfile.editingFinished.connect(self.setIBInfile)
-
-        fui.outdirDefault.clicked.connect(self.setOutdirDefault)
-        fui.outdirStatic.clicked.connect(self.setOutdir)
-        fui.outdir.textChanged.connect(self.setOutdir)
-
-        fui.disciplinedBtn.pressed.connect(self.setDisciplinedBrowse)
-        fui.disciplinedEdit.textChanged.connect(self.setDisciplined)
-
-        fui.theDateCbox.clicked.connect(self.setTodayBool)
-        fui.theDateBtn.pressed.connect(self.setToday)
-        fui.theDate.dateChanged.connect(self.setDialogDate)
-
-        fui.okBtn.pressed.connect(self.closeit)
-
-        fui.structjourDbBtn.pressed.connect(self.structjourDbBrowse)
-        fui.structjourDbEdit.textChanged.connect(self.structjourDb)
-        fui.tradeDbBtn.pressed.connect(self.tradeDbBrowse)
-        fui.tradeDbEdit.textChanged.connect(self.tradeDb)
-
-        fui.createDirsBtn.pressed.connect(self.createDirs)
 
         self.exec()
 
@@ -181,7 +182,8 @@ class FileSetCtrl(QDialog):
             self.fui.structjourDbEdit.setStyleSheet("color: red;")
         else:
             self.fui.structjourDbEdit.setStyleSheet("color: green;")
-            self.settings.setValue('structjourDb', path)
+        
+        self.settings.setValue('structjourDb', path)
 
     def tradeDbBrowse(self):
         '''
@@ -203,8 +205,8 @@ class FileSetCtrl(QDialog):
             self.fui.tradeDbEdit.setStyleSheet("color: red;")
         else:
             self.fui.tradeDbEdit.setStyleSheet("color: green;")
-            self.settings.setValue('tradeDb', path)
 
+        self.settings.setValue('tradeDb', path)
 
 
 
@@ -411,6 +413,8 @@ class FileSetCtrl(QDialog):
         Set the lable widget from the text widget and color the label to show existance/not
         '''
         fname = self.fui.dasInfile.text()
+        # if not self.getDirectory():
+        #     return
         dasInfileLbl = os.path.join(self.getDirectory(), fname)
         self.fui.dasInfileLbl.setText(dasInfileLbl)
         if os.path.exists(dasInfileLbl):
@@ -495,7 +499,7 @@ class FileSetCtrl(QDialog):
         scheme = self.settings.value('scheme')
         journal = self.settings.value('journal')
         if not scheme or not journal:
-            return None
+            return ''
 
         d = self.settings.value('theDate')
         if isinstance(d, (QDate, QDateTime)):

@@ -44,7 +44,8 @@ class PickleSettings:
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         self.settings = QSettings('zero_substance', 'structjour') 
-        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
+        self.apisettings = QSettings('zero_substance/stockapi', 'structjour')
+        self.chartsettings = QSettings('zero_substance/chart', 'structjour')
         self.setkeys = []
         self.setvals = []
         self.apisetkeys = []
@@ -63,7 +64,8 @@ class PickleSettings:
 
     def initializeSettings(self):
         self.settings.clear()
-        self.apiset.clear()
+        self.apisettings.clear()
+        self.chartsettings.clear()
 
     def removePickle(self):
         if os.path.exists(self.name):
@@ -72,8 +74,12 @@ class PickleSettings:
     def initializeVars(self):
         self.setkeys = []
         self.setvals = []
+
         self.apisetkeys = []
         self.apisetvals = []
+
+        self.chartkeys = []
+        self.chartvals = []
 
 
     def storeSettings(self, replacePickle=False):
@@ -85,11 +91,16 @@ class PickleSettings:
         for k in self.setkeys:
             self.setvals.append(self.settings.value(k))
 
-        self.apisetkeys = self.apiset.allKeys()
+        self.apisetkeys = self.apisettings.allKeys()
         for k in self.apisetkeys:
-            self.apisetvals.append(self.apiset.value(k))
+            self.apisetvals.append(self.apisettings.value(k))
 
-        setsnkeys = [self.setkeys, self.setvals, self.apisetkeys, self.apisetvals]
+        self.chartkeys = self.chartsettings.allKeys()
+        for k in self.chartkeys:
+            self.chartvals.append(self.chartsettings.value(k))
+            
+
+        setsnkeys = [self.setkeys, self.setvals, self.apisetkeys, self.apisetvals, self.chartkeys, self.chartvals]
 
         with open(self.name, "wb") as f:
             '''Cannot pickle qsettings objects- so we pickle a list'''
@@ -103,7 +114,10 @@ class PickleSettings:
                     self.settings.setValue(k, v)
             
                 for k2, v2 in zip(setsnkeys[2], setsnkeys[3]):
-                    self.apiset.setValue(k2, v2)
+                    self.apisettings.setValue(k2, v2)
+
+                for k2, v2 in zip(setsnkeys[4], setsnkeys[5]):
+                    self.chartsettings.setValue(k2, v2)
 
             os.remove(self.name)
         else:
@@ -245,7 +259,12 @@ class TestUtilities(unittest.TestCase):
 
 def notmain():
     '''Run some local code... Careful not to remove keys'''
-    t = TestUtilities()
+    p = PickleSettings()
+    p.storeSettings()
+    p.initializeSettings()
+    # p.restoreSettings()
+    # t = TestUtilities()
+    
     # t.test_makeupEntries()
     # t.test_getLastWorkDay()
     # t.test_setDB()
@@ -278,5 +297,5 @@ def localrun():
                 attr()
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

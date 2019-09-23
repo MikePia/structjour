@@ -192,6 +192,9 @@ class SumControl(QMainWindow):
 
     def exportExcel(self):
         ''' Signal callback when the exportBtn is pressed. Initiates an export to excel.'''
+        if not self.lf:
+            print('Nothing to export')
+            return
         excel = ExportToExcel(self.lf.ts, self.lf.jf, self.lf.df)
         excel.exportExcel()
 
@@ -702,7 +705,7 @@ class SumControl(QMainWindow):
         in the db, then add it too. Call lf.setStrategy to update the tto
         :strat: THe currently stored strat for this trade
         '''
-        if not self.lf:
+        if not self.settings.value('structjourDb'):
             print('Cannot load strategies right now')
             return
         strats = Strategy()
@@ -800,6 +803,10 @@ class SumControl(QMainWindow):
         file exists override it to blue
         ['theDate', 'setToday', scheme', 'journal', 'dasInfile, 'ibInfile', outdir]
         '''
+        if not self.getDirectory():
+            # Nothing to load
+            return
+        infile=None
         daDate = self.ui.dateEdit.date()
         if isinstance(daDate, (QDate, QDateTime)):
             daDate = qtime2pd(daDate)
@@ -1137,8 +1144,8 @@ class SumControl(QMainWindow):
     def stratBrowseDlg(self):
         '''Show the strategy dialog'''
 
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
-        if not apiset.value('dbsqlite'):
+        # apiset = QSettings('zero_substance/stockapi', 'structjour')
+        if not self.settings.value('structjourDb'):
             j = self.settings.value('journal')
             if not j:
                 print('Please set the location of the your journal directory.')
@@ -1147,7 +1154,7 @@ class SumControl(QMainWindow):
                 if not j:
                     return
             db = os.path.join(j, 'structjour.sqlite')
-            apiset.setValue('dbsqlite', db)
+            self.settings.setValue('structjourDb', db)
         stratB = StratControl()
         stratB.show()
         stratB.exec()

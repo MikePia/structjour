@@ -39,8 +39,8 @@ class Strategy:
 
     def __init__(self, create=False, testdb=None):
         # if not db:
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
-        db = apiset.value('dbsqlite')
+        settings = QSettings('zero_substance', 'structjour')
+        db = settings.value('structjourDb')
         db = db if not testdb else testdb
         if not db:
             print('db value is not set')
@@ -52,8 +52,8 @@ class Strategy:
         #     return
         self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()
-        if create:
-            self.createTables()
+        self.createTables()
+        self.db = db
 
     def setLink(self, key, url):
         sid = self.getId(key)
@@ -200,6 +200,9 @@ class Strategy:
         return cursor.fetchone()
 
     def setDescription(self, name, desc):
+        if not name:
+            print('No strategy is selected. No action taken')
+            return
         sid = self.getId(name)
         # Set source to user
         source = 2 

@@ -183,12 +183,11 @@ class StratControl(QDialog):
         val = 1 if val == True else 0
 
         strat = self.strat.getStrategy(key)
-        if strat[1] != val:
+        if strat and strat[1] != val:
             self.strat.setPreferred(key, val)
 
     def stratNotesChanged(self):
         if not self.justloaded:
-            print('Notes changed')
             self.setWindowTitle('Strategy Browser ... text edited')
         self.justloaded = False
 
@@ -236,12 +235,9 @@ class StratControl(QDialog):
             self.ui.linkList.addItem(l)
 
 
-        
-
-
     def loadStrategies(self):
         '''Load the strategy combo box from the db'''
-        if not self.apiset.value('dbsqlite'):
+        if not self.settings.value('structjourDb'):
             return
         
         strats = self.strat.getStrategies()

@@ -134,6 +134,47 @@ class ChartControl(QDialog):
 
     ####### chart3 #######
 
+    def initializeColors(self):
+        '''
+        Initialze some values if none are set
+        '''
+        self.ui.markerColorUp.setText('g')
+        self.ui.markerColorDown.setText('r')
+        self.ui.markerEdgeColor.setText('k')
+        self.ui.markerAlpha.setText('0.4')
+        self.ui.markerSize.setValue(3)
+        self.ui.colorUp.setText('g')
+        self.ui.colorDown.setText('r')
+        self.ui.chart1MA1Spin.setValue(9)
+        self.ui.chart1MA2Spin.setValue(20)
+        self.ui.chart1MA3Spin.setValue(50)
+        self.ui.chart1MA4Spin.setValue(200)
+        self.ui.chart1MA1Color.setText('grey')
+        self.ui.chart1MA2Color.setText('blue')
+        self.ui.chart1MA3Color.setText('green')
+        self.ui.chart1MA4Color.setText('yellow')
+        self.ui.chart1VWAPColor.setText('violet')
+
+        self.ui.chart2MA1Spin.setValue(9)
+        self.ui.chart2MA2Spin.setValue(20)
+        self.ui.chart2MA3Spin.setValue(50)
+        self.ui.chart2MA4Spin.setValue(200)
+        self.ui.chart2MA1Color.setText('grey')
+        self.ui.chart2MA2Color.setText('blue')
+        self.ui.chart2MA3Color.setText('green')
+        self.ui.chart2MA4Color.setText('yellow')
+        self.ui.chart2VWAPColor.setText('violet')
+
+        self.ui.chart3MA1Spin.setValue(9)
+        self.ui.chart3MA2Spin.setValue(20)
+        self.ui.chart3MA3Spin.setValue(50)
+        self.ui.chart3MA4Spin.setValue(200)
+        self.ui.chart3MA1Color.setText('grey')
+        self.ui.chart3MA2Color.setText('blue')
+        self.ui.chart3MA3Color.setText('green')
+        self.ui.chart3MA4Color.setText('yellow')
+        self.ui.chart3VWAPColor.setText('violet')
+
     def validateColors(self):
         '''
         Check that the color names in each QlineEdit widget for a color has a legit mpl color
@@ -147,9 +188,11 @@ class ChartControl(QDialog):
         x['c'] = x['cyan']
         x['m'] = x['magenta']
         x['y'] = x['yellow']
-        x['b'] = x['black']
+        x['k'] = x['black']
         x['w'] = x['white']
         self.mplcolors = x
+        if not self.chartSet.allKeys():
+            self.initializeColors()
 
         for key in self.widgDict:
             widg = self.widgDict[key]
@@ -168,7 +211,8 @@ class ChartControl(QDialog):
         self.chartSet.setValue('chart3vwapcolor', val)
 
     def setChart3VWAP(self, val):
-        self.chartSet.setValue('chart3vwap', val)    
+        self.chartSet.setValue('chart3vwap', val)
+        self.setChart3VWAPColor(self.ui.chart3VWAPColor.text())
 
 
     def setChart3MA4Color(self, val):
@@ -181,6 +225,9 @@ class ChartControl(QDialog):
     def setChart3MA4(self, val):
         self.chartSet.setValue('chart3ma4', val)
 
+        self.setChart3MA4Spin(self.ui.chart3MA4Spin.value())
+        self.setChart3MA4Color(self.ui.chart3MA4Color.text())
+
     def setChart3MA3Color(self, val):
         self.chartSet.setValue('chart3ma3color', val)
 
@@ -191,6 +238,10 @@ class ChartControl(QDialog):
     def setChart3MA3(self, val):
         self.chartSet.setValue('chart3ma3', val)
 
+        self.setChart3MA3Spin(self.ui.chart3MA3Spin.value())
+        self.setChart3MA3Color(self.ui.chart3MA3Color.text())
+
+
 
     def setChart3MA2Color(self, val):
         self.chartSet.setValue('chart3ma2color', val)
@@ -200,7 +251,11 @@ class ChartControl(QDialog):
         self.setCbLabel(val, self.ui.chart3MA2)
 
     def setChart3MA2(self, val):
-        self.chartSet.setValue('chart3ma2', val)    
+        self.chartSet.setValue('chart3ma2', val)
+
+        self.setChart3MA2Spin(self.ui.chart3MA2Spin.value())
+        self.setChart3MA2Color(self.ui.chart3MA2Color.text())
+
 
     def setChart3MA1Color(self, val):
         self.chartSet.setValue('chart3ma1color', val)
@@ -212,6 +267,10 @@ class ChartControl(QDialog):
     def setChart3MA1(self, val):
         self.chartSet.setValue('chart3ma1', val)
 
+        self.setChart3MA1Spin(self.ui.chart3MA1Spin.value())
+        self.setChart3MA1Color(self.ui.chart3MA1Color.text())
+
+
 
     ####### chart2 #######
 
@@ -220,6 +279,7 @@ class ChartControl(QDialog):
 
     def setChart2VWAP(self, val):
         self.chartSet.setValue('chart2vwap', val)    
+        self.setChart2VWAPColor(self.ui.chart2VWAPColor.text())
 
 
     def setChart2MA4Color(self, val):
@@ -231,6 +291,9 @@ class ChartControl(QDialog):
 
     def setChart2MA4(self, val):
         self.chartSet.setValue('chart2ma4', val)
+
+        self.setChart2MA4Spin(self.ui.chart2MA4Spin.value())
+        self.setChart2MA4Color(self.ui.chart2MA4Color.text())
 
 
 
@@ -244,6 +307,9 @@ class ChartControl(QDialog):
     def setChart2MA3(self, val):
         self.chartSet.setValue('chart2ma3', val)
 
+        self.setChart2MA3Spin(self.ui.chart2MA3Spin.value())
+        self.setChart2MA3Color(self.ui.chart2MA3Color.text())
+
 
     def setChart2MA2Color(self, val):
         self.chartSet.setValue('chart2ma2color', val)
@@ -255,6 +321,8 @@ class ChartControl(QDialog):
     def setChart2MA2(self, val):
         self.chartSet.setValue('chart2ma2', val)    
 
+        self.setChart2MA2Spin(self.ui.chart2MA2Spin.value())
+        self.setChart2MA2Color(self.ui.chart2MA2Color.text())
 
 
 
@@ -268,13 +336,17 @@ class ChartControl(QDialog):
     def setChart2MA1(self, val):
         self.chartSet.setValue('chart2ma1', val)
 
+        self.setChart2MA1Spin(self.ui.chart2MA1Spin.value())
+        self.setChart2MA1Color(self.ui.chart2MA1Color.text())
+
     ####### chart1 #######
 
     def setChart1VWAPColor(self, val):
         self.chartSet.setValue('chart1vwapcolor', val)
 
     def setChart1VWAP(self, val):
-        self.chartSet.setValue('chart1vwap', val)    
+        self.chartSet.setValue('chart1vwap', val)
+        self.setChart1VWAPColor(self.ui.chart1VWAPColor.text())  
 
 
     def setChart1MA4Color(self, val):
@@ -286,6 +358,9 @@ class ChartControl(QDialog):
 
     def setChart1MA4(self, val):
         self.chartSet.setValue('chart1ma4', val)
+
+        self.setChart1MA4Spin(self.ui.chart1MA4Spin.value())
+        self.setChart1MA4Color(self.ui.chart1MA1Color.text())
 
 
 
@@ -299,6 +374,9 @@ class ChartControl(QDialog):
     def setChart1MA3(self, val):
         self.chartSet.setValue('chart1ma3', val)
 
+        self.setChart1MA3Spin(self.ui.chart1MA3Spin.value())
+        self.setChart1MA3Color(self.ui.chart1MA3Color.text())
+
 
     def setChart1MA2Color(self, val):
         self.chartSet.setValue('chart1ma2color', val)
@@ -308,7 +386,10 @@ class ChartControl(QDialog):
         self.setCbLabel(val, self.ui.chart1MA2)
 
     def setChart1MA2(self, val):
-        self.chartSet.setValue('chart1ma2', val)    
+        self.chartSet.setValue('chart1ma2', val)
+
+        self.setChart1MA2Spin(self.ui.chart1MA2Spin.value())
+        self.setChart1MA2Color(self.ui.chart1MA2Color.text())
 
     def setChart1MA1Color(self, val):
         self.chartSet.setValue('chart1ma1color', val)
@@ -319,6 +400,9 @@ class ChartControl(QDialog):
 
     def setChart1MA1(self, val):
         self.chartSet.setValue('chart1ma1', val)
+
+        self.setChart1MA1Spin(self.ui.chart1MA1Spin.value())
+        self.setChart1MA1Color(self.ui.chart1MA1Color.text())
 
     def setCbLabel(self, val, widg):
         if val <= 20:

@@ -40,7 +40,7 @@ from PyQt5.QtCore import QSettings
 
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
-from structjour.stock.utilities import getMASettings, checkForIbapi
+from structjour.stock.utilities import getMASettings, checkForIbapi, ManageKeys
 if checkForIbapi():
     from structjour.stock import myib as ib
 from structjour.stock import myiex as iex
@@ -117,7 +117,7 @@ class FinPlot:
             p = p.replace(' ', '')
             self.preferences = p.split(',')
         else:
-            self.preferences = ['ib', 'bc', 'av', 'iex']
+            self.preferences = [None]
         self.api = self.preferences[0]
 
         self.ftype = '.png'
@@ -135,7 +135,7 @@ class FinPlot:
     def getGridLines(self):
         y = self.chartSet.value('gridh', False, bool)
         x = self.chartSet.value('gridv', False, bool)
-        val = (True, 'both') if x and y else (True,'x') if x else (True,'y') if y else (None, None)
+        val = (True, 'both') if x and y else (True,'x') if x else (True,'y') if y else (False, None)
         return val
 
     def volFormat(self, vol, pos):
@@ -212,6 +212,8 @@ class FinPlot:
 
         violatedRules = []
         suggestedApis = self.preferences
+        if suggestedApis[0] is None:
+            return (False, ['No stock Api is selected'], [])
         # nopen = dt.datetime(n.year, n.month, n.day, 9, 30)
         nclose = dt.datetime(n.year, n.month, n.day, 16, 30)
 
@@ -259,6 +261,18 @@ class FinPlot:
         if start > n:
             suggestedApis = []
             violatedRules.append('No data is available for the future.')
+        # Rule No 6 Don't call barchart if there is no apike in settings
+        # Rule No 6 Don't call alphavantage if there is no apikey in settings
+        mk = ManageKeys()
+        bc_key = mk.getKey('bc')
+        av_key = mk.getKey('av')
+        if not bc_key and 'bc' in suggestedApis:
+            suggestedApis.remove('bc')
+            violatedRules.append('There is no apikey in the database for barchart')
+        if not av_key and 'av' in suggestedApis:
+            suggestedApis.remove('av')
+            violatedRules.append('There is no apikey in the database for alphavantage')
+            
 
         api = api in suggestedApis if api else False
 
@@ -372,7 +386,8 @@ class FinPlot:
         coldown = self.chartSet.value('colordown', 'r')
         ax1 = plt.subplot2grid((6, 1), (0, 0), rowspan=5, colspan=1)
         ax1.set_axisbelow(True)
-        ax1.grid(b=self.gridlines[0], which='major', axis=self.gridlines[1])
+        if self.gridlines[1]:
+            ax1.grid(b=self.gridlines[0], which='major', axis=self.gridlines[1])
 
         ax2 = plt.subplot2grid((6, 1), (5, 0), rowspan=1,
                                colspan=1, sharex=ax1)

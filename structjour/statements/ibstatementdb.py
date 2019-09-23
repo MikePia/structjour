@@ -49,7 +49,7 @@ class StatementDB:
         jdir = settings.value('journal')
         self.settings = settings
         if not db:
-            db = 'structjour_test.db'
+            db = self.settings.value('tradeDb')
         else:
             db = db
         self.source = source
@@ -57,9 +57,9 @@ class StatementDB:
             self.db = db
         else:
             self.db = os.path.join(jdir, db)
-        if not os.path.exists(self.db):
-            msg = 'failed to open db: ' +  db
-            raise ValueError(msg)
+        # if not os.path.exists(self.db):
+        #     msg = 'failed to open db: ' +  db
+        #     raise ValueError(msg)
 
         self.rc = FinReqCol()
         self.sf = SumReqFields()
