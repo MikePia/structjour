@@ -97,9 +97,6 @@ class Test_LayoutForms(TestCase):
             self.assertIsInstance(end, dt.time)
             self.assertIn('chart1', widg)
 
-
-
-
     def test_getImageNameX(self):
         '''Create a name for an API retrieved chart. lf.getChartData uses self.ts[key]'''
         # print(self.lf.ts.keys())
@@ -127,7 +124,6 @@ class Test_LayoutForms(TestCase):
             # self.assertIn('chart1', widg)
         pass
 
-
     def test_loadSavedFile(self):
         '''TODO: Place all this default/static in filesettings and simplify this to a single setting
             {sc.getOutdir}.{sc.ui.infileEdit.text().zst}
@@ -135,17 +131,16 @@ class Test_LayoutForms(TestCase):
             default: getDirectory()/out/)
         '''
         name = self.lf.sc.getSaveName()
+    
     def test_populateTradeSumForms(self):
         '''Populates the sc widgets. Depends on self.ts, sc'''
         pass
-
 
     def test_toggleTimeFormat(self):
         '''Used by sc to toggle the time with date and time in trade summary entries widgets
         (called from sc). Values from self.ts are reformatted into widgets. 
         Depends on sc and self.ts'''
         pass
-
     
     def test_runTtoSummaries(self):
         '''Nearly top level script called from runtrade.runnit-- fefactored most of it -- moved
@@ -161,6 +156,7 @@ class Test_LayoutForms(TestCase):
         '''Called when loading from input file, store the DataFrame object. Depends on the processed
         input df'''
         pass
+
     def test_saveTheTradeObject(self):
         '''
                 self.ts

@@ -48,19 +48,15 @@ class StatementDB:
         settings = QSettings('zero_substance', 'structjour')
         jdir = settings.value('journal')
         self.settings = settings
+        self.db = None
         if not db:
             db = self.settings.value('tradeDb')
         else:
             db = db
-        self.source = source
-        if os.path.exists(db):
+        if db:
             self.db = db
-        else:
-            self.db = os.path.join(jdir, db)
-        # if not os.path.exists(self.db):
-        #     msg = 'failed to open db: ' +  db
-        #     raise ValueError(msg)
 
+        self.source = source
         self.rc = FinReqCol()
         self.sf = SumReqFields()
         self.createTradeTables()
@@ -558,7 +554,7 @@ class StatementDB:
 
                 self.addCharts(cur, ts, ldf[0][self.rc.ticker].unique()[0], int(ts['id'].unique()[0]))
                 self.updateEntries(cur, int(ts['id'].unique()[0]), tdf)
-        conn.commit()
+                conn.commit()
 
     def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
         rc = self.rc

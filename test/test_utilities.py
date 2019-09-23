@@ -173,41 +173,7 @@ class TestUtilities(unittest.TestCase):
             self.assertTrue(dd.isoweekday() < 6)
             self.assertTrue(dd.isoweekday() > 0)
 
-    def test_setDB(self):
-        '''
-        Test the method ManageKeys.setDB. The location depends on having the journal location set.
-        This method is called by init y default.
-        '''
-        t = PickleSettings()
-        t.storeSettings()
-        t.initializeSettings()
-        settings = QSettings('zero_substance', 'structjour')
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
-
-        settings.setValue('journal', self.p)
-        mk = util.ManageKeys(create=True)
-        l = apiset.value('dbsqlite')
-        self.assertTrue(os.path.exists(l))
-        os.remove(l)
-
-        t.initializeSettings()
-        settings.setValue('journal', self.p)
-        mk = util.ManageKeys(create=True)
-        ll = apiset.value('dbsqlite')
-        self.assertTrue(l == ll)
-        os.remove(ll)
-        # self.assertEqual(l, ll)
-
-        t.initializeSettings()
-        # settings.setValue('journal', self.p)
-        mk = util.ManageKeys(create=True)
-        lll = apiset.value('dbsqlite')
-        self.assertFalse(lll)
-
-        t.restoreSettings()
-        # print(apiset.allKeys())
-        # print(settings.allKeys())
-        # self.assertTrue(os)
+   
 
     def test_updateKey(self):
         t = PickleSettings()
@@ -217,7 +183,8 @@ class TestUtilities(unittest.TestCase):
         apiset = QSettings('zero_substance/stockapi', 'structjour')
 
         settings.setValue('journal', self.p)
-        mk = util.ManageKeys(create=True)
+        testdb = 'test_db.db'
+        mk = util.ManageKeys(db=testdb, create=True)
         mk.updateKey('bc', 'Its the end of the world')
         mk.updateKey('av', 'as we know it')
         bck = mk.getKey('bc')
@@ -225,16 +192,11 @@ class TestUtilities(unittest.TestCase):
         self.assertTrue(bck == 'Its the end of the world')
         self.assertTrue(avk == 'as we know it')
 
-        l = apiset.value('dbsqlite')
-
         t.restoreSettings()
         # print(apiset.allKeys())
         # print(settings.allKeys())
-        os.remove(l)
+        os.remove(testdb)
 
-        # self.assertTrue(os)
-        mk = util.ManageKeys()
-        # print(mk.getKey('bc'))
 
     def test_ibSettings(self):
         t = PickleSettings()
@@ -260,9 +222,9 @@ class TestUtilities(unittest.TestCase):
 def notmain():
     '''Run some local code... Careful not to remove keys'''
     p = PickleSettings()
-    p.storeSettings()
-    p.initializeSettings()
-    # p.restoreSettings()
+    # p.storeSettings()
+    # p.initializeSettings()
+    p.restoreSettings()
     # t = TestUtilities()
     
     # t.test_makeupEntries()

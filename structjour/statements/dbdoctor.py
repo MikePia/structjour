@@ -62,7 +62,7 @@ class DbDoctor:
             list with info about the duplicated trades. Read with makeDupDict
         '''
         if not self.account:
-            print('You must set the account to search for trades')
+            # print('You must set the account to search for trades')
             return None, None
         if not self.db or not os.path.exists(self.db):
             print('Database location is not set')

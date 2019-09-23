@@ -261,7 +261,10 @@ class ManageKeys:
         Arbitrarily, its in apiset only. (apiset 'belongs' to the stockapi, but the db has a range
         of things beyond that).
         '''
-        self.db = self.settings.value('tradeDb')
+        if db:
+            self.db = db
+        else:
+            self.db = self.settings.value('structjourDb')
         msg = None
         if not self.db:
             msg = '\nWARNING: Trade Db location is not set.'

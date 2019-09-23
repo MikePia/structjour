@@ -30,7 +30,6 @@ import types
 
 import pandas as pd
 
-from structjour.pandasutil import InputDataFrame
 from structjour.statement import Statement_DAS, Statement_IBActivity
 from structjour.definetrades import ReqCol
 from structjour.journalfiles import JournalFiles
@@ -217,57 +216,7 @@ class Test_Statements(unittest.TestCase):
                     self.assertEqual(dbuy[rc.shares].sum(), nbuy[rc.shares].sum())
                     self.assertEqual(dsell[rc.shares].sum(), nsell[rc.shares].sum())
 
-    def test_MkShortNegative(self):
-        '''
-        Test the method Statement_DAS.mkShortsNegative
-        '''
-        rc = ReqCol()
-        for dummy in range(random.randint(2, 10)):
-            side, mult, shares = getTestSet(random.randint(4, 20))
-            testSet = list(zip(side, shares))
 
-            apd = pd.DataFrame(testSet, columns=[rc.side, rc.shares])
-
-            for i in range(len(side)):
-                # self.assertEqual(apd[rc.shares][i], shares[i])
-                self.assertEqual(apd[rc.shares][i], shares[i])
-
-            idf = InputDataFrame()
-            apd = idf.mkShortsNegative(apd)
-            for i in range(len(side)):
-                self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
-            #     self.assertEqual(apd[rc.shares][i], shares[i] * mult[i])
-
-    def testGetListTickerDF(self):
-        '''
-        Testing Statement_DAS.getListTickerDF
-        '''
-
-        rc = ReqCol()
-
-        tickers = ['MU', 'MU', 'MU',
-                   'TWTR', 'TWTR', 'TWTR', 'TWTR', 'TWTR', 'TWTR',
-                   'AAPL', 'AAPL', 'AAPL', 'AAPL', 'AAPL', 'AAPL', 'AAPL',
-                   'MU', 'MU', 'MU']
-        U1 = "U12345"
-        U2 = "TR12345"
-        accounts = [U1, U1, U1,
-                    U1, U1, U1, U2, U2, U2,
-                    U2, U1, U2, U2, U1, U1, U1,
-                    U2, U2, U2]
-
-        testSet = list(zip(tickers, accounts))
-
-        apd = pd.DataFrame(testSet, columns=[rc.ticker, rc.acct])
-
-        ipd = InputDataFrame()
-        listDf = ipd.getListTickerDF(apd)
-
-        #A dataframe for each ticker in both accounts
-        self.assertEqual(len(listDf), 6)
-        for df in listDf:
-            self.assertEqual(len(df[rc.ticker].unique()), 1)
-            self.assertEqual(len(df[rc.acct].unique()), 1)
 
     def test_getPositionsIB(self):
 
@@ -286,9 +235,13 @@ def notmain():
     # t.test_GetListOfTicketDF()
     # t.test_CreateSingleTicket()
     t.test_NewSingleTxPerTicket()
-    t.test_MkShortNegative()
+    # t.test_MkShortNegative()
     t.testGetListTickerDF()
     t.test_getPositionsIB()
 
+def main():
+    unittest.main()
+
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    main()

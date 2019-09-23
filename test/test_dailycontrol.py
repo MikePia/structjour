@@ -70,7 +70,6 @@ from PyQt5.QtTest import QTest
 from structjour.view.dailycontrol import DailyControl
 from structjour.journalfiles import JournalFiles
 from structjour.definetrades import DefineTrades
-from structjour.pandasutil import InputDataFrame
 
 from structjour.statement import Statement_IBActivity
 from structjour.statements.ibstatementdb import StatementDB

@@ -191,11 +191,6 @@ class LayoutForms:
         with open(name, "wb") as f:
             pickle.dump((self.ts, self.entries, self.df), f)
 
-
-    def loadDBSummaries(self, ts):
-
-        return ts
-
     def loadSavedFile(self, inputtype=None, theDate=None):
         '''
         Will rename. Load trade from the Database. inputtype is no longer an issue.
@@ -351,9 +346,7 @@ class LayoutForms:
 
     def getEntries(self, key):
         '''
-        The entries are pickled seperately in the dict self.entries. It uses parallel keys to
-        self.ts. This data is trade information, read only and is used currently for chart
-        generation. The data structure is:
+        The data structure is:
         [price, time, share, pl, diff, entryOrExit]. Share is positive for buy, negative for sell.
         :params key: Trade name from the tradeList widget
         '''

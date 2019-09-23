@@ -626,8 +626,6 @@ def notmain():
         ds = DasStatement(f[0], settings, f[1])
         df = ds.getTrades()
         print(list(df.columns), len(df))
-    # idf = InputDataFrame()
-    # trades, success = idf.processInputFile(df, settings.value('theDate'))
 
 
 def local():

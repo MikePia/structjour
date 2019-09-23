@@ -849,9 +849,11 @@ class SumControl(QMainWindow):
             self.ui.goBtn.setText('Read DB Data')
             # dbDate = daDate.strftime('%Y%m%d')
             statementDb = StatementDB()
-            account = self.settings.value('account')
             count, t_count = statementDb.getNumTicketsforDay(daDate)
-            s = f"{count} DB tickets for {daDate.strftime('%A, %B %d, %Y')}"
+            if t_count:
+                s = f"{count} DB tickets in {t_count} trades for {daDate.strftime('%A, %B %d, %Y')}"
+            else:
+                s = f"{count} DB tickets for {daDate.strftime('%A, %B %d, %Y')}"
             self.ui.infileEdit.setText(s)
             if t_count:
                 self.ui.infileEdit.setStyleSheet('color: blue;')

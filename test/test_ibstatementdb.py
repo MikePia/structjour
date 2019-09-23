@@ -34,11 +34,14 @@ from PyQt5.QtCore import QSettings
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
+from structjour.dfutil import DataFrameUtil
 from structjour.statements import findfiles as ff
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.thetradeobject import runSummaries
 from structjour.view.layoutforms import LayoutForms
+
+from structjour.colz.finreqcol import FinReqCol
 # pylint: disable = C0103
 
 class Test_StatementDB(unittest.TestCase):
@@ -60,17 +63,6 @@ class Test_StatementDB(unittest.TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
-
-    def test_findTradeSummary(self):
-        pass
-    def test_formatDate(self):
-        pass
-
-    def test_addCharts(self):
-        pass
-
-    def test_updateEntries(self):
-        pass
 
     def test_addTradeSummaries(self):
         '''
@@ -97,14 +89,37 @@ class Test_StatementDB(unittest.TestCase):
                     self.assertGreater(len(entryTrades), 0)
 
 
-                if count == 9:
-                    break
+                break
 
         # getNumTicketsforDay
                 
 
-    def test_findTrades(self):
-        pass
+    def test_findTrade(self):
+        rc = FinReqCol()
+        
+        ibdb = StatementDB(self.db)
+        row = {
+            rc.ticker:  'SNRK',
+            "DateTime": '20191212;093145',
+            rc.shares: 3000,
+            rc.price: 150.23,
+            rc.comm: None,
+            rc.oc: 'O',
+            rc.acct: "U2229999",
+            rc.bal: 3000,
+            rc.avg: 150.23,
+            rc.PL: None,
+            "DAS": 'DAS',
+            "IB": None}
+        data = list(row.values())
+        columns = list(row.keys())
+        x = pd.DataFrame(data=[data], columns=columns)
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        ibdb.insertTrade(x.iloc[0], cur)
+        conn.commit()
+        foundit = ibdb.findTrade(x.iloc[0]['DateTime'], x.iloc[0][rc.ticker], x.iloc[0][rc.shares], x.iloc[0][rc.acct])
+        self.assertTrue(foundit)
 
     def test_find_Trade(self):
         pass
@@ -240,9 +255,10 @@ def notmain():
     # t.test_getUncoveredDays()
     # t.test_getStatementDays()
     # t.test_insertTrade()
-    t.test_addTradeSummaries()
+    # t.test_addTradeSummaries()
+    t.test_findTrade()
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

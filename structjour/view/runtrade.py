@@ -31,7 +31,6 @@ from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox, QInputDial
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
-from structjour.pandasutil import InputDataFrame
 from structjour.statements.dasstatement import DasStatement
 from structjour.statements.findfiles import checkDateDir
 from structjour.statements.ibstatementdb import StatementDB
@@ -147,7 +146,6 @@ class runController:
         tradeSummaries = lf.runTtoSummaries(ldf)
         ts = lf.ts
         statement.addTradeSummaries(tradeSummaries, ldf)
-        # ts = statement.loadDBSummaries(ts)
         return True
 
 

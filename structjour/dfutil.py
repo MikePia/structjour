@@ -55,8 +55,7 @@ class DataFrameUtil(object):
             err = '\n\nYour DataFrame is missing some required fields ... Including:\n     '
             err += str((set(requiredFields) - set(actualFields)))
             if 'Date' in str((set(requiredFields) - set(actualFields))):
-                err += '\nNote that DAS exports lack a Date field and it must be supplied. Using\n'
-                err += 'Statement_DAS.getTrades() is recommended.\n'
+                err += '\nNote that DAS exports lack a Date field and it must be supplied. \n'
             raise ValueError(err)
 
     @classmethod
