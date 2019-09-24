@@ -124,11 +124,8 @@ class DefineTrades(object):
         nt = DataFrameUtil.addRows(nt, 2)
         nt = self.addSummaryPL(nt)
 
-        # Get the length of the original input file before adding rows for processing Workbook
-        # later (?move this out a level)
-        inputlen = len(nt)
         dframe = DataFrameUtil.addRows(nt, 2)
-        return inputlen, dframe, ldf
+        return dframe, ldf
 
     def processOutputDframe(self, trades):
         '''

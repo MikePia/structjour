@@ -39,7 +39,6 @@ from structjour.thetradeobject import SumReqFields, runSummaries, setTradeSummar
 
 # pylint: disable=C0103, C1801
 
-
 class LayoutForms:
     '''
     Run theTradeObject summaries to get the tto DataFrame and populate
@@ -185,15 +184,14 @@ class LayoutForms:
         #     if not pd.DataFrame.equals(df, self.df):
         #         raise ValueError("blah blah blah")
         # It happens when -- after loading an older version of the file-- click save with a new
-        # current version. 
+        # current version.
 
 
         with open(name, "wb") as f:
             pickle.dump((self.ts, self.entries, self.df), f)
 
-    def loadSavedFile(self, inputtype=None, theDate=None):
+    def loadTradesFromDB(self, theDate=None):
         '''
-        Will rename. Load trade from the Database. inputtype is no longer an issue.
         User tweak-- if DAS or IB import files are checked when the load button is clicked,
         Change the selected radio to useDatabase and return. Update will show if there are
         any DB trades to load.
@@ -206,7 +204,7 @@ class LayoutForms:
         ibdb = StatementDB()
         df = ibdb.getStatement(theDate)
         tu = DefineTrades('DB')
-        inputlen, self.df, ldf = tu.processDBTrades(df)
+        self.df, ldf = tu.processDBTrades(df)
 
         ts, self.entries = ibdb.getTradeSummaries(theDate)
         self.ts = setTradeSummaryHeaders(ts)
@@ -223,54 +221,9 @@ class LayoutForms:
         # except AttributeError as e:
         #     print(e)
 
-        windowTitle = self.sc.baseWindowTitle +': ' + self.sc.ui.infileEdit.text() + ': User Data Loaded'
+        inf = self.sc.ui.infileEdit.text()
+        windowTitle = self.sc.baseWindowTitle +': ' + inf + ': User Data Loaded'
         self.sc.setWindowTitle(windowTitle)
-
-        # In prep to do the mistake summary and excel export, return the list it uses now
-        # It might be good to use the dict self.ts instead
-        return tradeSummaries
-
-    def loadSavedFileOLD(self, inputtype=None, theDate=None):
-        '''
-        Keep it around for a bit in case some objects need depickled. New just takes out the pickle.
-        Depickle a saved tto list. Clear then repopulate the tradeList widget. The first append
-        will trigger the loading mechanism from tto to QT widgets
-        '''
-        if inputtype == 'DB':
-            ibdb = StatementDB()
-            df = ibdb.getStatement(theDate)
-            tu = DefineTrades('DB')
-            inputlen, self.df, ldf = tu.processDBTrades(df)
-
-            ts, self.entries = ibdb.getTradeSummaries(theDate)
-            self.ts = setTradeSummaryHeaders(ts)
-        else:
-            name = self.sc.getSaveName()
-            if not os.path.exists(name):
-                print(f'Save file does not exist "{name}".')
-                return None
-            with open(name, "rb") as f:
-                test = pickle.load(f)
-                if len(test) == 2:
-                    print('Save is in the wrong format. Save and load it again to correct it')
-                    (self.ts, self.entries) = test
-                    # self.ts = test
-                elif len(test) != 3:
-                    print('Something is wrong with this file')
-                    return
-                else:
-                    (self.ts, self.entries, self.df) = test
-
-        print('load up the trade names now')
-        tradeSummaries = []
-        self.sc.ui.tradeList.clear()
-        for key in self.ts:
-            self.sc.ui.tradeList.addItem(key)
-            tradeSummaries.append(self.ts[key])
-        try:
-            self.sc.dControl.runDialog(self.df, self.ts)
-        except AttributeError as e:
-            print(e)
 
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead
@@ -378,7 +331,6 @@ class LayoutForms:
         :params ckey: The widget name of the clickLabel will be one of 'chart1', 'chart2', or
                     'chart3'
         '''
-        rc = self.rc
         from PyQt5.QtCore import QDate
 
         assert ckey in ('chart1', 'chart2', 'chart3')
@@ -389,7 +341,7 @@ class LayoutForms:
             # Set some default vals for begin, end and interval if no chart entry exists
             begin = tto['Time1'].unique()[0]
             end = None
-            for i in range(1,9):
+            for i in range(1, 9):
                 x = tto['Time' + str(i)].unique()[0]
                 if x:
                     end = x
@@ -398,7 +350,7 @@ class LayoutForms:
             interval = 1 if ckey == 'chart1' else 5 if ckey == 'chart2' else 15
 
             return ['', begin, end, interval]
-            
+
         name = tto[ckey].unique()[0]
         begin = tto[ckey + 'Start'].unique()[0]
         end = tto[ckey + 'End'].unique()[0]

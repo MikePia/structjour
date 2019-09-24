@@ -79,7 +79,7 @@ class Test_StatementDB(unittest.TestCase):
             df = ibdb.getStatement(day)
             if not df.empty:
                 tu = DefineTrades("DB")
-                inputlen, dframe, ldf = tu.processDBTrades(df)
+                dframe, ldf = tu.processDBTrades(df)
                 tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
                 ibdb.addTradeSummaries(tradeSummaries, ldf)
                 summaries = ibdb.findTradeSummariesByDay(day)

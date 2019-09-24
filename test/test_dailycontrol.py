@@ -126,7 +126,7 @@ class TestDailyCtrl(TestCase):
             self.assertTrue(not df2.empty, msg)
         
         tu = DefineTrades(jf.inputType)
-        inputlen, dframe, ldf = tu.processDBTrades(df2)
+        dframe, ldf = tu.processDBTrades(df2)
         self.df = dframe
         sc = SumControl()
         lf = LayoutForms(sc, jf, dframe)

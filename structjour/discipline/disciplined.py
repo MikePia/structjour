@@ -508,7 +508,7 @@ def registerTrades(wb, theDate):
         msg = f'''found {x[0]} tickets and {x[1]} trades. Nothing to process for the date {theDate.strftime('%A %d, %Y')}in the DB'''
         return msg
     tu = DefineTrades('DB')
-    inputlen, df, ldf = tu.processDBTrades(df)
+    df, ldf = tu.processDBTrades(df)
 
     ts, entries = ibdb.getTradeSummaries(theDate)
     # self.ts = setTradeSummaryHeaders(ts)

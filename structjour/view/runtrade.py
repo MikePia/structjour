@@ -29,7 +29,6 @@ from PyQt5.QtCore import QDate, QDateTime
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox, QInputDialog, QLineEdit
 
-from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
 from structjour.statements.dasstatement import DasStatement
 from structjour.statements.findfiles import checkDateDir
@@ -41,10 +40,13 @@ from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.stock.utilities import qtime2pd
 from structjour.journalfiles import JournalFiles
-# pylint: disable = C0103
+# pylint: disable = C0103, C0301
 
 
 def getDate(msg):
+    '''
+    QInputDialog to get the date
+    '''
     while True:
         text, okPressed = QInputDialog.getText(None, "Get text", msg, QLineEdit.Normal, "")
         if okPressed and text != '':
@@ -71,6 +73,7 @@ class runController:
         self.ui = self.sc.ui
 
         self.initialize()
+        self.inputtype = None
 
         self.ui.goBtn.pressed.connect(self.runnit)
         self.ui.loadBtn.pressed.connect(self.loadit)
@@ -109,8 +112,7 @@ class runController:
         '''
         Load saved objects
         '''
-        inputType = self.settings.value('inputType')
-            
+
         daDate = self.ui.dateEdit.date()
         daDate = qtime2pd(daDate)
         self.settings.setValue('theDate', daDate)
@@ -122,29 +124,31 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
-        
+
 
         lf = LayoutForms(self.sc, jf, None)
-        lf.loadSavedFile(inputType, daDate)
+        lf.loadTradesFromDB(daDate)
         if lf.df is None:
             print('Press load with useDatabase checked')
 
     def runDBInput(self, daDate, jf):
+        '''
+        Get the trades from daDate in the DB and process the trades
+        '''
         statement = StatementDB()
 
         daDate = qtime2pd(daDate)
 
-        rc = FinReqCol()
         df = statement.getStatement(daDate)
         if df.empty:
             return False
 
         tu = DefineTrades(self.inputtype)
-        inputlen, dframe, ldf = tu.processDBTrades(df)
+        dframe, ldf = tu.processDBTrades(df)
         lf = LayoutForms(self.sc, jf, dframe)
         lf.pickleitnow()
         tradeSummaries = lf.runTtoSummaries(ldf)
-        ts = lf.ts
+        # ts = lf.ts
         statement.addTradeSummaries(tradeSummaries, ldf)
         return True
 
@@ -166,17 +170,17 @@ class runController:
             if os.path.exists(local):
                 d, jf.infile = os.path.split(local)
                 jf.inpathfile = local
-            
+
         if self.inputtype == 'IB_HTML':
             jf.inputType = 'IB_HTML'
             statement = IbStatement()
-            x = statement.openIBStatement(jf.inpathfile)
+            statement.openIBStatement(jf.inpathfile)
         elif self.inputtype == 'DAS':
             theDate = self.settings.value('theDate')
             ds = DasStatement(jf.infile, self.settings, theDate)
-            df = ds.getTrades()
+            ds.getTrades()
 
- 
+
     def runnit(self):
         '''
         Load an initial input file and process it.
@@ -199,7 +203,7 @@ class runController:
             if os.path.exists(local):
                 d, jf.infile = os.path.split(local)
                 jf.inpathfile = local
-            
+
         x, inputType = getStatementType(jf.inpathfile)
         if not inputType:
             msg = f'<h3>No trades found. File does not appear to be a statement</h3><ul> '
@@ -225,7 +229,7 @@ class runController:
                     raise ValueError(f'Error in processing statemnt {jf.inpathfile}')
                 numtickets = len(x[0][tkey])
                 gotToday = self.runDBInput(self.theDate, jf)
-                
+
                 if gotToday:
                     return
                 else:
@@ -239,7 +243,7 @@ class runController:
                 msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
                 msg = msg + f'<div>{x[1]}</div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
             return
@@ -249,7 +253,7 @@ class runController:
                 msg = "<h3>The date for this DAS statement is not clear</h3>"
                 msg += "<div>Please enter the date for this statement</div>"
                 msg += f'<div><strong>{jf.inpathfile}</strong></div>'
-                msg +=  '<div>(YYYYMMDD) ex: 20190113</div>'
+                msg += '<div>(YYYYMMDD) ex: 20190113</div>'
                 theDate = getDate(msg)
                 if theDate:
                     self.settings.setValue('theDate', theDate)
@@ -257,13 +261,13 @@ class runController:
                 else:
                     return
             ds = DasStatement(jf.infile, self.settings, self.theDate)
-            df = ds.getTrades()
+            ds.getTrades()
             self.runDBInput(self.theDate, jf)
             return
         else:
             msg = '<h3>Unrecognized input:</h3><ul> '
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
             return
@@ -271,6 +275,7 @@ class runController:
 
 
 def main():
+    '''Run some local code'''
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     os.chdir(os.path.realpath('../../'))
@@ -278,7 +283,7 @@ def main():
     s = QStyleFactory.create('Fusion')
     app.setStyle(s)
     w = SumControl()
-    rc = runController(w)
+    rw = runController(w)
     w.show()
     sys.exit(app.exec_())
 
