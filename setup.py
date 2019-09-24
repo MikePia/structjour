@@ -35,7 +35,10 @@ setuptools.setup(
         'images/ZeroSubstanceCreation_220.png',
         'images/ZeroSubstanceCreation_500x334.png',
         'images/ZeroSubstanceCreation.png',
-        'images/ZSLogo.png'
+        'images/ZSLogo.png',
+        'images/filesettings.png',
+        'images/stockapi.png',
+        'images/structjour.png'
     ]), ('', ['Disciplined.xlsx'])],
     entry_points={'console_scripts': 'structjour=structjour.view.runtrade:main'},
     python_requires='>=3.6'
