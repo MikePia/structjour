@@ -12,7 +12,7 @@ setuptools.setup(
     license='GPL',
     long_description=long_description,
     url='https://github.com/MikePia/structjour',
-    packages=setuptools.find_packages(exclude=['tests']),
+    packages=setuptools.find_packages(exclude=['test']),
     keywords='DayTrading journal',
     classifiers=[
         'Development Status :: - Alpha',
@@ -36,7 +36,7 @@ setuptools.setup(
         'images/ZeroSubstanceCreation_500x334.png',
         'images/ZeroSubstanceCreation.png',
         'images/ZSLogo.png'
-    ])],
+    ]), ('', ['Disciplined.xlsx'])],
     entry_points={'console_scripts': 'structjour=structjour.view.runtrade:main'},
     python_requires='>=3.6'
 )
