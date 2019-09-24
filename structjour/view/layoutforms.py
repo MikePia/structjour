@@ -218,10 +218,13 @@ class LayoutForms:
         for key in self.ts:
             self.sc.ui.tradeList.addItem(key)
             tradeSummaries.append(self.ts[key])
-        try:
-            self.sc.dControl.runDialog(self.df, self.ts)
-        except AttributeError as e:
-            print(e)
+        # try:
+        #     self.sc.dControl.runDialog(self.df, self.ts)
+        # except AttributeError as e:
+        #     print(e)
+
+        windowTitle = self.sc.baseWindowTitle +': ' + self.sc.ui.infileEdit.text() + ': User Data Loaded'
+        self.sc.setWindowTitle(windowTitle)
 
         # In prep to do the mistake summary and excel export, return the list it uses now
         # It might be good to use the dict self.ts instead

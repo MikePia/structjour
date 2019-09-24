@@ -83,6 +83,7 @@ class SumControl(QMainWindow):
         ui.setupUi(self)
         self.setWindowIcon(QIcon("images/ZSLogo.png"))
 
+        self.baseWindowTitle = 'Structjour -- Daily trade review'
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
@@ -173,6 +174,12 @@ class SumControl(QMainWindow):
     # ==================== Main Form  methods =========================
     # =================================================================
 
+    def markDataChanged(self):
+        t = self.windowTitle()
+        if not t[-1] == '*':
+            t += '***'
+            self.setWindowTitle(t)
+
     def browseInfile(self):
         indir = self.getDirectory()
         path = QFileDialog.getOpenFileName(self, "Select Chart", indir,
@@ -217,6 +224,7 @@ class SumControl(QMainWindow):
         text = self.ui.strategy.currentText()
         if not text:
             return
+        self.markDataChanged()
         strat = Strategy()
         allstrats = strat.getStrategies()
 
@@ -249,6 +257,10 @@ class SumControl(QMainWindow):
 
         self.lf.saveTheTradeObject(outpathfile)
         self.ui.infileEdit.setStyleSheet('color: blue;')
+        t = self.windowTitle()
+        if t[-1] == '*':
+            t = t[:-3]
+            self.setWindowTitle(t)
 
     def getSaveName(self):
         '''
@@ -437,6 +449,7 @@ class SumControl(QMainWindow):
             self.lf.setChartData(key, data, c)
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
+            self.markDataChanged()
             return pname
 
         apiset = QSettings('zero_substance/stockapi', 'structjour')
@@ -535,6 +548,9 @@ class SumControl(QMainWindow):
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
 
+        if action in [pastePic, browsePic]:
+            self.markDataChanged()
+
         if action == pastePic:
             name = ''
             if self.lf:
@@ -629,6 +645,7 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trades are loaded. Nothing to explain')
             return
+        self.markDataChanged()
         key = self.ui.tradeList.currentText()
         text = self.ui.explain.toPlainText()
         self.lf.setExplain(key, text)
@@ -638,6 +655,7 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trades are loaded nothing to analyze.')
             return
+        self.markDataChanged()
         key = self.ui.tradeList.currentText()
         text = self.ui.notes.toPlainText()
         self.lf.setNotes(key, text)
@@ -646,6 +664,7 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trades are loaded.')
             return
+        self.markDataChanged()
         note = self.ui.sumNote.toPlainText()
         key = self.ui.tradeList.currentText()
         if not val:
@@ -665,6 +684,7 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trades are loaded. Nothing to summarize.')
             return
+        self.markDataChanged()
         lostval = self.ui.lost.text()
         note = self.ui.sumNote.toPlainText()
         key = self.ui.tradeList.currentText()
@@ -722,9 +742,11 @@ class SumControl(QMainWindow):
             self.ui.strategy.setCurrentIndex(index)
 
         key = self.ui.tradeList.currentText()
-        if self.lf and strat:
+        if not self.lf:
+            return
+        if strat:
             if not key:
-                print('I believe this is the right place for the code ')
+                # print('I believe this is the right place for the code ')
                 return
             self.lf.setStrategy(key, strat)
         if not self.ui.strategy.currentText():
@@ -961,6 +983,7 @@ class SumControl(QMainWindow):
         if not self.lf:
             # print('No trade for which to provide a target price')
             return
+        self.markDataChanged()
         diff = 0
         try:
             fval = float(val)
@@ -988,6 +1011,7 @@ class SumControl(QMainWindow):
         if not self.lf:
             # print('No trade for which to provide a stop price')
             return
+        self.markDataChanged()
         diff = 0
         try:
             fval = float(val)

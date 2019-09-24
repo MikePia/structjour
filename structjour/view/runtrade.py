@@ -36,7 +36,6 @@ from structjour.statements.findfiles import checkDateDir
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.statement import getStatementType
-from structjour.statement import Statement_IBActivity
 from structjour.stock.utilities import pd2qtime
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
@@ -103,7 +102,8 @@ class runController:
         ### end blitz
         self.infile = self.settings.value(inkey)
         self.inpathfile = self.ui.infileEdit.text()
-        print(self.inpathfile)
+        # print(self.inpathfile)
+        self.sc.setWindowTitle(self.sc.baseWindowTitle)
 
     def loadit(self):
         '''
@@ -190,6 +190,9 @@ class runController:
                           mydevel=True)
         if self.inputtype == 'DB':
             self.runDBInput(self.theDate, jf)
+
+            windowTitle = self.sc.baseWindowTitle +': ' + self.sc.ui.infileEdit.text() + ': no user data'
+            self.sc.setWindowTitle(windowTitle)
             return
         local = os.path.normpath(self.ui.infileEdit.text())
         if os.path.normpath(jf.inpathfile) != local:
@@ -207,6 +210,9 @@ class runController:
             msgbx.exec()
             return
         self.inputtype = inputType
+
+        windowTitle = self.sc.baseWindowTitle +': ' + self.sc.ui.infileEdit.text() + ': no user data'
+        self.sc.setWindowTitle(windowTitle)
 
         if self.inputtype == 'IB_HTML' or self.inputtype == 'IB_CSV':
             jf.inputType = self.inputtype
