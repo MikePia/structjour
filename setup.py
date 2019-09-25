@@ -26,6 +26,7 @@ setuptools.setup(
         'pandas>=0.24.0',
         'seaborn>=0.9.0',
         'PyQt5>=5.13.0',
+        'pyqt5-sip',
         'PyQtWebEngine>=5.12.1',
         'openpyxl==2.5.14',
         'beautifulsoup4>=4.7.1',
@@ -43,11 +44,3 @@ setuptools.setup(
     entry_points={'console_scripts': 'structjour=structjour.view.runtrade:main'},
     python_requires='>=3.6'
 )
-
-
-# figure out:
-# entry_points
-# package_data
-# data_files
-# extras_require
-# and how to include IBAPI  optional
