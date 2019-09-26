@@ -1338,5 +1338,5 @@ class Ui_MainWindow(object):
         self.actionDB_Doctor.setText(_translate("MainWindow", "DB Doctor"))
         self.actionExport_to_Disciplined_TradeLog.setText(_translate("MainWindow", "Export to TradeLog"))
         self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
-from clickbrowser import ClickBrowser
+from structjour.view.clickbrowser import ClickBrowser
 from structjour.view.clicklabel import ClickLabel

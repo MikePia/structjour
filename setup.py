@@ -25,10 +25,10 @@ setuptools.setup(
         'numpy>=1.16.0',
         'pandas>=0.24.0',
         'seaborn>=0.9.0',
+        'PyQtWebEngine>=5.12.1',
         'PyQt5>=5.13.0',
         'pyqt5-sip',
-        'PyQtWebEngine>=5.12.1',
-        'openpyxl==2.5.14',
+        'openpyxl>=2.5.14',
         'beautifulsoup4>=4.7.1',
         'mpl-finance==0.10.0'
     ],

@@ -112,6 +112,9 @@ class runController:
         '''
         Load saved objects
         '''
+        t = self.sc.windowTitle()
+        if t[-1] == '*':
+            self.saveTradesQuestion()
 
         daDate = self.ui.dateEdit.date()
         daDate = qtime2pd(daDate)
@@ -157,7 +160,7 @@ class runController:
         '''
         Load an initial input file and process it.
         '''
-        print('gonna runnitDB gonna runnitDB')
+        
         self.initialize()
         if not self.indir:
             print('What file is supposed to load?')
@@ -185,6 +188,9 @@ class runController:
         '''
         Load an initial input file and process it.
         '''
+        t = self.sc.windowTitle()
+        if t[-1] == '*':
+            self.saveTradesQuestion()
         self.initialize()
         if not self.indir:
             print('What file is supposed to load?')
@@ -272,7 +278,18 @@ class runController:
             msgbx.exec()
             return
 
-
+    def saveTradesQuestion(self):
+        msgBox = QMessageBox()
+        msgBox.setIconPixmap(QPixmap("images/ZSLogo.png"))
+        name = self.sc.ui.infileEdit.text()
+        msgBox.setText(f"User data for {name} has been modified.");
+        msgBox.setInformativeText("Do you want to commit your changes?");
+        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel);
+        msgBox.setDefaultButton(QMessageBox.Save);
+        ret = msgBox.exec();
+        
+        if ret == QMessageBox.Save:
+          self.sc.saveTradeObject()
 
 def main():
     '''Run some local code'''

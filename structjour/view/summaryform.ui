@@ -2257,7 +2257,7 @@ p, li { white-space: pre-wrap; }
   <customwidget>
    <class>ClickBrowser</class>
    <extends>QTextBrowser</extends>
-   <header>clickbrowser.h</header>
+   <header location="global">structjour.view.clickbrowser.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
