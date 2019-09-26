@@ -140,6 +140,8 @@ class SumControl(QMainWindow):
         self.ui.chart3Interval.editingFinished.connect(self.chart3IntervalChanged)
         self.ui.timeHeadBtn.pressed.connect(self.toggleDate)
 
+        self.ui.inspireQuote.clicked.connect(self.loadInspireQuote)
+
         self.ui.saveBtn.pressed.connect(self.saveTradeObject)
         self.ui.strategy.currentIndexChanged.connect(self.strategyChanged)
 
@@ -520,6 +522,21 @@ class SumControl(QMainWindow):
             widgs = [self.ui.chart3Start, self.ui.chart3End,
                      self.ui.chart3Interval, self.ui.chart3Name]
         return widgs
+
+    def loadInspireQuote(self, x, event):
+        print('Got the click in loadInspireQuote')
+
+        img = x
+        cmenu = QMenu(img)
+        fred = cmenu.addAction('Get a random quote')
+
+        # This is the line in question and None arg is the crux
+        action = cmenu.exec_(self.mapTo(None, event.globalPos()))
+        if action == fred:
+            # self.markDataChanged()
+            inspire = Inspire()
+            quote = inspire.getrandom().replace("\t", "        ")
+            self.ui.inspireQuote.setText(quote)
 
     def loadImage1(self, x, event):
         '''

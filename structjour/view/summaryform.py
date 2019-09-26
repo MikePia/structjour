@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.0
+# Created by: PyQt5 UI code generator 5.13.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -108,7 +108,7 @@ class Ui_MainWindow(object):
         self.exportBtn.setObjectName("exportBtn")
         self.verticalLayout.addWidget(self.exportBtn)
         self.horizontalLayout_4.addLayout(self.verticalLayout)
-        self.inspireQuote = QtWidgets.QTextBrowser(self.centralwidget)
+        self.inspireQuote = ClickBrowser(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1338,4 +1338,5 @@ class Ui_MainWindow(object):
         self.actionDB_Doctor.setText(_translate("MainWindow", "DB Doctor"))
         self.actionExport_to_Disciplined_TradeLog.setText(_translate("MainWindow", "Export to TradeLog"))
         self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
+from clickbrowser import ClickBrowser
 from structjour.view.clicklabel import ClickLabel

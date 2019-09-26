@@ -182,7 +182,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QTextBrowser" name="inspireQuote">
+           <widget class="ClickBrowser" name="inspireQuote">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
               <horstretch>0</horstretch>
@@ -2253,6 +2253,11 @@ p, li { white-space: pre-wrap; }
    <class>ClickLabel</class>
    <extends>QLabel</extends>
    <header location="global">structjour.view.clicklabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ClickBrowser</class>
+   <extends>QTextBrowser</extends>
+   <header>clickbrowser.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
