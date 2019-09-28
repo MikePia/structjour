@@ -1,1 +1,1 @@
-include structjour/images/*.
+global-include *.png

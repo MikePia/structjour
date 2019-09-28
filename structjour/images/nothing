@@ -1,0 +1,4 @@
+import os
+
+def dummy():
+    print(os.getcwd())

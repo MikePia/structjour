@@ -54,6 +54,9 @@ from structjour.xlimage import XLImage
 
 from structjour.strategy.strategies import Strategy
 
+# To force the import of the pacakage_data in setup
+# from structjour.images import dummy
+
 
 # pylint: disable = C0103, W0612, W0613, R0904, R0912, R0914, R0915
 
