@@ -35,4 +35,4 @@ class ClickBrowser(QTextBrowser):
     def contextMenuEvent(self, event):
         ''' Override and add emit'''
         self.clicked.emit(self, event)
-        QTextBrowser.contextMenuEvent(self, event)
+        # QTextBrowser.contextMenuEvent(self, event)

@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../images/ZSLogo.png</normaloff>../../images/ZSLogo.png</iconset>
+    <normaloff>../images/ZSLogo.png</normaloff>../images/ZSLogo.png</iconset>
   </property>
   <widget class="QLabel" name="label_9">
    <property name="geometry">
@@ -37,7 +37,7 @@
     <string>Files and Directories</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>32</x>

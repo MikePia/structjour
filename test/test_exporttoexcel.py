@@ -159,7 +159,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
             tto['MstkNote'] = notex
 
         # Setup a couple images to add 
-        imdir = 'images/'
+        imdir = 'structjour/images/'
         img1 = os.path.join(imdir, 'fractal-art-fractals.jpg')
         img2 = os.path.join(imdir, 'psych.jpg')
         assert os.path.exists(img1)

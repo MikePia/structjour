@@ -25,7 +25,7 @@ import re
 import sys
 
 import pandas as pd
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 
@@ -50,7 +50,7 @@ class FileSetCtrl(QDialog):
         fui.setupUi(self)
         self.fui = fui
 
-        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+        self.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
 
         # Define actions.
         fui.journalBtn.pressed.connect(self.setJournalDlg)
@@ -153,7 +153,7 @@ class FileSetCtrl(QDialog):
                 msg = f'<h3>{m.args[0]}</h3>'
                 msg += f'<p>{m.args[1]}</p>'
                 msgbx = QMessageBox()
-                msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
+                msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
                 msgbx.setText(msg)
                 msgbx.exec()
             else:
@@ -359,12 +359,14 @@ class FileSetCtrl(QDialog):
                 fs.append(x.string)
         fname = ''
         if len(fs) > 1:
+            title = 'Matched Files'
             msg = '<h3>You have matched multiple files:</h3><ul> '
             for name in fs:
                 msg = msg + '<li>' + name + '</li>'
             msg = msg + '</ul><p>Displaying the first</p>'
-            msgbx = QMessageBox()
-            msgbx.setText(msg)
+            msgbx = QMessageBox(QMessageBox.Information, title, msg, QMessageBox.Ok)
+            msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
+            # msgbx.setText(msg)
             msgbx.exec()
             fname = fs[0]
 

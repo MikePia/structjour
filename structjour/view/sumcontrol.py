@@ -77,11 +77,11 @@ class SumControl(QMainWindow):
         self.oldDate = None
         super().__init__()
 
-        defimage = "images/ZeroSubstanceCreation_220.png"
-        self.defaultImage = 'images/ZeroSubstanceCreation.png'
+        defimage = "structjour/images/ZeroSubstanceCreation_220.png"
+        self.defaultImage = 'structjour/images/ZeroSubstanceCreation.png'
         ui = Ui_MainWindow()
         ui.setupUi(self)
-        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+        self.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
 
         self.baseWindowTitle = 'Structjour -- Daily trade review'
         self.lf = None
@@ -392,7 +392,7 @@ class SumControl(QMainWindow):
             if not rule:
                 msg = msg + '<div>Please select Chart API from the menu</div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"));
+            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"));
             msgbx.setText(msg)
             msgbx.exec()
             return None
@@ -503,7 +503,8 @@ class SumControl(QMainWindow):
 
     def mousePressEvent(self, event):
         '''Overridden'''
-        print('mouse Press', (event.x(), event.y()))
+        # print('mouse Press', (event.x(), event.y()))
+        pass
 
     def getChartWidgets(self, c):
         '''
@@ -524,7 +525,6 @@ class SumControl(QMainWindow):
         return widgs
 
     def loadInspireQuote(self, x, event):
-        print('Got the click in loadInspireQuote')
 
         img = x
         cmenu = QMenu(img)

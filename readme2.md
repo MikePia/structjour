@@ -32,7 +32,7 @@ Go to file->file settings
 
   * Click Journal Directory and select the location to place your journal directory
   * Click on each of the next four buttons to set up defaults
-  * Disciplined Trader log (Disciplined.xlsx) is located in your install directory. I recommend placing it in your Journal Directory. Then click on Discipline and navigate to the file
+  * Disciplined Trader log (Disciplined.xlsx) is located in your install directory or can be found on [here on github](https://github.com/MikePia/structjour/raw/master/Disciplined.xlsx ). I recommend placing it in your Journal Directory. Then click on Discipline and navigate to the file
    * The structjour database and trades databse will be sqlite databases. They will be filenames in your system. They can be the same file if you like. Make up a name and place it in the boxes. Place them in your journal directory
    * Create Dirs will create subdirectories in your Journal Directory. 
        * Make sure you have a valid directory in the Journal Directory edit box.

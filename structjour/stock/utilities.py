@@ -28,11 +28,14 @@ import math
 import os
 import random
 import sqlite3
+import sys
 
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QSettings, QUrl, QDate, QDateTime, Qt
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtGui import QIcon
+
 
 
 # pylint: disable = C0103
@@ -256,20 +259,23 @@ class ManageKeys:
 
     def setDB(self, db=None):
         '''
-        Set the location of the sqlite db file. Its placed in the apiset but could belong in
-        settings. The db does not seem to have a natural place to be excluded from.
-        Arbitrarily, its in apiset only. (apiset 'belongs' to the stockapi, but the db has a range
-        of things beyond that).
+        Set the location of the sqlite db file. Store in main Settings
         '''
         if db:
             self.db = db
         else:
             self.db = self.settings.value('structjourDb')
         msg = None
-        if not self.db:
-            msg = '\nWARNING: Trade Db location is not set.'
-            msg = msg +  '\nPlease set the location of the trade Db. Select file->filesettings\n'
-            print('QMessageBox:', msg)
+        if not os.path.exists(self.db):
+            title = 'Warning'
+            msg = ('<h3>Warning: Trade Db location does not exist.</h3>'
+                    '<p>Please set a valid location when calling setDB or you may select or '
+                    'create a new location by selecting file->filesettings</p>')
+
+            msgbx = QMessageBox(QMessageBox.Warning, title, msg, QMessageBox.Ok)
+            msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
+            msgbx.exec()
+
             return
 
         if not os.path.exists(self.db):
@@ -396,13 +402,18 @@ def checkForIbapi():
 
 
 def notmain():
-    # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\src\\test\\testdb.sqlite')
+    '''Run local code. using a db path unique to this machine'''
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+    mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\test\\testdb.sqlite')
+    mk.setDB('notapath')
     # mk.updateKey('bc', '''That'll do pig''')
     # mk.updateKey('av', '''That'll do.''')
     # print(mk.getKey('bc'))
     # print(mk.getKey('av'))
-    print(getMASettings())
-    movingAverage(None, None, None)
+    # print(getMASettings())
+    # movingAverage(None, None, None)
+    
 
 def localstuff():
     settings = QSettings('zero_substance', 'structjour') 

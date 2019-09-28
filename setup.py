@@ -5,7 +5,7 @@ with open('readme.md', 'r') as fh:
 
 setuptools.setup(
     name='structjour',
-    version='0.9.9-Alpha',
+    version='0.9.91-Alpha.003',
     author='Mike Petersen',
     author_email='pentsok@zerosubstance.org',
     description='A structured daily journal for day traders.',
@@ -15,11 +15,11 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['test']),
     keywords='DayTrading journal',
     classifiers=[
-        'Development Status :: - Alpha',
-        'Intended Audience :: Day Traders'
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Other Audience',
         'Programming Language :: Python :: 3',
-        'License :: GNU GPL Version 3',
-        'Operating System :: Windows',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Operating System :: Microsoft :: Windows'
     ],
     install_requires=[
         'numpy>=1.16.0',
@@ -32,15 +32,15 @@ setuptools.setup(
         'beautifulsoup4>=4.7.1',
         'mpl-finance==0.10.0'
     ],
-    data_files=[('images', [
-        'images/ZeroSubstanceCreation_220.png',
-        'images/ZeroSubstanceCreation_500x334.png',
-        'images/ZeroSubstanceCreation.png',
-        'images/ZSLogo.png',
-        'images/filesettings.png',
-        'images/stockapi.png',
-        'images/structjour.png'
-    ]), ('', ['Disciplined.xlsx'])],
+    data_files=[('structjour/images', [
+        'structjour/images/ZeroSubstanceCreation_220.png',
+        'structjour/images/ZeroSubstanceCreation_500x334.png',
+        'structjour/images/ZeroSubstanceCreation.png',
+        'structjour/images/ZSLogo.png',
+        'structjour/images/filesettings.png',
+        'structjour/images/stockapi.png',
+        'structjour/images/structjour.png'
+    ]), ('', ['Disciplined.xlsx']),('',['readme.md'])],
     entry_points={'console_scripts': 'structjour=structjour.view.runtrade:main'},
     python_requires='>=3.6'
 )

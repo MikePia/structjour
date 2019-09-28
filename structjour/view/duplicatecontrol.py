@@ -43,7 +43,7 @@ class DupControl(QDialog):
         self.ui.setupUi(self)
         self.setWindowTitle('Database Tool')
 
-        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+        self.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
         self.nextRecord = None
         self.numDups = None
         self.deletMe = None

@@ -48,7 +48,7 @@ class StockApi(QDialog):
 
         checkForIbapi()
 
-        self.setWindowIcon(QIcon('images/ZSLogo.png'))
+        self.setWindowIcon(QIcon('structjour/images/ZSLogo.png'))
 
         self.ui.ibRealCb.clicked.connect(self.ibClicked)
         self.ui.ibPaperCb.clicked.connect(self.ibPaperclicked)

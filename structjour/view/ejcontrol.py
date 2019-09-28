@@ -47,7 +47,7 @@ class EJControl(QDialog):
         self.ui.browseBtn.pressed.connect(self.browse)
         self.settings = QSettings('zero_substance', 'structjour')
 
-        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+        self.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
 
         ok = self.exec()
         if ok:

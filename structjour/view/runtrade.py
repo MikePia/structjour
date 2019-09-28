@@ -215,7 +215,7 @@ class runController:
             msg = f'<h3>No trades found. File does not appear to be a statement</h3><ul> '
             msg += f'<div><strong>{jf.inpathfile}</strong></div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
+            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
             return
@@ -249,7 +249,7 @@ class runController:
                 msg = msg + f'<div><strong>{jf.inpathfile}</strong></div>'
                 msg = msg + f'<div>{x[1]}</div>'
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
+            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
             return
@@ -273,14 +273,14 @@ class runController:
         else:
             msg = '<h3>Unrecognized input:</h3><ul> '
             msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("images/ZSLogo.png"))
+            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
             return
 
     def saveTradesQuestion(self):
         msgBox = QMessageBox()
-        msgBox.setIconPixmap(QPixmap("images/ZSLogo.png"))
+        msgBox.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
         name = self.sc.ui.infileEdit.text()
         msgBox.setText(f"User data for {name} has been modified.");
         msgBox.setInformativeText("Do you want to commit your changes?");

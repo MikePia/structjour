@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1868</width>
-    <height>1545</height>
+    <height>1546</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -18,7 +18,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../../images/ZSLogo.png</normaloff>../../images/ZSLogo.png</iconset>
+    <normaloff>../images/ZSLogo.png</normaloff>../images/ZSLogo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_4">
@@ -141,7 +141,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#00aa00;&quot;&gt;Load the transactions shown in the file edit box.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Read File</string>
+               <string>GO</string>
               </property>
              </widget>
             </item>
@@ -151,7 +151,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#2d04fa;&quot;&gt;Load the saved data.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Load User Data</string>
+               <string>Load</string>
               </property>
              </widget>
             </item>
@@ -165,7 +165,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save all current data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Save User Data</string>
+               <string>Save</string>
               </property>
              </widget>
             </item>
@@ -2002,7 +2002,7 @@ p, li { white-space: pre-wrap; }
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap>../../images/ZeroSubstanceCreation.png</pixmap>
+             <pixmap>../images/ZeroSubstanceCreation.png</pixmap>
             </property>
            </widget>
           </item>
@@ -2087,7 +2087,7 @@ p, li { white-space: pre-wrap; }
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap>../../images/ZeroSubstanceCreation.png</pixmap>
+             <pixmap>../images/ZeroSubstanceCreation.png</pixmap>
             </property>
            </widget>
           </item>
@@ -2168,7 +2168,7 @@ p, li { white-space: pre-wrap; }
              <string/>
             </property>
             <property name="pixmap">
-             <pixmap>../../images/ZeroSubstanceCreation.png</pixmap>
+             <pixmap>../images/ZeroSubstanceCreation.png</pixmap>
             </property>
            </widget>
           </item>

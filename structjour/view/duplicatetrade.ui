@@ -13,7 +13,11 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QWidget" name="">
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../images/ZSLogo.png</normaloff>../images/ZSLogo.png</iconset>
+  </property>
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>15</x>
@@ -53,7 +57,7 @@ p, li { white-space: pre-wrap; }
          </widget>
         </item>
         <item>
-         <widget class="QWebEngineView" name="showDuplicate" native="true">
+         <widget class="QWebEngineView" name="showDuplicate">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -66,7 +70,7 @@ p, li { white-space: pre-wrap; }
             <height>450</height>
            </size>
           </property>
-          <property name="url" stdset="0">
+          <property name="url">
            <url>
             <string>about:blank</string>
            </url>

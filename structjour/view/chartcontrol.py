@@ -48,7 +48,7 @@ class ChartControl(QDialog):
         self.mplcolors = None
         self.loadStyles()
 
-        self.setWindowIcon(QIcon("images/ZSLogo.png"))
+        self.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
 
         self.ui.styleCb.currentTextChanged.connect(self.setStyle)
         self.ui.gridhCb.clicked.connect(self.setGridh)
