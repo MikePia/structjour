@@ -1,1 +1,2 @@
 global-include *.png
+global-include readme.md

@@ -1,6 +1,11 @@
 import setuptools
+from shutil import copyfile
+import os
 
-with open('readme.md', 'r') as fh:
+copyfile('readme.md', 'structjour/readme.md')
+
+
+with open('structjour/readme.md', 'r') as fh:
     long_description = fh.read()
 
 
@@ -8,12 +13,13 @@ thePackages = setuptools.find_packages(exclude=['test'])
 
 setuptools.setup(
     name='structjour',
-    version='0.9.91-Alpha.009', 
+    version='0.9.91-Alpha.013',
     author='Mike Petersen',
     author_email='pentsok@zerosubstance.org',
     description='A structured daily journal for day traders.',
     license='GPL',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/MikePia/structjour',
     packages=thePackages,
     keywords='DayTrading journal',
@@ -38,7 +44,7 @@ setuptools.setup(
     ],
     include_package_data=True,
 
-    data_files=[('', ['Disciplined.xlsx']),('',['readme.md'])],
+    # data_files=[('', ['Disciplined.xlsx']),('',['readme.md'])],
     entry_points={'console_scripts': 'structjour=structjour.view.runtrade:main'},
     python_requires='>=3.6'
 )
