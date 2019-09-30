@@ -25,6 +25,7 @@ setuptools.setup(
         'Operating System :: Microsoft :: Windows'
     ],
     install_requires=[
+        'requests',
         'numpy>=1.16.0',
         'pandas>=0.24.0',
         'seaborn>=0.9.0',
