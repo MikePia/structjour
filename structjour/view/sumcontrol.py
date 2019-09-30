@@ -737,7 +737,10 @@ class SumControl(QMainWindow):
         '''
         if not key:
             return
+        
+        title = self.windowTitle()
         self.lf.populateTradeSumForms(key)
+        self.setWindowTitle(title)
 
     def loadStrategies(self, strat):
         '''
