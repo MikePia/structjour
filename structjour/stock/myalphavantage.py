@@ -34,7 +34,7 @@ import datetime as dt
 import time
 import requests
 import pandas as pd
-from structjour.stock.picklekey import getKey as getPickledKey
+# from structjour.stock.picklekey import getKey as getPickledKey
 from structjour.stock.utilities import ManageKeys, movingAverage
 # import pickle
 
@@ -80,20 +80,10 @@ OUTPUTSIZE = ('compact', 'full')  # compact is default
 INTERVAL = ('1min', '5min', '15min', '30min',
             '60min', 'daily', 'weekly', 'monthly')
 
-# Deprecated
-APIKEY = getPickledKey('alphavantage')['key']
-
 def getKey():
     mk=ManageKeys()
     return mk.getKey('av')
 
-
-def getkeyPickled():
-    '''
-    My Personal key pickled on my personal system
-    '''
-    k = getPickledKey('alphavantage')
-    return k
 
 def getapis():
     '''some RESTful APIS'''
