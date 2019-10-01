@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>375</width>
-    <height>505</height>
+    <width>630</width>
+    <height>604</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,16 +17,16 @@
    <iconset>
     <normaloff>../images/ZSLogo.png</normaloff>../images/ZSLogo.png</iconset>
   </property>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>41</x>
-     <y>22</y>
-     <width>389</width>
-     <height>455</height>
+     <x>40</x>
+     <y>23</y>
+     <width>296</width>
+     <height>540</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_8">
+   <layout class="QVBoxLayout" name="verticalLayout_9">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6">
       <item>
@@ -233,6 +233,41 @@
      </layout>
     </item>
     <item>
+     <layout class="QVBoxLayout" name="verticalLayout_8">
+      <item>
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.worldtradingdata.com/register&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;World Trade Data free api (right click)&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="wtdCb">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use Alphavantage APIs get a free API key from &lt;/span&gt;&lt;a href=&quot;https://www.alphavantage.co/support/#api-key&quot;&gt;&lt;span style=&quot; font-size:9pt; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.alphavantage.co/support/#api-key &lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;   The data is realtime Historical data is available for the last 7 days. Data limts are 500 calls per day and 5 per minute.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>WorldTradeData</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <item>
+         <widget class="QLineEdit" name="wtdKey"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>API Key</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
      <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
        <widget class="QLabel" name="label_9">
@@ -264,7 +299,7 @@
       <item>
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Order the tokens ib, bc, av, and iex for preference</string>
+         <string>Order the tokens ib, bc, av, and wtd for preference</string>
         </property>
        </widget>
       </item>
@@ -274,7 +309,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Place the tokkens in order of preference. Structjour will choose from your preference and the availability of the api&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;For Example&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-weight:600;&quot;&gt;ib, bc, av, iex&lt;/span&gt;&lt;span style=&quot; font-size:9pt;&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;If you set the above order and click for a chart update for todays chart at 3:00 PM, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Structjour will use ib if you have opened IBGateway application.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;bc cannot be used for todays data till after 4:30&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Finally av will be chosen with its real time data.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;(iex works OK 1/2 the time)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>ib, bc, av</string>
+         <string>ib, bc, av, wtd</string>
         </property>
        </widget>
       </item>

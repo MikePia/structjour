@@ -33,7 +33,7 @@ from structjour.stock.utilities import ManageKeys, checkForIbapi
 
 class StockApi(QDialog):
     '''
-    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, iexCb, APIPref]
+    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, iexCb, wtdCb, APIPref]
     The api keys are held in the database
     '''
     def __init__(self, settings):
@@ -62,6 +62,9 @@ class StockApi(QDialog):
         
         self.ui.avCb.clicked.connect(self.setAvCb)
         self.ui.avKey.editingFinished.connect(self.setAvKey)
+
+        self.ui.wtdCb.clicked.connect(self.setWtdCb)
+        self.ui.wtdKey.editingFinished.connect(self.setWtdKey)
 
         self.ui.iexCb.clicked.connect(self.setIexCb)
 
@@ -130,6 +133,12 @@ class StockApi(QDialog):
         
         val = self.mk.getKey('av')
         self.ui.avKey.setText(val)
+
+        val = self.apiset.value('wtdCb', False, bool)
+        self.ui.wtdCb.setChecked(val)
+        
+        val = self.mk.getKey('wtd')
+        self.ui.wtdKey.setText(val)
 
         val = self.apiset.value('iexCb', False, bool)
         # self.ui.iexCb.setChecked(val)
@@ -214,6 +223,15 @@ class StockApi(QDialog):
         val = self.ui.avKey.text()
         self.mk.updateKey('av', val)
 
+    def setWtdCb(self, b):
+        self.apiset.setValue('wtdCb', b)
+        self.sortIt('wtd')
+    
+    def setWtdKey(self):
+        val = self.ui.wtdKey.text()
+        self.mk.updateKey('wtd', val)
+
+
     def setIexCb(self, b):
         # self.apiset.setValue('iexCb', b)
         self.apiset.setValue('iexCb', False)
@@ -256,6 +274,10 @@ class StockApi(QDialog):
                 self.ui.APIPref.setStyleSheet('color: red;')
                 return
             compareList.append('av')
+        if 'wtd' in ulist:
+            if not self.ui.wtdCb.isChecked():
+                self.ui.APIPref.setStyleSheer('color: red')
+            compareList.append('wtd')
         # if 'iex' in ulist:
         #     if not self.ui.iexCb.isChecked():
         #         self.ui.APIPref.setStyleSheet('color: red;')
