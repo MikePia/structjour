@@ -90,21 +90,6 @@ TYPE = ['minutes', 'nearbyMinutes', 'formTMinutes',
 ORDER = ['asc', 'desc']
 VOLUME = ['total', 'sum', 'contract', 'sumcontract', 'sumtotal']
 
-# For testing
-DEMO_PARAMS = {'apikey': getApiKey(),
-               'symbol': 'AAPL',
-               'type': 'minutes',
-               'startDate': '2018-12-03 12:45',
-               'maxRecords': 500,
-               'interval': 30,
-               #    'order': 'asc',
-               #    'sessionFilter': 'EFK',
-               #    'splits': 'true',
-               #    'dividends': 'true',
-               'volume': 'sum',
-               #    'nearby': 1,
-               #    'jerq': 'true'
-               }
 
 def setParams(symbol, minutes, startDay):
     '''Internal utility method'''

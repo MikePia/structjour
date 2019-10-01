@@ -266,7 +266,7 @@ class ManageKeys:
         else:
             self.db = self.settings.value('structjourDb')
         msg = None
-        if not os.path.exists(self.db):
+        if not self.db or not os.path.exists(self.db):
             title = 'Warning'
             msg = ('<h3>Warning: Trade Db location does not exist.</h3>'
                     '<p>Please set a valid location when calling setDB or you may select or '
@@ -405,7 +405,8 @@ def notmain():
     '''Run local code. using a db path unique to this machine'''
     from PyQt5.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\test\\testdb.sqlite')
+    # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\test\\testdb.sqlite')
+    mk = ManageKeys()
     mk.setDB('notapath')
     # mk.updateKey('bc', '''That'll do pig''')
     # mk.updateKey('av', '''That'll do.''')
