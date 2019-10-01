@@ -28,12 +28,7 @@ import pandas as pd
 # from structjour.stock.picklekey import getKey as getReg
 from structjour.stock.utilities import ManageKeys, getLastWorkDay, movingAverage
 
-
 # pylint: disable = C0103, R0912, R0914, R0915
-
-
-# https://marketdata.websol.barchart.com/getHistory.json?apikey={APIKEY}&symbol=AAPL&type=minutes&startDate=20181001&maxRecords=100&interval=5&order=asc&sessionFilter=EFK&splits=true&dividends=true&volume=sum&nearby=1&jerq=true
-
 
 def getApiKey():
     '''Returns the key for the barchart API

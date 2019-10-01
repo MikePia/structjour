@@ -334,7 +334,7 @@ class ManageKeys:
 
     def getKey(self, api):
         if not self.db:
-            return
+            return None
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
 

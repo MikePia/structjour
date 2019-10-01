@@ -30,21 +30,25 @@ from structjour.stock.utilities import ManageKeys, movingAverage, getLastWorkDay
 # Example-- open postman to play with them. We only need intraday here
 
 
-APIKEY = 'MBwKeaO5rUOgeuuvcGgGD803RXNZwAMlXtByt2gIvL69Eg02cOKlxyYOODQU'
 
 base_intraday = 'https://intraday.worldtradingdata.com/api/v1/intraday?'
 base_wtd = 'https://api.worldtradingdata.com/api/v1/'
 
-intraday = 'https://intraday.worldtradingdata.com/api/v1/intraday?symbol=BBBY&range=10&interval=60&api_token=MBwKeaO5rUOgeuuvcGgGD803RXNZwAMlXtByt2gIvL69Eg02cOKlxyYOODQU&sort=asc'
-realTime = 'https://api.worldtradingdata.com/api/v1/stock?symbol=AAPL,MSFT,HSBA.L&api_token=MBwKeaO5rUOgeuuvcGgGD803RXNZwAMlXtByt2gIvL69Eg02cOKlxyYOODQU'
-histOHLCV = 'https://api.worldtradingdata.com/api/v1/history?symbol=AAPL&sort=newest&api_token=MBwKeaO5rUOgeuuvcGgGD803RXNZwAMlXtByt2gIvL69Eg02cOKlxyYOODQU'
-fullHistory = 'https://api.worldtradingdata.com/api/v1/history?symbol=SQ&api_token=MBwKeaO5rUOgeuuvcGgGD803RXNZwAMlXtByt2gIvL69Eg02cOKlxyYOODQU&output=csv&sort=oldest'
+
+def getExamples():
+    intraday = f'https://intraday.worldtradingdata.com/api/v1/intraday?symbol=BBBY&range=10&interval=60&api_token={getApiKey()}'
+    realTime = f'https://api.worldtradingdata.com/api/v1/stock?symbol=AAPL,MSFT,HSBA.L&api_token={getApiKey()}'
+    histOHLCV = f'https://api.worldtradingdata.com/api/v1/history?symbol=AAPL&sort=newest&api_token={getApiKey()}'
+    fullHistory = f'https://api.worldtradingdata.com/api/v1/history?symbol=SQ&api_token={getApiKey()}&output=csv&sort=oldest'
+    return [intraday, realTime, histOHLCV, fullHistory]
 
 
 # For structjour intraday is all we need. A Full history can be retrieved as a download from the members area
 
 def getApiKey():
-    return APIKEY
+    mk = ManageKeys()
+    key = mk.getKey('wtd')
+    return key
 
 def getLimits():
     '''
@@ -200,8 +204,10 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
 
 
 def notmain():
-    print(getLimits())
-    print(getApiKey())
+    # print(getLimits())
+    # print(getApiKey())
+    for u in getExamples():
+        print(u)
 
 def main():
     symbol = 'AAPL'
@@ -213,7 +219,7 @@ def main():
     print(df.head)
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()
 
 
