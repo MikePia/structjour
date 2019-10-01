@@ -1,4 +1,5 @@
 # Structjour - A Structured Daily Journal for Day Traders of Stock Equities
+https://github.com/MikePia/structjour
 
 Structjour will import statements from DAS Trader Pro trading platform and Interactive Broker Statements. 
 
@@ -39,7 +40,7 @@ Go to file->file settings
        * Make sure you have a setting the the Directory Naming Scheme (press Set Default)
        * Then select the year and month and click 'Create Dirs'
 
-## Optional setup of automatic chart generation using free data from barchart and alphavantage
+## Optional setup of automatic chart generation using free data from WorldTradeData, barchart and alphavantage
    * Go to file->stock api 
 
 ![filesettings.png](images/stockapi.png)
@@ -48,11 +49,13 @@ Go to file->file settings
       * Do the registration and copy the apikey into the box
    * Get the Alphavantage apikey [from alphavantage here.](https://www.alphavantage.co/support/#api-key) 
       * Do the registration and copy the apikey into the box
-   * Select Barchart and Alphavantage boxes and place the tokens 'bc' and 'av' in the box underneath, seperated by a comma
+   * Get the WorldTradeData apikey [from WorldTradeData here.](https://www.worldtradingdata.com/register) 
+      * Do the registration and copy the apikey into the box
+   * Select/deselect Barchart, Alphavantage and WorldTradeData boxes and include/delete tokens 'bc', 'av' and 'wtd in the box underneath, seperated by a comma. 
    * Note that IEX recently outsourced their api and is currently disabled in the dialog
 
 ## Setup for Interactive Brokers TWSAPI (ibapi)
-If you have an Interactive Brokers account and can receive data from them, this is the best data. It includes afterhours data, does not have a practical limit on the dates for which you can receive data, and has no limits to usage. Both Barchart and Alphavantage (free apis) have limits with only market hours, available dates and request limits.
+The free APIs produce excellent charts but are limited to market hours and 7 to 30 days history. If you have an Interactive Brokers account and can receive data from them, this is the best data. It includes afterhours data, does not have a practical limit on the dates for which you can receive data, and has no limits to usage. 
 Briefly, to use ibapi you must:
    * Download and install [TWSAPI](https://interactivebrokers.github.io/) 
       * Additionally, you may have to run 'python setup.py install' in the appropriate directory in order to enable it to run with your preferred python executable.
@@ -62,6 +65,7 @@ Briefly, to use ibapi you must:
       * fill in (or just note the values) for Socket port and client id
       * Place port and Client ID in the Structjour stockapi dialog -- one setting for live, one for paper
       * Click on Interactive Brokers (live) or IBPaper account
+  * Ask ([github issue](https://github.com/MikePia/structjour/issues)) if you have difficulty setting it up.
 
 ## How to open your trades in Structjour from DAS Trader Pro
    * Export your trades window from DAS Trader Pro into the folder for the correct date underneath your Journal Dir. 
@@ -94,7 +98,7 @@ For your trade review, there is a strategey dropdown to choose from, a location 
 The strategy dropdown box on the main page can add new strategies to your list. Strategies are supported by the strategy browser where you can define your strategies and check whether to include them in the dropdown box on the front page. In the Strategy browser, you can define your strategy and provide a couple images. Additionally you can add web pages that describe each strategy
 
 
-Charts can be 1) automatically generated 2) copied from the clipboard or 3) loaded from a file. Data for automatic chart generation has three possible sources. Alphavantage and Barchart (free APIs) and Interactive Brokers python API using IB Gateway or Trader Work Station. If you have all three APIS setup, structjour will choose one based on availability and your set preference. The setup for Alphavantage and Barchart requires you get an API key (very simple and available to everyone). The ibapi data (setup more complicated) has the advantage of providing after hours data and long historical availability. Automatic chart generation can include Moving averages and VWAP. All charts are stored in a directory for that day providing easy access.
+Charts can be 1) automatically generated 2) copied from the clipboard or 3) loaded from a file. Data for automatic chart generation has four possible sources. WorldTradeData, Alphavantage and Barchart (free APIs) and Interactive Brokers python API using IB Gateway or Trader Work Station. If you have all four APIS setup, structjour will choose one based on availability and your set preference. The setup for WorldTradeData Alphavantage and Barchart requires you get an API key (very simple and available to everyone). The ibapi data (setup more complicated) has the advantage of providing after hours data and long historical availability. Automatic chart generation can include Moving averages and VWAP. All charts are stored in a directory for that day providing easy access.
 
 Input files are limited to DAS Trader PRO exports and IB statements (Activity, Trade and Flex statements). At some point in the future, other formats will be added.
 

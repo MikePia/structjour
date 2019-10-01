@@ -34,12 +34,15 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 from matplotlib import markers, style
 from matplotlib.ticker import FuncFormatter
+from pandas.plotting import register_matplotlib_converters
+
 from mpl_finance import candlestick_ohlc
 
 from PyQt5.QtCore import QSettings
 
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
+from structjour.stock import myWTD as wtd
 from structjour.stock.utilities import getMASettings, checkForIbapi, ManageKeys
 if checkForIbapi():
     from structjour.stock import myib as ib
@@ -196,8 +199,8 @@ class FinPlot:
 
     def apiChooserList(self, start, end, api=None):
         '''
-        Given the current list of apis as av, bc, iex, and ib, determine if the given api will
-            likely return data for the given times.
+        Given the current list of apis as av, bc, wtd iex, and ib, determine if the given api will
+            likely return data for the given times. 
         :params start: A datetime object or time stamp indicating the intended start of the chart.
         :params end: A datetime object or time stamp indicating the intended end of the chart.
         :params api: Param must be one of mab, bc, iex, or ib. If given, the return value in
@@ -232,7 +235,8 @@ class FinPlot:
             violatedRules.append(
                 'Barchart free data will not yesterdays data after 12 till today at  16:30')
 
-        # Rule 2 No support any charts greater than 7 days prior till today for Alphavantage
+        # Rule 2 No support any charts greater than 7 days prior to today for Alphavantage
+        # Rule 2 No support any charts greated than 7 days prior to tody for World Trade Data 
         # Rule 2 No support any charts greater than 30 days for Barchart
         if n > start:
             delt = n - start
@@ -246,6 +250,11 @@ class FinPlot:
                 lastday = n-pd.Timedelta(days=6)
                 violatedRules.append('AlphaVantage data before {} is unavailable.'.format(
                     lastday.strftime("%b %d")))
+            if delt.days > 6 and 'wtd' in suggestedApis:
+                suggestedApis.remove('wtd')
+                lastday = n-pd.Timedelta(days=6)
+                violatedRules.append('WorldTradeData data before {} is unavailable in 1 minute candles.'.format(
+                    lastday.strftime("%b %d")))            
 
         # Rule 3 Don't call ib if the library is not installed
         # Rule 4 Don't call ib if its not connected
@@ -261,17 +270,23 @@ class FinPlot:
         if start > n:
             suggestedApis = []
             violatedRules.append('No data is available for the future.')
-        # Rule No 6 Don't call barchart if there is no apike in settings
+        # Rule No 6 Don't call barchart if there is no apikey in settings
+        # Rule No 6 Don't call WorldTradeDate if there is no apikey in settings
         # Rule No 6 Don't call alphavantage if there is no apikey in settings
         mk = ManageKeys()
         bc_key = mk.getKey('bc')
         av_key = mk.getKey('av')
+        wtd_key = mk.getKey('wtd')
         if not bc_key and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
             violatedRules.append('There is no apikey in the database for barchart')
         if not av_key and 'av' in suggestedApis:
             suggestedApis.remove('av')
             violatedRules.append('There is no apikey in the database for alphavantage')
+
+        if not wtd_key and 'wtd' in suggestedApis:
+            suggestedApis.remove('wtd')
+            violatedRules.append('There is no apikey in the database for WorldTradeData')
             
 
         api = api in suggestedApis if api else False
@@ -280,7 +295,8 @@ class FinPlot:
 
     def apiChooser(self):
         '''
-        Get a data method
+        Get a data method as set in self.api
+        :return the method
         '''
         # self.api = api
         if self.api == 'bc':
@@ -290,6 +306,9 @@ class FinPlot:
             return mav.getmav_intraday
         if self.api == 'ib':
             return ib.getib_intraday
+        if self.api == 'wtd':
+            return wtd.getWTD_intraday
+
         if self.api == 'iex':
             return iex.getiex_intraday
 
@@ -360,6 +379,7 @@ class FinPlot:
                     it overrides.
         '''
 
+        register_matplotlib_converters()
         start = pd.Timestamp(start)
         end = pd.Timestamp(end)
         if self.style:

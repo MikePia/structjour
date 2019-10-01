@@ -313,6 +313,14 @@ class ManageKeys:
         if not cursor:
             cur.execute('''
                 INSERT INTO api_keys(api)VALUES(?);''', ("av",))
+
+        cur.execute('''
+            SELECT api from api_keys WHERE api = ?;''', ("wtd",))
+
+        cursor = cur.fetchone()
+        if not cursor:
+            cur.execute('''
+                INSERT INTO api_keys(api)VALUES(?);''', ("wtd",))
         conn.commit()
 
     def updateKey(self, api, key):
