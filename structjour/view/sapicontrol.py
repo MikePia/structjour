@@ -276,7 +276,7 @@ class StockApi(QDialog):
             compareList.append('av')
         if 'wtd' in ulist:
             if not self.ui.wtdCb.isChecked():
-                self.ui.APIPref.setStyleSheer('color: red')
+                self.ui.APIPref.setStyleSheet('color: red')
             compareList.append('wtd')
         # if 'iex' in ulist:
         #     if not self.ui.iexCb.isChecked():

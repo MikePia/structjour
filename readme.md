@@ -1,6 +1,7 @@
 # Structjour - A Structured Daily Journal for Day Traders of Stock Equities
 https://github.com/MikePia/structjour
 
+
 Structjour will import statements from DAS Trader Pro trading platform and Interactive Broker Statements. 
 
 I am very interested in all issues. Please inform me [here. (issues on github)](https://github.com/MikePia/structjour/issues). Uploaded to PyPi its initial pre-release Sept 28 '19.
@@ -41,6 +42,9 @@ Go to file->file settings
        * Then select the year and month and click 'Create Dirs'
 
 ## Optional setup of automatic chart generation using free data from WorldTradeData, barchart and alphavantage
+
+### Note regarding WorldTradingData.
+I just discovered they exist. The api is clean and the docs promise 250 trade limit per day and the data is good. I immediately added the api... But the limt that was enforced today and yesterday was 25. I don't believe that is enough to keep the api. I will leave it in for a couple weeks just in case they plan live up to their published limit.
    * Go to file->stock api 
 
 ![filesettings.png](images/stockapi.png)
