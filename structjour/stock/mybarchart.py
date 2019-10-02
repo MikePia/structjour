@@ -222,12 +222,14 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
             print(meta)
             return meta, df, maDict
 
-    # I expect this to fail at some point -- maybe for interval 60 and week old data. Test for it. 
-    # This code will not stand either through implementing user control over MAs. Its just good for today
+    deleteMe = list()
     for key in maDict:
         if key == 'vwap':
             continue
-        assert len(df) == len(maDict[key])
+        if len(df) != len(maDict[key]):
+            deleteMe.append(key)
+    for key in deleteMe:
+        del maDict[key]
 
     # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv 
     df = df[['open', 'high', 'low', 'close', 'volume']].copy(deep=True)
