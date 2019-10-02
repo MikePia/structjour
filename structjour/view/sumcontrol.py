@@ -357,6 +357,10 @@ class SumControl(QMainWindow):
         if not self.lf:
             print('No trade to get chart for')
             return None
+        key = self.ui.tradeList.currentText()
+        if not key in self.lf.ts.keys():
+            # Catch pressing update before loading a statement
+            return None
         chartSet = QSettings('zero_substance/chart', 'structjour')
         makeys = getMAKeys()
         makeys = makeys[0] if c == 'chart1' else makeys[1] if c == 'chart2' else makeys[2]
@@ -382,7 +386,6 @@ class SumControl(QMainWindow):
         fp.randomStyle = False
         begin = qtime2pd(swidg.dateTime())
         end = qtime2pd(ewidg.dateTime())
-        key = self.ui.tradeList.currentText()
         if qtime2pd(self.settings.value('TheDate')).date() != begin.date():
             begin, end = self.resetChartTimes(key, swidg, ewidg)
         (dummy, rules, apilist) = fp.apiChooserList(begin, end, fp.api)
@@ -472,8 +475,10 @@ class SumControl(QMainWindow):
 
     def chartMagic1(self):
         '''Update button was pressed for chart1. We will get a chart using a stock api'''
+        # if not self.lf.ts 
         pname = self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
                                self.ui.chart1Name, self.ui.chart1, 'chart1')
+                        
         if pname:
             self.settings.setValue('chart1', pname)
 

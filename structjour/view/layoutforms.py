@@ -334,6 +334,8 @@ class LayoutForms:
         from PyQt5.QtCore import QDate
 
         assert ckey in ('chart1', 'chart2', 'chart3')
+        if key not in self.ts.keys():
+            return None, None, None, None
         tto = self.ts[key]
         if 'chart1' not in tto.keys():
             self.updateTsDictionary()
