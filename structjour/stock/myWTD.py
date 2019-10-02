@@ -29,9 +29,6 @@ from structjour.stock.utilities import ManageKeys, movingAverage, getLastWorkDay
 
 # Example-- open postman to play with them. We only need intraday here
 
-
-
-base_intraday = 'https://intraday.worldtradingdata.com/api/v1/intraday?'
 base_wtd = 'https://api.worldtradingdata.com/api/v1/'
 
 
@@ -82,6 +79,22 @@ def getParams(symbol, interval, daRange):
     params['api_token'] = getApiKey()
     return params
 
+def ni(i):
+    '''
+    Return a usable interval (called resolution in the api). Note that ni accepts D W and M but we are not  going
+    to use them in structjour. 
+    :return: The given argument if its supported or 1, enabling resample for all other (int) values
+    '''
+    # These are the accepted values for the 'resolution' parameter
+    supported = [1, 5, 15, 30, 60, 'D', 'W', 'M']
+    if i in supported:
+        return i
+    elif isinstance(i, str):
+        return 1
+    elif isinstance(i, int):
+        return 1
+    raise ValueError('Programming Error: bad data or type used for interval parameter')
+
 # Implement the common interface for the api chooser
 def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     '''
@@ -95,8 +108,13 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     :return: meta, df, maDict
     :depends: On the settings of 'zero_substance/chart' for moving average settings
     '''
-    global base_intraday
-    base = base_intraday
+    # Intraday base differs from others. It has the intrday subdomain instead of api subdomain
+    base = 'https://intraday.worldtradingdata.com/api/v1/intraday?'
+
+    original_minutes = minutes
+    minutes = ni(minutes)
+    if not isinstance(minutes, int) or minutes < 0 or minutes > 60:
+        raise ValueError('Only candle intervals between 1 and 60 are supported')
 
 
     if not start:
@@ -114,19 +132,25 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         end = pd.Timestamp(end)
     
     
-
     # Retrieve the maximum data to get the longest possible moving averages
     daRange = 30
     if minutes == 1:
         daRange = 7
     params = getParams(symbol, minutes, daRange)
     response = requests.get(base, params=params)
-    print (response)
+
     if response.status_code != 200:
         # TODO get the message they send for reaching data limit
         meta = {'code': 666, 'message': response.text}
         return meta, pd.DataFrame(), None
     result = response.json()
+    if 'intraday' not in result.keys():
+        if 'message' in result.keys():
+            msg = result['message']
+        else:
+            msg = 'Failed to retrieve data from WorldTradingData'
+        return {'code': 666, 'message': msg}, pd.DataFrame(), None
+
     if result['timezone_name'] != 'America/New_York':
         msg = f'''Time zone returned a non EST zone: {result['timezone_name']}'''
         raise ValueError(msg)
@@ -141,19 +165,24 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
 
     df.index = pd.to_datetime(df.index)
     # resample for requested interval if necessary
-    values = df.close
 
-    # for i, row in df.iterrows():
-    #     d = pd.Timestamp(row['timestamp'])
-    #     newd = pd.Timestamp(d.year, d.month, d.day, d.hour, d.minute, d.second)
-    #     df.at[i, 'timestamp'] = newd
+    if original_minutes != minutes:
+        srate = f'{original_minutes}T'
+        df_ohlc = df[['open']].resample(srate).first()
+        df_ohlc['high'] = df[['high']].resample(srate).max()
+        df_ohlc['low'] = df[['low']].resample(srate).min()
+        df_ohlc['close'] = df[['close']].resample(srate).last()
+        df_ohlc['volume'] = df[['volume']].resample(srate).sum()
+        df = df_ohlc.copy()
 
-    maDict = movingAverage(values, df, start)
+
     # Get requested moving averages
+    maDict = movingAverage(df.close, df, start)
+
     # Trim off times not requested
     if start > pd.Timestamp(df.index[0]):
-        rstart = df.index[0]
-        rend = df.index[-1]
+        # rstart = df.index[0]
+        # rend = df.index[-1]
         df = df.loc[df.index >= start]
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
@@ -163,7 +192,6 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             msg = '\nWARNING: all data has been removed.'
             msg += f'\nThe Requested start was({start}).'
             
-            print(msg)
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
             return meta, df, maDict
@@ -194,15 +222,6 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     df = df.copy(deep=True)
     return meta, df, maDict
 
-
-
-
-
-    return meta, df, maDict
-
-
-
-
 def notmain():
     # print(getLimits())
     # print(getApiKey())
@@ -210,16 +229,19 @@ def notmain():
         print(u)
 
 def main():
-    symbol = 'AAPL'
+    symbol = 'ROKU'
     start = None
     end = None
-    minutes = 1
+    minutes = 7
 
     meta, df, maDict = getWTD_intraday(symbol, start, end, minutes, False)
-    print(df.head)
+    if not df.empty:
+        print(df.head(9))
+    else:
+        print(meta['message'])
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()
 
 
