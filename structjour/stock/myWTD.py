@@ -81,19 +81,18 @@ def getParams(symbol, interval, daRange):
 
 def ni(i):
     '''
-    Return a usable interval (called resolution in the api). Note that ni accepts D W and M but we are not  going
+    Return a usable interval. Note that ni accepts D W and M but we are not  going
     to use them in structjour. 
     :return: The given argument if its supported or 1, enabling resample for all other (int) values
     '''
     # These are the accepted values for the 'resolution' parameter
-    supported = [1, 5, 15, 30, 60, 'D', 'W', 'M']
+    supported = [1, 2, 5, 15, 60]
     if i in supported:
         return i
-    elif isinstance(i, str):
-        return 1
+
     elif isinstance(i, int):
         return 1
-    raise ValueError('Programming Error: bad data or type used for interval parameter')
+    return 5
 
 # Implement the common interface for the api chooser
 def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
@@ -109,9 +108,12 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     :depends: On the settings of 'zero_substance/chart' for moving average settings
     '''
     # Intraday base differs from others. It has the intrday subdomain instead of api subdomain
+    print('======= called WorldTradingData. 25 calls per day limit =======')
     base = 'https://intraday.worldtradingdata.com/api/v1/intraday?'
 
     original_minutes = minutes
+    if not isinstance(original_minutes, int):
+        original_minutes = 5
     minutes = ni(minutes)
     if not isinstance(minutes, int) or minutes < 0 or minutes > 60:
         raise ValueError('Only candle intervals between 1 and 60 are supported')
@@ -120,14 +122,14 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if not start:
         tdy = pd.Timestamp.now()
         tdy = getLastWorkDay(tdy)
-        start = pd.Timestamp(tdy.year, tdy.month, tdy.day, 9, 30)
+        start = pd.Timestamp(tdy.year, tdy.month, tdy.day, 9, 25)
     else:
         start = pd.Timestamp(start)
     
     if not end:
         tdy = pd.Timestamp.now()
         tdy = getLastWorkDay(tdy)
-        end = pd.Timestamp(tdy.year, tdy.month, tdy.day, 16, 00)
+        end = pd.Timestamp(tdy.year, tdy.month, tdy.day, 16, 5)
     else:
         end = pd.Timestamp(end)
     

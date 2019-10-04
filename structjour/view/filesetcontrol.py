@@ -538,6 +538,6 @@ class FileSetCtrl(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    apisettings = QSettings('zero_substance', 'structjour')
-    w = FileSetCtrl(apisettings)
+    settings = QSettings('zero_substance', 'structjour')
+    w = FileSetCtrl(settings)
     sys.exit(app.exec_())

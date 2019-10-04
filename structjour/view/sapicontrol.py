@@ -33,7 +33,7 @@ from structjour.stock.utilities import ManageKeys, checkForIbapi
 
 class StockApi(QDialog):
     '''
-    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, iexCb, wtdCb, APIPref]
+    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, wtdCb, fhCb, APIPref]
     The api keys are held in the database
     '''
     def __init__(self, settings):
@@ -66,7 +66,10 @@ class StockApi(QDialog):
         self.ui.wtdCb.clicked.connect(self.setWtdCb)
         self.ui.wtdKey.editingFinished.connect(self.setWtdKey)
 
-        self.ui.iexCb.clicked.connect(self.setIexCb)
+        self.ui.fhCb.clicked.connect(self.setFhCb)
+        self.ui.fhKey.editingFinished.connect(self.setFhKey)
+
+
 
         self.ui.APIPref.textChanged.connect(self.orderApis)
 
@@ -136,13 +139,15 @@ class StockApi(QDialog):
 
         val = self.apiset.value('wtdCb', False, bool)
         self.ui.wtdCb.setChecked(val)
-        
         val = self.mk.getKey('wtd')
         self.ui.wtdKey.setText(val)
 
-        val = self.apiset.value('iexCb', False, bool)
-        # self.ui.iexCb.setChecked(val)
-        self.ui.iexCb.setChecked(False)
+        val = self.apiset.value('fhCb', False, bool)
+        self.ui.fhCb.setChecked(val)
+        val = self.mk.getKey('fh')
+        self.ui.fhKey.setText(val)
+
+
 
         val = self.apiset.value('APIPref')
         self.ui.APIPref.setText(val)
@@ -231,12 +236,13 @@ class StockApi(QDialog):
         val = self.ui.wtdKey.text()
         self.mk.updateKey('wtd', val)
 
+    def setFhCb(self, b):
+        self.apiset.setValue('fhCb', b)
+        self.sortIt('fh')
 
-    def setIexCb(self, b):
-        # self.apiset.setValue('iexCb', b)
-        self.apiset.setValue('iexCb', False)
-        self.ui.iexCb.setChecked(False)
-        # self.sortIt('iex')
+    def setFhKey(self):
+        val = self.ui.fhKey.text()
+        self.mk.updateKey('fh', val)
 
     def reorderAPIPref(self, last):
         ul = self.ui.APIPref.text()
@@ -277,12 +283,14 @@ class StockApi(QDialog):
         if 'wtd' in ulist:
             if not self.ui.wtdCb.isChecked():
                 self.ui.APIPref.setStyleSheet('color: red')
+                return
             compareList.append('wtd')
-        # if 'iex' in ulist:
-        #     if not self.ui.iexCb.isChecked():
-        #         self.ui.APIPref.setStyleSheet('color: red;')
-        #         return
-        #     compareList.append('iex')
+
+        if 'fh' in ulist:
+            if not self.ui.fhCb.isChecked():
+                self.ui.APIPref.setStyleSheet('color: red')
+                return
+            compareList.append('fh')
 
         # Validate the string as a list and reorder last element
         if len(ulist) > len(compareList):

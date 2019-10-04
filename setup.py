@@ -13,7 +13,7 @@ thePackages = setuptools.find_packages(exclude=['test'])
 
 setuptools.setup(
     name='structjour',
-    version='0.9.91-Alpha.016',
+    version='0.9.91-Alpha.019',
     author='Mike Petersen',
     author_email='pentsok@zerosubstance.org',
     description='A structured daily journal for day traders.',
@@ -32,6 +32,7 @@ setuptools.setup(
     ],
     install_requires=[
         'requests',
+        'Pillow',
         'numpy>=1.16.0',
         'pandas>=0.24.0',
         'seaborn>=0.9.0',

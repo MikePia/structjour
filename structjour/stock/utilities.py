@@ -264,7 +264,7 @@ class ManageKeys:
         if db:
             self.db = db
         else:
-            self.db = self.settings.value('structjourDb')
+            self.db = self.settings.value('tradeDb')
         msg = None
         if not self.db or not os.path.exists(self.db):
             title = 'Warning'
@@ -321,6 +321,15 @@ class ManageKeys:
         if not cursor:
             cur.execute('''
                 INSERT INTO api_keys(api)VALUES(?);''', ("wtd",))
+        conn.commit()
+
+        cur.execute('''
+            SELECT api from api_keys WHERE api = ?;''', ("fh",))
+
+        cursor = cur.fetchone()
+        if not cursor:
+            cur.execute('''
+                INSERT INTO api_keys(api)VALUES(?);''', ("fh",))
         conn.commit()
 
     def updateKey(self, api, key):

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>630</width>
-    <height>604</height>
+    <width>390</width>
+    <height>654</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,10 +20,10 @@
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>23</y>
+     <x>41</x>
+     <y>25</y>
      <width>296</width>
-     <height>540</height>
+     <height>573</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -244,7 +244,7 @@
       <item>
        <widget class="QCheckBox" name="wtdCb">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use Alphavantage APIs get a free API key from &lt;/span&gt;&lt;a href=&quot;https://www.alphavantage.co/support/#api-key&quot;&gt;&lt;span style=&quot; font-size:9pt; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.alphavantage.co/support/#api-key &lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;   The data is realtime Historical data is available for the last 7 days. Data limts are 500 calls per day and 5 per minute.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use World Trading Data APIs get a free API key from  &lt;/span&gt;&lt;a href=&quot;https://www.worldtradingdata.com/register&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.worldtradingdata.com/register&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt; The data is realtime Historical data is available for the last 7 days. But the data limits are only 25 trades per call.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>WorldTradeData</string>
@@ -278,19 +278,36 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.alphavantage.co/terms_of_service/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt; IEX has moved--disabled for now.&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://finnhub.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Finnhub API (right click)&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="iexCb">
+       <widget class="QCheckBox" name="fhCb">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#aa0914;&quot;&gt;IEX is no longer providing their API. They have outsourced to iexCloud. Looking into it. (9/12/19)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use Finnhub APIs get a free API key from &lt;/span&gt;&lt;a href=&quot;https://finnhub.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://finnhub.io &lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;The data is realtime Historical data  Data limts are 60 calls per minute and no practical limits per day.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>IEX</string>
+         <string>Finnhub</string>
         </property>
        </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <item>
+         <widget class="QLineEdit" name="fhKey"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>API Key</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
