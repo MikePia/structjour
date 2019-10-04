@@ -103,7 +103,7 @@ def setParams(symbol, minutes, startDay):
     return params
 
 # Not getting the current date-- maybe after the market closes?
-def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
+def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     '''
     Note that getHistory will return previous day's prices until 15 minutes after the market
         closes. We will generate a warning if our start or end date differ from the date of the
@@ -121,7 +121,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=True):
         seperate from request status_code.
     :raise: ValueError if response.status_code is not 200.
     '''
-
+    print('======= Called Barchart -- 150 call limit, data available after market close =======')
     if not end:
         tdy = dt.datetime.today()
         end = dt.datetime(tdy.year, tdy.month, tdy.day, 17, 0)

@@ -173,7 +173,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
          low, close, volume and indexed by pd timestamp. If not specified, this
          will return a weeks data. 
     '''
-    print('======= Called alpha =======')
+    print('======= Called alpha 500 calls per day limit, 5/minute =======')
     start = pd.to_datetime(start) if start else None
     end = pd.to_datetime(end) if end else None
     if not minutes:
