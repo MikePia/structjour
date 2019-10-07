@@ -89,7 +89,7 @@ def getParams(symbol, start, end, interval):
 
 
 
-def getFh_intraday(symbol, start=None, end=None, minutes=5):
+def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     '''
     Common interface for apiChooser. Timezone is determined by the trade day. If this were used
     for multiday trades spanning DST, the times will be inaccurate before the time change. The
@@ -110,6 +110,8 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5):
         minutes = 60
     params = getParams(symbol, start, end, minutes)
     response = requests.get(base, params=params)
+    if showUrl:
+        print(response.url)
     j = response.json()
     if 'o' not in j.keys():
         return j, pd.DataFrame, None
