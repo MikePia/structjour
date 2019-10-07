@@ -36,11 +36,11 @@ class StockApi(QDialog):
     [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, wtdCb, fhCb, APIPref]
     The api keys are held in the database
     '''
-    def __init__(self, settings):
+    def __init__(self, settings, db=None):
         super().__init__()
 
         self.apiset = settings
-        self.mk = ManageKeys()
+        self.mk = ManageKeys(db=db)
     
         ui = SapiDlg()
         ui.setupUi(self)
@@ -342,6 +342,8 @@ class StockApi(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    # apisettings = QSettings('zero_substance/stockapi/test', 'structjour')
+    # w = StockApi(apisettings, db='schnork.db')
     apisettings = QSettings('zero_substance/stockapi', 'structjour')
-    w = StockApi(apisettings)
+    w = StockApi(apisettings, db=None)
     sys.exit(app.exec_())

@@ -55,8 +55,9 @@ I just discovered they exist. The api is clean and the docs promise 250 trade li
       * Do the registration and copy the apikey into the box
    * Get the WorldTradeData apikey [from WorldTradeData here.](https://www.worldtradingdata.com/register) 
       * Do the registration and copy the apikey into the box
-   * Select/deselect Barchart, Alphavantage and WorldTradeData boxes and include/delete tokens 'bc', 'av' and 'wtd in the box underneath, seperated by a comma. 
-   * Note that IEX recently outsourced their api and is currently disabled in the dialog
+   * Get the Finhub apikey [from Finnhub here.](https://finnhub.io/) 
+      * Do the registration and copy the apikey into the box 
+   * Select/deselect Barchart, Alphavantage, Finnhub and WorldTradeData boxes and include/delete tokens 'bc', 'av', 'fh' and 'wtd in the box underneath, seperated by commas. 
 
 ## Setup for Interactive Brokers TWSAPI (ibapi)
 The free APIs produce excellent charts but are limited to market hours and 7 to 30 days history. If you have an Interactive Brokers account and can receive data from them, this is the best data. It includes afterhours data, does not have a practical limit on the dates for which you can receive data, and has no limits to usage. 
@@ -93,7 +94,7 @@ Briefly, to use ibapi you must:
 
 Import from DAS Trader Pro or Interactive Broker Statements. If requested I plan to include other brokers' statements.
 
-Tickets are divided into trades and displayed showing entries, exits, PnL, and the diff between initial entry and exit and some other stuff.
+Individual trading transactionas are combined into tickets and tickets are combined into trades. Trades are displayed showing ticket entries, exits, PnL, and the diff between initial entry and exit and some other stuff.
 
 A place to enter your initial target and stoploss can detect when the stop is violated and figures the lost PnL. The loss amount can be edited to reflect loss of real or potential PnL due to breaking your rules. 
 
@@ -118,7 +119,7 @@ All of your trades can be exported to an excel file (a tweak of 'DisciplinedTrad
 
 ![Image of daily summary](images/dailysummary.png)
 
-Excel export
+Excel export. All trades from a day are imported into a single sheet and saved in the out directory for that date
 ![Image of excel](images/excel.png) 
 
 Strategy Browser
