@@ -24,6 +24,7 @@ Local utility functions shared by some stock modules and test code.
 
 from collections import OrderedDict
 import datetime as dt
+import pytz
 import math
 import os
 import random
@@ -88,6 +89,26 @@ def pd2qtime(pdt, qdate=False):
     pdt = pd.Timestamp(pdt)
     return QDate(pdt.year, pdt.month, pdt.day)
     
+def getNewyorkTZ(d):
+    '''
+    Returns the difference between GMT and EST for a given date
+    :d: pandas Timestamp or datetime
+    :return: int hours diff from GMT
+    '''
+    if isinstance(d, int):
+         d = pd.Timestamp(d*10**9)
+    if isinstance(d, pd.Timestamp):
+        d = dt.datetime(d.year, d.month, d.day, d.hour, d.minute)
+    tz = pytz.timezone('US/Eastern').localize(d).strftime('%z')
+    # tz = pytz.timezone('Europe/London').localize(d).strftime('%z')
+    # tz = pytz.timezone('Indian/Christmas').localize(d).strftime('%z')
+    assert tz[0] in ['+', '-']
+    if tz[0] == '-':
+        hours = int(tz[1:])//-100
+    else:
+        hours = int(tz[1:])//100
+    return hours
+
 
 def getMAKeys():
     cc1 = ['chart1ma1', 'chart1ma2', 'chart1ma3', 'chart1ma4', 'chart1vwap', 'chart1ma1spin',
@@ -434,18 +455,23 @@ def notmain():
     
 
 def localstuff():
-    settings = QSettings('zero_substance', 'structjour') 
-    apiset = QSettings('zero_substance/stockapi', 'structjour')
-    setkeys = settings.allKeys()
-    apikeys = apiset.allKeys()
-    setval=list()
-    apival=list()
-    for k in setkeys:
-        setval.append(settings.value(k))
-    for k in apikeys:
-        apival.append(apiset.value(k))
+    # settings = QSettings('zero_substance', 'structjour') 
+    # apiset = QSettings('zero_substance/stockapi', 'structjour')
+    # setkeys = settings.allKeys()
+    # apikeys = apiset.allKeys()
+    # setval=list()
+    # apival=list()
+    # for k in setkeys:
+    #     setval.append(settings.value(k))
+    # for k in apikeys:
+        # apival.append(apiset.value(k))
+    d = pd.Timestamp('2019-08-08')
+    print(getNewyorkTZ(d))
+    d = pd.Timestamp('2019-12-08')
+    print(getNewyorkTZ(d))
+    print(getNewyorkTZ(60))
 
 
 if __name__ == '__main__':
-    notmain()
-    # localstuff()
+    # notmain()
+    localstuff()

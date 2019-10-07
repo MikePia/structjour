@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 import requests
+import datetime, pytz
 
-from structjour.stock.utilities import ManageKeys, movingAverage
+from structjour.stock.utilities import ManageKeys, movingAverage, getNewyorkTZ
 APIKEY = 'bm9spbnrh5rb24oaaehg'
 
 
@@ -48,14 +49,20 @@ def unix2pd(t):
 
 def getStartForRequest(start, end, interval):
     '''
-    Method does two things, gets a start request prior to start to get enough data to calculate
-    a 200 MA. Finnhub seems to get data from 8AM to 12PM Mon-Fri. (Havn't seen it in docs). But 
-    here we will just get enough data to succeed and adjust it (Trying 1000 intervals)
+    Method does three things, 
+        1) gets a start request prior to start (for MA calcs)
+        2) Adjusts for user time (NY) to  Grenwich conversion
+        3) converts to unix timestamp
+    :start: Timestamp-- users requested start
+    :end: Timestamp-- users requested end
+    :interval: int-- Users requested candle interval
     '''
     delt = pd.Timedelta(minutes=interval*1000)
-    rstart = start - delt
+    deltzone = pd.Timedelta(hours=-getNewyorkTZ(end)) 
+    rstart = start - delt + deltzone
+    rend =  end + deltzone
     rstart = int(pd2unix(rstart))
-    rend = int(pd2unix(end))
+    rend = int(pd2unix(rend))
     return rstart, rend
     pass
 
@@ -70,7 +77,6 @@ def getParams(symbol, start, end, interval):
     :end: Timestamp. The user requested end time
     :interval: Timestamp. The user requested candle interval
     '''
-    print('======= Called Finnhub -- no practical limit, 60/minute =======')
     rstart, rend = getStartForRequest(start, end, interval)
     interval = ni(interval)
     params = {}
@@ -81,7 +87,15 @@ def getParams(symbol, start, end, interval):
     params['token'] = getApiKey()
     return params
 
-def getFh_intraday(symbol, start=None, end = None, minutes=5):
+
+
+def getFh_intraday(symbol, start=None, end=None, minutes=5):
+    '''
+    Common interface for apiChooser. Timezone is determined by the trade day. If this were used
+    for multiday trades spanning DST, the times will be inaccurate before the time change. The
+    chooser is desinged for single day trades.
+    '''
+    print('======= Called Finnhub -- no practical limit, 60/minute =======')
     base = 'https://finnhub.io/api/v1/stock/candle?'
 
     if not start or not end:
@@ -106,7 +120,10 @@ def getFh_intraday(symbol, start=None, end = None, minutes=5):
          'close': j['c'], 'timestamp': j['t'], 'volume': j['v']}
     status = j['s']
     df = pd.DataFrame(data=d)
-    df.index = pd.to_datetime(df['timestamp'],unit='s')
+    stupid = df.copy()
+    tradeday = unix2pd(int(df.iloc[-1]['timestamp']))
+    tzdelt = getNewyorkTZ(tradeday) * 60 * 60
+    df.index = pd.to_datetime(df['timestamp'] + tzdelt, unit='s')
 
     df = df[['open', 'high', 'low', 'close', 'volume']]
 
@@ -128,6 +145,7 @@ def getFh_intraday(symbol, start=None, end = None, minutes=5):
         if l == 0:
             msg = f"\nWARNING: you have sliced off all the data with the end date {start}"
             print(msg)
+            metaj={}
             metaj['code'] = 666
             metaj['message'] = msg
             return metaj, pd.DataFrame(), maDict
@@ -140,33 +158,29 @@ def getFh_intraday(symbol, start=None, end = None, minutes=5):
         if l < 1:
             msg = f"\nWARNING: you have sliced off all the data with the end date {end}"
             print(msg)
+            metaj = {}
             metaj['code'] = 666
             metaj['message'] = msg
             return metaj, pd.DataFrame(), maDict
     # If we don't have a full ma, delete -- Later:, implement a 'delayed start' ma in graphstuff
-    keys = maDict.keys()
-    for key in keys:
+    deleteMe = []
+    for key in maDict.keys():
         if len(df) != len(maDict[key]):
-            del maDict[key]
+            deleteMe.append(key)
+    for k in deleteMe:
+        del maDict[k]
 
-
-
-
-    return meta, df, None
-
-
-
-
+    return meta, df, None, stupid
 
 def notmain():
     # print(pd2unix('2019-09-30 09:30'), pd2unix('2019-09-30 10:30'))
     # print(unix2pd(1569988860), unix2pd(1570037220))
     symbol = 'AAPL'
     count = 500
-    minutes = 15
-    start = '2019-10-02 10:45'
-    end = '2019-10-02 15:45'
-    meta, df, maD = getFh_intraday(symbol, start, end,  minutes)
+    minutes = 2
+    start = '2019-10-07 09:15'
+    end = '2019-10-07 12:02'
+    meta, df, maD, stupid = getFh_intraday(symbol, start, end,  minutes)
     print(df.head())
     print(df.tail())
     print()
