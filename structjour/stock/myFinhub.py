@@ -57,7 +57,7 @@ def getStartForRequest(start, end, interval):
     :end: Timestamp-- users requested end
     :interval: int-- Users requested candle interval
     '''
-    delt = pd.Timedelta(minutes=interval*1000)
+    delt = pd.Timedelta(minutes=interval*1500)
     deltzone = pd.Timedelta(hours=-getNewyorkTZ(end)) 
     rstart = start - delt + deltzone
     rend =  end + deltzone
@@ -120,7 +120,6 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5):
          'close': j['c'], 'timestamp': j['t'], 'volume': j['v']}
     status = j['s']
     df = pd.DataFrame(data=d)
-    stupid = df.copy()
     tradeday = unix2pd(int(df.iloc[-1]['timestamp']))
     tzdelt = getNewyorkTZ(tradeday) * 60 * 60
     df.index = pd.to_datetime(df['timestamp'] + tzdelt, unit='s')
@@ -170,7 +169,7 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5):
     for k in deleteMe:
         del maDict[k]
 
-    return meta, df, None, stupid
+    return meta, df, maDict
 
 def notmain():
     # print(pd2unix('2019-09-30 09:30'), pd2unix('2019-09-30 10:30'))
@@ -180,7 +179,7 @@ def notmain():
     minutes = 2
     start = '2019-10-07 09:15'
     end = '2019-10-07 12:02'
-    meta, df, maD, stupid = getFh_intraday(symbol, start, end,  minutes)
+    meta, df, maD  = getFh_intraday(symbol, start, end,  minutes)
     print(df.head())
     print(df.tail())
     print()

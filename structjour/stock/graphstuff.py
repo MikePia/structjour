@@ -43,6 +43,7 @@ from PyQt5.QtCore import QSettings
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
 from structjour.stock import myWTD as wtd
+from structjour.stock import myFinhub as fh
 from structjour.stock.utilities import getMASettings, checkForIbapi, ManageKeys
 if checkForIbapi():
     from structjour.stock import myib as ib
@@ -199,11 +200,11 @@ class FinPlot:
 
     def apiChooserList(self, start, end, api=None):
         '''
-        Given the current list of apis as av, bc, wtd iex, and ib, determine if the given api will
+        Given the current list of apis as av, bc, wtd, fh and ib, determine if the given api will
             likely return data for the given times. 
         :params start: A datetime object or time stamp indicating the intended start of the chart.
         :params end: A datetime object or time stamp indicating the intended end of the chart.
-        :params api: Param must be one of mab, bc, iex, or ib. If given, the return value in
+        :params api: Param must be one of mab, bc, fh or ib. If given, the return value in
             (api, x, x)[0] will reflect the bool result of the api
         :return: (bool, rulesviolated, suggestedStocks) The first entry is only valid if api is
             an argument.
@@ -273,10 +274,12 @@ class FinPlot:
         # Rule No 6 Don't call barchart if there is no apikey in settings
         # Rule No 6 Don't call WorldTradeDate if there is no apikey in settings
         # Rule No 6 Don't call alphavantage if there is no apikey in settings
+        # Rule No 6 Don't call finnhub if there is no api key in settings
         mk = ManageKeys()
         bc_key = mk.getKey('bc')
         av_key = mk.getKey('av')
         wtd_key = mk.getKey('wtd')
+        fh_key = mk.getKey('fh')
         if not bc_key and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
             violatedRules.append('There is no apikey in the database for barchart')
@@ -287,6 +290,9 @@ class FinPlot:
         if not wtd_key and 'wtd' in suggestedApis:
             suggestedApis.remove('wtd')
             violatedRules.append('There is no apikey in the database for WorldTradeData')
+        if not fh_key and 'fh' in suggestedApis:
+            suggestedApis.remove('fh')
+            violatedRules.append('There is no apikey in the database for finnhub')
             
 
         api = api in suggestedApis if api else False
@@ -308,6 +314,8 @@ class FinPlot:
             return ib.getib_intraday
         if self.api == 'wtd':
             return wtd.getWTD_intraday
+        if self.api == 'fh':
+            return fh.getFh_intraday
 
         if self.api == 'iex':
             return iex.getiex_intraday
