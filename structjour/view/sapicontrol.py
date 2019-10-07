@@ -71,7 +71,8 @@ class StockApi(QDialog):
 
 
 
-        self.ui.APIPref.textChanged.connect(self.orderApis)
+        self.ui.APIPref.textChanged.connect(self.colorApis)
+        self.ui.APIPref.editingFinished.connect(self.orderApis)
 
         self.ui.okBtn.pressed.connect(self.okPressed)
 
@@ -176,6 +177,11 @@ class StockApi(QDialog):
         self.orderApis()
         self.close()
 
+    def colorApis(self, val):
+        # val = self.ui.APIPref()
+        self.apiset.setValue('APIPref', val)
+        self.colorIt(val)
+
     def orderApis(self): 
         val = self.ui.APIPref.text()
         self.apiset.setValue('APIPref', val)
@@ -260,7 +266,36 @@ class StockApi(QDialog):
         self.ui.APIPref.setText(ul)
         return ul, ulist
 
+    def colorIt(self, strPref):
+        '''
+        Color the API pref as red or green as user edits
+        '''
+        ulist = strPref.split(',')
+        ulist = [x.strip() for x in ulist]
+        if not set(ulist).issubset(set(['bc', 'ib', 'av', 'wtd', 'fh'])):
+            self.ui.APIPref.setStyleSheet('color: red;')
+            return
+        else:
+            self.ui.APIPref.setStyleSheet('color: green;')
+        wdict = {'bc': self.ui.bcCb, 'av': self.ui.avCb, 'ib': [self.ui.ibRealCb, self.ui.ibPaperCb],
+                 'wtd': self.ui.wtdCb, 'fh': self.ui.fhCb}
+        for token in ulist:
+            if token == 'ib':
+                if not wdict[token][0].isChecked and not wdict[token][1].isChecked():
+                    self.ui.APIPref.setStyleSheet('color: red;')
+                    return
+            elif not wdict[token].isChecked():
+                self.ui.APIPref.setStyleSheet('color: red;')
+                return
+        self.ui.APIPref.setStyleSheet('color: green;')
+
+        
+
+
     def sortIt(self, last):
+        '''
+        Color and order the api pref after done editing
+        '''
         ul, ulist = self.reorderAPIPref(last)
         compareList = list()
 
