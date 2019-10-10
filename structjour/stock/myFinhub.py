@@ -3,7 +3,7 @@ import numpy as np
 import requests
 import datetime, pytz
 
-from structjour.stock.utilities import ManageKeys, movingAverage, getNewyorkTZ
+from structjour.stock.utilities import ManageKeys, movingAverage, getNewyorkTZ, excludeAfterHours
 APIKEY = 'bm9spbnrh5rb24oaaehg'
 
 
@@ -57,7 +57,7 @@ def getStartForRequest(start, end, interval):
     :end: Timestamp-- users requested end
     :interval: int-- Users requested candle interval
     '''
-    delt = pd.Timedelta(minutes=interval*1500)
+    delt = pd.Timedelta(minutes=interval*2000)
     deltzone = pd.Timedelta(hours=-getNewyorkTZ(end)) 
     rstart = start - delt + deltzone
     rend =  end + deltzone
@@ -114,13 +114,15 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         print(response.url)
     j = response.json()
     if 'o' not in j.keys():
-        return j, pd.DataFrame, None
+        meta = {'code': 666, 'message': j['s']}
+        return meta, pd.DataFrame, None
     assert set(['o', 'h', 'l', 'c', 't', 'v', 's']).issubset(set(j.keys()))
-    meta = j['s']
+    meta = {'message': j['s'], 'code': 199}
+    if j['s'] == 'no_data':
+        print('WTF')
 
     d = {'open': j['o'], 'high': j['h'], 'low':j['l'],
          'close': j['c'], 'timestamp': j['t'], 'volume': j['v']}
-    status = j['s']
     df = pd.DataFrame(data=d)
     tradeday = unix2pd(int(df.iloc[-1]['timestamp']))
     tzdelt = getNewyorkTZ(tradeday) * 60 * 60
@@ -136,6 +138,17 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         df_ohlc['close'] = df[['close']].resample(srate).last()
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
+
+    # API retrieves *all* times. Prune out all NaN (from after hours)
+    df = df[df['open'] > 0]
+    if excludeAfterHours():
+        d = df.index[-1]
+        o = pd.Timestamp(d.year, d.month, d.day, 9, 30)
+        c = pd.Timestamp(d.year, d.month, d.day, 16, 00)
+        if df.index[0] < o:
+            df = df[df.index >= o]
+            df = df[df.index <= c]
+    
 
     maDict = movingAverage(df.close, df, start)
     if start > df.index[0]:
@@ -176,11 +189,11 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
 def notmain():
     # print(pd2unix('2019-09-30 09:30'), pd2unix('2019-09-30 10:30'))
     # print(unix2pd(1569988860), unix2pd(1570037220))
-    symbol = 'AAPL'
+    symbol = 'ROKU'
     count = 500
     minutes = 2
-    start = '2019-10-07 09:15'
-    end = '2019-10-07 12:02'
+    start = '2019-10-10 03:15'
+    end = '2019-10-10 18:02'
     meta, df, maD  = getFh_intraday(symbol, start, end,  minutes)
     print(df.head())
     print(df.tail())

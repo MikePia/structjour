@@ -28,7 +28,7 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from structjour.stock.utilities import checkForIbapi
+from structjour.stock.utilities import checkForIbapi, excludeAfterHours
 if checkForIbapi():
 
     from ibapi import wrapper
@@ -209,7 +209,8 @@ class TestApp(TestWrapper, TestClient):
         :params dur: a string for how long before end should the chart begin "1 D"
         :params interval: candle len
         '''
-        AFTERHOURS = 0
+        # get value for exclue afterhours, 1==RTH only
+        AFTERHOURS = 1 if excludeAfterHours() else 1
 
         if not validateDurString(dur):
             print("Duration must be formatted like '3 D' using S, D, W, M, or Y")
@@ -319,6 +320,8 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     # ib = TestApp(4002, 7979, '127.0.0.1')
     x = IbSettings()
     ibs = x.getIbSettings()
+    if not ibs:
+        return 0, pd.DataFrame(), None
     ib = TestApp(ibs['port'], ibs['id'], ibs['host'])
     df = ib.getHistorical(symb, end=end, dur=dur, interval=interval, exchange='NASDAQ')
     lendf = len(df)
@@ -390,10 +393,10 @@ def isConnected():
 
 def main():
     '''test run'''
-    start = dt.datetime(2019, 8, 23, 9, 0)
-    end = dt.datetime(2019, 8, 23, 17, 0)
-    minutes = 30
-    x, ddf, maDict = getib_intraday('SQ', start, end, minutes)
+    start = dt.datetime(2019, 10, 10, 7, 0)
+    end = dt.datetime(2019, 10, 10, 17, 0)
+    minutes = 15
+    x, ddf, maDict = getib_intraday('ROKU', start, end, minutes)
     print(x, ddf)
 
 def notmain():

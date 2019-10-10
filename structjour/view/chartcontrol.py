@@ -62,6 +62,7 @@ class ChartControl(QDialog):
         self.ui.colorDown.textChanged.connect(self.setColorDown)
         self.ui.interactiveCb.clicked.connect(self.setInteractive)
         self.ui.showLegendCb.clicked.connect(self.setLegend)
+        self.ui.excluedAfterHoursCb.clicked.connect(self.setAfterHours)
 
         self.ui.chart1MA1.clicked.connect(self.setChart1MA1)
         self.ui.chart1MA1Spin.valueChanged.connect(self.setChart1MA1Spin)
@@ -413,6 +414,9 @@ class ChartControl(QDialog):
     def setLegend(self, val):
         self.chartSet.setValue('showlegend', val)
 
+    def setAfterHours(self, val):
+        self.chartSet.setValue('afterhours', val)
+
     def setInteractive(self, val):
         self.chartSet.setValue('interactive', val)
 
@@ -452,6 +456,7 @@ class ChartControl(QDialog):
         self.ui.styleCb.addItems(style.available)
 
     def initFromSettings(self):
+        '''Initialize all these widgets from settings'''
         widgDict = {'chart': self.ui.styleCb, 
                 'gridv': self.ui.gridvCb,
                 'gridh': self.ui.gridhCb,
@@ -464,6 +469,7 @@ class ChartControl(QDialog):
                 'colordown': self.ui.colorDown,
                 'interactive': self.ui.interactiveCb,
                 'showlegend': self.ui.showLegendCb,
+                'afterhours': self.ui.excluedAfterHoursCb,
                 'chart1ma1': self.ui.chart1MA1,
                 'chart1ma2': self.ui.chart1MA2,
                 'chart1ma3': self.ui.chart1MA3,

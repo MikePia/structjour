@@ -155,6 +155,11 @@ def vwap(df, bd=None):
     dfv['VWAP'] = dfv['Cum_Vol_Price'] / dfv['Cum_Vol']
     return dfv['VWAP']
 
+def excludeAfterHours():
+    chartSet = QSettings('zero_substance/chart', 'structjour')
+    val = chartSet.value('afterhours', False, type=bool)
+    return val
+
 def movingAverage(values, df, beginDay=None):
     '''
     Creates a dictionary of moving averages based settings values. All window values in 
@@ -383,7 +388,6 @@ class ManageKeys:
             print('WARNING: Trying to retrieve db location, the database file location is not set.')
         return db
 
-
 class IbSettings:
     def __init__(self):
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
@@ -464,12 +468,13 @@ def localstuff():
     # for k in setkeys:
     #     setval.append(settings.value(k))
     # for k in apikeys:
-        # apival.append(apiset.value(k))
-    d = pd.Timestamp('2019-08-08')
-    print(getNewyorkTZ(d))
-    d = pd.Timestamp('2019-12-08')
-    print(getNewyorkTZ(d))
-    print(getNewyorkTZ(60))
+    #     # apival.append(apiset.value(k))
+    # d = pd.Timestamp('2019-08-08')
+    # print(getNewyorkTZ(d))
+    # d = pd.Timestamp('2019-12-08')
+    # print(getNewyorkTZ(d))
+    # print(getNewyorkTZ(60))
+    print(excludeAfterHours())
 
 
 if __name__ == '__main__':
