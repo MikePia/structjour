@@ -221,8 +221,12 @@ class TestGraphstuff(unittest.TestCase):
                 name = fp.graph_candlestick(
                     trade[0], start, end, minutes=minutes, save=name)
                 cwd = os.getcwd()
-                msg = 'error creating ' + name + " IN ", cwd
-                self.assertTrue(os.path.exists(name), msg)
+                if name:
+            
+                    msg = 'error creating ' + name + " IN ", cwd
+                    self.assertTrue(os.path.exists(name), msg)
+                else:
+                    print('Failed to get data', fp.api)
 
     def test_setTimeFrame(self):
         '''
