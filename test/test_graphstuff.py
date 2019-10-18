@@ -44,7 +44,7 @@ def getTicker():
     Get a random ticker symbol
     '''
     tickers = ['SQ', 'AAPL', 'TSLA', 'ROKU', 'NVDA', 'NUGT',
-               'MSFT', 'CAG', 'ACRS', 'FRED', 'NFLX', 'MU', 'AAPL']
+               'MSFT', 'CAG', 'ACRS', 'WORK', 'NFLX', 'MU', 'AAPL']
     return tickers[random.randint(0, 12)]
 
 class TestGraphstuff(unittest.TestCase):
@@ -215,8 +215,6 @@ class TestGraphstuff(unittest.TestCase):
             self.makeupEntries(trade[0], start, end, minutes, fp)
             for api in apilist:
                 fp.api = api
-                # if api == 'iex':
-                #     fp.interactive = True
                 name = dummyName(fp, trade[0], trade[1], trade[2], trade[3])
                 name = fp.graph_candlestick(
                     trade[0], start, end, minutes=minutes, save=name)

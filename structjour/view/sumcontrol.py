@@ -28,6 +28,7 @@ from fractions import Fraction
 import os
 import re
 import sys
+import threading
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon
@@ -90,6 +91,7 @@ class SumControl(QMainWindow):
         self.lf = None
         self.ui = ui
         self.settings = QSettings('zero_substance', 'structjour')
+        self.chartSet = QSettings('zero_substance/chart', 'structjour')
 
         self.settings.setValue('runType', 'QT')
         now = None
@@ -361,25 +363,24 @@ class SumControl(QMainWindow):
         if not key in self.lf.ts.keys():
             # Catch pressing update before loading a statement
             return None
-        chartSet = QSettings('zero_substance/chart', 'structjour')
         makeys = getMAKeys()
         makeys = makeys[0] if c == 'chart1' else makeys[1] if c == 'chart2' else makeys[2]
         mas = list()
         masl = list()
         for i in range(0, 4):
-            val = chartSet.value(makeys[i], False, bool)
+            val = self.chartSet.value(makeys[i], False, bool)
             if val:
-                mas.append(['MA'+str(i+1), chartSet.value(makeys[i+5]),
-                            chartSet.value(makeys[i+9])])
-        val = chartSet.value(makeys[4], False, bool)
+                mas.append(['MA'+str(i+1), self.chartSet.value(makeys[i+5]),
+                            self.chartSet.value(makeys[i+9])])
+        val = self.chartSet.value(makeys[4], False, bool)
         masl.append(mas)
 
         if val:
-            masl.append(['VWAP', chartSet.value(makeys[13])])
+            masl.append(['VWAP', self.chartSet.value(makeys[13])])
         else:
             masl.append([])
         assert len(masl) == 2
-        chartSet.setValue('getmas', masl)
+        self.chartSet.setValue('getmas', masl)
 
 
         fp = FinPlot()
@@ -410,26 +411,9 @@ class SumControl(QMainWindow):
 
         pname = os.path.join(outdir, name)
 
-        # Programming note. Resolution?. Fix up entries here for use in placing markers on graphs.
-        # Leaving the original entries created in theTradeObject.runSummaries but
-        # this stuff seems out of place here
-        # In tto, entries includes all the stuff in the entries in the Summary form
-        # Not sure I need all that but ... Not sure I don't- leaving it for now
-        # Also the candle index is worthless here because we just have to recalculate
-        # to account for differences in data from different stock APIs.
-        # But this data structure is the one we are using (argument for rewriting tto.__setEntries and
-        # blitzing the need for this)
         entries = self.lf.getEntries(key)
         fpentries = list()
         if entries and  len(entries[0]) == 6:
-            # TODO-- implemented partial resolution to above. New files get the new entries,
-            # old ones are converted here, same as it ever was, but a path to upgrading is in queue
-            # Deprecated version in place to accomodate my personal old files. -- Try to upgrade
-            # all then blitz this. To upgrade the the new version, either load it from the file
-            # (Go button) or load it from the saved excel file (no button yet). Loading from the
-            # saved file (load button) Will load whatever it already has. Need a saved file
-            # management dialog showing all avalialbe input files, along with their associated
-            # qt python object files and exported excel files
             for e in entries:
                 etime = e[1]
                 diff = etime - begin if (etime > begin) else (begin-etime)
@@ -458,6 +442,8 @@ class SumControl(QMainWindow):
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
             self.markDataChanged()
+            self.settings.setValue(c, pname)
+            print('Thread returning')
             return pname
 
         apiset = QSettings('zero_substance/stockapi', 'structjour')
@@ -476,25 +462,34 @@ class SumControl(QMainWindow):
     def chartMagic1(self):
         '''Update button was pressed for chart1. We will get a chart using a stock api'''
         # if not self.lf.ts 
-        pname = self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
-                               self.ui.chart1Name, self.ui.chart1, 'chart1')
-                        
-        if pname:
-            self.settings.setValue('chart1', pname)
+
+        interactive = self.chartSet.value('interactive', False, type=bool)
+        import matplotlib
+
+        # OK... putting this in a thread caused the runtime error thing tom tkinter
+        # (backend for matplotlib at the time). It won't let me load tkagg after qt 
+        # is loaded.ChartControl. QtAgg works for file but it freezes for interactive
+
+        # self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
+        #                     self.ui.chart1Name, self.ui.chart1, 'chart1')
+        x = threading.Thread(target=self.chartMage, 
+                            args=(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
+                            self.ui.chart1Name, self.ui.chart1, 'chart1', ))
+        x.start()
 
     def chartMagic2(self):
         '''Update button was pressed for chart2. We will get a chart using a stock api'''
-        pname = self.chartMage(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
-                               self.ui.chart2Name, self.ui.chart2, 'chart2')
-        if pname:
-            self.settings.setValue('chart2', pname)
+        x = threading.Thread(target=self.chartMage, 
+                             args=(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
+                               self.ui.chart2Name, self.ui.chart2, 'chart2'))
+        x.start()
 
     def chartMagic3(self):
         '''Update button was pressed for chart3. We will get a chart using a stock api'''
-        pname = self.chartMage(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
-                               self.ui.chart3Name, self.ui.chart3, 'chart3')
-        if pname:
-            self.settings.setValue('chart3', pname)
+        x = threading.Thread(target=self.chartMage,
+                             args=(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
+                               self.ui.chart3Name, self.ui.chart3, 'chart3'))
+        x.start()
 
     def toggleDate(self):
         '''
@@ -1215,8 +1210,7 @@ class SumControl(QMainWindow):
         self.loadStrategies(None)
 
     def chartSetDlg(self):
-        chartsettings = QSettings('zero_substance/chart', 'structjour')
-        self.chartDlg = ChartControl(chartsettings)
+        self.chartDlg = ChartControl(self.chartSet)
 
     def disciplineTradeLog(self):
         self.w = DisciplineControl()

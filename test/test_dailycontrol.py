@@ -71,7 +71,6 @@ from structjour.view.dailycontrol import DailyControl
 from structjour.journalfiles import JournalFiles
 from structjour.definetrades import DefineTrades
 
-from structjour.statement import Statement_IBActivity
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 

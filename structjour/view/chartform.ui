@@ -394,6 +394,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_20">
           <item>
            <widget class="QLabel" name="label_9">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#ff0000;&quot;&gt;Disabled, currently the matplotlib back end to qt (QtAgg) freezes the app when its run interactively. Leave it here till its fixed or the reason is known. (thread related?) &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>Interactive</string>
             </property>
@@ -401,6 +404,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="interactiveCb">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>interactive</string>
             </property>
@@ -419,6 +425,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_19">
           <item>
            <widget class="QLabel" name="label_17">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>Show Legend</string>
             </property>
@@ -426,6 +435,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="showLegendCb">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#ff0000;&quot;&gt;Disabled, currently the qt back end to matplotlibis freezes the program when its run interactively.  Leave it here till its fixed or I figure out why&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>legend</string>
             </property>

@@ -54,7 +54,7 @@ def getPrevTuesWed(td):
     before = td - dt.timedelta(deltdays)
     return before
 
-@unittest.skip('Leave to deal with later')
+# @unittest.skip('Leave to deal with later')
 class TestMybarchart(unittest.TestCase):
     '''
     Test functions in module bybarchart

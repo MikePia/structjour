@@ -31,7 +31,7 @@ from structjour.stock import myib as ib
 from structjour.stock import utilities as util
 # pylint: disable = C0103
 
-@unittest.skip('Levae to deal with later')
+# @unittest.skip('Levae to deal with later')
 class TestMyib(unittest.TestCase):
     '''
     Test methods and functions in the myib module
@@ -140,7 +140,17 @@ class TestMyib(unittest.TestCase):
             #     self.assertLessEqual(delt.total_seconds(), minutes * 60)
             # else:
                 # The start should be within the amount of the candle length
+            #WARNING afterhours data was assumed when theses tests were created.  If afterhours
+            # is not set  in settings, there will be failures here. At some point, ccould update the
+            # tests ... for now just keep after hours data
             if d != start:
+                # Can't tell with pre market data-- it may just start later than requested
+                if start.time() < dt.time(9,30):
+                    delt = (pd.Timestamp('9:30')-pd.Timedelta(minutes=minutes)).time()
+                    delt2 = (d-pd.Timedelta(minutes=minutes)).time()
+                    self.assertLessEqual(delt2, delt)
+                    continue
+
                 delt = pd.Timedelta(minutes=minutes)
                 delt2 = d - start if d > start else start - d
                 self.assertLessEqual(delt2, delt)
@@ -157,12 +167,13 @@ def main():
     test discovery is not working in vscode. Use this for debugging. Then run cl python -m unittest
     discovery
     '''
-    f = TestMyib()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
-            if isinstance(attr, types.MethodType):
-                attr()
+    unittest.main()
+    # f = TestMyib()
+    # for name in dir(f):
+    #     if name.startswith('test'):
+    #         attr = getattr(f, name)
+    #         if isinstance(attr, types.MethodType):
+    #             attr()
 
 
 if __name__ == '__main__':

@@ -54,6 +54,7 @@ class TestChartCtrl(TestCase):
                 'markersize': [78, 87],
                 'colorup': ['color4', 'colorH'],
                 'colordown': ['color5', 'colorG'],
+                'afterhours':[True, False],
                 'interactive': [False, True],
                 'showlegend': [True, False],
 
@@ -131,6 +132,8 @@ class TestChartCtrl(TestCase):
         '''Simulate user input, check that the widget, and settings have the value in the testSet'''
         for key in self.w.widgDict:
             widg = self.w.widgDict[key]
+            if not widg.isEnabled():
+                continue
             testVal = self.testSet[key][1] 
             if isinstance(widg, QLineEdit):
                 QTest.keyClick(widg, Qt.Key_A, Qt.ControlModifier)

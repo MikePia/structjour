@@ -15,9 +15,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
-A module to access iex API. From the REStful source. No wrapeere packages
+A module to access iex API. From the REStful source. No wraper packages
 @author: Mike Petersen
 @creation_date: 12/20/18
+This API is no longer active. They outsourced. New API at iexcloud. Not planning to support.
+Will likely delete this module.
 '''
 # import datetime as dt
 import pandas as pd

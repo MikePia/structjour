@@ -26,28 +26,28 @@ import os
 import random
 import re
 
-import pandas as pd
-
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.dates as mdates
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import pandas as pd
+import PyQt5
 from matplotlib import markers, style
 from matplotlib.ticker import FuncFormatter
-from pandas.plotting import register_matplotlib_converters
-
 from mpl_finance import candlestick_ohlc
-
+from pandas.plotting import register_matplotlib_converters
 from PyQt5.QtCore import QSettings
 
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
-from structjour.stock import myWTD as wtd
 from structjour.stock import myFinhub as fh
-from structjour.stock.utilities import getMASettings, checkForIbapi, ManageKeys
+from structjour.stock import myWTD as wtd
+from structjour.stock.utilities import ManageKeys, checkForIbapi, getMASettings
+
 if checkForIbapi():
     from structjour.stock import myib as ib
-from structjour.stock import myiex as iex
 
 # pylint: disable = C0103, W0603
 
@@ -316,9 +316,6 @@ class FinPlot:
             return wtd.getWTD_intraday
         if self.api == 'fh':
             return fh.getFh_intraday
-
-        if self.api == 'iex':
-            return iex.getiex_intraday
 
         return None
 

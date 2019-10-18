@@ -396,7 +396,7 @@ class IbSettings:
             p = p.replace(' ', '')
             self.preferences = p.split(',')
         else:
-            self.preferences = ['ib', 'bc', 'av', 'iex']
+            self.preferences = ['ib', 'bc', 'av', 'fh']
         self.setIbStuff()
 
 

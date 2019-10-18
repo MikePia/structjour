@@ -55,7 +55,8 @@ class TestSapi(TestCase):
                    'ibPaperCb': False,
                    'bcCb': True,
                    'avCb': False,
-                   'iexCb': True,
+                   'wtdCb': True,
+                   'fhCb': False,
                    'APIPref': 'abc, cde, fg'}
 
         apisettings.setValue('ibRealPort', '6789')
@@ -70,7 +71,8 @@ class TestSapi(TestCase):
                    'ibPaperCb': self.w.ui.ibPaperCb,
                    'bcCb': self.w.ui.bcCb,
                    'avCb': self.w.ui.avCb,
-                   'iexCb': self.w.ui.iexCb,
+                   'wtdCb': self.w.ui.wtdCb,
+                   'fhCb': self.w.ui.fhCb,
                    'APIPref': self.w.ui.APIPref}
         self.testWidgets = testWidgets
         self.testSet = testSet
@@ -79,7 +81,7 @@ class TestSapi(TestCase):
     def test_initFromSettings(self):
         '''[ibRealPort, ibRealId, ibPaperPort, ibPaperId, 
         ibRealCb, ibPaperCb, 
-        bcCb, avCb, iexCb, 
+        bcCb, avCb, wtdCb, fhCb, 
         APIPref]'''
         for key in self.testWidgets:
             widg = self.testWidgets[key]
@@ -88,9 +90,6 @@ class TestSapi(TestCase):
                 self.assertEqual(widg.text(), val)
             elif isinstance(widg, QCheckBox):
                 val = self.apiSet.value(key, False, bool)
-                # have disabled iex checkbox 9/12/19 because iex api is kaput TODO:
-                if widg.objectName() == 'iexCb':
-                    val = False
                 self.assertEqual(widg.isChecked(), val)
 
     def test_sortIt(self):
@@ -101,7 +100,8 @@ class TestSapi(TestCase):
         self.apiSet.setValue('ibPaperCb', False)
         self.apiSet.setValue('bcCb', True)
         self.apiSet.setValue('avCb', False)
-        self.apiSet.setValue('iexCb', True)
+        self.apiSet.setValue('wtdCb', True)
+        self.apiSet.setValue('fhCb', False)
         self.w.ui.APIPref.setText('ib, bc')
 
         s = self.w.ui.APIPref.styleSheet()
