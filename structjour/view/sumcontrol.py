@@ -441,9 +441,9 @@ class SumControl(QMainWindow):
             self.lf.setChartData(key, data, c)
             p, fname = os.path.split(pname)
             nwidg.setText(fname)
-            self.markDataChanged()
+            # self.markDataChanged()
             self.settings.setValue(c, pname)
-            print('Thread returning')
+            print('Thread returning successful')
             return pname
 
         apiset = QSettings('zero_substance/stockapi', 'structjour')
@@ -457,6 +457,7 @@ class SumControl(QMainWindow):
             apiset.setValue('code', '')
             apiset.setValue('message', '')
 
+        print('Thread returning failed')
         return None
 
     def chartMagic1(self):
@@ -476,6 +477,8 @@ class SumControl(QMainWindow):
                             args=(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
                             self.ui.chart1Name, self.ui.chart1, 'chart1', ))
         x.start()
+        x.join()
+        self.markDataChanged()
 
     def chartMagic2(self):
         '''Update button was pressed for chart2. We will get a chart using a stock api'''
@@ -483,6 +486,8 @@ class SumControl(QMainWindow):
                              args=(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
                                self.ui.chart2Name, self.ui.chart2, 'chart2'))
         x.start()
+        x.join()
+        self.markDataChanged()
 
     def chartMagic3(self):
         '''Update button was pressed for chart3. We will get a chart using a stock api'''
@@ -490,6 +495,8 @@ class SumControl(QMainWindow):
                              args=(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
                                self.ui.chart3Name, self.ui.chart3, 'chart3'))
         x.start()
+        x.join()
+        self.markDataChanged()
 
     def toggleDate(self):
         '''
