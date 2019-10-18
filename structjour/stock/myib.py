@@ -210,7 +210,7 @@ class TestApp(TestWrapper, TestClient):
         :params interval: candle len
         '''
         # get value for exclue afterhours, 1==RTH only
-        AFTERHOURS = 1 if excludeAfterHours() else 1
+        AFTERHOURS = 1 if excludeAfterHours() else 0
 
         if not validateDurString(dur):
             print("Duration must be formatted like '3 D' using S, D, W, M, or Y")
