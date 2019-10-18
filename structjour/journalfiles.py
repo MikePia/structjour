@@ -84,7 +84,7 @@ class JournalFiles:
         self.inputType = inputType
         self.settings.setValue('inputType', self.inputType)
         self.theDate = theDate
-        self.monthformat = "_%Y%m_%B"
+        self.monthformat = "_%Y%m_%B" #TODO abstract the formats from scheme setting in a utility method
         self.dayformat = "_%m%d_%A"
         self.root = os.getcwd()
         self.indir = indir if indir else os.path.join(self.root, 'data/')

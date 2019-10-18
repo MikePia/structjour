@@ -26,6 +26,7 @@ Created on Oct 18, 2018
 @author: Mike Petersen
 '''
 import os
+import math
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -119,6 +120,19 @@ class LayoutSheet:
             df = DataFrameUtil.addRows(df, self.summarySize)
         return imageLocation, df
 
+    def cleanData(self, row):
+        '''
+        Clean up the data for insertion into excel.
+        '''
+        for ix, x in enumerate(row):
+            # Express Timedelta as a string
+            if isinstance(x, pd.Timedelta):
+                row[ix] = str(row[ix])
+            # Express NaT as and empty string
+            if pd.isnull(x) and not isinstance(x, float):
+                row[ix] = ''
+        return row
+
     def createWorkbook(self, dframe):
         '''
         Create the workbook obj and give it all the data in the DataFrame. This copies
@@ -136,6 +150,8 @@ class LayoutSheet:
 
         # Add all cell values from the df to the ws object
         for r in dataframe_to_rows(nt, index=False, header=False):
+            r = self.cleanData(r)
+            
             ws.append(r)
 
         # Place column names at the top table -- (under the notes and inspire quote)
