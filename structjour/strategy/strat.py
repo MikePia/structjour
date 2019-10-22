@@ -200,9 +200,3 @@ it marks a reversal then this is the strategy:
             return None
 
 
-# tso = TheStrategyObject()
-# for i in range(len(tso.s1)):
-#     print(tso.getStrat(i, 0))
-#     desc = tso.getStratDesc(i)
-#     if desc:
-#         print(tso.getStratDesc(i))

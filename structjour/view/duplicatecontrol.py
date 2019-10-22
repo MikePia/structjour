@@ -21,7 +21,7 @@ Created on September 2, 2019
 
 @author: Mike Petersen
 '''
-
+import logging
 import os
 import sys
 
@@ -78,7 +78,7 @@ class DupControl(QDialog):
         tsid2 = self.dups[self.nextRecord][11]
 
         if int(ts_id) not in [tsid1, tsid2]:
-            print('''Fire up a messgage box saying you eh, eh , eh, Simon says you can't do that''')
+            logging.info(f'''Deleting {ts_id} is not an option''')
             return
         if self.dbdr.deleteTradeSumById(int(ts_id)):
             self.actionTaken[self.nextRecord][1] = [True, int(ts_id)]
@@ -93,7 +93,7 @@ class DupControl(QDialog):
         id2 = self.dups[self.nextRecord][1]
 
         if int(t_id) not in [id1, id2]:
-            print('''Fire up a messgage box saying you eh, eh , eh, Simon says you can't do that''')
+            logging.info(f'''Deleting {t_id} is not an option''')
             return
         if self.dbdr.deleteTradeById(int(t_id)):
             self.actionTaken[self.nextRecord][0] = [True, int(t_id)]

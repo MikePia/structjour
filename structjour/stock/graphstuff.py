@@ -530,7 +530,6 @@ def localRun():
     fp = FinPlot()
     x = fp.apiChooserList('20190903 093000', '20190903 091400' )
     # fp.apiChooser()
-    print(x)
     # odate = dt.datetime(2019, 1, 19, 9, 40)
     # cdate = dt.datetime(2019, 1, 19, 16, 30)
     # interval = 60

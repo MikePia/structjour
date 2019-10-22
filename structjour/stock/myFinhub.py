@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import numpy as np
 import requests
@@ -95,7 +96,7 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     for multiday trades spanning DST, the times will be inaccurate before the time change. The
     chooser is desinged for single day trades.
     '''
-    print('======= Called Finnhub -- no practical limit, 60/minute =======')
+    logging.info('======= Called Finnhub -- no practical limit, 60/minute =======')
     base = 'https://finnhub.io/api/v1/stock/candle?'
 
     if not start or not end:
@@ -111,7 +112,7 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     params = getParams(symbol, start, end, minutes)
     response = requests.get(base, params=params)
     if showUrl:
-        print(response.url)
+        logging.info(response.url)
     j = response.json()
     if 'o' not in j.keys():
         meta = {'code': 666, 'message': j['s']}
@@ -119,7 +120,7 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     assert set(['o', 'h', 'l', 'c', 't', 'v', 's']).issubset(set(j.keys()))
     meta = {'message': j['s'], 'code': 199}
     if j['s'] == 'no_data':
-        print('WTF')
+        logging.error('Error-- no data')
 
     d = {'open': j['o'], 'high': j['h'], 'low':j['l'],
          'close': j['c'], 'timestamp': j['t'], 'volume': j['v']}
@@ -157,8 +158,8 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
         l = len(df)
         if l == 0:
-            msg = f"\nWARNING: you have sliced off all the data with the end date {start}"
-            print(msg)
+            msg = f"\You have sliced off all the data with the end date {start}"
+            logging.warning(msg)
             metaj={}
             metaj['code'] = 666
             metaj['message'] = msg
@@ -170,8 +171,8 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
         l = len(df)
         if l < 1:
-            msg = f"\nWARNING: you have sliced off all the data with the end date {end}"
-            print(msg)
+            msg = f"Tou have sliced off all the data with the end date {end}"
+            logging.warning(msg)
             metaj = {}
             metaj['code'] = 666
             metaj['message'] = msg
@@ -187,17 +188,12 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     return meta, df, maDict
 
 def notmain():
-    # print(pd2unix('2019-09-30 09:30'), pd2unix('2019-09-30 10:30'))
-    # print(unix2pd(1569988860), unix2pd(1570037220))
     symbol = 'ROKU'
     count = 500
     minutes = 2
     start = '2019-10-10 03:15'
     end = '2019-10-10 18:02'
     meta, df, maD  = getFh_intraday(symbol, start, end,  minutes)
-    print(df.head())
-    print(df.tail())
-    print()
 
 if __name__ == '__main__':
     notmain()

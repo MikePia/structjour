@@ -221,13 +221,13 @@ class TestUtilities(unittest.TestCase):
 
 def notmain():
     '''Run some local code... Careful not to remove keys'''
-    p = PickleSettings()
+    # p = PickleSettings()
     # p.storeSettings()
     # p.initializeSettings()
-    p.restoreSettings()
-    # t = TestUtilities()
+    # p.restoreSettings()
+    t = TestUtilities()
     
-    # t.test_makeupEntries()
+    t.test_makeupEntries()
     # t.test_getLastWorkDay()
     # t.test_setDB()
     # t.test_updateKey()

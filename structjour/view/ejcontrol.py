@@ -21,7 +21,7 @@ Created on May 8, 2019
 
 @author: Mike Petersen
 '''
-
+import logging
 import os
 import sys
 from PyQt5.QtGui import QIcon
@@ -54,9 +54,9 @@ class EJControl(QDialog):
             j = self.ui.journalEdit.text()
             if os.path.exists(j):
                 self.settings.setValue('journal', j)
-                print('\n\nSUCCESS!!\n\n')
+                logging.info('Successfully set the journal directory')
                 return
-        print('FAILURE')
+        logging.info('Failed to set the journal directory')
 
     def browse(self):
         '''

@@ -24,6 +24,7 @@ Re- doing das Statemnet stuff to save the trades in the db and generally imporve
 
 # from pandas import DataFrame, read_csv
 # import matplotlib.pyplot as plt
+import logging
 import math
 import os
 
@@ -248,9 +249,8 @@ class DasStatement:
                 # If DAS is more than 50 cents off, send it ot swing Trades (which is not
                 # implemented yet-- just adds it back to normal) Otherwise just fixit here
                 if not math.isclose(row[rc.PL], PLfig, abs_tol=0.5):
-                    print('Figured the PL differently than DAS')
                     if abs(row[rc.PL] - PLfig) > 2:
-                        print("The figured PL is far from DAS's PLcalculated PL")
+                        logging.info("The figured PL is far from DAS's PLcalculated PL")
                 tdf.at[i, rc.PL] = PLfig                
                 tdf.at[i, rc.oc] = 'C'
                 if balance == 0:
@@ -260,12 +260,7 @@ class DasStatement:
                 average = row[rc.avg]
                 balance = row[rc.bal]
                 continue
-            else:
-                print('just want to place a break here and verify these are unfixable from here.')
-                # if len(tdf) == 1:
-                #     continue
-                # else:
-                    # raise ValueError('First trade(s) no bal/avg in the tdf and pastPrimo is False')
+
         ntdf = ntdf.append(tdf)
         return ntdf, stdf
 
@@ -321,13 +316,12 @@ class DasStatement:
         # positions = pd.DataFrame(columns=reqcols)
         if self.positions and os.path.exists(self.positions):
             positions = pd.read_csv(self.positions)
-            print('Here is the DAS positions file:', self.positions)
-            print(positions)
+            logging.info(f'The DAS positions file: {self.positions}')
             reqcols = ['Symb', 'Account', 'Shares']
             currentcols = list(positions.columns)
             if not set(reqcols).issubset(set(currentcols)):
-                print('WARNING: positions table is missing the following required columns.')
-                print(set(reqcols) - set(currentcols))
+                logging.warning('positions table is missing the following required columns.')
+                logging.warning(f'{set(reqcols) - set(currentcols)}')
                 positions = pd.DataFrame(columns=reqcols)
             else:
                 positions = positions[positions['Shares'] != 0]
@@ -396,7 +390,7 @@ class DasStatement:
             self.infile = os.path.join(ff.getDirectory(self.theDate), self.infile)
             self.positions = os.path.join(ff.getDirectory(self.theDate), self.positions)
         if not os.path.exists(self.infile):
-            print('File does not exist', self.infile)
+            logging.warning(f'File does not exist: {self.infile}')
             return pd.DataFrame()
         pos = os.path.split(self.infile)
         self.positions = os.path.join(pos[0], self.positions)
@@ -405,7 +399,6 @@ class DasStatement:
         df = pd.DataFrame()
         if not os.path.exists(self.positions):
             pass
-            # print('File does not exist', self.positions)
         else:
             self.settings.setValue('dasInfile2', self.positions)
         df = pd.read_csv(self.infile)
@@ -425,7 +418,7 @@ class DasStatement:
         missingcols = set(reqcol) - set(actualcols)
 
         if missingcols:
-            print('statement is missing the required fields:', missingcols)
+            logging.warning(f'statement is missing the required fields: {missingcols}')
             return pd.DataFrame()
 
         df = df[reqcol].copy()

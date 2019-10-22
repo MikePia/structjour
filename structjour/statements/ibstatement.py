@@ -26,6 +26,7 @@ db. The code to do that is not there yet.
 @creation_data: 07/8/19
 '''
 
+import logging
 import math
 import os
 import urllib.request
@@ -152,7 +153,7 @@ class IbStatement:
                         # We are lacking the previous average so cannot reliably figure the
                         # average or PL. (IB uses Cost basis accounting and their PL may be wrong
                         #  for our purposes)
-                        # print(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
+                        # logger.info(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
                         pass
 
 
@@ -338,7 +339,7 @@ class IbStatement:
                     self.beginDate = pd.Timestamp(beg).date()
                     self.endDate = pd.Timestamp(end).date()
                 except ValueError:
-                    print('Failed to get date from trades file')
+                    logging.warning('Failed to get date from trades file')
             assert self.beginDate
             assert self.endDate
         if 'Transactions' in tabd.keys():
@@ -483,7 +484,7 @@ class IbStatement:
                 self.endDate = pd.Timestamp(self.endDate).date()
         except ValueError:
             msg = f'Failed to parse the statement date period: {period}'
-            print(msg)
+            logging.warning(msg)
 
     def combinePartialsDefaultCSV(self, t):
         if 'order' in t['DataDiscriminator'].str.lower().unique():
@@ -748,7 +749,7 @@ class IbStatement:
                         # This should be a first trade for this statmenet/Symbol. Could be Open or
                         # Close. We are lacking the previous balance so cannot reliably figure the
                         # average.
-                        # print(f'''There is a  trade for {row[rc.ticker]} that lacks a transaction in this statement''')
+                        # logging.debug(f'''There is a  trade for {row[rc.ticker]} that lacks a transaction in this statement''')
                         pass
 
                 newdf = newdf.append(tdf)
@@ -816,7 +817,6 @@ class IbStatement:
             df = x.copy()
             return {'Trades': df}, {'Trades': 'Trades'}
 
-        # print("Trades are not added to the database")
         return {'Trades': df}, {'Trades': 'Trades'}
 
     def combineOrdersByTime(self, t):

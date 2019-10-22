@@ -112,12 +112,10 @@ conn.commit()
 
 for key, count in zip(tso.strats.keys(), range(len(tso.strats.keys()))):
     cur.execute('SELECT id FROM strategy WHERE name = ?', (key,))
-    print(key)
     strategy_id = cur.fetchone()[0]
     cur.execute('''INSERT INTO description(id, description, source_id, strategy_id)
 					VALUES(?, ?, ?, ?)''',
                 (count, tso.strats[key][1], source_id, strategy_id))
-    # print(count, key, tso.strats[key])
 conn.commit()
 
 

@@ -470,7 +470,6 @@ class TheTradeObject:
         self.__blandSpaceInMstkNote()
         ret = self.__setEntries(imageName)
 
-        # print("Side = ", self.df.loc[self.ix0][frc.side])
         # Add a column to manage the Qt mistake stuff
         self.TheTrade['clean'] = True
         return ret
@@ -696,7 +695,6 @@ class TheTradeObject:
                 count = count + 1
             if isinstance(self.df.loc[self.ix][frc.sum], str):
                 entryPrice = exitPrice
-                # print('wtf')
             else:
                 entryPrice = exitPrice - self.df.loc[self.ix][frc.sum]
             tmpentry = (entryPrice - partEntryPrice)
@@ -881,8 +879,6 @@ def runSummaries(ldf):
         tto = TheTradeObject(tdf, False, sf)
         tto.runSummary(imageName)
         tradeSummaries.append(tto.TheTrade)
-        # for key in self.wd.keys():
-        #     print(key, tto.TheTrade[key].unique()[0])
         tkey = f'{i+1} {tto.TheTrade[sf.name].unique()[0]}'
         ts[tkey] = tto.TheTrade
         entries[tkey] = tto.entries
@@ -895,8 +891,6 @@ def notmain():
     '''Run some local code'''
     sf = SumReqFields()
 
-    print('\n', sf.maxcol(), '\n')
-    print('\n', sf.maxrow(), '\n')
 
 
 if __name__ == '__main__':

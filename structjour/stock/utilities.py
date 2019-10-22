@@ -24,6 +24,7 @@ Local utility functions shared by some stock modules and test code.
 
 from collections import OrderedDict
 import datetime as dt
+import logging
 import pytz
 import math
 import os
@@ -198,6 +199,8 @@ def movingAverage(values, df, beginDay=None):
     return maDict
 
 def makeupEntries(df, minutes):
+    if df.empty:
+        return []
     start = df.index[0]
     end = df.index[-1]
     start = pd.Timestamp(start)
@@ -385,7 +388,7 @@ class ManageKeys:
         '''Get the file location of the sqlite database'''
         db = self.settings.value('tradeDb')
         if not db:
-            print('WARNING: Trying to retrieve db location, the database file location is not set.')
+            logging.warning('Trying to retrieve db location, the database file location is not set.')
         return db
 
 class IbSettings:
@@ -450,30 +453,9 @@ def notmain():
     # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\test\\testdb.sqlite')
     mk = ManageKeys()
     mk.setDB('notapath')
-    # mk.updateKey('bc', '''That'll do pig''')
-    # mk.updateKey('av', '''That'll do.''')
-    # print(mk.getKey('bc'))
-    # print(mk.getKey('av'))
-    # print(getMASettings())
-    # movingAverage(None, None, None)
     
 
 def localstuff():
-    # settings = QSettings('zero_substance', 'structjour') 
-    # apiset = QSettings('zero_substance/stockapi', 'structjour')
-    # setkeys = settings.allKeys()
-    # apikeys = apiset.allKeys()
-    # setval=list()
-    # apival=list()
-    # for k in setkeys:
-    #     setval.append(settings.value(k))
-    # for k in apikeys:
-    #     # apival.append(apiset.value(k))
-    # d = pd.Timestamp('2019-08-08')
-    # print(getNewyorkTZ(d))
-    # d = pd.Timestamp('2019-12-08')
-    # print(getNewyorkTZ(d))
-    # print(getNewyorkTZ(60))
     print(excludeAfterHours())
 
 

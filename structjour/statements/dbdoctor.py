@@ -20,6 +20,7 @@ Find and correct db errors
 @creation_data: 07/03/19
 '''
 
+import logging
 import os
 import sqlite3
 
@@ -62,16 +63,14 @@ class DbDoctor:
             list with info about the duplicated trades. Read with makeDupDict
         '''
         if not self.account:
-            # print('You must set the account to search for trades')
             return None, None
         if not self.db or not os.path.exists(self.db):
-            print('Database location is not set')
+            logging.warning('Database location is not set')
             return None, None
         dups = self.getDuplicateTrades(self.account)
         if not dups:
             return None, None
-        print(f"found {len(dups)} suspected duplicates")
-        print(dups[0])
+        logging.info(f"found {len(dups)} suspected duplicates")
         c_dups = dups.copy()
         deleteMe = list()
         for i, dup in enumerate(dups):
@@ -114,13 +113,14 @@ class DbDoctor:
                     if(len_t) < 2:
                         deleteTSum = t1['tsid']
             if not deleteTrade:
-                print('No clue which to  delete ', t1['id'], t2['id'])
+                msg = f'''User must choose which to delete: {t1['id']},  {t2['id']}'''
+                logging.info(msg)
             else:
-                print(f'{i+1}. Recommend deleting {deleteTrade}')
+                logging.info(f'{i+1}. Recommend deleting {deleteTrade}')
                 if autoDelete:
                     self.deleteTradeById(deleteTrade)
             if deleteTSum:
-                print(f'     Delete TradeSum record {deleteTSum}')
+                logging.info(f'     Delete TradeSum record {deleteTSum}')
                 if autoDelete:
                     self.deleteTradeSumById(deleteTSum)
             deleteMe.append([deleteTrade, deleteTSum])
@@ -131,9 +131,6 @@ class DbDoctor:
         '''
         Leaving off the commit till Im nearly done programming it
         '''
-        # dbd = DbDoctor()
-        # x = dbd.db
-        # print(x)
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cursor = cur.execute('''DELETE from ib_trades WHERE id = ?''', (tid, ))
@@ -144,9 +141,6 @@ class DbDoctor:
         '''
         Leaving off the commit till Im nearly done programming it
         '''
-        # dbd = DbDoctor()
-        # x = dbd.db
-        # print(x)
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cursor = cur.execute('''DELETE from trade_sum WHERE id = ?''', (tid, ))
@@ -158,9 +152,6 @@ class DbDoctor:
         Retrieve the the records from the chart table that have the foreign key tid to the
         trade_sum table
         '''
-        # dbd = DbDoctor()
-        # x = dbd.db
-        # print(x)
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cursor = cur.execute('''
@@ -238,7 +229,6 @@ class DbDoctor:
                 and datetime > ?
                 order by datetime''', (account, theDate))
         cursor = cursor.fetchall()
-        print(cursor)
 
     def makeDupDict(self, dup):
         '''
@@ -301,7 +291,6 @@ def notmain():
     # getTicketsWoTrades("U2429974", "201811")
     dbdr = DbDoctor()
     dbdr.doDups(autoDelete=True)
-    print()
 
 
 if __name__ == '__main__':

@@ -220,10 +220,6 @@ class LayoutForms:
         for key in self.ts:
             self.sc.ui.tradeList.addItem(key)
             tradeSummaries.append(self.ts[key])
-        # try:
-        #     self.sc.dControl.runDialog(self.df, self.ts)
-        # except AttributeError as e:
-        #     print(e)
 
         inf = self.sc.ui.infileEdit.text()
         windowTitle = self.sc.baseWindowTitle +': ' + inf + ': User Data Loaded'
@@ -284,7 +280,6 @@ class LayoutForms:
                 daVal = ''
                 # raise TypeError(msg)
             self.wd[wkey].setText(daVal)
-            # print(wkey)
 
         strat = tto['Strategy'].unique()[0]
         self.sc.loadStrategies(strat)
@@ -300,7 +295,6 @@ class LayoutForms:
         self.sc.loadImageFromFile(self.sc.ui.chart1, ipathfilename1)
         self.sc.loadImageFromFile(self.sc.ui.chart2, ipathfilename2)
         self.sc.loadImageFromFile(self.sc.ui.chart3, ipathfilename3)
-        # print('never were here')
         self.sc.diffTarget(self.sc.ui.targ.text())
         self.sc.stopLoss(self.sc.ui.stop.text())
 

@@ -21,6 +21,7 @@ DB archive of all ib statements
 '''
 
 import datetime as dt
+import logging
 import math
 import os
 import sqlite3
@@ -246,7 +247,7 @@ class StatementDB:
         x = cursor.fetchall()
         if x:
             if len(x) > 1:
-                print(f'ERROR: multiple trade summaries found with date:{date}, start: {start}')
+                logging.error(f'multiple trade summaries found with date:{date}, start: {start}')
             return x[0]
 
         return False
@@ -594,7 +595,6 @@ class StatementDB:
         if x:
             if len(x) !=1:
                 pass
-                # print('Duplicates ? ', symbol, datetime)
             return x
         return False
 
@@ -999,8 +999,6 @@ class StatementDB:
                                 self.updateAvgPlOC(cur, ft, average, pl, 'C')
                                 if ft[rc.bal] == 0:
                                     pastPrimo = False
-                            # else:
-                            #     print('or else')
                         conn.commit()
                         break
                             #######
@@ -1175,7 +1173,6 @@ class StatementDB:
                 self.coveredDates(begin, end, account, cur)
         else:
             pass
-            # print('Not all of those trades processed')
         self.insertPositions(cur, openPos)
         conn.commit()
         self.reFigureAPL(begin, end)
@@ -1491,7 +1488,6 @@ class StatementDB:
                 notcovered.append(current)
             else:
                 pass
-                # print(f'''FOUND: {current.strftime('%A, %B %d')}''')
             current = current + delt
             if current > end.date():
                 break

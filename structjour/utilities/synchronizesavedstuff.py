@@ -100,7 +100,6 @@ class WeGot:
         '''
         d = self.getIndir()
         if not d[0]:
-            # print(f'Cannot locate directory "{d[1]}".')
             return []
 
         sglob = self.settings.value('ibInfile')

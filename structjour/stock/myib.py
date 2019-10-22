@@ -22,6 +22,7 @@ Implement historicalData method from the IB API
 
 # import sys
 import datetime as dt
+import logging
 from threading import Thread
 import queue
 import pandas as pd
@@ -81,8 +82,6 @@ def ni(i, minutes='minutes'):
     # find any discrepencies
     if not isinstance(i, int):
         raise ValueError('For ib.ni minutes must be an int')
-    # if minutes != 'minutes':
-    #     print(f'{minutes} is not supported yet. Setting to 1 min')
     durdict = {1: '1 min', 2: '2 mins', 3: '3 mins', 5: '5 mins', 10: '10 mins',
                15: '15 mins', 20: '20 mins', 30: '30 mins', 60: '1 hour'}
     resamp = False
@@ -99,7 +98,6 @@ def validateDurString(s):
     '''
     d = ['S', 'D', 'W', 'M', 'Y']
     sp = s.split()
-    # print(sp)
     if len(sp) != 2:
         return False
     if sp[1] not in d:
@@ -137,15 +135,14 @@ class TestWrapper(wrapper.EWrapper):
         I think if we receive this without asking for it, it means IB failed to locate a single
         match for a requested instrument
         '''
-        print("(POSSIBLE) WARNING: Is this the droid you were looking for?")
-        print(f"ContractDetails: {reqId} {contractDetails}")
+        pass
 
     def error(self, reqId: TickerId, errorCode: list, errorString: str):
         '''
         Overriden method to return all errors to us
         '''
         if reqId != -1:
-            print(f"Error: {reqId} {errorCode} {errorString}")
+            logging.error(f"Error: {reqId} {errorCode} {errorString}")
 
     def historicalData(self, reqId: int, bar):
         '''
@@ -168,10 +165,6 @@ class TestWrapper(wrapper.EWrapper):
         df = pd.DataFrame(self.data,
                           columns=['date', 'open', 'high', 'low', 'close', 'volume'])
         self.storage.put(df)
-        # GDF=df
-        # print(df)
-        # print(df.tail(2))
-        # exit()
 
 
 class TestApp(TestWrapper, TestClient):
@@ -213,15 +206,15 @@ class TestApp(TestWrapper, TestClient):
         AFTERHOURS = 1 if excludeAfterHours() else 0
 
         if not validateDurString(dur):
-            print("Duration must be formatted like '3 D' using S, D, W, M, or Y")
+            logging.warning("Duration must be formatted like '3 D' using S, D, W, M, or Y")
             return pd.DataFrame()
 
         if not isinstance(end, dt.datetime):
-            print("end must be formatted as a datetime object")
+            logging.warning("end must be formatted as a datetime object")
             return pd.DataFrame()
 
         if interval not in BAR_SIZE:
-            print('Bar size ({}) must be one of: {}'.format(interval, BAR_SIZE))
+            logging.warning('Bar size ({}) must be one of: {}'.format(interval, BAR_SIZE))
             return pd.DataFrame()
 
         # app = Ib()
@@ -247,7 +240,6 @@ class TestApp(TestWrapper, TestClient):
                                interval, "TRADES", AFTERHOURS, 1, False, [])
         # client.reqHistoricalData(4002, ContractSamples.EuropeanStock(), queryTime,
         #                          "10 D", "1 min", "TRADES", 1, 1, false, null);
-        # print('Requesting access')
 
         # self.run()
         thread = Thread(target=self.run)
@@ -258,10 +250,10 @@ class TestApp(TestWrapper, TestClient):
         try:
             x = self.storage.get(timeout=10)
             x.set_index('date', inplace=True)
-            # print("About to print the Da
             return x
         except queue.Empty as ex:
-            print("Request came back empty", ex.__class__.__name__, ex)
+            logging.error(f"Request came back empty {ex.__class__.__name__}")
+            logging.error(ex)
             return pd.DataFrame()
 
 
@@ -281,7 +273,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     apiset = QSettings('zero_substance/stockapi', 'structjour')
     if not apiset.value('gotibapi', type=bool):
         return {'message': 'ibapi is not installed', 'code': 666}, pd.DataFrame(), None
-    print('***** IB *****')
+    logging.info('***** IB *****')
     biz = getLastWorkDay()
     if not end:
         end = pd.Timestamp(biz.year, biz.month, biz.day, 16, 0)
@@ -343,10 +335,11 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     maDict = movingAverage(df.close, df, end)
 
     if start > df.index[0]:
-        print(start, "Cutting off from: ", df.index[0])
+        msg = f"Cutting off beginning: {df.index[0]} to begin at {start}"
+        logging.info(msg)
         df = df.loc[df.index >= start]
         if not df.high.any():
-            print('WARNING: All data has been removed')
+            logging.warning('All data has been removed')
             return 0, pd.DataFrame(), None
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]

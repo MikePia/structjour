@@ -21,6 +21,7 @@ A module to access WorldTradingData API. From the REStful source. This looks lik
 WorldTradingData. 
 '''
 
+import logging
 import requests
 import pandas as pd
 
@@ -108,7 +109,7 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     :depends: On the settings of 'zero_substance/chart' for moving average settings
     '''
     # Intraday base differs from others. It has the intrday subdomain instead of api subdomain
-    print('======= called WorldTradingData. 25 calls per day limit =======')
+    logging.info('======= called WorldTradingData. 25 calls per day limit =======')
     base = 'https://intraday.worldtradingdata.com/api/v1/intraday?'
 
     original_minutes = minutes
@@ -212,7 +213,7 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             msg = msg + f'\nThe Requested end was({end}).'
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
-            print(meta)
+            logging.error(f'{meta}')
             return meta, df, maDict
 
     for key in maDict:
@@ -225,8 +226,6 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     return meta, df, maDict
 
 def notmain():
-    # print(getLimits())
-    # print(getApiKey())
     for u in getExamples():
         print(u)
 

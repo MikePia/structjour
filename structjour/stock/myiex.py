@@ -22,6 +22,7 @@ This API is no longer active. They outsourced. New API at iexcloud. Not planning
 Will likely delete this module.
 '''
 # import datetime as dt
+import logging
 import pandas as pd
 import requests
 # pylint: disable=C0103
@@ -88,7 +89,7 @@ def validateTimeString(start, end):
                 assert m < 60
                 assert m > -1
             except Exception as ex:
-                print(f"{ex.__class__.__name__}: {ex}")
+                logging.error(ex)
                 raise ValueError(msg)
 
 
@@ -166,7 +167,7 @@ def get_trading_chart(symb, start=None, end=None, minutes=None, filt=False, show
         now = pd.Timestamp.today()
         now = pd.Timestamp(now.year, now.month, now.day)
         if ts > now:
-            print('\nWARNING: you have requested a day in the future. Call cancelled.\n')
+            logging.warning('You have requested a day in the future. Call cancelled.')
             return pd.DataFrame()
 
         rng = f"date/{theDate}"

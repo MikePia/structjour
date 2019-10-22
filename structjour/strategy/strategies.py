@@ -21,6 +21,7 @@ Created on April 30, 2019
 
 @author: Mike Petersen
 '''
+import logging
 import os
 import sqlite3
 
@@ -43,13 +44,9 @@ class Strategy:
         db = settings.value('structjourDb')
         db = db if not testdb else testdb
         if not db:
-            print('db value is not set')
+            logging.info('db value is not set')
             return
 
-        # if not os.path.exists(db):
-        #     msg = f'db file {db} is not found. '
-        #     print(msg)
-        #     return
         self.conn = sqlite3.connect(db)
         self.cur = self.conn.cursor()
         self.createTables()
@@ -95,7 +92,6 @@ class Strategy:
         to either chart1 or chart2. Need to manually constrain only one (chart1, chart2) for each
         strategy (sqlite constraints with unique combination of cell contents?)
         '''
-        # print('setting', key, name)
         sid = self.getId(key)
         cursor = self.conn.execute('''SELECT name FROM images
             WHERE strategy_id = ? and widget = ?''', (sid, widget,))
@@ -171,10 +167,11 @@ class Strategy:
             x = self.cur.execute('''INSERT INTO strategy(name, preferred)
 	    			VALUES(?, ?)''', (name, preferred))
         except sqlite3.IntegrityError as e:
-            print(f'{name} already exists in DB. No action taken:', e)
+            logging.warning(f'{name} already exists in DB. No action taken')
+            logging.Warning(e)
             return None
         except sqlite3.OperationalError as e:
-            print('Close the database browser please:', e)
+            logging.error(e)
             return None
         self.conn.commit()
         return x
@@ -201,7 +198,7 @@ class Strategy:
 
     def setDescription(self, name, desc):
         if not name:
-            print('No strategy is selected. No action taken')
+            logging.info('No strategy is selected. No action taken')
             return
         sid = self.getId(name)
         # Set source to user
@@ -262,12 +259,10 @@ class Strategy:
 
         for key, count in zip(tso.strats.keys(), range(len(tso.strats.keys()))):
             self.cur.execute('SELECT id FROM strategy WHERE name = ?', (key,))
-            # print(key)
             strategy_id = self.cur.fetchone()[0]
             self.cur.execute('''INSERT INTO description(id, description, source_id, strategy_id)
                             VALUES(?, ?, ?, ?)''',
                         (count, tso.strats[key][1], source_id, strategy_id))
-            # print(count, key, tso.strats[key])
         self.conn.commit()
 
 

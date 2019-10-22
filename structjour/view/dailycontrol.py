@@ -21,6 +21,7 @@ Created on April 8, 2019
 
 @author: Mike Petersen
 '''
+import logging
 import os
 import sqlite3.test.transactions
 import sys
@@ -54,7 +55,6 @@ class QDialogWClose(QDialog):
     '''A message box with a close event handler'''
     def closeEvent(self, event):
         '''Overridden event handler'''
-        print("X is clicked")
         t = self.windowTitle()
         if t.find('text edited') > 0:
             msg = 'Daily notes contents has changed. Would you like to save it?\n'
@@ -88,7 +88,7 @@ class DailyControl(QDialogWClose):
             if not self.db:
                 j = self.settings.value('journal')
                 if not j:
-                    print('Please set the location of the your journal directory.')
+                    logging.info('Please set the location of your journal directory.')
                     EJControl()
                     j = self.settings.value('journal')
                     if not j:
@@ -123,7 +123,7 @@ class DailyControl(QDialogWClose):
         widget. Use setNote for a vanilla db commit
         '''
         if not self.date:
-            print('Cannot save without a date')
+            logging.info('Cannot save without a date')
             return
         d = self.date.strftime('%Y%m%d')
         d = int(d)
@@ -149,7 +149,7 @@ class DailyControl(QDialogWClose):
         Commit or update the dailyNotes db table with self.date and note
         '''
         if not self.date:
-            print('Cannot save without a date')
+            logging.info('Cannot save without a date')
             return
         d = self.date.strftime('%Y%m%d')
         d = int(d)
@@ -174,7 +174,7 @@ class DailyControl(QDialogWClose):
         date can be given as an argument or retrieved from the df argument for runDialog.
         '''
         if not self.date:
-            print('Cannot retrieve a note without a date')
+            logging.info('Cannot retrieve a note without a date')
             return
         d = self.date.strftime('%Y%m%d')
         d = int(d)
@@ -261,7 +261,7 @@ class DailyControl(QDialogWClose):
         count = 0
 
         if not self.ts:
-            print('Trade data not found')
+            logging.info('Trade data not found')
             return
 
         # Gather all the data

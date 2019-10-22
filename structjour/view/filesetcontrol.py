@@ -19,7 +19,7 @@ Created on April 1, 2019
 
 @author: Mike Petersen
 '''
-
+import logging
 import os
 import re
 import sys
@@ -185,7 +185,6 @@ class FileSetCtrl(QDialog):
             createDirsStructjour(m)
         except ValueError as m:
             if m.args[0].startswith('Directory Already'):
-                # print('Qmessage box', m.args[0], m.args[1])
                 msg = f'<h3>{m.args[0]}</h3>'
                 msg += f'<p>{m.args[1]}</p>'
                 msgbx = QMessageBox()
@@ -389,7 +388,7 @@ class FileSetCtrl(QDialog):
 
         # What should turn red here????
         if not d or not os.path.exists(d):
-            print(f'Cannot locate directory "{d}".')
+            logging.warning(f'Cannot locate directory "{d}".')
             self.fui.ibInfileLbl.setText(sedit)
             self.fui.ibInfileLbl.setStyleSheet("color: red;")
             return
@@ -574,7 +573,7 @@ class FileSetCtrl(QDialog):
                 os.makedirs(outdir)
             except (IOError, OSError) as ex:
                 # LOG THIS
-                print(ex)
+                logging.error(ex)
         return outdir
 
 if __name__ == '__main__':

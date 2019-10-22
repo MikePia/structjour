@@ -23,6 +23,7 @@ system. I am goingto implement the straight RESTful free API using request.
 @creation_data: 12/19/18
 '''
 import datetime as dt
+import logging
 import requests
 import pandas as pd
 # from structjour.stock.picklekey import getKey as getReg
@@ -121,7 +122,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         seperate from request status_code.
     :raise: ValueError if response.status_code is not 200.
     '''
-    print('======= Called Barchart -- 150 call limit, data available after market close =======')
+    logging.info('======= Called Barchart -- 150 call limit, data available after market close =======')
     if not end:
         tdy = dt.datetime.today()
         end = dt.datetime(tdy.year, tdy.month, tdy.day, 17, 0)
@@ -145,7 +146,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
 
     response = requests.get(BASE_URL, params=params)
     if showUrl:
-        print(response.url)
+        logging.info(response.url)
 
     if response.status_code != 200:
         raise Exception(
@@ -154,15 +155,14 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             response.text
             and isinstance(response.text, str)
             and response.text.startswith('You have reached')):
-        print('WARNING: API max queries:\n', response.text)
+        logging.warning(f'API max queries: {response.text}')
         meta = {'code': 666, 'message': response.text}
         return meta, pd.DataFrame(), None
 
 
     result = response.json()
     if not result['results']:
-        print('WARNING: Failed to retrieve any data. Barchart sends the following greeting:')
-        print(result['status'])
+        logging.warning('''Failed to retrieve any data. Barchart sends the following greeting: {result['status']}''')
         return result['status'], pd.DataFrame(), None
 
 
@@ -177,7 +177,6 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         d = pd.Timestamp(row['timestamp'])
         newd = pd.Timestamp(d.year, d.month, d.day, d.hour, d.minute, d.second)
         df.at[i, 'timestamp'] = newd
-        # print(d, newd)
 
     df.set_index(df.timestamp, inplace=True)
     df.index.rename('date', inplace=True)
@@ -199,7 +198,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             msg += '''If you are seeking a chart from today, its possible Barchart has not made'''
             msg += 'the data available yet. (Should be available by 4:45PM but they are occasionally late)'
             msg += 'You can wait or try AlphaVantage or IB if you have them available. Open File->StockAPI'
-            print(msg)
+            logging.warning(msg)
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
             return meta, df, maDict
@@ -219,7 +218,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             msg = msg + f'\nThe Requested end was({end}).'
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
-            print(meta)
+            logging.warning(f'{meta}')
             return meta, df, maDict
 
     deleteMe = list()

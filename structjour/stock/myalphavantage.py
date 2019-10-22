@@ -31,6 +31,7 @@ Calls the RESTapi for intraday. There is a limit on the free API of 5 calls per 
 # pylint: disable = C0301
 
 import datetime as dt
+import logging
 import time
 import requests
 import pandas as pd
@@ -126,7 +127,8 @@ def ni(i):
     # was comparison of str and int. I could not trigger the exception or find a str instance error
     # It never happened for running unittest test_mav
     if isinstance(i, str):
-        print(':::::::::::::::::\n', i, '::::::::::::::::::\n')
+        pass
+        # logging.info(':::::::::::::::::\n', i, '::::::::::::::::::\n')
     if i < 1:
         i = 1
     elif i > 120:
@@ -147,7 +149,7 @@ def ni(i):
         elif i < 60:
             ret = ('30min', 30, i)
         return resamp, ret
-    print(
+    logging.warning(
         f"interval={i} is not supported by alphavantage. Setting to 1min candle as if it were requested")
     return False, ('1min', 1, 1)
 
@@ -173,7 +175,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
          low, close, volume and indexed by pd timestamp. If not specified, this
          will return a weeks data. 
     '''
-    print('======= Called alpha 500 calls per day limit, 5/minute =======')
+    logging.info('======= Called alpha 500 calls per day limit, 5/minute =======')
     start = pd.to_datetime(start) if start else None
     end = pd.to_datetime(end) if end else None
     if not minutes:
@@ -195,7 +197,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     request_url = f"{BASE_URL}"
     response = requests.get(request_url, params=params)
     if showUrl:
-        print(response.url)
+        logging.info(response.url)
 
     if response.status_code != 200:
         raise Exception(
@@ -215,8 +217,8 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             R = 1
             r = Retries()
         if r.retries > 0:
-            print(metaj)
-            print(f'Will retry in 60 seconds: {RETRY - r.retries + 1} of {RETRY} tries.')
+            logging.info(f'{metaj}')
+            logging.info(f'Will retry in 60 seconds: {RETRY - r.retries + 1} of {RETRY} tries.')
             r.retries = r.retries - 1
 
             time.sleep(60)
@@ -237,7 +239,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         if end < df.index[0]:
             msg = 'WARNING: You have requested data that is unavailable:'
             msg = msg + f'\Your end date ({end}) is before the earliest first date ({df.index[0]}).'
-            print(msg)
+            logging.warning(msg)
             metaj['code'] = 666
             metaj['message'] = msg
             
@@ -292,7 +294,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             l = len(df)
             if l == 0:
                 msg = f"\nWARNING: you have sliced off all the data with the end date {start}"
-                print(msg)
+                logging.warning(msg)
                 metaj['code'] = 666
                 metaj['message'] = msg
                 return metaj, pd.DataFrame(), maDict
@@ -305,7 +307,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             l = len(df)
             if l < 1:
                 msg = f"\nWARNING: you have sliced off all the data with the end date {end}"
-                print(msg)
+                logging.warning(msg)
                 metaj['code'] = 666
                 metaj['message'] = msg
                 return metaj, pd.DataFrame(), maDict

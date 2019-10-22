@@ -22,6 +22,7 @@ Created on May 29, 2019
 @author: Mike Petersen
 '''
 import datetime as dt
+import logging
 import os
 from PIL import Image as PILImage
 
@@ -71,22 +72,19 @@ class ExportToExcel:
             try:
                 wb.save(saveName)
             except PermissionError as ex:
-                print()
-                print(ex)
-                print()
-                print("Failed to create file {0}.{1}".format(saveName, ex))
-                print("Images from the clipboard were saved  in {0}".format(jf.outdir))
+                logging.error(ex)
+                logging.error("Failed to create file {0}".format(saveName))
+                logging.info("Images from the clipboard were saved  in {0}".format(jf.outdir))
                 (nm, ext) = os.path.splitext(jf.outpathfile)
                 saveName = "{0}({1}){2}".format(nm, count, ext)
-                print("Will try to save as {0}".format(saveName))
+                logging.error("Will try to save as {0}".format(saveName))
                 count = count+1
                 if count == 6:
-                    print("Giving up. PermissionError")
                     raise (PermissionError(
                         "Failed to create file {0}".format(saveName)))
                 continue
             except Exception as ex:
-                print(ex.__class__, ex)
+                logging.error(ex)
             break
 
     def populateXLDailyNote(self, ws):
@@ -165,7 +163,6 @@ class ExportToExcel:
                 else:
                     cell = cell = mistake.mistakeFields[key][0]
                 cell = tcell(cell, anchor=mistake.anchor)
-            #     print(cell)
                 formula = mistake.formulas[key][0]
                 targetcell = mistake.formulas[key][1]
                 targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0][0][1]))
@@ -358,5 +355,5 @@ class ExportToExcel:
 
 
         self.saveXL(wb, self.jf)
-        print("Processing complete. Saved {}".format(self.jf.outpathfile))
+        logging.info("Processing complete. Saved {}".format(self.jf.outpathfile))
         # return jf
