@@ -20,6 +20,7 @@ Created on Sep 5, 2018
 
 @author: Mike Petersen
 '''
+import logging
 import sys
 # import datetime
 import pandas as pd
@@ -44,7 +45,7 @@ class ReqCol(object):
         '''Set the required columns in the import file.'''
 
         if source != 'DAS':
-            print("Only DAS is currently supported")
+            logging.error("Only DAS is currently supported")
             raise ValueError
 
         # rcvals are the actual column titles (to be abstracted when we add new input files)
@@ -618,9 +619,10 @@ class DefineTrades(object):
                     msg = '\nFound a flipper short to long.\n'
                     msg = msg + "Use this file for devel and testing if this is an IB statement\n"
             else:
-                print('This should never run. What happned in postProcessing?',
+                msg = ('This should never run. What happned in postProcessing?',
                       'It means we have a non 0 balance at the end of a trade.(!?!)',
-                      tdf.iloc[-1][c.bal], tdf.iloc[-1][c.name])
+                      str(tdf.iloc[-1][c.bal], tdf.iloc[-1][c.name]))
+                logging.error(msg)
             if count == 0:
                 dframe = tdf
             else:

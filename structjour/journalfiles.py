@@ -19,6 +19,7 @@
 @author Mike Petersen
 '''
 import datetime as dt
+import logging
 import os
 import sys
 import numpy as np
@@ -73,7 +74,8 @@ class JournalFiles:
                 msg = f"\n\nTheDate ({theDate}) must be a valid timestamp or string.\n"
                 msg += "Leave it blank to accept today's date\n" 
                 msg += ex.__str__() + "\n" 
-                print(msg)
+                logging.error(ex)
+                logging.error(msg)
                 raise ValueError(msg)
                     
             theDate = theDate
@@ -110,8 +112,7 @@ class JournalFiles:
         try:
             self._checkPaths()
         except NameError as ex:
-            print('Directory ERROR', ex)
-            print()
+            logging.error(ex)
 
     def setMyParams(self, indir, outdir):
         '''
@@ -141,7 +142,7 @@ class JournalFiles:
             try:
                 os.mkdir(self.outdir)
             except FileNotFoundError as ex:
-                print(ex)
+                logging.error(ex)
                 return False
         return True
 
@@ -152,24 +153,23 @@ class JournalFiles:
         :raise NameError: If not DB and inpathfile, inpathfile2 (if given) or outdir do not exist.
         '''
         if self.inputType != 'DB' and not os.path.exists(self.inpathfile):
-            print(os.path.realpath(self.inpathfile))
             if os.path.exists(os.path.join(self.root, self.infile)):
                 self.indir = self.root
                 self.inpathfile = os.path.join(self.indir, self.infile)
             else:
                 err = "Fatal error:{0}: input can't be located: {1}".format(
                     "JournalFiles._checkPaths", self.inpathfile)
-                self.printValues()
+                logging.error(err)
                 raise NameError(err)
 
         if self.inputType != 'DB' and self.inpathfile2 and not os.path.exists(self.inpathfile2):
             err = "Fatal error:{0}: input can't be located: {1}".format(
                     "JournalFiles._checkPaths", self.inpathfile2)
-            self.printValues()
+            logging.error(err)
             raise NameError(err)
 
         if not os.path.exists(self.indir):
-            print('fixme')
+            logging.error('fixme')
         
 
         if self.inputType == 'DB':
@@ -181,7 +181,7 @@ class JournalFiles:
                     if not os.path.exists(monthdir):
                         msg = f'''The folder {monthdir} does not exist. Structjour must create the
                         folder in order to continue. Creating the directories now.'''
-                        print(msg)
+                        logging.info(msg)
                         journal = self.settings.value('journal')
                         if os.path.exists(journal):
                             scheme = self.settings.value('scheme')
@@ -209,7 +209,7 @@ class JournalFiles:
                 # If the parent exists, we can create outdir when needed
                 err = "Fatal error:{0} Output directory cannot be located: {1}".format(
                     "JournalFiles._checkPaths", self.outdir)
-                self.printValues()
+                logging.error(err)
                 raise NameError(err)
 
     def resetInfile(self, infile):

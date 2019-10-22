@@ -24,6 +24,7 @@ Created on April 14, 2019
 '''
 
 import datetime as dt
+import logging
 import os
 import pickle
 
@@ -170,15 +171,18 @@ class LayoutForms:
         self.ts = ibdb.updateTradeSummaries(self.ts)
 
 
+        # This is legacy stuff. It will run IFF we are lacking a loaded trade table and we
+        # have one already pickled. 
         df = None
         dfname = self.getStoredTradeName()
         if dfname and os.path.exists(dfname):
             with open(dfname, "rb") as f:
                 df = pickle.load(f)
         if df is not None and self.df is None:
+            logging.warning('Using a pickled trade table object in saveTheTradeObject')
             self.df = df
         if self.df is None:
-            print('Failed to locate the trades information. Pickle FAILED')
+            logging.warning('Failed to locate the trades information. Pickle FAILED')
             return
         # if df is not None and self.df is not None:
         #     if not pd.DataFrame.equals(df, self.df):
@@ -210,7 +214,7 @@ class LayoutForms:
         self.ts = setTradeSummaryHeaders(ts)
 
 
-        print('load up the trade names now')
+        logging.info('load up the trade names now')
         tradeSummaries = []
         self.sc.ui.tradeList.clear()
         for key in self.ts:
@@ -276,7 +280,7 @@ class LayoutForms:
             elif wkey == "Strategy":
                 continue
             elif not isinstance(daVal, str):
-                print(f"WARNING:  {wkey} is {str(type(daVal))}: {daVal}. Changing to empty str")
+                logging.warning(f"{wkey} is {str(type(daVal))}: {daVal}. Changing to empty str")
                 daVal = ''
                 # raise TypeError(msg)
             self.wd[wkey].setText(daVal)

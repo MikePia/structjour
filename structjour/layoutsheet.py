@@ -26,6 +26,7 @@ Created on Oct 18, 2018
 @author: Mike Petersen
 '''
 import os
+import logging
 import math
 import pandas as pd
 import numpy as np
@@ -112,7 +113,6 @@ class LayoutSheet:
                                   imageName,
                                   tdf.Start.unique()[-1],
                                   tdf.Duration.unique()[-1]])
-            # print(count, imageName, len(imageLocation), len(tdf) + len(df) + 3)
             count = count + 1
 
             # Append the mini trade table then add rows to fit the tradeSummary form
@@ -253,7 +253,6 @@ class LayoutSheet:
                 else:
                     cell = cell = mistake.mistakeFields[key][0]
                 cell = tcell(cell, anchor=mistake.anchor)
-            #     print(cell)
                 formula = mistake.formulas[key][0]
                 targetcell = mistake.formulas[key][1]
                 targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0]))
@@ -299,7 +298,6 @@ class LayoutSheet:
                         raise ValueError(
                             'Malformed float for variable pl in createDailySummary')
 
-            # print(pl)
             if float(pl) > maxTrade[0]:
                 maxTrade = (pl, "Trade{0}, {1}, {2}".format(
                     count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
@@ -384,21 +382,19 @@ class LayoutSheet:
             try:
                 wb.save(saveName)
             except PermissionError as ex:
-                print()
-                print(ex)
-                print()
-                print("Failed to create file {0}.{1}".format(saveName, ex))
-                print(
+                logging.error(ex)
+                logging.error("Failed to create file {0}".format(saveName))
+                logging.error(
                     "Images from the clipboard were saved  in {0}".format(jf.outdir))
                 (nm, ext) = os.path.splitext(jf.outpathfile)
                 saveName = "{0}({1}){2}".format(nm, count, ext)
-                print("Will try to save as {0}".format(saveName))
+                logging.error("Will try to save as {0}".format(saveName))
                 count = count+1
                 if count == 6:
-                    print("Giving up. PermissionError")
+                    logging.error("Giving up. PermissionError")
                     raise (PermissionError(
                         "Failed to create file {0}".format(saveName)))
                 continue
             except Exception as ex:
-                print(ex)
+                logging.error(ex)
             break

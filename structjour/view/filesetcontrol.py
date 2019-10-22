@@ -88,6 +88,11 @@ class FileSetCtrl(QDialog):
 
         fui.createDirsBtn.pressed.connect(self.createDirs)
 
+        fui.logfile_browse.pressed.connect(self.logfile_browse)
+        fui.logfile_edit.textChanged.connect(self.logfile_edit)
+
+        fui.logfile_level_cb.currentIndexChanged.connect(self.logfile_level)
+
         fui.journal.setText(self.settings.value('journal'))
         self.setJournalDir()
 
@@ -111,6 +116,11 @@ class FileSetCtrl(QDialog):
 
         fui.tradeDbEdit.setText(self.settings.value('tradeDb'))
         self.tradeDb()
+
+        fui.logfile_edit.setText(self.settings.value('logfile'))
+        self.logfile_edit()
+
+        fui.logfile_level_cb.setCurrentText(self.settings.value('logfile_level', 'Debug'))
 
         if self.settings.value('outdirPolicy') == 'static':
             self.fui.outdirStatic.setChecked(True)
@@ -142,6 +152,32 @@ class FileSetCtrl(QDialog):
 
         self.exec()
 
+    def logfile_level(self, x):
+        self.settings.setValue('logfile_level', self.fui.logfile_level_cb.currentText())
+
+    def logfile_browse(self):
+        '''
+        Open a file dialog and set the results to the structjourDbEdit
+        '''
+        jdir = self.settings.value('journal')
+        path = QFileDialog.getSaveFileName(self, "Select structjour db", jdir,
+                                           options=QFileDialog.DontConfirmOverwrite)
+        if path[0]:
+            self.fui.logfile_edit.setText(path[0])
+        # self.settings.setValue('structjourDb', path[0])
+
+    def logfile_edit(self):
+        '''
+        Set the logfile settings from the widget and color the widget text showing existance/not.
+        '''
+        path = self.fui.logfile_edit.text()
+        if not os.path.exists(path):
+            self.fui.logfile_edit.setStyleSheet("color: red;")
+        else:
+            self.fui.logfile_edit.setStyleSheet("color: green;")
+        
+        self.settings.setValue('logfile', path)
+
     def createDirs(self):
         '''Create the sub directories in the journal directory'''
         m = pd.Timestamp(f'{self.fui.createDirsMonth.currentText()} {self.fui.createDirsYear.currentText()}')
@@ -160,6 +196,7 @@ class FileSetCtrl(QDialog):
                 raise ValueError(m)
         else:
             self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
+            
 
 
     def structjourDbBrowse(self):
@@ -167,7 +204,9 @@ class FileSetCtrl(QDialog):
         Open a file dialog and set the results to the structjourDbEdit
         '''
         jdir = self.settings.value('journal')
-        path = QFileDialog.getOpenFileName(self, "Select structjour db", jdir, f'Sqlite db(*.db *.sqlite *.sqlite3 *.db3))')
+        path = QFileDialog.getSaveFileName(self, "Select structjour db", jdir,
+                                           f'Sqlite db(*.db *.sqlite *.sqlite3 *.db3))',
+                                           options=QFileDialog.DontConfirmOverwrite)
         if path[0]:
             self.fui.structjourDbEdit.setText(path[0])
         # self.settings.setValue('structjourDb', path[0])
@@ -190,7 +229,9 @@ class FileSetCtrl(QDialog):
         Open a file dialog and set the results to the tradeDbEdit
         '''
         jdir = self.settings.value('journal')
-        path = QFileDialog.getOpenFileName(self, "Select trade db", jdir, f'Sqlite db(*db *.sqlite *.sqlite3 *.db3))')
+        path = QFileDialog.getSaveFileName(self, "Select trade db", jdir,
+                                           f'Sqlite db(*db *.sqlite *.sqlite3 *.db3))',
+                                           options=QFileDialog.DontConfirmOverwrite)
         if path[0]:
             self.fui.tradeDbEdit.setText(path[0])
         # self.settings.setValue('tradeDb', path[0])

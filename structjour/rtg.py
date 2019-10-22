@@ -23,7 +23,7 @@ Random Trade Generator to for testing
 @author: Mike Petersen
 '''
 
-
+import logging
 import math
 from math import isclose
 import random
@@ -231,8 +231,7 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     tradedf = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty',
                                                 'Balance', 'Account', 'PnL', 'Sum', 'Name', 'Date', 'Duration'])
     if not isclose(tradedf['PnL'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
-        print(tradedf['PnL'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
-        print()
+        logging.warning(tradedf['PnL'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
         
     return tradedf, latest
 

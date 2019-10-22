@@ -37,16 +37,16 @@
     <string>Files and Directories</string>
    </property>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>32</x>
-     <y>42</y>
-     <width>920</width>
+     <x>33</x>
+     <y>43</y>
+     <width>926</width>
      <height>826</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_13">
+   <layout class="QHBoxLayout" name="horizontalLayout_15">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
@@ -561,285 +561,406 @@
      </spacer>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_7">
+     <layout class="QVBoxLayout" name="verticalLayout_12">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <layout class="QVBoxLayout" name="verticalLayout_11">
         <item>
-         <widget class="QLabel" name="label_7">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>structjour database</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QPushButton" name="structjourDbBtn">
-            <property name="focusPolicy">
-             <enum>Qt::NoFocus</enum>
-            </property>
-            <property name="text">
-             <string>structjour db</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="structjourDbEdit">
-            <property name="minimumSize">
-             <size>
-              <width>300</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <spacer name="verticalSpacer_9">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_8">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>trades database</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_11">
-          <item>
-           <widget class="QPushButton" name="tradeDbBtn">
-            <property name="focusPolicy">
-             <enum>Qt::NoFocus</enum>
-            </property>
-            <property name="text">
-             <string>trade db</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="tradeDbEdit">
-            <property name="minimumSize">
-             <size>
-              <width>300</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <spacer name="verticalSpacer_10">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_5">
-          <item>
-           <widget class="QLabel" name="label_10">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+           <widget class="QLabel" name="label_7">
             <property name="font">
              <font>
-              <pointsize>9</pointsize>
+              <pointsize>10</pointsize>
               <weight>75</weight>
               <bold>true</bold>
              </font>
             </property>
             <property name="text">
-             <string>Create journal file directories for the month of ....</string>
+             <string>structjour database</string>
             </property>
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
             <item>
-             <widget class="QPushButton" name="createDirsBtn">
+             <widget class="QPushButton" name="structjourDbBtn">
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
               <property name="text">
-               <string>Create Dirs</string>
+               <string>structjour db</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="createDirsYear">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
+             <widget class="QLineEdit" name="structjourDbEdit">
+              <property name="minimumSize">
                <size>
-                <width>75</width>
-                <height>16777215</height>
+                <width>300</width>
+                <height>0</height>
                </size>
               </property>
-              <item>
-               <property name="text">
-                <string>2019</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>2020</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>2021</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>2022</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>2023</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>2024</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>2025</string>
-               </property>
-              </item>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_10">
+          <item>
+           <spacer name="verticalSpacer_9">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>13</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>trades database</string>
+              </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="createDirsMonth">
+             <layout class="QHBoxLayout" name="horizontalLayout_11">
+              <item>
+               <widget class="QPushButton" name="tradeDbBtn">
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
+                <property name="text">
+                 <string>trade db</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="tradeDbEdit">
+                <property name="minimumSize">
+                 <size>
+                  <width>300</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <spacer name="verticalSpacer_10">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>18</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="QLabel" name="label_10">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="maximumSize">
-               <size>
-                <width>85</width>
-                <height>16777215</height>
-               </size>
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
               </property>
-              <item>
-               <property name="text">
-                <string>January</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>February</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>March</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>April</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>May</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>June</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>July</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>August</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>September</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>October</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>November</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>December</string>
-               </property>
-              </item>
+              <property name="text">
+               <string>Create journal file directories for the month of ....</string>
+              </property>
              </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_12">
+              <item>
+               <widget class="QPushButton" name="createDirsBtn">
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
+                <property name="text">
+                 <string>Create Dirs</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="createDirsYear">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>75</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>2019</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2020</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2021</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2022</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2023</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2024</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2025</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="createDirsMonth">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>85</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>January</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>February</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>March</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>April</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>May</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>June</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>July</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>August</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>September</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>October</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>November</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>December</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <spacer name="verticalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>401</width>
+              <height>13</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <widget class="QLabel" name="label_12">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Set log file and level</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_13">
+                <item>
+                 <widget class="QPushButton" name="logfile_browse">
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
+                  <property name="text">
+                   <string>Set log file</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="logfile_edit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>300</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_14">
+              <item>
+               <widget class="QLabel" name="label_13">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Choose log level</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="logfile_level_cb">
+                <item>
+                 <property name="text">
+                  <string>Debug</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Info</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Warning</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Error</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Critical</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
@@ -848,14 +969,14 @@
        </layout>
       </item>
       <item>
-       <spacer name="verticalSpacer_8">
+       <spacer name="verticalSpacer_11">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>401</width>
-          <height>508</height>
+          <width>20</width>
+          <height>428</height>
          </size>
         </property>
        </spacer>

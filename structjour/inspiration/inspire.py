@@ -337,7 +337,6 @@ class Inspire:
         '''
 
         num = randint(0, len(self.df)-1)
-#         print (len(self.df), num)
         qt = self.df.loc[num]
         quote = qt['quote'].replace('\n', ' ')
         ret = "{0}, {1}\n{2}\n\t\t-{3}".format(
@@ -356,12 +355,6 @@ class Inspire:
             print(
                 "{0}, {1}\n{2}\n\t\t-{3}\n".format(qt['name'], qt['on'], qt['quote'], qt['who']))
 
-#         for q in qs :
-#             print("\n{}".format(q))
-#
-#         return("Its the end of the world as we know it")
-
-# print("You got to admit its getting better.")
 
 
 class TradingPlan:

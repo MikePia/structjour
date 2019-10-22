@@ -26,3 +26,5 @@ TODO*
 *egg-info*
 *.pickle
 structjour/readme.md
+app.log
+structjour.log

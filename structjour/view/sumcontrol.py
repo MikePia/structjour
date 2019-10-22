@@ -25,6 +25,7 @@ Created on April 8, 2019
 
 import datetime as dt
 from fractions import Fraction
+import logging
 import os
 import re
 import sys
@@ -73,13 +74,17 @@ class SumControl(QMainWindow):
                      'ibInfile', ibInfileName', outdir, 'interval', inputType]
     '''
 
-    def __init__(self):
+    def __init__(self, level=logging.DEBUG):
         '''
         Retrieve and load settings, and  create action signals for the SumControl Form.
         :params ui: The QT designer object created from summaryform.ui
         '''
         self.oldDate = None
         super().__init__()
+
+        self.settings = QSettings('zero_substance', 'structjour')
+        self.chartSet = QSettings('zero_substance/chart', 'structjour')
+        self.setuplog()
 
         defimage = "structjour/images/ZeroSubstanceCreation_220.png"
         self.defaultImage = 'structjour/images/ZeroSubstanceCreation.png'
@@ -90,8 +95,6 @@ class SumControl(QMainWindow):
         self.baseWindowTitle = 'Structjour -- Daily trade review'
         self.lf = None
         self.ui = ui
-        self.settings = QSettings('zero_substance', 'structjour')
-        self.chartSet = QSettings('zero_substance/chart', 'structjour')
 
         self.settings.setValue('runType', 'QT')
         now = None
@@ -177,6 +180,23 @@ class SumControl(QMainWindow):
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
 
+
+    def setuplog(self):
+        # basicConfig args level, filename, filemode, format
+        level = self.settings.value('logfile_level', 'Debug')
+        lvls = { 'Debug': logging.DEBUG,
+                 'Info': logging.INFO,
+                 'Warning': logging.WARNING,
+                 'Error': logging.ERROR,
+                 'Critical': logging.CRITICAL
+               }
+        logfile = self.settings.value('logfile', 'app.log')
+        level = lvls[level]
+        filename = logfile
+        filemode = 'a'
+        datefmt = '%Y/%m/%d %H:%M:%S'
+        format = '%(asctime)s  - %(levelname)s - %(funcName)s - %(message)s'
+        logging.basicConfig(level=level, filename=filename, filemode=filemode, format=format, datefmt=datefmt)
     # =================================================================
     # ==================== Main Form  methods =========================
     # =================================================================
@@ -207,7 +227,7 @@ class SumControl(QMainWindow):
     def exportExcel(self):
         ''' Signal callback when the exportBtn is pressed. Initiates an export to excel.'''
         if not self.lf:
-            print('Nothing to export')
+            logging.info('Nothing to export')
             return
         excel = ExportToExcel(self.lf.ts, self.lf.jf, self.lf.df)
         excel.exportExcel()
@@ -215,7 +235,7 @@ class SumControl(QMainWindow):
     def showDaily(self):
         '''Display the DailyControl form'''
         if not self.lf or self.lf.df is None:
-            print('The input file is not loaded')
+            logging.info('The input file is not loaded')
             return
 
         # Some programming weirdness here. This dialog was working, then it stopped working. From
@@ -258,7 +278,7 @@ class SumControl(QMainWindow):
     def saveTradeObject(self):
         '''Signal call back from saveBtn. Initiates saving the data.'''
         if not self.lf:
-            print('Nothing to save')
+            logging.info('Nothing to save')
             return
         outpathfile = self.getSaveName()
 
@@ -357,7 +377,7 @@ class SumControl(QMainWindow):
         :c: A string, one of 'chart1, chart2 or chart3'
         '''
         if not self.lf:
-            print('No trade to get chart for')
+            logging.info('No trade to get chart for')
             return None
         key = self.ui.tradeList.currentText()
         if not key in self.lf.ts.keys():
@@ -443,7 +463,7 @@ class SumControl(QMainWindow):
             nwidg.setText(fname)
             # self.markDataChanged()
             self.settings.setValue(c, pname)
-            print('Thread returning successful')
+            logging.info('Thread returning successful')
             return pname
 
         apiset = QSettings('zero_substance/stockapi', 'structjour')
@@ -457,7 +477,7 @@ class SumControl(QMainWindow):
             apiset.setValue('code', '')
             apiset.setValue('message', '')
 
-        print('Thread returning failed')
+        logging.info('Thread returning failed')
         return None
 
     def chartMagic1(self):
@@ -513,7 +533,6 @@ class SumControl(QMainWindow):
 
     def mousePressEvent(self, event):
         '''Overridden'''
-        # print('mouse Press', (event.x(), event.y()))
         pass
 
     def getChartWidgets(self, c):
@@ -604,7 +623,7 @@ class SumControl(QMainWindow):
                 self.ui.chart3Name.setText(nname)
         elif action == browsePic:
             if not self.lf:
-                print('No trade to chart')
+                logging.info('No trade to chart')
                 return
             outdir = self.getOutdir()
             tnum = 'Trade' + key.split(' ')[0] + '*'
@@ -670,7 +689,7 @@ class SumControl(QMainWindow):
     def setExplain(self):
         '''Update self.lf from the explain widget'''
         if not self.lf:
-            print('No trades are loaded. Nothing to explain')
+            logging.info('No trades are loaded. Nothing to explain')
             return
         self.markDataChanged()
         key = self.ui.tradeList.currentText()
@@ -680,7 +699,7 @@ class SumControl(QMainWindow):
     def setNotes(self):
         '''Update self.lf from the notes widget'''
         if not self.lf:
-            print('No trades are loaded nothing to analyze.')
+            logging.info('No trades are loaded nothing to analyze.')
             return
         self.markDataChanged()
         key = self.ui.tradeList.currentText()
@@ -689,7 +708,7 @@ class SumControl(QMainWindow):
 
     def setMstkVal(self, val):
         if not self.lf:
-            print('No trades are loaded.')
+            logging.info('No trades are loaded.')
             return
         self.markDataChanged()
         note = self.ui.sumNote.toPlainText()
@@ -709,7 +728,7 @@ class SumControl(QMainWindow):
     def setMstkNote(self):
         # TODO bug? setting stopLoss
         if not self.lf:
-            print('No trades are loaded. Nothing to summarize.')
+            logging.info('No trades are loaded. Nothing to summarize.')
             return
         self.markDataChanged()
         lostval = self.ui.lost.text()
@@ -756,7 +775,7 @@ class SumControl(QMainWindow):
         :strat: THe currently stored strat for this trade
         '''
         if not self.settings.value('structjourDb'):
-            print('Cannot load strategies right now')
+            logging.info('Cannot load strategies right now')
             return
         strats = Strategy()
         stratlist = [x[1] for x in strats.getPreferred()]
@@ -776,7 +795,6 @@ class SumControl(QMainWindow):
             return
         if strat:
             if not key:
-                # print('I believe this is the right place for the code ')
                 return
             self.lf.setStrategy(key, strat)
         if not self.ui.strategy.currentText():
@@ -1011,7 +1029,7 @@ class SumControl(QMainWindow):
         '''
         # Set the targ, targDiff and rr widgets
         if not self.lf:
-            # print('No trade for which to provide a target price')
+            logging.info('No trade for which to provide a target price')
             return
         self.markDataChanged()
         diff = 0
@@ -1039,7 +1057,7 @@ class SumControl(QMainWindow):
         call rrCalc
         '''
         if not self.lf:
-            # print('No trade for which to provide a stop price')
+            logging.info('No trade for which to provide a stop price')
             return
         self.markDataChanged()
         diff = 0
@@ -1112,7 +1130,8 @@ class SumControl(QMainWindow):
             # Still not confident in how to treat flipped positions.
 
             if shares < 0:
-                print('Flipped trade retaining long maxLoss attributes', self.ui.tradeList.currentText())
+                msg = f'Flipped trade retaining long maxLoss attributes {self.ui.tradeList.currentText()}'
+                logging.info(msg)
             if slDiff >= 0:
                 self.ui.maxLoss.setText('')
                 return 0.0
@@ -1178,7 +1197,7 @@ class SumControl(QMainWindow):
         '''
         w = FileSetCtrl(self.settings)
         if not self.lf:
-            print('No trades loaded')
+            logging.info('No trades loaded')
             return
         if self.ui.ibImport.isChecked():
             self.ibDefault(True)
@@ -1205,6 +1224,7 @@ class SumControl(QMainWindow):
             j = self.settings.value('journal')
             if not j:
                 print('Please set the location of the your journal directory.')
+                logging.info('Please set the location of the your journal directory.')
                 EJControl()
                 j = self.settings.value('journal')
                 if not j:

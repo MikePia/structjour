@@ -22,6 +22,7 @@ Created on Sep 8, 2019
 
 Moved to its own file to avoid a circular dependency
 '''
+import logging
 
 
 class FinReqCol(object):
@@ -35,7 +36,7 @@ class FinReqCol(object):
     def __init__(self, source='DAS'):
 
         if source not in ['DAS', 'IB_HTML', 'IB_CSV', 'DB']:
-            print("Only DAS IB_HTML and DB are implemented")
+            logging.error("Only DAS IB_HTML and DB are implemented")
             raise ValueError('ERROR: source is not recognized: {source')
 
         # frcvals are the actual column titles (to be abstracted when we add new input files)

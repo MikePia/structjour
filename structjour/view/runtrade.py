@@ -20,7 +20,7 @@ Created on Apr 1, 2019
 @author: Mike Petersen
 '''
 
-
+import logging
 import os
 import sys
 
@@ -55,7 +55,8 @@ def getDate(msg):
             try:
                 text = pd.Timestamp(text)
                 return text
-            except ValueError:
+            except ValueError as ex:
+                logging.error(ex)
                 continue
         else:
             break
@@ -122,7 +123,7 @@ class runController:
         self.initialize()
 
         if not self.indir:
-            print('What file is supposed to load?')
+            logging.info('No file to load?')
             return
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
@@ -161,9 +162,10 @@ class runController:
         Load an initial input file and process it.
         '''
         
+        logging.info('did this go to the right file?')
         self.initialize()
         if not self.indir:
-            print('What file is supposed to load?')
+            logging.info('No file to load?')
             return
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
@@ -188,12 +190,13 @@ class runController:
         '''
         Load an initial input file and process it.
         '''
+        logging.info('DID THIS go to the file???')
         t = self.sc.windowTitle()
         if t[-1] == '*':
             self.saveTradesQuestion()
         self.initialize()
         if not self.indir:
-            print('What file is supposed to load?')
+            logging.info('No file to load?')
             return
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
@@ -289,7 +292,7 @@ class runController:
         ret = msgBox.exec();
         
         if ret == QMessageBox.Save:
-          self.sc.saveTradeObject()
+            self.sc.saveTradeObject()
 
 def main():
     '''Run some local code'''
