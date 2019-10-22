@@ -35,16 +35,16 @@ Go to file->file settings
   * Click Journal Directory and select the location to place your journal directory
   * Click on each of the next four buttons to set up defaults
   * Disciplined Trader log (Disciplined.xlsx) is located in your install directory or can be found on [here on github](https://github.com/MikePia/structjour/raw/master/Disciplined.xlsx ). I recommend placing it in your Journal Directory. Then click on Discipline and navigate to the file
-   * The "structjour database" and "trades databse" will be sqlite databases. They will be filenames in your system. They can be the same file if you like. Make up a name and place it in the boxes. Place them in your journal directory
+   * The "structjour database" and "trades databse" will be sqlite databases. They will be filenames in your system. They can be the same file if you like. Click each of the buttons 'structjour db' and 'trades db' to select a sqlite db or to create a new one.
    * Create Dirs will create subdirectories in your Journal Directory. 
        * Make sure you have a valid directory in the Journal Directory edit box.
-       * Make sure you have a setting the the Directory Naming Scheme (press Set Default)
+       * Make sure you have set the the Directory Naming Scheme (press Set Default)
        * Then select the year and month and click 'Create Dirs'
 
-## Optional setup of automatic chart generation using free data from WorldTradeData, barchart and alphavantage
+## Optional setup of automatic chart generation using free data from WorldTradeData, barchart, finnhub and alphavantage
 
 ### Note regarding WorldTradingData.
-I just discovered they exist. The api is clean and the docs promise 250 trade limit per day and the data is good. I immediately added the api... But the limt that was enforced today and yesterday was 25. I don't believe that is enough to keep the api. I will leave it in for a couple weeks just in case they plan live up to their published limit.
+WTD has a limit of only 25 charts per day but the data is good. Thats enough for 12 trades with 2 charts each. Could be useful and its real time data. Its easy enough to switch between data sources.
    * Go to file->stock api 
 
 ![filesettings.png](images/stockapi.png)
