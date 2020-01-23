@@ -517,58 +517,61 @@ class StatementDB:
             daTime = self.formatTime(ts[sf.start].unique()[0])
             if not self.findTradeSummary(daDay, daTime):
                 clean = ''
-                x = cur.execute(f'''
-                    INSERT INTO trade_sum(
-                        {sf.name},
-                        {sf.strat},
-                        {sf.link1},
-                        {sf.acct},
-                        {sf.pl},
-                        {sf.start},
-                        {sf.date},
-                        {sf.dur},
-                        {sf.shares},
-                        {sf.mktval},
-                        {sf.targ},
-                        {sf.targdiff},
-                        {sf.stoploss},
-                        {sf.sldiff},
-                        {sf.rr},
-                        {sf.maxloss},
-                        {sf.mstkval},
-                        {sf.mstknote},
-                        {sf.explain},
-                        {sf.notes},
-                        clean) 
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                        (ts[sf.name].unique()[0],
-                         ts[sf.strat].unique()[0],
-                         ts[sf.link1].unique()[0],
-                         ts[sf.acct].unique()[0],
-                         ts[sf.pl].unique()[0],
-                         daTime,
-                         daDay,
-                         ts[sf.dur].unique()[0],
-                         ts[sf.shares].unique()[0],
-                         ts[sf.mktval].unique()[0],
-                         ts[sf.targ].unique()[0],
-                         ts[sf.targdiff].unique()[0],
-                         ts[sf.stoploss].unique()[0],
-                         ts[sf.sldiff].unique()[0],
-                         ts[sf.rr].unique()[0],
-                         ts[sf.maxloss].unique()[0],
-                         ts[sf.mstkval].unique()[0],
-                         ts[sf.mstknote].unique()[0],
-                         ts[sf.explain].unique()[0],
-                         ts[sf.notes].unique()[0],
-                         clean))
-                assert x.rowcount == 1
-                ts['id'] = x.lastrowid
-                x = x.fetchone()
+                try:
+                    x = cur.execute(f'''
+                        INSERT INTO trade_sum(
+                            {sf.name},
+                            {sf.strat},
+                            {sf.link1},
+                            {sf.acct},
+                            {sf.pl},
+                            {sf.start},
+                            {sf.date},
+                            {sf.dur},
+                            {sf.shares},
+                            {sf.mktval},
+                            {sf.targ},
+                            {sf.targdiff},
+                            {sf.stoploss},
+                            {sf.sldiff},
+                            {sf.rr},
+                            {sf.maxloss},
+                            {sf.mstkval},
+                            {sf.mstknote},
+                            {sf.explain},
+                            {sf.notes},
+                            clean) 
+                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            (ts[sf.name].unique()[0],
+                            ts[sf.strat].unique()[0],
+                            ts[sf.link1].unique()[0],
+                            ts[sf.acct].unique()[0],
+                            ts[sf.pl].unique()[0],
+                            daTime,
+                            daDay,
+                            ts[sf.dur].unique()[0],
+                            ts[sf.shares].unique()[0],
+                            ts[sf.mktval].unique()[0],
+                            ts[sf.targ].unique()[0],
+                            ts[sf.targdiff].unique()[0],
+                            ts[sf.stoploss].unique()[0],
+                            ts[sf.sldiff].unique()[0],
+                            ts[sf.rr].unique()[0],
+                            ts[sf.maxloss].unique()[0],
+                            ts[sf.mstkval].unique()[0],
+                            ts[sf.mstknote].unique()[0],
+                            ts[sf.explain].unique()[0],
+                            ts[sf.notes].unique()[0],
+                            clean))
+                    assert x.rowcount == 1
+                    ts['id'] = x.lastrowid
+                    x = x.fetchone()
 
-                self.addCharts(cur, ts, ldf[0][self.rc.ticker].unique()[0], int(ts['id'].unique()[0]))
-                self.updateEntries(cur, int(ts['id'].unique()[0]), tdf)
-                conn.commit()
+                    self.addCharts(cur, ts, ldf[0][self.rc.ticker].unique()[0], int(ts['id'].unique()[0]))
+                    self.updateEntries(cur, int(ts['id'].unique()[0]), tdf)
+                    conn.commit()
+                except Exception as ex:
+                    logging.error('Commit failed for trades_sum table', ex)
 
     def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
         rc = self.rc
