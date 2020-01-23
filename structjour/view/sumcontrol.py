@@ -84,7 +84,7 @@ class SumControl(QMainWindow):
 
         self.settings = QSettings('zero_substance', 'structjour')
         self.chartSet = QSettings('zero_substance/chart', 'structjour')
-        self.setuplog()
+        # self.setuplog()
         while( not self.settings.value('journal') or not self.settings.value('structjourDb') or not self.settings.value('tradeDb')):
             self.fileSetDlg()
 
@@ -184,24 +184,6 @@ class SumControl(QMainWindow):
         self.stopLoss(self.ui.stop.text())
         
 
-
-
-    def setuplog(self):
-        # basicConfig args level, filename, filemode, format
-        level = self.settings.value('logfile_level', 'Debug')
-        lvls = { 'Debug': logging.DEBUG,
-                 'Info': logging.INFO,
-                 'Warning': logging.WARNING,
-                 'Error': logging.ERROR,
-                 'Critical': logging.CRITICAL
-               }
-        logfile = self.settings.value('logfile', 'app.log')
-        level = lvls[level]
-        filename = logfile
-        filemode = 'a'
-        datefmt = '%Y/%m/%d %H:%M:%S'
-        format = '%(asctime)s  - %(levelname)s - %(funcName)s - %(message)s'
-        logging.basicConfig(level=level, filename=filename, filemode=filemode, format=format, datefmt=datefmt)
     # =================================================================
     # ==================== Main Form  methods =========================
     # =================================================================
@@ -418,16 +400,23 @@ class SumControl(QMainWindow):
         if apilist:
             fp.api = apilist[0]
         else:
-            msg = '<h3>No stock api is selected</h3><ul> '
+            # TODO for some reason I cannot figure out, this message box does not work-- it just hangs w/o returning
+            # Test it by unchecking all stock apis
+
+            # msg = '<h3>No stock api is selected</h3><ul> '
+            msg = ''
             for rule in rules:
                 msg = msg + f'<div><strong>Violated rule: {rule}</strong></div>'
-            if not rule:
-                msg = msg + '<div>Please select Chart API from the menu</div>'
-            msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"));
-            msgbx.setText(msg)
-            msgbx.exec()
+            # if not rule:
+            #     msg = msg + '<div>Please select Chart API from the menu</div>'
+
+            # title = 'Warning'
+            # msgbx = QMessageBox(QMessageBox.Warning, title, msg, QMessageBox.Ok)
+            # # msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
+            # msgbx.exec()
+            logging.info(msg)
             return None
+
         interval = iwidg.value()
         # name = nwidg.text()
         name = self.lf.getImageNameX(key, c)

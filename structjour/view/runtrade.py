@@ -25,7 +25,7 @@ import os
 import sys
 
 import pandas as pd
-from PyQt5.QtCore import QDate, QDateTime
+from PyQt5.QtCore import QDate, QDateTime, QSettings
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox, QInputDialog, QLineEdit
 
@@ -291,8 +291,27 @@ class runController:
         if ret == QMessageBox.Save:
             self.sc.saveTradeObject()
 
+def setuplog():
+    # basicConfig args level, filename, filemode, format
+    settings = QSettings('zero_substance', 'structjour')
+    level = settings.value('logfile_level', 'Debug')
+    lvls = { 'Debug': logging.DEBUG,
+                'Info': logging.INFO,
+                'Warning': logging.WARNING,
+                'Error': logging.ERROR,
+                'Critical': logging.CRITICAL
+            }
+    logfile = settings.value('logfile', 'app.log')
+    level = lvls[level]
+    filename = logfile
+    filemode = 'a'
+    datefmt = '%Y/%m/%d %H:%M:%S'
+    format = '%(asctime)s  - %(levelname)s - %(funcName)s - %(message)s'
+    logging.basicConfig(level=level, filename=filename, filemode=filemode, format=format, datefmt=datefmt)
+
 def main():
     '''Run some local code'''
+    setuplog()
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     os.chdir(os.path.realpath('../../'))
