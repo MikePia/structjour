@@ -437,15 +437,11 @@ def checkForIbapi():
             import ibapi
             apisettings.setValue('gotibapi', True)
             return True
-            
 
         except ImportError:
             apisettings.setValue('gotibapi', False)
             return False
         
-
-
-
 def notmain():
     '''Run local code. using a db path unique to this machine'''
     from PyQt5.QtWidgets import QApplication

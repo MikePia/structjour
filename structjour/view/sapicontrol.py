@@ -13,14 +13,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
 
 '''
 Created on Apr 1, 2019
 
 @author: Mike Petersen
 '''
-import os
 import sys
 
 from PyQt5.QtCore import QSettings
@@ -33,7 +33,8 @@ from structjour.stock.utilities import ManageKeys, checkForIbapi
 
 class StockApi(QDialog):
     '''
-    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb, avCb, wtdCb, fhCb, APIPref]
+    [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb,
+    avCb, wtdCb, fhCb, APIPref]
     The api keys are held in the database
     '''
     def __init__(self, settings, db=None):
@@ -41,7 +42,7 @@ class StockApi(QDialog):
 
         self.apiset = settings
         self.mk = ManageKeys(db=db)
-    
+
         ui = SapiDlg()
         ui.setupUi(self)
         self.ui = ui
@@ -59,7 +60,7 @@ class StockApi(QDialog):
 
         self.ui.bcCb.clicked.connect(self.setBcCb)
         self.ui.bcKey.editingFinished.connect(self.setBcKey)
-        
+
         self.ui.avCb.clicked.connect(self.setAvCb)
         self.ui.avKey.editingFinished.connect(self.setAvKey)
 
@@ -69,21 +70,18 @@ class StockApi(QDialog):
         self.ui.fhCb.clicked.connect(self.setFhCb)
         self.ui.fhKey.editingFinished.connect(self.setFhKey)
 
-
-
         self.ui.APIPref.textChanged.connect(self.colorApis)
         self.ui.APIPref.editingFinished.connect(self.orderApis)
 
         self.ui.okBtn.pressed.connect(self.okPressed)
 
         self.ui.APIPref.setStyleSheet('color: black;')
-        
+
         v = QIntValidator()
         self.ui.ibRealPort.setValidator(v)
         self.ui.ibRealId.setValidator(v)
         self.ui.ibPaperPort.setValidator(v)
         self.ui.ibPaperId.setValidator(v)
-
 
         self.initFromSettings()
         self.gotibapi = checkForIbapi()
@@ -91,21 +89,6 @@ class StockApi(QDialog):
         # self.orderApis()
 
         self.show()
-
-    # def checkForIbapi(self):
-    #     '''
-    #     If the ibapi is not installed or available, disable its use.
-    #     '''
-    #     apisettings = QSettings('zero_substance/stockapi', 'structjour')
-    #     try:
-    #         import ibapi
-    #         gotibapi = True
-    #         apisettings.setValue('gotibapi', True)
-    #         return True
-
-    #     except ImportError:
-    #         apisettings.setValue('gotibapi', False)
-    #         return False
 
     def initFromSettings(self):
         val = self.apiset.value('ibRealPort', '')
@@ -128,13 +111,13 @@ class StockApi(QDialog):
 
         val = self.apiset.value('bcCb', False, bool)
         self.ui.bcCb.setChecked(val)
-        
+
         val = self.mk.getKey('bc')
         self.ui.bcKey.setText(val)
 
         val = self.apiset.value('avCb', False, bool)
         self.ui.avCb.setChecked(val)
-        
+
         val = self.mk.getKey('av')
         self.ui.avKey.setText(val)
 
@@ -148,14 +131,10 @@ class StockApi(QDialog):
         val = self.mk.getKey('fh')
         self.ui.fhKey.setText(val)
 
-
-
         val = self.apiset.value('APIPref')
         self.ui.APIPref.setText(val)
 
         self.sortIt(None)
-
-
 
     def setIbRealPort(self):
         text = self.ui.ibRealPort.text()
@@ -182,11 +161,10 @@ class StockApi(QDialog):
         self.apiset.setValue('APIPref', val)
         self.colorIt(val)
 
-    def orderApis(self): 
+    def orderApis(self):
         val = self.ui.APIPref.text()
         self.apiset.setValue('APIPref', val)
         self.sortIt(None)
-    
 
     def ibClicked(self, b):
         if not self.gotibapi:
@@ -200,6 +178,7 @@ class StockApi(QDialog):
         if b:
             self.apiset.setValue('ibPaperCb', not b)
             self.ui.ibPaperCb.setChecked(not b)
+        self.appendOrRemoveAPI('ib', b)
         self.sortIt('ib')
 
     def ibPaperclicked(self, b):
@@ -210,16 +189,33 @@ class StockApi(QDialog):
             self.ui.ibPaperCb.setChecked(False)
             return
 
-
         # self.ui.ibPaperCb.setChecked(b)
         self.apiset.setValue('ibPaperCb', b)
         if b:
             self.apiset.setValue('ibRealCb', not b)
             self.ui.ibRealCb.setChecked(not b)
+        self.appendOrRemoveAPI('ib', b)
         self.sortIt('ib')
 
+    def appendOrRemoveAPI(self, api, b):
+        ul = self.ui.APIPref.text()
+        ulist = ul.replace(' ', '').split(',') if ul else []
+        if b and api not in ulist:
+            if len(ulist) == 0:
+                self.ui.APIPref.setText(self.ui.APIPref.text() + api)
+            else:
+                self.ui.APIPref.setText(self.ui.APIPref.text() + f', {api}')
+        elif not b and api in ulist:
+            ulist.remove(api)
+            newul = self.setAPIPrefFromList(ulist)
+            self.ui.APIPref.setText(newul)
+
     def setBcCb(self, b):
+        '''
+        Check or uncheck the bc checkbox and append or remove 'bc' from the pref list
+        '''
         self.apiset.setValue('bcCb', b)
+        self.appendOrRemoveAPI('bc', b)
         self.sortIt('bc')
 
     def setBcKey(self):
@@ -228,6 +224,7 @@ class StockApi(QDialog):
 
     def setAvCb(self, b):
         self.apiset.setValue('avCb', b)
+        self.appendOrRemoveAPI('av', b)
         self.sortIt('av')
 
     def setAvKey(self):
@@ -236,19 +233,30 @@ class StockApi(QDialog):
 
     def setWtdCb(self, b):
         self.apiset.setValue('wtdCb', b)
+        self.appendOrRemoveAPI('wtd', b)
         self.sortIt('wtd')
-    
+
     def setWtdKey(self):
         val = self.ui.wtdKey.text()
         self.mk.updateKey('wtd', val)
 
     def setFhCb(self, b):
         self.apiset.setValue('fhCb', b)
+        self.appendOrRemoveAPI('fh', b)
         self.sortIt('fh')
 
     def setFhKey(self):
         val = self.ui.fhKey.text()
         self.mk.updateKey('fh', val)
+
+    def setAPIPrefFromList(self, ulist):
+        newul = ''
+        for x in ulist:
+            newul = newul + x + ', '
+        if newul:
+            newul = newul[:-2]
+            newul
+        return newul
 
     def reorderAPIPref(self, last):
         ul = self.ui.APIPref.text()
@@ -256,12 +264,12 @@ class StockApi(QDialog):
         if last and last in ulist:
             ulist.remove(last)
             ulist.append(last)
-            newul = ''
-            for x in ulist:
-                newul = newul + x + ', '
-            if newul:
-                newul = newul[:-2]
-                ul = newul
+            ul = self.setAPIPrefFromList(ulist)
+            # for x in ulist:
+            #     newul = newul + x + ', '
+            # if newul:
+            #     newul = newul[:-2]
+            #     ul = newul
         self.apiset.setValue('APIPref', ul)
         self.ui.APIPref.setText(ul)
         return ul, ulist
@@ -277,7 +285,8 @@ class StockApi(QDialog):
             return
         else:
             self.ui.APIPref.setStyleSheet('color: green;')
-        wdict = {'bc': self.ui.bcCb, 'av': self.ui.avCb, 'ib': [self.ui.ibRealCb, self.ui.ibPaperCb],
+        wdict = {'bc': self.ui.bcCb, 'av': self.ui.avCb,
+                 'ib': [self.ui.ibRealCb, self.ui.ibPaperCb],
                  'wtd': self.ui.wtdCb, 'fh': self.ui.fhCb}
         for token in ulist:
             if token == 'ib':
@@ -288,9 +297,6 @@ class StockApi(QDialog):
                 self.ui.APIPref.setStyleSheet('color: red;')
                 return
         self.ui.APIPref.setStyleSheet('color: green;')
-
-        
-
 
     def sortIt(self, last):
         '''

@@ -17,12 +17,12 @@
    <iconset>
     <normaloff>../images/ZSLogo.png</normaloff>../images/ZSLogo.png</iconset>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>41</x>
      <y>25</y>
-     <width>296</width>
+     <width>311</width>
      <height>573</height>
     </rect>
    </property>
@@ -316,7 +316,7 @@
       <item>
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Order the tokens ib, bc, av, and wtd for preference</string>
+         <string>Order the tokens ib, bc, av, wtd and fh for preference</string>
         </property>
        </widget>
       </item>
