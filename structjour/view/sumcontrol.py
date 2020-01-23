@@ -85,6 +85,9 @@ class SumControl(QMainWindow):
         self.settings = QSettings('zero_substance', 'structjour')
         self.chartSet = QSettings('zero_substance/chart', 'structjour')
         self.setuplog()
+        while( not self.settings.value('journal') or not self.settings.value('structjourDb') or not self.settings.value('tradeDb')):
+            self.fileSetDlg()
+
 
         defimage = "structjour/images/ZeroSubstanceCreation_220.png"
         self.defaultImage = 'structjour/images/ZeroSubstanceCreation.png'
@@ -179,6 +182,8 @@ class SumControl(QMainWindow):
         # edit boxes-- calling them manually here.
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
+        
+
 
 
     def setuplog(self):
@@ -1196,8 +1201,12 @@ class SumControl(QMainWindow):
         the current settings (QSetting), define the dialog actions, and store the new settings.
         '''
         w = FileSetCtrl(self.settings)
-        if not self.lf:
-            logging.info('No trades loaded')
+        try:
+            if not self.lf:
+                logging.info('No trades loaded')
+                return
+        except AttributeError:
+            logging.info('Fileset Dialog called before setup')
             return
         if self.ui.ibImport.isChecked():
             self.ibDefault(True)

@@ -29,6 +29,8 @@ import sqlite3
 import pandas as pd
 
 from PyQt5.QtCore import QSettings
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtGui import QIcon
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.statements.findfiles import getDirectory
@@ -56,6 +58,15 @@ class StatementDB:
             db = db
         if db:
             self.db = db
+        if not self.db:
+            title = 'Warning'
+            msg = ('<h3>Database files have not been set</h3>'
+                    '<p>Please set a valid location when calling setDB or you may select or '
+                    'create a new location by selecting file->filesettings</p>')
+            msgbx = QMessageBox(QMessageBox.Warning, title, msg, QMessageBox.Ok)
+            msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
+            msgbx.exec()
+            return
 
         self.source = source
         self.rc = FinReqCol()
@@ -78,6 +89,8 @@ class StatementDB:
         self.covered = None
 
     def createTradeTables(self):
+        
+
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         rc = self.rc
