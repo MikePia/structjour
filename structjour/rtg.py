@@ -215,7 +215,6 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
             prevBal = prevBal+qty
             if prevBal == 0:
                 #We are coincidentally at 0 balance. Trade is over. Must be a hotkey mistake ;-)
-                # print(':::::::::: Trade over. Random hot key error :::::::')
                 break
 
         nowtime = nexttime

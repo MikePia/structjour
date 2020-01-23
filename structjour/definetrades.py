@@ -213,7 +213,6 @@ class DefineTrades(object):
                 dframe.at[i, rc.start] = oldTime
 
             else:
-                #             print("      Finally :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
                 dframe.at[i, rc.start] = oldTime
             if row[rc.bal] == 0:
                 newTrade = True
@@ -234,7 +233,6 @@ class DefineTrades(object):
             if newTrade:
                 if row[c.side].startswith('HOLD') and i < len(dframe):
                     oldTime = dframe.at[i+1, c.time]
-                    # print("     :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
                     dframe.at[i, c.start] = oldTime
 
                 else:
@@ -243,7 +241,6 @@ class DefineTrades(object):
 
                 newTrade = False
             else:
-                #             print("      Finally :Index: {0},  Side: {1}, Time{2}, setting {3}".format(i, row['Side'], row['Time'], oldTime))
                 dframe.at[i, c.start] = oldTime
             if row[c.bal] == 0:
                 newTrade = True
@@ -455,7 +452,6 @@ class DefineTrades(object):
                 #     lastCol = row[c.PL]
 
             elif count == len(dframe) - 1:
-                # print(dframe)
                 dframe.at[i, c.PL] = tot
                 dframe.at[i, c.sum] = totSim
             else:
@@ -483,7 +479,7 @@ class DefineTrades(object):
                 raise(NameError(
                     "Cannot make a trade list. Call addTradeIndex() before."))
         except NameError as ex:
-            print(ex, 'Bye!')
+            logging.error(ex)
             sys.exit(-1)
 
         ldf = list()
@@ -496,7 +492,6 @@ class DefineTrades(object):
                 ldf.append(tdf)
             else:
                 break
-        # print("Got {0} trades".format(len(ldf)))
         return ldf
 
     def fixTsid(self, tdf):
@@ -613,7 +608,6 @@ class DefineTrades(object):
                     msg = '\nFound a flipper long to short.\n'
                     msg = msg + "Use this file for devel and testing if this is an IB statement\n"
                 elif not tdf.at[x0, c.side].startswith('B') and not tdf.at[xl, c.side].startswith('B'):
-                    # print("found a flipper short to long")
                     # tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
                     tdf.at[xl, c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
                     msg = '\nFound a flipper short to long.\n'

@@ -258,7 +258,7 @@ class LayoutSheet:
                 targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0]))
                 formula = formula.format(targetcell)
 
-                # print("ws[{0}]='{1}'".format(cell, formula))
+                # logging.debug("ws[{0}]='{1}'".format(cell, formula))
                 ws[cell] = formula
 
     def populateDailySummaryForm(self, TheTradeList, mistake, ws, anchor):

@@ -356,7 +356,7 @@ class LayoutForms:
         end = tto[ckey + 'End'].unique()[0]
         if not isinstance(begin, (pd.Timestamp, dt.datetime, np.datetime64, QDate)) or (
                 not isinstance(end, (pd.Timestamp, dt.datetime, np.datetime64, QDate))):
-            print('WARNING: date type is not standard', type(begin))
+            logging.warning(f'WARNING: date type is not standard: {type(begin)}')
             return None
 
         interval = int(tto[ckey + 'Interval'].unique()[0])
@@ -413,8 +413,6 @@ class LayoutForms:
                 daVal = daVal.strftime(self.timeFormat)
             widg.setText(daVal)
 
-        print(tto['Time1'], type(tto['Time1']))
-        # self.sc.ui.time1
 
     def setTargVals(self, key, targ, diff, rr):
         '''Store the values affected by a change in the target value'''

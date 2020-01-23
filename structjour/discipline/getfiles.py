@@ -5,6 +5,7 @@ be useful starting point. The load from xl stuff for example. Saving and loading
 everything from DB now. But Edits done in excel have no current path to the db.
 '''
 
+import logging
 import os
 import pickle
 import re
@@ -53,7 +54,7 @@ class manageSavedStuff:
 
         # What should turn red here????
         if not d or not os.path.exists(d):
-            print(f'Cannot locate directory "{d}".')
+            logging.info(f'Cannot locate directory "{d}".')
             return None
         fs = list()
         for f in os.listdir(d):
@@ -124,10 +125,9 @@ class manageSavedStuff:
             outdir = os.path.join(self.basedir, outdir)
             for objs in sumList[key]:
                 for xlfile in objs[1]:
-                    # print(xlfile)
                     if not objs[2]:
                         for xl in objs[1]:
-                            print(xlfile)
+                            logging.debug(xlfile)
 
                             xlname = os.path.join(outdir, xl)
                             ldf, ts, fpentries, dframe, notes = self.loadEverything(xlname, key)

@@ -20,6 +20,7 @@ Created on Apr 1, 2019
 
 @author: Mike Petersen
 '''
+import logging
 import os
 import sys
 from PyQt5 import QtWebEngineWidgets
@@ -49,7 +50,7 @@ class StratControl(QDialog):
 
         defimage = "structjour/images/ZeroSubstanceCreation_220.png"
         if not os.path.exists(defimage):
-            print('========== its not there', defimage)
+            logging.info(f'Incorrect path of image: {defimage}')
         self.settings.setValue("defaultImage", defimage)
         self.ui.setupUi(self)
 
@@ -72,7 +73,7 @@ class StratControl(QDialog):
         
 
     def loadPage(self, val):
-        print('val', val)
+        logging.debug(f'val {val}')
         self.ui.strategyBrowse.load(QUrl(val))
 
     def removeLink(self):
@@ -94,7 +95,7 @@ class StratControl(QDialog):
             self.strat.setLink(key, link)
 
     def changePage(self, val):
-        print("changePage", val)
+        logging.debug(f"changePage {val}")
         if val.data(0) == 'Text and Images':
             self.ui.stackedWidget.setCurrentIndex(0)
         else:
@@ -113,7 +114,8 @@ class StratControl(QDialog):
         the only argument to mapTo() that didn't fail quietly-crashing the program. The fact that
         it failed without comment is weird. I am expecting their undocumented code to change.
         '''
-        print('loadIm1ge1', x.objectName(), event.pos(), event.globalPos())
+        msg = f'loadIm1ge1 {x.objectName()} {event.pos()} {event.globalPos()}'
+        logging.debug(msg)
         img = x
         cmenu = QMenu(img)
 
@@ -128,10 +130,10 @@ class StratControl(QDialog):
 
         if action == pi4:
             key = self.ui.strategyCb.currentText()
-            print('Are we ready?', key, x.objectName())
+            logging.debug(f'Are we ready? {key, x.objectName()}')
             journalDir = self.settings.value('journal')
             if not journalDir:
-                print('Please set your journal directory before adding images')
+                logging.warning('Please set your journal directory before adding images')
                 return
             else:
                 imagedir = os.path.join(journalDir, 'images/')
@@ -171,7 +173,6 @@ class StratControl(QDialog):
         return pname   
     
     def saveNotes(self, event):
-        print('Here ..... .....', event)
         desc = self.ui.strategyNotes.toPlainText()
         key = self.ui.strategyCb.currentText()
         self.strat.setDescription(key, desc)
@@ -258,7 +259,7 @@ class StratControl(QDialog):
             ix = self.ui.strategyCb.findText(addthis)
             self.ui.strategyCb.setCurrentIndex(ix)
         else:
-            print('Nothing to add. No action taken')
+            logging.info('Nothing strategy to add. No action taken')
 
     def removeStrategy(self):
         removethis = self.ui.strategyCb.currentText()

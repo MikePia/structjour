@@ -106,7 +106,6 @@ class runController:
         ### end blitz
         self.infile = self.settings.value(inkey)
         self.inpathfile = self.ui.infileEdit.text()
-        # print(self.inpathfile)
         self.sc.setWindowTitle(self.sc.baseWindowTitle)
 
     def loadit(self):
@@ -132,8 +131,6 @@ class runController:
 
         lf = LayoutForms(self.sc, jf, None)
         lf.loadTradesFromDB(daDate)
-        if lf.df is None:
-            print('Press load with useDatabase checked')
 
     def runDBInput(self, daDate, jf):
         '''

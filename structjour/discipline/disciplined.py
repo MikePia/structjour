@@ -107,8 +107,6 @@ def doctorTheTrade(newdf, daDate, ts,  fname):
                 raise ValueError(msg)
         else:
             pass
-            # print(newdf[key].unique())
-            # print(len(newdf[key].unique()))
     outdir, n = os.path.split(fname)
     for key in ts:
         tto = ts[key]
@@ -208,8 +206,8 @@ def getAvgExit(trade):
             try:
                 assert(positions[-1])
             except:
-                print(
-                    "Found empty shares in an exit-- this may be an overnight trade or something: Fix this bug developer!!")
+                logging.error(
+                    "Found empty shares in an exit-- this may be an overnight trade")
             product = product + (x * p)
 
     return 0 if sum(positions) == 0 else product/sum(positions)
@@ -262,7 +260,6 @@ def getDevelDailyJournalList(prefix, begin):
         fn = os.path.join(outdir, fn)
         if os.path.exists(fn):
             thelist.append([fn, current])
-            # print(current.strftime('%A, %B %d, %Y'), fn)
         current += delt
     return thelist
 
@@ -389,7 +386,6 @@ def getTradeTable(fname, daDate):
 
 def registerTradesOLD(tsList, wb):
     for fname, theDate in tsList:
-        # print(fname, theDate)
         wb2 = load_workbook(fname)
         trades = wb2["Sheet"]
 
@@ -425,7 +421,6 @@ def registerTradesOLD(tsList, wb):
                 tdf = ldf[ix]
                 if not gotAnyExits(tdf):
                     continue
-                # print(cols.keys())
 
                 #date
                 cell = tcell(cols['date'][0], anchor=anchor)

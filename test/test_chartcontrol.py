@@ -23,7 +23,7 @@ Created on May 20, 2019
 '''
 
 
-
+import logging
 import sys
 import unittest
 from  unittest import TestCase
@@ -126,7 +126,7 @@ class TestChartCtrl(TestCase):
                 val = self.chartSet.value(key)
                 self.assertEqual(widg.currentText(), val)         
             else:
-                print(type(widgs[key]))
+                logging.debug(f'{type(widgs[key])}')
 
     def test_changeByUser(self):
         '''Simulate user input, check that the widget, and settings have the value in the testSet'''
@@ -160,7 +160,7 @@ class TestChartCtrl(TestCase):
                 # Skipping this. Interaction w Combox has many variables. 
                 pass
             else:
-                print(type(widg))
+                logging.debug(f'{type(widg)}')
 
 
 

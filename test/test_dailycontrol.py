@@ -21,7 +21,7 @@ Created on May 22, 2019
 
 @author: Mike Petersen
 '''
-
+import logging
 import os
 import sys
 import unittest
@@ -56,7 +56,7 @@ try:
     app = QtWidgets.QApplication([''])
     from PyQt5 import QtWebEngineWidgets
 except ImportError as exception:
-    print('\nRetrying webengine import...')
+    logging.info('\nRetrying webengine import...')
     app = webengine_hack()
     from PyQt5 import QtWebEngineWidgets
 
@@ -133,7 +133,6 @@ class TestDailyCtrl(TestCase):
         tradeSummaries = lf.runTtoSummaries(ldf)
         self.ts = lf.ts
         ibdb.addTradeSummaries(tradeSummaries, ldf)
-        print()
 
     def tearDown(self):
         self.apiset.setValue('dbsqlite', self.realdb)

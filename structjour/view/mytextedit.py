@@ -36,7 +36,6 @@ class MyTextEdit(QTextEdit):
 
     def contextMenuEvent(self, event):
         ''' Override '''
-        # print('Here we are again', event)
         stdMenu = self.createStandardContextMenu()
         commitAction = QAction("Commit", self)
         commitAction.setShortcut("Ctrl+S")

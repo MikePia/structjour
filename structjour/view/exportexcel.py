@@ -168,7 +168,7 @@ class ExportToExcel:
                 targetcell = tcell(targetcell, anchor=(1, imageLocation[i][0][0][1]))
                 formula = formula.format(targetcell)
 
-                # print("ws[{0}]='{1}'".format(cell, formula))
+                # logging.info("ws[{0}]='{1}'".format(cell, formula))
                 ws[cell] = formula
 
     def placeImagesAndSumStyles(self, imageLocation, ws, tf):

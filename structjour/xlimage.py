@@ -20,6 +20,7 @@ Created on Oct 16, 2018
 
 @author: Mike Petersen
 '''
+import logging
 import os
 
 from PIL import Image as PILImage
@@ -47,7 +48,7 @@ class XLImage:
             os.chdir(os.path.realpath(ddiirr))
             os.chdir(os.path.realpath('../'))
             if not os.path.exists(default):
-                print('Cannot locate default image', default)
+                logging.warning('Cannot locate default image', default)
         self.defaultImage = default
         self.numCells = heightInCells
         self.pixPerCell = pixPerCell
@@ -88,7 +89,7 @@ class XLImage:
             img = Image(name)
 
         except IOError as e:
-            print("An exception occured '%s'" % e)
+            logging.error(e)
             if img:
                 return img
             return None, e.__str__()
@@ -126,7 +127,7 @@ class XLImage:
             img = Image(pname)
 
         except IOError as e:
-            print("An exception occured '%s'" % e)
+            logging.error(e)
             if img:
                 return img
             return None, e.__str__()
