@@ -262,12 +262,12 @@ class SumControl(QMainWindow):
         key = self.ui.tradeList.currentText()
         self.lf.setStrategy(key, text)
 
-    def saveTradeObject(self):
+    def saveTradeObject(self, oldDate = None):
         '''Signal call back from saveBtn. Initiates saving the data.'''
         if not self.lf:
             logging.info('Nothing to save')
             return
-        outpathfile = self.getSaveName()
+        outpathfile = self.getSaveName(oldDate)
 
         self.lf.saveTheTradeObject(outpathfile)
         self.ui.infileEdit.setStyleSheet('color: blue;')
@@ -276,7 +276,7 @@ class SumControl(QMainWindow):
             t = t[:-3]
             self.setWindowTitle(t)
 
-    def getSaveName(self):
+    def getSaveName(self, oldDate = None):
         '''
         This needs to be a name that can be gleaned from the info on the form and settings
         loaded for each file name
@@ -852,8 +852,26 @@ class SumControl(QMainWindow):
 
     # def getDBInfileEdTxt(self):
 
+    def saveTradesQuestion(self, oldDate):
+        msgBox = QMessageBox()
+        msgBox.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
+        name = self.ui.tradeList.currentText()  # + oldDate.
+        oldDate = qtime2pd(oldDate)
+        msgBox.setText(f"User data for {name}  on {oldDate.strftime('%A %B %d')} has been modified.")
+        msgBox.setInformativeText("Do you want to commit your changes?")
+        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Save)
+        ret = msgBox.exec()
+        
+        if ret == QMessageBox.Save:
+            self.saveTradeObject(oldDate)
+
     def theDateChanged(self, val):
         
+        t = self.windowTitle()
+        if t[-1] == '*':
+            self.saveTradesQuestion(self.oldDate)
+
         if self.oldDate and val != self.oldDate:
              self.ui.infileEdit.setText('')
         self.oldDate = val

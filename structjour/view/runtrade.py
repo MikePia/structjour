@@ -62,6 +62,7 @@ def getDate(msg):
             break
     return None
 
+
 class runController:
     '''
     Programming notes-- minimize the use of the ui (self.ui). Instead create high level
@@ -78,13 +79,14 @@ class runController:
 
         self.ui.goBtn.pressed.connect(self.runnit)
         self.ui.loadBtn.pressed.connect(self.loadit)
+        self.loadedDate = None
 
     def initialize(self):
         '''
         Initialize the inputs and outs
         '''
-        ### Might blitz thes lines if JournalFiles gets an overhaul. For ease of transaiton
-        ### We keep JournalFiles till its allworks into the Qt run
+        # Might blitz thes lines if JournalFiles gets an overhaul. For ease of transaiton
+        # We keep JournalFiles till its allworks into the Qt run
         self.settings = self.sc.settings
         self.inputtype = self.settings.value('inputType')
         self.indir = self.sc.getDirectory()
@@ -103,7 +105,7 @@ class runController:
         self.theDate = theDate
         self.positions = self.settings.value('dasInfile2')
 
-        ### end blitz
+        # end blitz
         self.infile = self.settings.value(inkey)
         self.inpathfile = self.ui.infileEdit.text()
         self.sc.setWindowTitle(self.sc.baseWindowTitle)
@@ -112,12 +114,14 @@ class runController:
         '''
         Load saved objects
         '''
-        t = self.sc.windowTitle()
-        if t[-1] == '*':
-            self.saveTradesQuestion()
+        # oldDate = self.loadedDate
+        # t = self.sc.windowTitle()
+        # if t[-1] == '*':
+        #     self.saveTradesQuestion(oldDate)
 
         daDate = self.ui.dateEdit.date()
         daDate = qtime2pd(daDate)
+        self.loadedDate = daDate
         self.settings.setValue('theDate', daDate)
         self.initialize()
 
@@ -127,7 +131,6 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
-
 
         lf = LayoutForms(self.sc, jf, None)
         lf.loadTradesFromDB(daDate)
@@ -152,7 +155,6 @@ class runController:
         # ts = lf.ts
         statement.addTradeSummaries(tradeSummaries, ldf)
         return True
-
 
     def runnitDB(self):
         '''
@@ -182,15 +184,13 @@ class runController:
             ds = DasStatement(jf.infile, self.settings, theDate)
             ds.getTrades()
 
-
     def runnit(self):
         '''
         Load an initial input file and process it.
         '''
-        logging.info('DID THIS go to the file???')
-        t = self.sc.windowTitle()
-        if t[-1] == '*':
-            self.saveTradesQuestion()
+        # t = self.sc.windowTitle()
+        # if t[-1] == '*':
+        #     self.saveTradesQuestion()
         self.initialize()
         if not self.indir:
             logging.info('No file to load?')
@@ -201,7 +201,7 @@ class runController:
         if self.inputtype == 'DB':
             self.runDBInput(self.theDate, jf)
 
-            windowTitle = self.sc.baseWindowTitle +': ' + self.sc.ui.infileEdit.text() + ': no user data'
+            windowTitle = f'{self.sc.baseWindowTitle}: {self.sc.ui.infileEdit.text()}: no user data'
             self.sc.setWindowTitle(windowTitle)
             return
         local = os.path.normpath(self.ui.infileEdit.text())
@@ -221,7 +221,7 @@ class runController:
             return
         self.inputtype = inputType
 
-        windowTitle = self.sc.baseWindowTitle +': ' + self.sc.ui.infileEdit.text() + ': no user data'
+        windowTitle = self.sc.baseWindowTitle + ': ' + self.sc.ui.infileEdit.text() + ': no user data'
         self.sc.setWindowTitle(windowTitle)
 
         if self.inputtype == 'IB_HTML' or self.inputtype == 'IB_CSV':
@@ -253,7 +253,7 @@ class runController:
             msgbx.setText(msg)
             msgbx.exec()
             return
-        elif  self.inputtype == 'DAS':
+        elif self.inputtype == 'DAS':
             x = checkDateDir(jf.inpathfile)
             if not x:
                 msg = "<h3>The date for this DAS statement is not clear</h3>"
@@ -278,28 +278,29 @@ class runController:
             msgbx.exec()
             return
 
-    def saveTradesQuestion(self):
+    def saveTradesQuestion(self, oldDate):
         msgBox = QMessageBox()
         msgBox.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
-        name = self.sc.ui.infileEdit.text()
-        msgBox.setText(f"User data for {name} has been modified.");
-        msgBox.setInformativeText("Do you want to commit your changes?");
-        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel);
-        msgBox.setDefaultButton(QMessageBox.Save);
-        ret = msgBox.exec();
+        name = self.sc.ui.tradeList.currentText()  # + oldDate.
+        msgBox.setText(f"User data for {name}  on {oldDate.strftime('%A %B %d')} has been modified.")
+        msgBox.setInformativeText("Do you want to commit your changes?")
+        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Save)
+        ret = msgBox.exec()
         
         if ret == QMessageBox.Save:
-            self.sc.saveTradeObject()
+            self.sc.saveTradeObject(oldDate)
+
 
 def setuplog():
     # basicConfig args level, filename, filemode, format
     settings = QSettings('zero_substance', 'structjour')
     level = settings.value('logfile_level', 'Debug')
-    lvls = { 'Debug': logging.DEBUG,
-                'Info': logging.INFO,
-                'Warning': logging.WARNING,
-                'Error': logging.ERROR,
-                'Critical': logging.CRITICAL
+    lvls = {'Debug': logging.DEBUG,
+            'Info': logging.INFO,
+            'Warning': logging.WARNING,
+            'Error': logging.ERROR,
+            'Critical': logging.CRITICAL
             }
     logfile = settings.value('logfile', 'app.log')
     level = lvls[level]
@@ -308,6 +309,7 @@ def setuplog():
     datefmt = '%Y/%m/%d %H:%M:%S'
     format = '%(asctime)s  - %(levelname)s - %(funcName)s - %(message)s'
     logging.basicConfig(level=level, filename=filename, filemode=filemode, format=format, datefmt=datefmt)
+
 
 def main():
     '''Run some local code'''
