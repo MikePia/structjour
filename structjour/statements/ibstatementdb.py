@@ -1252,7 +1252,7 @@ class StatementDB:
                 ORDER BY Start''', (daDate,))
         tsums = tsums.fetchall()
         if not tsums:
-            return dict()
+            return dict(), None
 
         tradeSummary = dict()
         entriesd = dict()
