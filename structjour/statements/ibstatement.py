@@ -37,7 +37,7 @@ from bs4 import BeautifulSoup
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
-from structjour.statements.findfiles import getDirectory, findFilesSinceMonth, findFilesInDir, getBaseDir
+from structjour.statements.findfiles import getDirectory, findFilesSinceMonth
 from structjour.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -53,7 +53,6 @@ def readit(url):
         with open(url) as f:
             data = f.read()
     return data
-
 
 
 class IbStatement:
@@ -106,7 +105,7 @@ class IbStatement:
                     offset = offset - holding
                 balance = -offset
 
-                #Discriminator for first opening transaction
+                # Discriminator for first opening transaction
                 # TODO account for account in tos
                 primo = False
                 side = LONG
@@ -136,7 +135,7 @@ class IbStatement:
                     # Here are openers -- adding to the trade; average changes
                     # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
                     elif (primo and side is LONG and quantity >= 0) or (
-                        primo and side is SHORT and quantity < 0):
+                          primo and side is SHORT and quantity < 0):
                         newAverage = ((average * prevBalance) + (quantity * row[rc.price])) / balance
                         average = newAverage
                         tdf.at[i, rc.avg] = average

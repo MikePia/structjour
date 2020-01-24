@@ -40,6 +40,7 @@ from structjour.thetradeobject import SumReqFields
 
 # pylint: disable = C0103
 
+
 class StatementDB:
     '''
     Methods to create and manage tables to store Activity Statements. Fields are exactly IB fields
@@ -49,7 +50,7 @@ class StatementDB:
     def __init__(self, db=None, source=None):
         '''Initialize and set the db location'''
         settings = QSettings('zero_substance', 'structjour')
-        jdir = settings.value('journal')
+        # jdir = settings.value('journal')
         self.settings = settings
         self.db = None
         if not db:
@@ -61,8 +62,8 @@ class StatementDB:
         if not self.db:
             title = 'Warning'
             msg = ('<h3>Database files have not been set</h3>'
-                    '<p>Please set a valid location when calling setDB or you may select or '
-                    'create a new location by selecting file->filesettings</p>')
+                   '<p>Please set a valid location when calling setDB or you may select or '
+                   'create a new location by selecting file->filesettings</p>')
             msgbx = QMessageBox(QMessageBox.Warning, title, msg, QMessageBox.Ok)
             msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
             msgbx.exec()
@@ -76,7 +77,7 @@ class StatementDB:
         self.holidays = [ 
                         ['New Year’s Day', '20180101', '20190101', '20200101', '21210101', '20220101', '20230101'],
                         ['Martin Luther King, Jr. Day', '20180115', '20190121', '20200120', '20210118', '20220117', '20230116'],
-                        ['Washington’s Birthday', '20180219', '20190218',	'20200217', '20210221', '20220221', '20230220'],
+                        ['Washington’s Birthday', '20180219', '20190218', '20200217', '20210221', '20220221', '20230220'],
                         ['Good Friday', '', '20190419', '20200410', '20210402', '20220415', '20230407'],
                         ['Memorial Day', '20180528', '20190527', '20200525', '20210531', '20220530', '20230529'],
                         ['Independence Day', '20180704', '20190704', '20200704', '20210704', '20220704', '20230704'],
@@ -89,7 +90,6 @@ class StatementDB:
         self.covered = None
 
     def createTradeTables(self):
-        
 
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -119,10 +119,9 @@ class StatementDB:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 account TEXT NOT NULL,
                 symbol TEXT NOT NULL,
-	            quantity INTEGER NOT NULL,
+                quantity INTEGER NOT NULL,
                 date TEXT NOT NULL);''')
                 
-
         cur.execute('''
             CREATE TABLE if not exists ib_covered (
                 day	TEXT NOT NULL,
@@ -175,7 +174,6 @@ class StatementDB:
                 {sf.notes} TEXT,
                 clean TEXT)''')
 
-
         cur.execute('''CREATE UNIQUE INDEX if not exists date_start on trade_sum('Date', 'Start')''')
         conn.commit()
 
@@ -185,8 +183,6 @@ class StatementDB:
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        rc = self.rc
-        sf = self.sf
         cur.execute('''DROP TABLE IF EXISTS ib_covered;''')
         cur.execute('''DROP TABLE IF EXISTS ib_positions;''')
         cur.execute('''DROP TABLE IF EXISTS ib_trades;''')
@@ -212,9 +208,9 @@ class StatementDB:
         date = date.strftime("%Y%m%d")
 
         cursor = cur.execute(f'''
-            SELECT * FROM trade_sum
-                WHERE {sf.date} = ?''',
-            (date, ))
+                             SELECT * FROM trade_sum
+                                 WHERE {sf.date} = ?''',
+                             (date, ))
         x = cursor.fetchall()
         if x:
             return x
@@ -236,7 +232,6 @@ class StatementDB:
             t[sf.explain], t[sf.notes], t['clean']) = ts
         return t
 
-        
     def findTradeSummary(self, date, start):
         '''
         Get a trade summary record by date and time
@@ -253,10 +248,10 @@ class StatementDB:
         start = start.strftime("%H:%M:%S")
 
         cursor = cur.execute(f'''
-            SELECT * FROM trade_sum
-                WHERE {sf.start} = ?
-                AND {sf.date} = ?''',
-            (start, date ))
+                             SELECT * FROM trade_sum
+                                 WHERE {sf.start} = ?
+                                 AND {sf.date} = ?''',
+                             (start, date))
         x = cursor.fetchall()
         if x:
             if len(x) > 1:
@@ -283,7 +278,7 @@ class StatementDB:
 
     def findChart(self, cur, ts_id, slot):
         cursor = cur.execute('''SELECT * from chart WHERE trade_sum_id = ? and slot = ?''',
-                (ts_id, slot))
+                             (ts_id, slot))
         cursor = cursor.fetchone()
         return cursor
 
@@ -299,7 +294,7 @@ class StatementDB:
         name = trade[sf.name].unique()[0]
         ticker = name.split(' ')[0]
         for i in range(0, 3):
-            chart = 'chart' + str(i+1)
+            chart = 'chart' + str(i + 1)
             start = chart + 'Start'
             end = chart + 'End'
             interval = chart + 'Interval'
@@ -313,7 +308,7 @@ class StatementDB:
             interval = int(trade[interval].unique()[0])
             path, name = os.path.split(chart)
 
-            cursor = self.findChart(cur, trade_sum_id, i+1)
+            cursor = self.findChart(cur, trade_sum_id, i + 1)
 
             if cursor:
                 id = cursor[0]
@@ -326,14 +321,13 @@ class StatementDB:
                 cursor = cur.execute('''
                 INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id) 
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                    (ticker, path, name, source, start, end, interval, i+1, trade_sum_id))
-
+                    (ticker, path, name, source, start, end, interval, i + 1, trade_sum_id))
 
     def addCharts(self, cur, ts, symb, ts_id):
         '''Generic creation of chart names'''
         dtfrmt = '%Y%m%d;%H%M%S'
         for i in range(3):
-            chart = 'chart' + str(i+1)
+            chart = 'chart' + str(i + 1)
             start = chart + 'Start'
             end = chart + 'End'
             interval = chart + 'Interval'
@@ -359,16 +353,15 @@ class StatementDB:
             cursor = cur.execute('''
                 INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id) 
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                    (symb, path, chart, source, start, end, interval, i+1, ts_id))
+                    (symb, path, chart, source, start, end, interval, i + 1, ts_id))
             
-    def updateEntries(self, cur,  ts_id, tdf):
+    def updateEntries(self, cur, ts_id, tdf):
         '''
         Set the foreign key in ib_trades to point to the trade_sum to which this transaction belongs.
         :ts_id: the trade_sum_id for this transaction as part of a trade.
         :tdf: The dataframe that represents this ib_trade db object.
         '''
         rc = self.rc
-        entry = 0
         tdf.sort_values([rc.date, rc.time], inplace=True)
         for i, row in tdf.iterrows():
             cur.execute(f''' UPDATE ib_trades SET trade_sum_id = ?
@@ -378,8 +371,7 @@ class StatementDB:
         '''
         Get the transactions for for a trade by trade_sum_id
         '''
-        #Summary Fields
-        sf = self.sf
+        # Summary Fields
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cursor = cur.execute('''
@@ -407,7 +399,7 @@ class StatementDB:
         
         if sf.pl not in trade.columns:
             if 'P / L' in trade.columns:
-                trade =trade.rename(columns={'P / L': sf.pl})
+                trade = trade.rename(columns={'P / L': sf.pl})
         if trade[sf.mktval].unique()[0] is None:
             trade[sf.mktval] = 0
         return trade
@@ -423,7 +415,7 @@ class StatementDB:
         cur = conn.cursor()
         sf = self.sf
         rc = self.rc
-        tcols = sf.tcols
+        # tcols = sf.tcols
         newts = dict()
         for dkey in ts:
             trade = ts[dkey]
@@ -500,15 +492,12 @@ class StatementDB:
             else:
                 raise ValueError('Found an instance that requires updating ib_trade.trade_sum_id.')
 
-
-            
-            
         conn.commit()
         return newts
             
     def addTradeSummaries(self, tradeSummaries, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
-        #Summary Fields
+        # Summary Fields
         sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -573,7 +562,7 @@ class StatementDB:
                 except Exception as ex:
                     logging.error('Commit failed for trades_sum table', ex)
 
-    def findTrades(self, datetime, symbol, quantity, price,  account, cur=None):
+    def findTrades(self, datetime, symbol, quantity, price, account, cur=None):
         rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
@@ -609,7 +598,7 @@ class StatementDB:
             (datetime, symbol, quantity, account))
         x = cursor.fetchall()
         if x:
-            if len(x) !=1:
+            if len(x) != 1:
                 pass
             return x
         return False
@@ -638,7 +627,6 @@ class StatementDB:
         if x.rowcount == 1:
             return True
 
-        
         return False
 
     def isDateCovered(self, cur, account, d):
@@ -665,7 +653,7 @@ class StatementDB:
         begin = pd.Timestamp(begin).date()
         current = begin
         if not end:
-            end=current
+            end = current
         else:
             end = pd.Timestamp(end).date()
         while current <= end:
@@ -673,7 +661,7 @@ class StatementDB:
                 d = current.strftime('%Y%m%d')
                 cur.execute('''
                     INSERT INTO ib_covered(day, covered, account)
-                    VALUES(?, ?, ?)''',  (d, 'true', account))
+                    VALUES(?, ?, ?)''', (d, 'true', account))
             current = current + delt
         # conn.commit()
 
@@ -693,16 +681,16 @@ class StatementDB:
                     WHERE account = ?
                     AND symbol = ?
                     AND date = ?''',
-                    (row['Account'], row['Symbol'], d) )
+                    (row['Account'], row['Symbol'], d))
             found = found.fetchall()
             if not found:
                 cur.execute('''
                     INSERT INTO ib_positions (account, symbol, quantity, date)
                     VALUES(?, ?, ?, ?)''',
-                (row['Account'], row['Symbol'], row['Quantity'], d) )
+                (row['Account'], row['Symbol'], row['Quantity'], d))
 
     ########################################################################################
-    ############################ methods for structjour ####################################
+    # ########################### methods for structjour ###################################
     ########################################################################################
     
     def getNumTicketsforDay(self, day, account='all'):
@@ -757,7 +745,7 @@ class StatementDB:
             conn.commit()
     
     ########################################################################################
-    #################### DB Helper methods for refigureAPL #################################
+    # ################### DB Helper methods for refigureAPL ################################
     ########################################################################################
 
     def DBfigureUnbalancedPL(self, cur, prevTrades, bt):
@@ -799,7 +787,7 @@ class StatementDB:
                     postOmega and side == SHORT and tdict[i][rc.shares] < 0):
                 # opener
                 # If just before a closer, then the average is shared
-                if tdict[i-1][rc.oc] == 'C':
+                if tdict[i - 1][rc.oc] == 'C':
                     tdict[i][rc.oc] = 'O'
                     tdict[i][rc.avg] = average
                 # If the average==price, this is the trade opener (for our purposes)
@@ -810,8 +798,8 @@ class StatementDB:
                     raise ValueError('Programming note: Not sure what I was thinking here.')
                     balance = tdict[i][rc.shares]
                     tdict[i][rc.bal] = balance
-                    for j in range(i-1, -1, -1):
-                        balance = balance - tdict[j+1][rc.shares]
+                    for j in range(i - 1, -1, -1):
+                        balance = balance - tdict[j + 1][rc.shares]
                         if j == 0:
                             self.updateAvgBalPlOC(cur, tdict[j], tdict[j][rc.avg], balance,
                                                   tdict[j][rc.PL], tdict[j][rc.oc])
@@ -935,7 +923,6 @@ class StatementDB:
 
             if isNumeric([bt[rc.avg], bt[rc.bal]]):
                 continue
-            symbol = bt[rc.ticker]
             account = bt[rc.acct]
             prevTrades = self.getPreviousTrades(cur, bt)
 
@@ -962,7 +949,7 @@ class StatementDB:
 
                         #######
                         balance = 0
-                        #Discriminator for first opening transaction
+                        # Discriminator for first opening transaction
                         pastPrimo = False
                         side = LONG
 
@@ -991,7 +978,7 @@ class StatementDB:
                                 average = ft[rc.price]
                                 assert math.isclose(ft[rc.price], ft[rc.avg], abs_tol=1e-5)
 
-                                #average should be set for this one
+                                # average should be set for this one
                                 # tdf.at[i, 'Average'] = average
                                 side = LONG if ft[rc.shares] >= 0 else SHORT
 
@@ -1006,7 +993,6 @@ class StatementDB:
                                     ft[rc.avg] = average
                                     self.updateAvgOC(cur, ft, average, 'O')
 
-
                             # Here are closers; PL is figured and check for trade ending
                             elif pastPrimo:
                                 # Close Tx, P/L is figured on CLOSING transactions only
@@ -1017,7 +1003,7 @@ class StatementDB:
                                     pastPrimo = False
                         conn.commit()
                         break
-                            #######
+                        # ######
                     elif isNumeric([pt[rc.avg], pt[rc.PL], pt[rc.bal]]) and pt[rc.PL] != 0:
                         # Found a good closer (has PL and avg)
                         fixthese.append(prevTrade)
@@ -1031,7 +1017,7 @@ class StatementDB:
                             ft = self.makeTradeDict(fixthis)
 
                             if pastPrimo and not isNumeric(ft[rc.bal]):
-                                 ### Has the balance variable been set????
+                                # ## Has the balance variable been set????
                                 prevBalance = balance
                                 balance = balance + ft[rc.shares]
                                 self.updateBal(cur, ft, balance)
@@ -1063,7 +1049,7 @@ class StatementDB:
                                 else:
                                     assert math.isclose(ft[rc.avg], ft[rc.price], abs_tol=1e-5)
                                 average = ft[rc.avg]
-                                prevBal = ft[rc.bal]
+                                # prevBal = ft[rc.bal]
                                 pl = 0
                                 self.updateAvgBalPlOC(cur, ft, average, ft[rc.bal], pl, 'O')
                                 nextTrade = False
@@ -1099,7 +1085,7 @@ class StatementDB:
                                 raise ValueError('What else we got here?')
                         conn.commit()
                         break
-                    elif i == len(prevTrades) -1 and isNumeric(bt[rc.PL]) and bt[rc.PL] != 0:
+                    elif i == len(prevTrades) - 1 and isNumeric(bt[rc.PL]) and bt[rc.PL] != 0:
                         # This catches a badTrade if the conditions above have failed (end of
                         # prevTrades) and the badTrade has a PL. Its possible we can figure out the
                         # some of the rest of the details by comparing average price to previous
@@ -1125,8 +1111,8 @@ class StatementDB:
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
 
-        LONG = True
-        SHORT = False
+        # LONG = True
+        # SHORT = False
 
         badTrades = self.getBadTrades()
         for badTrade in badTrades:
@@ -1159,8 +1145,8 @@ class StatementDB:
                     # side = LONG if ft[rc.shares] < 0 else SHORT
                     if isNumeric(ft[rc.bal]):
                         balance = ft[rc.bal]
-                        for j in range(i-1, -1, -1):
-                            balance = balance - fixthese[j+1][rc.shares]
+                        for j in range(i - 1, -1, -1):
+                            balance = balance - fixthese[j + 1][rc.shares]
                             self.updateBal(cur, fixthese[j], balance)
                             if j == 0:
                                 conn.commit()
@@ -1194,7 +1180,6 @@ class StatementDB:
         self.reFigureAPL(begin, end)
         dbdr = DbDoctor()
         dbdr.doDups(autoDelete=True)
-
 
     def popHol(self):
         '''
@@ -1260,7 +1245,7 @@ class StatementDB:
             entries = list()
             ts = self.makeTradeSumDict(ts)
             ts_id = ts[sf.id]
-            key = str(i+1) + ' ' + ts[sf.name]
+            key = str(i + 1) + ' ' + ts[sf.name]
             sumCharts = cur.execute('''
                 SELECT c.symb, c.path, c.name, c.start, c.end, c.interval, c.slot, c.id, ts.id,
                         ts.Name, ts.Start, ts.Duration, ts.Date
@@ -1268,15 +1253,12 @@ class StatementDB:
                     LEFT JOIN chart AS c ON c.trade_sum_id = ts.id
                     WHERE ts.id = ?''', (ts_id, ))
 
-            
             sumCharts = sumCharts.fetchall()
             for sumChart in sumCharts:
                 schart = dict()
                 (schart['symb'], schart['path'], schart['name'], schart['start'], schart['end'],
                  schart['interval'], schart['slot'], schart['c_id'], schart['ts_id'],
                  schart['t_name'], schart['t_start'], schart['t_dur'], schart['date']) = sumChart
-
-
 
                 chart = 'chart' + str(schart['slot'])
                 if not schart['name']:
@@ -1313,7 +1295,7 @@ class StatementDB:
             sumTrades = sumTrades.fetchall()
             
             for i in range(0, 8):
-                ii = str(i+1)
+                ii = str(i + 1)
                 if i < len(sumTrades):
                     strade = dict()
                     (strade['symb'], strade['datetime'], strade['shares'], strade['avg'],
@@ -1321,8 +1303,7 @@ class StatementDB:
                      strade['acct'], strade['t_id'], strade['ts_id'], strade['name'],
                      strade['date']) = sumTrades[i]
 
-
-                    BS = 'B' if  strade['shares'] >= 0 else 'S'
+                    BS = 'B' if strade['shares'] >= 0 else 'S'
                     time = pd.Timestamp(strade['datetime'])
                     entry = [strade['price'], '', BS, time]
                     entries.append(entry)
@@ -1357,7 +1338,6 @@ class StatementDB:
             tradeSummary[key] = tdf
         return tradeSummary, entriesd
         
-
     def getStatement(self, day, account='all'):
         '''
         Get the trades from a single day. This is the default and corresponds with tradeSummaries
@@ -1529,7 +1509,6 @@ class StatementDB:
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        rc = self.rc
         cur.execute('''
             SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal} FROM ib_trades
                 WHERE {rc.acct} = ?
@@ -1539,6 +1518,7 @@ class StatementDB:
                 ORDER BY datetime''', (account, sym, daMin, daMax))
         found = cur.fetchall()
         return found
+
 
 def notmain():
     '''Run some local code for devel'''
@@ -1554,25 +1534,28 @@ def notmain():
         print('Missing', missingdict['uncovered'])
     print()
 
+
 def local():
     '''Run some local code for devel'''
     d = pd.Timestamp('2018-03-23')
-    e = pd.Timestamp('2018-12-31')
+    # e = pd.Timestamp('2018-12-31')
     print(d.strftime("%B, %A %d %Y"))
     db = StatementDB()
     x, y = db.getNumTicketsforDay(d)
     print(x, "tickets")
-    print (y, "trades")
+    print(y, "trades")
+
 
 def main():
     '''Tun some local code for devel'''
     x = StatementDB()
     daDate = '20190103'
-    ts, entries= x.getTradeSummaries(daDate)
+    ts, entries = x.getTradeSummaries(daDate)
         
     print(ts.keys())
     print(ts.values())
     print(entries)
+
 
 if __name__ == '__main__':
     # notmain()

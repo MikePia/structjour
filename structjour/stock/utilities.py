@@ -34,13 +34,9 @@ import sys
 
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import QSettings, QUrl, QDate, QDateTime, Qt
+from PyQt5.QtCore import QSettings, QDate, QDateTime
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon
-
-
-
-# pylint: disable = C0103
 
 
 def isNumeric(l):
@@ -57,6 +53,7 @@ def isNumeric(l):
         if t is None or not isinstance(t, (int, float, np.integer)) or math.isnan(t):
             return False
     return True
+
 
 def qtime2pd(qdt):
     '''Return a pandas Timestamp from a QDateTime'''
@@ -75,6 +72,7 @@ def qtime2pd(qdt):
         return qdt
     return d
 
+
 def pd2qtime(pdt, qdate=False):
     '''
     Return a QDateTime or a QDate from a time object of Timestamp
@@ -90,6 +88,7 @@ def pd2qtime(pdt, qdate=False):
     pdt = pd.Timestamp(pdt)
     return QDate(pdt.year, pdt.month, pdt.day)
     
+
 def getNewyorkTZ(d):
     '''
     Returns the difference between GMT and EST for a given date
@@ -97,7 +96,7 @@ def getNewyorkTZ(d):
     :return: int hours diff from GMT
     '''
     if isinstance(d, int):
-         d = pd.Timestamp(d*10**9)
+        d = pd.Timestamp(d*10**9)
     if isinstance(d, pd.Timestamp):
         d = dt.datetime(d.year, d.month, d.day, d.hour, d.minute)
     tz = pytz.timezone('US/Eastern').localize(d).strftime('%z')
@@ -113,15 +112,16 @@ def getNewyorkTZ(d):
 
 def getMAKeys():
     cc1 = ['chart1ma1', 'chart1ma2', 'chart1ma3', 'chart1ma4', 'chart1vwap', 'chart1ma1spin',
-          'chart1ma2spin', 'chart1ma3spin', 'chart1ma4spin', 'chart1ma1color', 'chart1ma2color',
-          'chart1ma3color', 'chart1ma4color', 'chart1vwapcolor']
+           'chart1ma2spin', 'chart1ma3spin', 'chart1ma4spin', 'chart1ma1color', 'chart1ma2color',
+           'chart1ma3color', 'chart1ma4color', 'chart1vwapcolor']
     cc2 = ['chart2ma1', 'chart2ma2', 'chart2ma3', 'chart2ma4', 'chart2vwap', 'chart2ma1spin',
-          'chart2ma2spin', 'chart2ma3spin', 'chart2ma4spin', 'chart2ma1color', 'chart2ma2color',
-          'chart2ma3color', 'chart2ma4color', 'chart2vwapcolor']
-    cc3  =['chart3ma1', 'chart3ma2', 'chart3ma3', 'chart3ma4', 'chart3vwap', 'chart3ma1spin',
-          'chart3ma2spin', 'chart3ma3spin', 'chart3ma4spin', 'chart3ma1color', 'chart3ma2color',
-          'chart3ma3color', 'chart3ma4color', 'chart3vwapcolor']
+           'chart2ma2spin', 'chart2ma3spin', 'chart2ma4spin', 'chart2ma1color', 'chart2ma2color',
+           'chart2ma3color', 'chart2ma4color', 'chart2vwapcolor']
+    cc3 = ['chart3ma1', 'chart3ma2', 'chart3ma3', 'chart3ma4', 'chart3vwap', 'chart3ma1spin',
+           'chart3ma2spin', 'chart3ma3spin', 'chart3ma4spin', 'chart3ma1color', 'chart3ma2color',
+           'chart3ma3color', 'chart3ma4color', 'chart3vwapcolor']
     return cc1, cc2, cc3
+
 
 def getMASettings():
     chartSet = QSettings('zero_substance/chart', 'structjour')
@@ -134,6 +134,7 @@ def getMASettings():
         vwap.append(['vwap', mas[1][1]])
 
     return maDict, vwap
+
 
 def vwap(df, bd=None):
     '''
@@ -152,14 +153,16 @@ def vwap(df, bd=None):
         dfv = dfv.loc[dfv.index >= begin]
 
     dfv['Cum_Vol'] = dfv['volume'].cumsum()
-    dfv['Cum_Vol_Price'] = (dfv['volume'] * (dfv['high'] + dfv['low'] + dfv['close'] ) /3).cumsum()
+    dfv['Cum_Vol_Price'] = (dfv['volume'] * (dfv['high'] + dfv['low'] + dfv['close']) / 3).cumsum()
     dfv['VWAP'] = dfv['Cum_Vol_Price'] / dfv['Cum_Vol']
     return dfv['VWAP']
+
 
 def excludeAfterHours():
     chartSet = QSettings('zero_substance/chart', 'structjour')
     val = chartSet.value('afterhours', False, type=bool)
     return val
+
 
 def movingAverage(values, df, beginDay=None):
     '''
@@ -172,7 +175,6 @@ def movingAverage(values, df, beginDay=None):
     mas = getMASettings()
     windows = list()
     windows = list(mas[0].keys())
-
 
     maDict = OrderedDict()
 
@@ -188,15 +190,15 @@ def movingAverage(values, df, beginDay=None):
             except ValueError:
                 del maDict[ma]
         else:
-            dataframe = pd.DataFrame(values)
+            # dataframe = pd.DataFrame(values)
             dfema = df['close'].ewm(span=ma, adjust=False, min_periods=ma, ignore_na=True).mean()
             maDict[ma] = dfema
             maDict[ma].index = df.index
     if mas[1]:
         maDict['vwap'] = vwap(df, beginDay)
 
-
     return maDict
+
 
 def makeupEntries(df, minutes):
     if df.empty:
@@ -207,7 +209,6 @@ def makeupEntries(df, minutes):
     end = pd.Timestamp(end)
     entries = []
     for i in range(random.randint(0, 5)):
-        # Make up an entry time
         delta = end - start
         sec = delta.total_seconds()
         earliest = int(sec//10)
@@ -219,7 +220,7 @@ def makeupEntries(df, minutes):
         diff = entry - start
         candleindex = int(diff.total_seconds()/60//minutes)
 
-        #Get the time index of the candle
+        # Get the time index of the candle
         # tix = df.index[candleindex]
 
         # Set a random buy or sell
@@ -234,6 +235,7 @@ def makeupEntries(df, minutes):
         entries.append([price, candleindex, side, entry])
 
     return entries
+
 
 def getLastWorkDay(d=None):
     '''
@@ -255,6 +257,7 @@ def getLastWorkDay(d=None):
     bizday = now - dt.timedelta(deltDays)
     return bizday
 
+
 def getPrevTuesWed(td):
     '''
     Utility method to get a probable market open day prior to td. The least likely
@@ -274,6 +277,7 @@ def getPrevTuesWed(td):
     before = td - dt.timedelta(deltdays)
     return before
 
+
 class ManageKeys:
     def __init__(self, create=False, db=None):
         self.settings = QSettings('zero_substance', 'structjour') 
@@ -284,7 +288,6 @@ class ManageKeys:
         
         if self.db:
             self.createTables()
-
 
     def setDB(self, db=None):
         '''
@@ -298,8 +301,8 @@ class ManageKeys:
         if not self.db or not os.path.exists(self.db):
             title = 'Warning'
             msg = ('<h3>Warning: Trade Db location does not exist.</h3>'
-                    '<p>Please set a valid location when calling setDB or you may select or '
-                    'create a new location by selecting file->filesettings</p>')
+                   '<p>Please set a valid location when calling setDB or you may select or '
+                   'create a new location by selecting file->filesettings</p>')
 
             msgbx = QMessageBox(QMessageBox.Warning, title, msg, QMessageBox.Ok)
             msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
@@ -391,6 +394,7 @@ class ManageKeys:
             logging.warning('Trying to retrieve db location, the database file location is not set.')
         return db
 
+
 class IbSettings:
     def __init__(self):
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
@@ -401,7 +405,6 @@ class IbSettings:
         else:
             self.preferences = ['ib', 'bc', 'av', 'fh']
         self.setIbStuff()
-
 
     def setIbStuff(self):
         pref = self.preferences
@@ -419,29 +422,30 @@ class IbSettings:
                 self.ibId = self.apiset.value('ibPaperId', 7979, int)
 
     def getIbSettings(self):
-        #TODO abstrast host like port and id-- set it in the stockapi dialog
+        # TODO abstrast host like port and id-- set it in the stockapi dialog
         if not self.ibPort or not self.ibId:
             return None
         d = {'port': self.ibPort,
-                'id': self.ibId,
-                'host': '127.0.0.1'}
+             'id': self.ibId,
+             'host': '127.0.0.1'}
         return d
 
 
 def checkForIbapi():
-        '''
-        If the ibapi is not installed or available, disable its use.
-        '''
-        apisettings = QSettings('zero_substance/stockapi', 'structjour')
-        try:
-            import ibapi
-            apisettings.setValue('gotibapi', True)
-            return True
+    '''
+    If the ibapi is not installed or available, disable its use.
+    '''
+    apisettings = QSettings('zero_substance/stockapi', 'structjour')
+    try:
+        import ibapi
+        apisettings.setValue('gotibapi', True)
+        return True
 
-        except ImportError:
-            apisettings.setValue('gotibapi', False)
-            return False
-        
+    except ImportError:
+        apisettings.setValue('gotibapi', False)
+        return False
+
+
 def notmain():
     '''Run local code. using a db path unique to this machine'''
     from PyQt5.QtWidgets import QApplication

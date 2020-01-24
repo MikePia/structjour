@@ -138,8 +138,6 @@ class LayoutForms:
         self.imageNames = None
         self.sc.loadLayoutForms(self)
 
-
-
 #######
 
     def getStoredTradeName(self):
@@ -170,7 +168,6 @@ class LayoutForms:
         ibdb = StatementDB()
         self.ts = ibdb.updateTradeSummaries(self.ts)
 
-
         # This is legacy stuff. It will run IFF we are lacking a loaded trade table and we
         # have one already pickled. 
         df = None
@@ -189,7 +186,6 @@ class LayoutForms:
         #         raise ValueError("blah blah blah")
         # It happens when -- after loading an older version of the file-- click save with a new
         # current version.
-
 
         with open(name, "wb") as f:
             pickle.dump((self.ts, self.entries, self.df), f)
@@ -216,7 +212,6 @@ class LayoutForms:
             return None
         self.ts = setTradeSummaryHeaders(ts)
 
-
         logging.info('load up the trade names now')
         tradeSummaries = []
         self.sc.ui.tradeList.clear()
@@ -225,7 +220,7 @@ class LayoutForms:
             tradeSummaries.append(self.ts[key])
 
         inf = self.sc.ui.infileEdit.text()
-        windowTitle = self.sc.baseWindowTitle +': ' + inf + ': User Data Loaded'
+        windowTitle = f"{self.sc.baseWindowTitle}: {inf}: User Data Loaded"
         self.sc.setWindowTitle(windowTitle)
 
         # In prep to do the mistake summary and excel export, return the list it uses now
@@ -378,7 +373,6 @@ class LayoutForms:
         self.ts[key][ckey + 'Start'] = data[0]
         self.ts[key][ckey + 'End'] = data[1]
 
-
     def setChartData(self, key, data, ckey):
         '''
         Store the chart data in the trade object
@@ -415,7 +409,6 @@ class LayoutForms:
                 daVal = pd.Timestamp(daVal)
                 daVal = daVal.strftime(self.timeFormat)
             widg.setText(daVal)
-
 
     def setTargVals(self, key, targ, diff, rr):
         '''Store the values affected by a change in the target value'''

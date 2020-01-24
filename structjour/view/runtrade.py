@@ -141,8 +141,6 @@ class runController:
             msgbx.exec()
             self.runnit()
             
-
-
     def runDBInput(self, daDate, jf):
         '''
         Get the trades from daDate in the DB and process the trades
