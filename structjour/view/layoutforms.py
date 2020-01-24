@@ -203,7 +203,7 @@ class LayoutForms:
         if self.sc.ui.dasImport.isChecked() or self.sc.ui.ibImport.isChecked():
             self.sc.ui.useDatabase.setChecked(True)
             self.sc.useDatabase(True)
-            return None
+            return 1
 
         ibdb = StatementDB()
         df = ibdb.getStatement(theDate)
@@ -211,6 +211,9 @@ class LayoutForms:
         self.df, ldf = tu.processDBTrades(df)
 
         ts, self.entries = ibdb.getTradeSummaries(theDate)
+        if not ts:
+            logging.info(f"No user data has been saved for {theDate.strftime('%A %B %d')}.")
+            return None
         self.ts = setTradeSummaryHeaders(ts)
 
 

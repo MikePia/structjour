@@ -133,7 +133,15 @@ class runController:
                           mydevel=True)
 
         lf = LayoutForms(self.sc, jf, None)
-        lf.loadTradesFromDB(daDate)
+        if not lf.loadTradesFromDB(daDate):
+            msg = f'No user data has been saved for {daDate.strftime("%A %B %d")}. Loading trade data.'
+            msgbx = QMessageBox()
+            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
+            msgbx.setText(msg)
+            msgbx.exec()
+            self.runnit()
+            
+
 
     def runDBInput(self, daDate, jf):
         '''
