@@ -166,7 +166,7 @@ def excludeAfterHours():
 
 def movingAverage(values, df, beginDay=None):
     '''
-    Creates a dictionary of moving averages based settings values. All window values in 
+    Creates a dictionary of moving averages based settings values. All window values in
     chartSettings will be processed. Returns a dict of MA: SMA for windows of 20 or less
     and EMA for windows greater than 20, and it always process and returns VWAP.
     :values:
@@ -230,7 +230,7 @@ def makeupEntries(df, minutes):
         high = df.iloc[candleindex].high
         low = df.iloc[candleindex].low
         price = (random.random() * (high - low)) + low
-        
+
         # [price, candle, side, entry]
         entries.append([price, candleindex, side, entry])
 
@@ -280,12 +280,12 @@ def getPrevTuesWed(td):
 
 class ManageKeys:
     def __init__(self, create=False, db=None):
-        self.settings = QSettings('zero_substance', 'structjour') 
+        self.settings = QSettings('zero_substance', 'structjour')
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
         self.db = db
         if not self.db:
             self.setDB()
-        
+
         if self.db:
             self.createTables()
 
@@ -314,7 +314,7 @@ class ManageKeys:
             msg = 'No db listed-- do we recreate the default and add a setting?- or maybe pop and get the db address'
             # self.createTables()
             # raise ValueError(msg)
-    
+
     def createTables(self):
         '''
         Creates the api_keys if it doesnt exist then adds a row for each api that requires a key
@@ -437,7 +437,7 @@ def checkForIbapi():
     '''
     apisettings = QSettings('zero_substance/stockapi', 'structjour')
     try:
-        import ibapi
+        import ibapi     # noqa: F401
         apisettings.setValue('gotibapi', True)
         return True
 
@@ -449,11 +449,11 @@ def checkForIbapi():
 def notmain():
     '''Run local code. using a db path unique to this machine'''
     from PyQt5.QtWidgets import QApplication
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv)     # noqa: F841
     # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\test\\testdb.sqlite')
     mk = ManageKeys()
     mk.setDB('notapath')
-    
+
 
 def localstuff():
     print(excludeAfterHours())

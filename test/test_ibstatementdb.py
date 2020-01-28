@@ -34,15 +34,15 @@ from PyQt5.QtCore import QSettings
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
-from structjour.dfutil import DataFrameUtil
+# from structjour.dfutil import DataFrameUtil
 from structjour.statements import findfiles as ff
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.thetradeobject import runSummaries
-from structjour.view.layoutforms import LayoutForms
+# from structjour.view.layoutforms import LayoutForms
 
-from structjour.colz.finreqcol import FinReqCol
-# pylint: disable = C0103
+# from structjour.colz.finreqcol import FinReqCol
+
 
 class Test_StatementDB(unittest.TestCase):
     '''
@@ -52,14 +52,13 @@ class Test_StatementDB(unittest.TestCase):
         super(Test_StatementDB, self).__init__(*args, **kwargs)
         self.settings = QSettings('zero_substance', 'structjour')
 
-        
         self.db = "testdb.db"
         jdir = self.settings.value('journal')
 
         self.fulldb = os.path.join(jdir, self.db)
 
     def setUp(self):
-        
+
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
@@ -67,14 +66,14 @@ class Test_StatementDB(unittest.TestCase):
     def test_addTradeSummaries(self):
         '''
         Tests addTradeSummaries
-        ''' 
+        '''
         ibdb = StatementDB(self.db)
         self.clearTables()
         ibs, x = self.openStuff()
         # ibdb.getUncoveredDays
         covered = ibdb.getCoveredDays()
-    
-        rc = FinReqCol()
+
+        # rc = FinReqCol()
         for count, day in enumerate(covered):
             df = ibdb.getStatement(day)
             if not df.empty:
@@ -88,18 +87,16 @@ class Test_StatementDB(unittest.TestCase):
                     entryTrades = ibdb.getEntryTrades(summary['id'])
                     self.assertGreater(len(entryTrades), 0)
 
-
                 break
 
         # getNumTicketsforDay
-                
 
     def test_findTrade(self):
         rc = FinReqCol()
-        
+
         ibdb = StatementDB(self.db)
         row = {
-            rc.ticker:  'SNRK',
+            rc.ticker: 'SNRK',
             "DateTime": '20191212;093145',
             rc.shares: 3000,
             rc.price: 150.23,
@@ -123,10 +120,10 @@ class Test_StatementDB(unittest.TestCase):
 
     def test_find_Trade(self):
         pass
-    
+
     def test_insertPositions(self):
         pass
-    
+
     def test_getNumTicketsForDay(self):
         pass
 
@@ -150,7 +147,6 @@ class Test_StatementDB(unittest.TestCase):
         cur.execute('''delete from ib_positions''')
         cur.execute('''delete from trade_sum''')
         conn.commit()
-
 
     def test_insertTrade(self):
         '''
@@ -180,9 +176,9 @@ class Test_StatementDB(unittest.TestCase):
 
         x = cur.execute('''SELECT count() from ib_trades ''')
         x = x.fetchone()
-        
+
         self.assertEqual(x[0], 1)
-            
+
         ibdb.insertTrade(row, cur)
         conn.commit()
         x = cur.execute('''SELECT count() from ib_trades ''')
@@ -207,7 +203,7 @@ class Test_StatementDB(unittest.TestCase):
         return ibs, x
 
     def test_getUncoveredDays(self):
-        '''Tests several methods in the covered process from''' 
+        '''Tests several methods in the covered process from'''
         self.clearTables()
         ibdb = StatementDB(self.db)
         ibs, x = self.openStuff()
@@ -233,7 +229,7 @@ class Test_StatementDB(unittest.TestCase):
         ibs, x = self.openStuff()
         current = ibs.endDate
         ibdb = StatementDB(db=self.db)
-        days = list(pd.date_range(start=current-pd.Timedelta(days=21), end=current))
+        days = list(pd.date_range(start=current - pd.Timedelta(days=21), end=current))
         days.sort(reverse=True)
         for day in days:
             if day.weekday() > 4 or ibdb.isHoliday(current):
@@ -243,12 +239,13 @@ class Test_StatementDB(unittest.TestCase):
                 cols = [frc.ticker, frc.date, frc.shares, frc.bal, frc.price,
                         frc.avg, frc.comm, frc.acct, frc.oc, frc.PL, 'id']
                 self.assertTrue(set(cols) == set(list(s.columns)))
-                for daDate  in s[frc.date].unique():
+                for daDate in s[frc.date].unique():
                     self.assertEqual(day.date(), pd.Timestamp(daDate).date())
 
 
 def main():
     unittest.main()
+
 
 def notmain():
     t = Test_StatementDB()

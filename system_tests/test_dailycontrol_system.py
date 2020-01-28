@@ -230,5 +230,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

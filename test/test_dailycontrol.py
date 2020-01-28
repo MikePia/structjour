@@ -148,5 +148,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()

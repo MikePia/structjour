@@ -25,14 +25,10 @@ import sys
 # import datetime
 import pandas as pd
 
-from structjour.colz.finreqcol import FinReqCol 
+from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.stock.utilities import isNumeric
-
-# pylint: disable = C0103
-
-
 
 
 class ReqCol(object):
@@ -95,11 +91,10 @@ class DefineTrades(object):
                 rccols.append(c)
         return rccols
 
-    
     def processDBTrades(self, trades):
         '''
         Run the methods to create the new DataFrame and fill in the data for the new trade-
-        centric DataFrame.
+        centric (as opposed to transaction-centric, trades may contain multiple transactgions) DataFrame.
         '''
         rc = self._frc
 
@@ -107,7 +102,7 @@ class DefineTrades(object):
         trades = self.addFinReqCol(trades)
         rccolumns = rc.columns.copy()
         rccolumns = self.appendCols(rccolumns)
-        
+
         newTrades = trades[rccolumns]
         newTrades.copy()
         nt = newTrades.sort_values([rc.ticker, rc.acct, rc.date])
@@ -232,7 +227,7 @@ class DefineTrades(object):
         for i, row in dframe.iterrows():
             if newTrade:
                 if row[c.side].startswith('HOLD') and i < len(dframe):
-                    oldTime = dframe.at[i+1, c.time]
+                    oldTime = dframe.at[i + 1, c.time]
                     dframe.at[i, c.start] = oldTime
 
                 else:
@@ -248,8 +243,8 @@ class DefineTrades(object):
 
     def addTradeIndex(self, dframe):
         '''
-        Labels and numbers the trades by populating the TIndex column. 'Trade 1' for example includes the transactions 
-        between the initial purchase or short of a stock and its subsequent 0 position. (If the stock is held overnight, 
+        Labels and numbers the trades by populating the TIndex column. 'Trade 1' for example includes the transactions
+        between the initial purchase or short of a stock and its subsequent 0 position. (If the stock is held overnight,
         non-transaction rows have been inserted to account for todays' activities.)
         '''
 
@@ -317,7 +312,7 @@ class DefineTrades(object):
         ldf = self.getTradeList(dframe)
         newdf = pd.DataFrame()
         for tdf in ldf:
-            assert len(tdf[c.start].unique()==1)
+            assert len(tdf[c.start].unique() == 1)
             ixs = tdf.index
             timeEnd = pd.Timestamp(tdf.at[ixs[-1], c.time])
             timeStart = pd.Timestamp(tdf.at[ixs[-1], c.start])
@@ -347,7 +342,6 @@ class DefineTrades(object):
                 dframe.at[i, c.dur] = diff
         return dframe
 
-
     def addTradeNameDB(self, dframe):
         '''
         Create a name for this trade like 'AMD Short'. Place it in the c.name column. If this is
@@ -363,7 +357,7 @@ class DefineTrades(object):
             ixs = t.index
             side = ''
             if (t.iloc[-1][rc.oc].find('O') >= 0 and t.iloc[-1][rc.shares] > 0) or (
-                t.iloc[-1][rc.oc].find('C') >= 0 and t.iloc[-1][rc.shares] < 0):
+                    t.iloc[-1][rc.oc].find('C') >= 0 and t.iloc[-1][rc.shares] < 0):
                 side = ' Long'
             else:
                 side = ' Short'
@@ -372,7 +366,6 @@ class DefineTrades(object):
             t.at[ixs[-1], rc.name] = name
             newtrade = newtrade.append(t)
         return newtrade
-
 
     def addTradeName(self, dframe):
         '''
@@ -417,14 +410,13 @@ class DefineTrades(object):
                 df.at[ixs[1], rc.sum] = acnttotal
             elif acnt.startswith('TR'):
                 df.at[ixs[0], rc.sum] = acnttotal
-                
+
         df.at[ixs[0], rc.PL] = total
         return df
 
-
     def addSummaryPLold(self, dframe):
-        ''' 
-        Create a summary of the P/L for the day, place it in new row. 
+        '''
+        Create a summary of the P/L for the day, place it in new row.
         Sum up the transactions in c.PL for Live and Sim Seperately.
         We rely on the account number starting with 'U' or 'TR' to determine
         live or SIM. These two columns should add to the same amount. '''
@@ -438,9 +430,9 @@ class DefineTrades(object):
         totLive = 0.0
         totSim = 0.0
         for i, row in dframe.iterrows():
-            count = count+1
-            if count < len(dframe)-1:
-                tot = tot+row[c.PL]
+            count = count + 1
+            if count < len(dframe) - 1:
+                tot = tot + row[c.PL]
                 if row[c.bal] == 0:
                     tot2 = tot2 + row[c.sum]
                     if row[c.acct].startswith('TR'):
@@ -460,11 +452,9 @@ class DefineTrades(object):
 
         return dframe
 
-
-
     def getTradeList(self, dframe):
         '''
-        Creates a python list of DataFrames for each trade. It relies on addTradeIndex successfully creating the 
+        Creates a python list of DataFrames for each trade. It relies on addTradeIndex successfully creating the
         trade index in the format Trade 1, Trade 2 etc.
         :param:dframe: A dataframe with the column Tindex filled in.
         '''
@@ -514,8 +504,6 @@ class DefineTrades(object):
                 tdf = tdf.astype({'tsid': int})
                 # Update the db
         return tdf
-                
-
 
     def postProcessingDB(self, ldf):
         '''
@@ -534,7 +522,7 @@ class DefineTrades(object):
             xl = tdf.index[-1]
             if tdf.at[x0, rc.bal] != tdf.at[x0, rc.shares] or tdf.at[xl, rc.bal] != 0:
                 tdf.at[xl, rc.name] = tdf.at[xl, rc.name] + " OVERNIGHT"
-        
+
             if tdf.at[x0, rc.bal] != 0:
                 firstrow = True
                 for i, row in tdf.iterrows():
@@ -548,10 +536,9 @@ class DefineTrades(object):
                 assert len(tdf) == 1
             if len(tdf['tsid'].unique()) > 1 or not isNumeric(tdf['tsid'].unique()[0]):
                 tdf = self.fixTsid(tdf)
-                    
+
             dframe = dframe.append(tdf)
         return ldf, dframe
-
 
     def postProcessing(self, ldf):
         '''

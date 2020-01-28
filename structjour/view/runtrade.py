@@ -327,7 +327,7 @@ def main():
     s = QStyleFactory.create('Fusion')
     app.setStyle(s)
     w = SumControl()
-    rw = runController(w)
+    rw = runController(w)     # noqa: F841
     w.show()
     sys.exit(app.exec_())
 
