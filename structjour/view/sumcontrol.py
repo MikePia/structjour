@@ -866,11 +866,17 @@ class SumControl(QMainWindow):
         if ret == QMessageBox.Save:
             self.saveTradeObject(oldDate)
 
-    def theDateChanged(self, val):
-        
+    def doWeSave(self, yes=False):
         t = self.windowTitle()
         if t[-1] == '*':
-            self.saveTradesQuestion(self.oldDate)
+            if yes is True:
+                self.saveTradeObject(self.oldDate)
+            else:
+                self.saveTradesQuestion(self.oldDate)
+
+    def theDateChanged(self, val):
+        
+        self.doWeSave()
 
         if self.oldDate and val != self.oldDate:
              self.ui.infileEdit.setText('')

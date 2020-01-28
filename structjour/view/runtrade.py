@@ -119,6 +119,7 @@ class runController:
         # if t[-1] == '*':
         #     self.saveTradesQuestion(oldDate)
 
+        self.sc.doWeSave(yes=True)
         daDate = self.ui.dateEdit.date()
         daDate = qtime2pd(daDate)
         self.loadedDate = daDate
@@ -133,6 +134,8 @@ class runController:
                           mydevel=True)
 
         lf = LayoutForms(self.sc, jf, None)
+
+
         if not lf.loadTradesFromDB(daDate):
             msg = f'No user data has been saved for {daDate.strftime("%A %B %d")}. Loading trade data.'
             msgbx = QMessageBox()
@@ -197,6 +200,7 @@ class runController:
         # t = self.sc.windowTitle()
         # if t[-1] == '*':
         #     self.saveTradesQuestion()
+        self.sc.doWeSave(yes=True)
         self.initialize()
         if not self.indir:
             logging.info('No file to load?')
@@ -204,6 +208,7 @@ class runController:
         jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
                           infile=self.infile, inputType=self.inputtype, infile2=self.positions,
                           mydevel=True)
+
         if self.inputtype == 'DB':
             self.runDBInput(self.theDate, jf)
 
