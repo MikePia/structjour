@@ -29,6 +29,7 @@ from unittest import TestCase
 import pandas as pd
 import sqlite3
 
+
 # https://stackoverflow.com/questions/57426219/how-to-import-qtwebenginewidgets-after-qapplication-has-been-created
 # thanks to ekhumoro.
 # Strangely the import error occurs using (before installing webengine_hack here):
@@ -49,12 +50,14 @@ import sqlite3
 #     app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
 #     return app
 
+
 # try:
 #     # just for testing
 #     from PyQt5 import QtWidgets
 #     app = QtWidgets.QApplication([''])
 #     from PyQt5 import QtWebEngineWidgets
 # except ImportError as exception:
+#     logging.info(exception)
 #     logging.info('\nRetrying webengine import...')
 #     app = webengine_hack()
 #     from PyQt5 import QtWebEngineWidgets
@@ -119,10 +122,9 @@ class TestDailyCtrl(TestCase):
             self.assertTrue(not df2.empty, msg)
 
         tu = DefineTrades(jf.inputType)
-        dframe, ldf = tu.processDBTrades(df2)
-        self.df = dframe
+        self.df, ldf = tu.processDBTrades(df2)
         sc = SumControl()
-        lf = LayoutForms(sc, jf, dframe)
+        lf = LayoutForms(sc, jf, self.df)
         # lf.pickleitnow()
         tradeSummaries = lf.runTtoSummaries(ldf)
         self.ts = lf.ts
@@ -133,8 +135,12 @@ class TestDailyCtrl(TestCase):
         self.apiset.setValue('dbsqlite', self.realdb)
 
     def test_commitNote(self):
-        daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate, db=self.testdb)
+        '''
+        Test the commitNote method with no note arg -- retrieves note from note widget.
+        Test not creation and note update.
+        '''
+        # daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(self.theDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum=self.ts)
         dc.dropTable()
         dc.createTable()
@@ -155,6 +161,9 @@ class TestDailyCtrl(TestCase):
         self.assertEqual(updatenote, xnote)
 
     def test_populateNotes(self):
+        '''
+        Tests the populateNotes method. It gets not from the db and sets the note widget text.
+        '''
         daDate = pd.Timestamp('2021-06-06')
         dc = DailyControl(daDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum=self.ts)
@@ -171,9 +180,9 @@ class TestDailyCtrl(TestCase):
         self.assertEqual(widgnote, note)
 
     def test_populateStuff(self):
-        '''Test populateS (modelS), populateM (modelM) and the pandas modelT'''
-        daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate, db=self.testdb)
+        '''Test the headers for populateS (modelS), populateM (modelM) and the pandas modelT after runDialog'''
+        # daDate = pd.Timestamp('2021-06-06')
+        dc = DailyControl(self.theDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum=self.ts)
         headers = ['Daily P / L Summary', 'Live Total', 'Sim Total', 'Highest Profit',
                    'Largest Loss', 'Average Win', 'Average Loss']
@@ -188,8 +197,7 @@ class TestDailyCtrl(TestCase):
             self.assertEqual(head, dc.modelT.headerData(i, Qt.Horizontal))
 
     def test_populateM(self):
-        daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate, db=self.testdb)
+        dc = DailyControl(self.theDate, db=self.testdb)
         dc.runDialog(self.df, tradeSum=self.ts)
         headers = ['Name', 'PnL', 'Lost Plays', 'Mistake or pertinent feature of trade']
         for i, head in enumerate(headers):
@@ -200,13 +208,27 @@ def main():
     unittest.main()
 
 
+def notmain_helper(t, method, count):
+    t.setUp()
+    method()
+    t.tearDown()
+    return count + 1
+
+
 def notmain():
     t = TestDailyCtrl()
-    t.setUp()
-    t.commitNote()
-    t.tearDown()
+    count = notmain_helper(t, t.test_commitNote, 0)
+
+    t = TestDailyCtrl()
+    count = notmain_helper(t, t.test_populateNotes, count)
+
+    t = TestDailyCtrl()
+    count = notmain_helper(t, t.test_populateStuff, count)
+
+    t = TestDailyCtrl()
+    count = notmain_helper(t, t.test_populateM, count)
 
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()
