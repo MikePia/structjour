@@ -140,7 +140,7 @@ class runController:
             msgbx.setText(msg)
             msgbx.exec()
             self.runnit()
-            
+
     def runDBInput(self, daDate, jf):
         '''
         Get the trades from daDate in the DB and process the trades
@@ -166,7 +166,7 @@ class runController:
         '''
         Load an initial input file and process it.
         '''
-        
+
         logging.info('did this go to the right file?')
         self.initialize()
         if not self.indir:
@@ -293,7 +293,7 @@ class runController:
         msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
         msgBox.setDefaultButton(QMessageBox.Save)
         ret = msgBox.exec()
-        
+
         if ret == QMessageBox.Save:
             self.sc.saveTradeObject(oldDate)
 

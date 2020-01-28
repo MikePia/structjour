@@ -169,7 +169,7 @@ class LayoutForms:
         self.ts = ibdb.updateTradeSummaries(self.ts)
 
         # This is legacy stuff. It will run IFF we are lacking a loaded trade table and we
-        # have one already pickled. 
+        # have one already pickled.
         df = None
         dfname = self.getStoredTradeName()
         if dfname and os.path.exists(dfname):
@@ -316,9 +316,9 @@ class LayoutForms:
                     self.ts[key][c] = ''
                     start = pd.Timestamp('2175-01-02')
                     end = pd.Timestamp('2175-01-01')
-                    self.ts[key][c+'Start'] = start
-                    self.ts[key][c+'End'] = end
-                    self.ts[key][c+'Interval'] = interval
+                    self.ts[key][c + 'Start'] = start
+                    self.ts[key][c + 'End'] = end
+                    self.ts[key][c + 'Interval'] = interval
 
     def getChartData(self, key, ckey):
         '''
@@ -404,7 +404,7 @@ class LayoutForms:
         twidgets = [self.sc.ui.time1, self.sc.ui.time2, self.sc.ui.time3, self.sc.ui.time4,
                     self.sc.ui.time5, self.sc.ui.time6, self.sc.ui.time7, self.sc.ui.time8]
         for i, widg in enumerate(twidgets):
-            daVal = tto['Time' + str(i+1)].unique()[0]
+            daVal = tto['Time' + str(i + 1)].unique()[0]
             if isinstance(daVal, (pd.Timestamp, dt.datetime, np.datetime64)):
                 daVal = pd.Timestamp(daVal)
                 daVal = daVal.strftime(self.timeFormat)

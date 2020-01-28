@@ -87,7 +87,7 @@ def pd2qtime(pdt, qdate=False):
         return QDate(pdt)
     pdt = pd.Timestamp(pdt)
     return QDate(pdt.year, pdt.month, pdt.day)
-    
+
 
 def getNewyorkTZ(d):
     '''
@@ -96,7 +96,7 @@ def getNewyorkTZ(d):
     :return: int hours diff from GMT
     '''
     if isinstance(d, int):
-        d = pd.Timestamp(d*10**9)
+        d = pd.Timestamp(d * 10**9)
     if isinstance(d, pd.Timestamp):
         d = dt.datetime(d.year, d.month, d.day, d.hour, d.minute)
     tz = pytz.timezone('US/Eastern').localize(d).strftime('%z')
@@ -104,9 +104,9 @@ def getNewyorkTZ(d):
     # tz = pytz.timezone('Indian/Christmas').localize(d).strftime('%z')
     assert tz[0] in ['+', '-']
     if tz[0] == '-':
-        hours = int(tz[1:])//-100
+        hours = int(tz[1:]) // -100
     else:
-        hours = int(tz[1:])//100
+        hours = int(tz[1:]) // 100
     return hours
 
 
@@ -181,12 +181,12 @@ def movingAverage(values, df, beginDay=None):
     for ma in windows:
         if ma > 20:
 
-            weights = np.repeat(1.0, ma)/ma
+            weights = np.repeat(1.0, ma) / ma
             smas = np.convolve(values, weights, 'valid')
             maDict[ma] = smas
             maDict[ma] = pd.DataFrame(maDict[ma])
             try:
-                maDict[ma].index = df.index[ma-1:]
+                maDict[ma].index = df.index[ma - 1:]
             except ValueError:
                 del maDict[ma]
         else:
@@ -211,14 +211,14 @@ def makeupEntries(df, minutes):
     for i in range(random.randint(0, 5)):
         delta = end - start
         sec = delta.total_seconds()
-        earliest = int(sec//10)
-        latest = int(sec-earliest)
+        earliest = int(sec // 10)
+        latest = int(sec - earliest)
         secs = random.randint(earliest, latest)
         entry = start + pd.Timedelta(seconds=secs)
 
         # Figure the candle index for our made up entry
         diff = entry - start
-        candleindex = int(diff.total_seconds()/60//minutes)
+        candleindex = int(diff.total_seconds() / 60 // minutes)
 
         # Get the time index of the candle
         # tix = df.index[candleindex]
@@ -413,7 +413,7 @@ class IbSettings:
         if 'ib' in pref:
             ibreal = self.apiset.value('ibRealCb', False, bool)
             ibPaper = self.apiset.value('ibPaperCb', False, bool)
-            ibpref = self.apiset.value('ibPref')
+            # ibpref = self.apiset.value('ibPref')
             if ibreal:
                 self.ibPort = self.apiset.value('ibRealPort', 7496, int)
                 self.ibId = self.apiset.value('ibRealId', 7878, int)

@@ -40,6 +40,7 @@ from structjour.view.ejcontrol import EJControl
 
 # pylint: disable = C0103, W0201
 
+
 def fc(val):
     '''formatCurrency'''
     if not isinstance(val, (float, np.floating)):
@@ -50,6 +51,7 @@ def fc(val):
         val = '(${:.02f})'.format(val).replace('-', '')
 
     return val
+
 
 class QDialogWClose(QDialog):
     '''A message box with a close event handler'''
@@ -62,6 +64,7 @@ class QDialogWClose(QDialog):
                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if ok == QMessageBox.Yes:
                 self.commitNote()
+
 
 class DailyControl(QDialogWClose):
     '''
@@ -82,7 +85,7 @@ class DailyControl(QDialogWClose):
             self.date = pd.Timestamp(daDate)
         settings = QSettings('zero_substance', 'structjour')
         if db:
-            self.db=db
+            self.db = db
         else:
             self.db = settings.value('tradeDb')
             if not self.db:
@@ -104,9 +107,9 @@ class DailyControl(QDialogWClose):
 
         cur.execute('''
             CREATE TABLE if not exists "daily_notes" (
-                	"date"	INTEGER,
-                	"note"	TEXT,
-                	PRIMARY KEY("date"))''')
+                "date"	INTEGER,
+                "note"	TEXT,
+                PRIMARY KEY("date"))''')
         conn.commit()
 
     def dropTable(self):
@@ -119,8 +122,8 @@ class DailyControl(QDialogWClose):
 
     def commitNote(self, note=None):
         '''
-        Save or update the db file for the notes field. This commits the text in the dailyNotes
-        widget. Use setNote for a vanilla db commit
+        Save or update the db file for the notes field. If no note is given. will retrieve the text
+         from the qt dailyNotes widget. Use setNote for a vanilla db commit
         '''
         if not self.date:
             logging.info('Cannot save without a date')
@@ -136,7 +139,7 @@ class DailyControl(QDialogWClose):
         cur = conn.cursor()
         if exist:
             cur.execute('''UPDATE daily_notes
-                SET note = ? 
+                SET note = ?
                 WHERE date = ?''', (note, d))
 
         else:
@@ -160,7 +163,7 @@ class DailyControl(QDialogWClose):
         cur = conn.cursor()
         if exist:
             cur.execute('''UPDATE daily_notes
-                SET note = ? 
+                SET note = ?
                 WHERE date = ?''', (note, d))
 
         else:
@@ -228,8 +231,6 @@ class DailyControl(QDialogWClose):
         self.ui.dailyNotes.clicked.connect(self.saveNotes)
         self.ui.dailyNotes.textChanged.connect(self.dNotesChanged)
 
-
-
         self.createTable()
         self.populateNotes()
 
@@ -257,7 +258,7 @@ class DailyControl(QDialogWClose):
         simLosses = list()
         maxTrade = (0, "notrade")
         minTrade = (0, "notrade")
-        #Didnot save the Trade number in TheTrade.  These should be the same order...
+        # Didnot save the Trade number in TheTrade.  These should be the same order...
         count = 0
 
         if not self.ts:
@@ -302,7 +303,7 @@ class DailyControl(QDialogWClose):
 
         dailySumData = OrderedDict()
 
-        #row1
+        # row1
         dailySumData['livetot'] = fc(sum([sum(liveWins), sum(liveLosses)]))
 
         numt = len(liveWins) + len(liveLosses)
@@ -316,7 +317,7 @@ class DailyControl(QDialogWClose):
                                "" if len(liveLosses) == 1 else "s")
             dailySumData['livetotnote'] = note
 
-        #row2
+        # row2
         dailySumData['simtot'] = fc(sum([sum(simWins), sum(simLosses)]))
 
         # 9 trades,  3 Winners, 6 Losers
@@ -371,7 +372,6 @@ class DailyControl(QDialogWClose):
         if not dailySumData:
             return
 
-
         ro1 = [QStandardItem('Live Total'), QStandardItem(str(dailySumData['livetot'])), QStandardItem(dailySumData['livetotnote'])]
         ro2 = [QStandardItem('Sim Total'), QStandardItem(str(dailySumData['simtot'])), QStandardItem(dailySumData['simtotnote'])]
         ro3 = [QStandardItem('Highest Profit'), QStandardItem(str(dailySumData['highest'])), QStandardItem(dailySumData['highestnote'])]
@@ -409,7 +409,7 @@ class DailyControl(QDialogWClose):
                 row = []
                 row.append(QStandardItem(trade))
 
-                #Legacy saved object thing
+                # Legacy saved object thing
                 if 'P / L' in self.ts[trade].keys():
                     self.ts[trade].rename(columns={'P / L': 'PnL'}, inplace=True)
                     self.setStatusTip('Legacy object, open each trade, then save then load')
@@ -422,7 +422,6 @@ class DailyControl(QDialogWClose):
                     self.ts[trade]['PnL'] = 0.0
                     pl = 0.0
                 row.append(QStandardItem(pl))
-
 
                 mVal = self.ts[trade]['MstkVal'].unique()[0]
                 if mVal and isinstance(mVal, (np.floating, float, np.float)):
@@ -441,6 +440,7 @@ class DailyControl(QDialogWClose):
         self.ui.mstkForm.setRowHeight(0, 50)
         self.ui.mstkForm.resizeColumnToContents(1)
         self.ui.mstkForm.resizeColumnToContents(2)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

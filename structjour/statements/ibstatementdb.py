@@ -74,15 +74,15 @@ class StatementDB:
         self.sf = SumReqFields()
         self.createTradeTables()
 
-        self.holidays = [ 
+        self.holidays = [
                         ['New Year’s Day', '20180101', '20190101', '20200101', '21210101', '20220101', '20230101'],
                         ['Martin Luther King, Jr. Day', '20180115', '20190121', '20200120', '20210118', '20220117', '20230116'],
                         ['Washington’s Birthday', '20180219', '20190218', '20200217', '20210221', '20220221', '20230220'],
                         ['Good Friday', '', '20190419', '20200410', '20210402', '20220415', '20230407'],
                         ['Memorial Day', '20180528', '20190527', '20200525', '20210531', '20220530', '20230529'],
                         ['Independence Day', '20180704', '20190704', '20200704', '20210704', '20220704', '20230704'],
-                        ['Labor Day', '20180903', '20190902', '20200907', '20210906', '20220905', '20230904'], 
-                        ['Thanksgiving Day', '20181122', '20191128', '20201126', '20211125', '20221124', '20231123'], 
+                        ['Labor Day', '20180903', '20190902', '20200907', '20210906', '20220905', '20230904'],
+                        ['Thanksgiving Day', '20181122', '20191128', '20201126', '20211125', '20221124', '20231123'],
                         ['Christmas Day', '20181225', '20191225', '20201225', '20211225', '20221225', '20231225']
         ]
         self.popHol()
@@ -121,7 +121,7 @@ class StatementDB:
                 symbol TEXT NOT NULL,
                 quantity INTEGER NOT NULL,
                 date TEXT NOT NULL);''')
-                
+
         cur.execute('''
             CREATE TABLE if not exists ib_covered (
                 day	TEXT NOT NULL,
@@ -144,7 +144,7 @@ class StatementDB:
                 start TEXT NOT NULL,
                 end TEXT NOT NULL,
                 interval INTEGER,
-                slot INTEGER, 
+                slot INTEGER,
                 trade_sum_id INTEGER,
                 FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id),
                 PRIMARY KEY(id))''')
@@ -203,7 +203,7 @@ class StatementDB:
         sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        
+
         date = pd.Timestamp(date)
         date = date.strftime("%Y%m%d")
 
@@ -224,7 +224,7 @@ class StatementDB:
         '''
         sf = self.sf
         ts = list(ts)
-        
+
         t = dict()
         (t['id'], t[sf.name], t[sf.strat], t[sf.link1], t[sf.acct], t[sf.pl], t[sf.start],
             t[sf.date], t[sf.dur], t[sf.shares], t[sf.mktval], t[sf.targ], t[sf.targdiff],
@@ -241,7 +241,7 @@ class StatementDB:
         sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        
+
         date = pd.Timestamp(date)
         date = date.strftime("%Y%m%d")
         start = pd.Timestamp(start)
@@ -313,13 +313,13 @@ class StatementDB:
             if cursor:
                 id = cursor[0]
                 cur.execute(f'''
-                UPDATE chart set symb = ?, path = ?, name = ?, start = ?, end = ?, 
+                UPDATE chart set symb = ?, path = ?, name = ?, start = ?, end = ?,
                     interval = ?
                     WHERE id = ?''', (ticker, path, name, start, end, interval, id))
             else:
                 source = 'user'
                 cursor = cur.execute('''
-                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id) 
+                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                     (ticker, path, name, source, start, end, interval, i + 1, trade_sum_id))
 
@@ -351,10 +351,10 @@ class StatementDB:
                 continue
 
             cursor = cur.execute('''
-                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id) 
+                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id)
                     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                     (symb, path, chart, source, start, end, interval, i + 1, ts_id))
-            
+
     def updateEntries(self, cur, ts_id, tdf):
         '''
         Set the foreign key in ib_trades to point to the trade_sum to which this transaction belongs.
@@ -379,7 +379,7 @@ class StatementDB:
                 WHERE trade_sum_id = ?''', (ts_id, ))
         x = cursor.fetchall()
         return x
-    
+
     def doctorTheTrade(self, trade):
         '''
         Basically this fixes up my stuff (developer) and should be unnecessary by release time
@@ -396,20 +396,20 @@ class StatementDB:
             trade[sf.clean] = ''
         if sf.id not in trade.columns:
             trade[sf.id] = None
-        
+
         if sf.pl not in trade.columns:
             if 'P / L' in trade.columns:
                 trade = trade.rename(columns={'P / L': sf.pl})
         if trade[sf.mktval].unique()[0] is None:
             trade[sf.mktval] = 0
         return trade
-        
+
     def updateTradeSummaries(self, ts):
         '''
         Update the table trad_sum and its relations for the trades in ts.
         :ts: A dict of dict. The keys for the outer dict are found in the list widget.
-        The inner dicts are the trade object with keys and db fields common to the 
-        SumReqFields.columns 
+        The inner dicts are the trade object with keys and db fields common to the
+        SumReqFields.columns
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -426,8 +426,8 @@ class StatementDB:
             if not tradesum:
                 continue
             trade[sf.id] = tradesum[0]
-                
-            cur.execute(f''' UPDATE trade_sum SET 
+
+            cur.execute(f''' UPDATE trade_sum SET
                 {sf.name} = ?,
                 {sf.strat} = ?,
                 {sf.link1} = ?,
@@ -494,7 +494,7 @@ class StatementDB:
 
         conn.commit()
         return newts
-            
+
     def addTradeSummaries(self, tradeSummaries, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
         # Summary Fields
@@ -529,7 +529,7 @@ class StatementDB:
                             {sf.mstknote},
                             {sf.explain},
                             {sf.notes},
-                            clean) 
+                            clean)
                             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                             (ts[sf.name].unique()[0],
                             ts[sf.strat].unique()[0],
@@ -618,7 +618,7 @@ class StatementDB:
             das = 'DAS'
         elif self.source == 'IB':
             ib = 'IB'
-        x = cur.execute(f''' 
+        x = cur.execute(f'''
             INSERT INTO ib_trades ({rc.ticker}, datetime, {rc.shares}, {rc.price}, {rc.comm},
                                    {rc.oc}, {rc.acct}, {rc.bal}, {rc.avg}, {rc.PL}, DAS, IB)
             VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -635,7 +635,7 @@ class StatementDB:
         '''
         d = d.strftime("%Y%m%d")
         cursor = cur.execute('''
-            SELECT * from ib_covered 
+            SELECT * from ib_covered
                 WHERE day = ?
                 AND account = ?
                 ''', (d, account))
@@ -676,7 +676,7 @@ class StatementDB:
         for i, row in posTab.iterrows():
             d = pd.Timestamp(row['Date']).strftime("%Y%m%d")
             found = cur.execute('''
-                SELECT symbol, quantity, date 
+                SELECT symbol, quantity, date
                     FROM ib_positions
                     WHERE account = ?
                     AND symbol = ?
@@ -692,7 +692,7 @@ class StatementDB:
     ########################################################################################
     # ########################### methods for structjour ###################################
     ########################################################################################
-    
+
     def getNumTicketsforDay(self, day, account='all'):
 
         conn = sqlite3.connect(self.db)
@@ -743,7 +743,7 @@ class StatementDB:
             cur.execute(f''' UPDATE ib_trades SET trade_sum_id = ?
                 WHERE  id = ?''', (ts_id, t_id))
             conn.commit()
-    
+
     ########################################################################################
     # ################### DB Helper methods for refigureAPL ################################
     ########################################################################################
@@ -753,7 +753,7 @@ class StatementDB:
         A secondary attempt to get balance for the badTrade bt. bt has a PL but lacks
         balance.
         First set it as a closer and set the average (just incase).
-        Look for an adjacent previous opener  (set average and open) and if the averages of 
+        Look for an adjacent previous opener  (set average and open) and if the averages of
             that opener == price (within a tolerance) set balances
 
         Programming note: This is similar to refigureAPL_backwards. Can they combine? share code?
@@ -1273,27 +1273,27 @@ class StatementDB:
                 ts[chart + 'Start'] = start
                 ts[chart + 'End'] = end
                 ts[chart + 'Interval'] = schart['interval']
-            
+
             sumTrades = cur.execute('''
-                SELECT t.Symb, 
-                        t.datetime, 
-                        t.Qty, 
-                        t.Average, 
-                        t.Balance, 
-                        t.Price, 
-                        t.PnL as tPnL, 
-                        t.Commission, 
-                        t.OC, 
-                        t.Account, 
-                        t.id as t_id, 
-                        ts.id as ts_id, 
-                        ts.Name, 
-                        ts.Date 
+                SELECT t.Symb,
+                        t.datetime,
+                        t.Qty,
+                        t.Average,
+                        t.Balance,
+                        t.Price,
+                        t.PnL as tPnL,
+                        t.Commission,
+                        t.OC,
+                        t.Account,
+                        t.id as t_id,
+                        ts.id as ts_id,
+                        ts.Name,
+                        ts.Date
                     FROM trade_sum AS ts
                     LEFT JOIN ib_trades AS t ON t.trade_sum_id = ts.id
                     WHERE trade_sum_id = ?''', (ts_id, ))
             sumTrades = sumTrades.fetchall()
-            
+
             for i in range(0, 8):
                 ii = str(i + 1)
                 if i < len(sumTrades):
@@ -1302,12 +1302,10 @@ class StatementDB:
                      strade['bal'], strade['price'], strade['pl'], strade['comm'], strade['oc'],
                      strade['acct'], strade['t_id'], strade['ts_id'], strade['name'],
                      strade['date']) = sumTrades[i]
-
                     BS = 'B' if strade['shares'] >= 0 else 'S'
                     time = pd.Timestamp(strade['datetime'])
                     entry = [strade['price'], '', BS, time]
                     entries.append(entry)
-
                     # 9 is OC, 5 is price
                     if strade['oc'].find('O') > -1:
                         ts['Entry' + ii] = strade['price']
@@ -1315,7 +1313,7 @@ class StatementDB:
                     else:
                         ts['Exit' + ii] = strade['price']
                         ts['Entry' + ii] = ''
-                    
+
                     ts['Time' + ii] = time
                     ts['EShare' + ii] = strade['shares']
                     diff = None
@@ -1337,12 +1335,12 @@ class StatementDB:
             entriesd[key] = entries
             tradeSummary[key] = tdf
         return tradeSummary, entriesd
-        
+
     def getStatement(self, day, account='all'):
         '''
         Get the trades from a single day. This is the default and corresponds with tradeSummaries
         with numbered trades from a single day. Create a DataFrame with minimal columns, Format
-        Date and Time and add Side 
+        Date and Time and add Side
         :day: A date string or timestamp. The statement day
         :account: Leave blank to get all accounts. Fill in to get a single account.
         :return: DataFrame.
@@ -1371,7 +1369,7 @@ class StatementDB:
             ''', (begin, end, account))
         if trades:
             trades = trades.fetchall()
-            
+
             columns = [rc.ticker, rc.date, rc.shares, rc.bal, rc.price, rc.avg, rc.PL, rc.acct, rc.oc, 'id', rc.comm, 'DAS', 'IB', 'tsid']
             df = pd.DataFrame(data=trades, columns=columns)
 
@@ -1502,7 +1500,7 @@ class StatementDB:
             return {'min': pd.Timestamp(days[0]).date(),
                     'max': pd.Timestamp(days[1]).date(),
                     'uncovered': uncovered}
-   
+
     def getTradesByDates(self, account, sym, daMin, daMax):
         '''
         Get trades between  times min and max for a ticker/account
@@ -1551,7 +1549,7 @@ def main():
     x = StatementDB()
     daDate = '20190103'
     ts, entries = x.getTradeSummaries(daDate)
-        
+
     print(ts.keys())
     print(ts.values())
     print(entries)
