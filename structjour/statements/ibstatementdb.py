@@ -179,7 +179,7 @@ class StatementDB:
 
     def reinitializeTradeTables(self):
         '''
-        This is intended for testing code only. Be sure the db is initialezed to a test db.
+        This is intended for testing code only. Be sure the db is initialized to a test db.
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -197,7 +197,8 @@ class StatementDB:
     def findTradeSummariesByDay(self, date):
         '''
         Get a trade summary record by date and time
-        :date: A Date string or Timestamp for the date to find.
+
+        :params date: A Date string or Timestamp for the date to find.
         :start: A Time string or Timestamp for the time to find
         '''
         sf = self.sf
@@ -277,6 +278,9 @@ class StatementDB:
         return daTime
 
     def findChart(self, cur, ts_id, slot):
+        '''
+        FInd the charts related to a trade summary record for each of three slots
+        '''
         cursor = cur.execute('''SELECT * from chart WHERE trade_sum_id = ? and slot = ?''',
                              (ts_id, slot))
         cursor = cursor.fetchone()
@@ -289,6 +293,9 @@ class StatementDB:
         pass
 
     def updateCharts(self, cur, trade):
+        '''
+        Helper method for updateTradeSummaries. Not intended for api use
+        '''
         sf = self.sf
         trade_sum_id = int(trade['id'].unique()[0])
         name = trade[sf.name].unique()[0]
@@ -324,7 +331,10 @@ class StatementDB:
                     (ticker, path, name, source, start, end, interval, i + 1, trade_sum_id))
 
     def addCharts(self, cur, ts, symb, ts_id):
-        '''Generic creation of chart names'''
+        '''
+        Generic creation of chart names. A helper method for addTradeSummaries. Not intended
+        for api.
+        '''
         dtfrmt = '%Y%m%d;%H%M%S'
         for i in range(3):
             chart = 'chart' + str(i + 1)
@@ -357,6 +367,7 @@ class StatementDB:
 
     def updateEntries(self, cur, ts_id, tdf):
         '''
+        Helper method for addTradeSummaries.
         Set the foreign key in ib_trades to point to the trade_sum to which this transaction belongs.
         :ts_id: the trade_sum_id for this transaction as part of a trade.
         :tdf: The dataframe that represents this ib_trade db object.
@@ -369,7 +380,7 @@ class StatementDB:
 
     def getEntryTrades(self, ts_id):
         '''
-        Get the transactions for for a trade by trade_sum_id
+        Get the transactions (ib_trades) related to a trade (trade_sum) by trade_sum_id.
         '''
         # Summary Fields
         conn = sqlite3.connect(self.db)
@@ -384,7 +395,7 @@ class StatementDB:
         '''
         Basically this fixes up my stuff (developer) and should be unnecessary by release time
         Fix up the legacy objects (which is every object that was ever saved as an
-        object [currently 8/8/19])
+        object [currently 8/8/19]). 
         '''
         sf = self.sf
         if sf.date not in trade.columns:
@@ -406,10 +417,13 @@ class StatementDB:
 
     def updateTradeSummaries(self, ts):
         '''
+        This is called as part of saving trade summaries to db
         Update the table trad_sum and its relations for the trades in ts.
         :ts: A dict of dict. The keys for the outer dict are found in the list widget.
         The inner dicts are the trade object with keys and db fields common to the
         SumReqFields.columns
+        :params ts: dict<str, dict<k,v> Where the string is trade name like '1 IBM Long' a
+        found in the combo box of the Summary form
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -694,6 +708,13 @@ class StatementDB:
     ########################################################################################
 
     def getNumTicketsforDay(self, day, account='all'):
+        '''
+        Queries the database to get the count of transactions recorded from a single day.
+        By default will retrieve the tickets from all accouts.
+        :param day: str or timestamp. The day to query
+        :param all: str, send an account number to restrict to a single account
+        :return: int
+        '''
 
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -731,6 +752,8 @@ class StatementDB:
     def updateTSID(self, t_id, ts_id):
         '''
         Update the tsid in the ib_trades record
+        :params t_id: Trade id from the ib_trades table
+        :params ts_id: Trade summary id from the trade_sums table (foreign key) relation to ib_trades
         '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
@@ -834,11 +857,12 @@ class StatementDB:
         badTrades = found.fetchall()
         return badTrades
 
-    def getPreviousTrades(self, cur, t):
+    def getPreviousTrades(self, cur, bt):
         '''
-        Given the trade bt, retrieve the previou trades from the same symbol/account
+        Given the trade bt, retrieve the previou trades from the same symbol/account. This is
+        used to find misssing position size, average and PnL.
         :cur: A cursor
-        :bt: Dict representing a trade containing keys for symbol, date and account
+        :bt: Dict representing a trade. The dict must contain keys for symbol, date and account
         '''
         rc = self.rc
         prevTrades = cur.execute(f'''
@@ -848,15 +872,15 @@ class StatementDB:
                 AND datetime < ?
                 AND {rc.acct} = ?
                 ORDER BY datetime DESC
-                ''', (t[rc.ticker], t[rc.date], t[rc.acct]))
+                ''', (bt[rc.ticker], bt[rc.date], bt[rc.acct]))
         prevTrades = prevTrades.fetchall()
         return prevTrades
 
-    def getNextTrades(self, cur, t):
+    def getNextTrades(self, cur, bt):
         '''
         Given the trade bt, retrieve the next trades from the same symbol/account
         :cur: A cursore
-        :t: Dict representing a trade containing keys for symbol, date and account
+        :bt: Dict representing a trade containing keys for symbol, date and account
         '''
         rc = self.rc
         prevTrades = cur.execute(f'''
@@ -866,7 +890,7 @@ class StatementDB:
                 AND datetime > ?
                 AND {rc.acct} = ?
                 ORDER BY datetime
-                ''', (t[rc.ticker], t[rc.date], t[rc.acct]))
+                ''', (bt[rc.ticker], bt[rc.date], bt[rc.acct]))
         prevTrades = prevTrades.fetchall()
         return prevTrades
 
@@ -1104,8 +1128,8 @@ class StatementDB:
         A second algorithm to try to fill in some blanks. A bad trade is missing average and/or
         balance.
         A trade where balance == shares can set avg = price and is an opener (OC = O).
-        A trade with a PL value != 0  is a closer and we can figure average. An adjacent and
-            previous opener will have the same average.
+        A trade with a PL value != 0  is a closer and we can figure average. An adjacent
+            (to the closer) and previous opener will have the same average.
         '''
         rc = self.rc
         conn = sqlite3.connect(self.db)
@@ -1154,7 +1178,7 @@ class StatementDB:
 
     def processStatement(self, tdf, account, begin, end, openPos=None):
         '''
-        Processs the trade, positions, ancd covered tables using the Trades table and the
+        Processs the trade, positions, and covered tables using the Trades table and the
         OpenPositions table.
         '''
         rc = self.rc
@@ -1217,7 +1241,10 @@ class StatementDB:
     def isCovered(self, account, d):
         '''
         returns True or False if this day is covered in the db. It is True if we have processed a
-        Statement that covers this day. There may be no trades on a covered day.
+        Statement that covers this day. There may be no trades on a covered day. It imay be marked
+        covered when processing a multi-day statement that spans the day or when processing a
+        statement with no trades. We assume statments coave an  entire day. If the user imports
+        partial DAS data, it may be untrue.
         '''
         d = pd.Timestamp(d).date()
         beg = end = d
@@ -1227,6 +1254,13 @@ class StatementDB:
         return True
 
     def getTradeSummaries(self, daDate):
+        '''
+        Trade summaries are multiple transactios from ib_trades that represent a single
+        trade. A trade begins with a purchase or sale from 0 shares and ends with 0 shares.
+        Exceptions may be overnight trades in which either the beginning or end transaction
+        is not (yet) associated with this trade. Associated data in trade summaries include
+        user input and analysis including associated chart files. (located in the file system)
+        '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         sf = self.sf
@@ -1338,7 +1372,7 @@ class StatementDB:
 
     def getStatement(self, day, account='all'):
         '''
-        Get the trades from a single day. This is the default and corresponds with tradeSummaries
+        Get the trades from a single day. This is the default and corresponds tradeSummaries
         with numbered trades from a single day. Create a DataFrame with minimal columns, Format
         Date and Time and add Side
         :day: A date string or timestamp. The statement day
@@ -1424,6 +1458,9 @@ class StatementDB:
         return pd.DataFrame()
 
     def getCoveredDays(self):
+        '''
+        :return: a list of dates representing a complete list of days in the db
+        '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cursor = cur.execute('''
@@ -1444,10 +1481,12 @@ class StatementDB:
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
         '''
         Get Market days between beg and end for which we are not covered by an IB statement.
-        :account:
-        :beg:
-        :end:
-        :usecache: Use the default True is this is to be called repeatedly to check the same dates.
+        
+        Paramaters:
+        :params account:
+        :params beg:
+        :params end:
+        :params usecache: Use the default True is this is to be called repeatedly to check the same dates.
                    Use usecache=False to check for unique dates.
         '''
         if not beg:

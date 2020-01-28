@@ -176,6 +176,7 @@ class LayoutForms:
             with open(dfname, "rb") as f:
                 df = pickle.load(f)
         if df is not None and self.df is None:
+            # Will soon delete these pickled items from the project
             logging.warning('Using a pickled trade table object in saveTheTradeObject')
             self.df = df
         if self.df is None:
