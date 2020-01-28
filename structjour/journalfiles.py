@@ -21,8 +21,6 @@
 import datetime as dt
 import logging
 import os
-import sys
-import numpy as np
 import pandas as pd
 
 from PyQt5.QtCore import QSettings
@@ -31,15 +29,13 @@ from structjour import time as mkmonth
 # pylint: disable=C0103, R0913
 
 
-
-
 class JournalFiles:
     '''
     Handles the location of directories to read from and to write to, and also the names of the
     files to read and write.
     '''
 
-    inputTypeDict = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_cvs': 'IB_CVS', 'db': 'DB'}
+    inputTypeDict = {'das': 'DAS', 'ib': 'IB_HTML', 'ib_csv': 'IB_CSV', 'db': 'DB'}
 
     # As the console version has no plan for release, not to worry too much about configuration
     def __init__(self, indir=None, outdir=None, theDate=None, infile='trades.csv', inputType='DAS',
@@ -48,19 +44,19 @@ class JournalFiles:
         Creates the required path and field names to run the program. Raises value error if the
         input file cannot be located. If mydevel is True, the default locations change.
 
-        :params indir:      The location of the input file. Defaut is (cwd)/data. 
-        :params outdir      The name of the output directory. Default is (indir)/out. 
+        :params indir:      The location of the input file. Defaut is (cwd)/data.
+        :params outdir      The name of the output directory. Default is (indir)/out.
         :params theDate:    A Datetime object or timestamp of the date of the transactions in the
-                            input file. Will be used if the input file lacks dates. Defaults to 
+                            input file. Will be used if the input file lacks dates. Defaults to
                             today.
         :params infile:     The name of the input file. Defaults to 'trades.csv'.
-        :params inputType:  One of  DAS, IB_HTML, or IB_CVS. Either IB input file should be an
+        :params inputType:  One of  DAS, IB_HTML, or IB_CSV. Either IB input file should be an
                             activity statement with the tables: Trades, Open Positions and Account
                             Information.
         :params infile2:    This is the positions file. Required for DAS Trader Pro only and only
                             if positions are held before or after this input file's trades. If
                             missing, the program will ask for the information. Defaults to
-                            'positions.csv'     
+                            'positions.csv'
         :raise ValueError:  If theDate is not a valid time.
         :raise NameError:   If the infile is not located.
         '''
@@ -72,12 +68,11 @@ class JournalFiles:
 
             except ValueError as ex:
                 msg = f"\n\nTheDate ({theDate}) must be a valid timestamp or string.\n"
-                msg += "Leave it blank to accept today's date\n" 
-                msg += ex.__str__() + "\n" 
-                logging.error(ex)
+                msg += "Leave it blank to accept today's date\n"
+                msg += ex.__str__() + "\n"
                 logging.error(msg)
                 raise ValueError(msg)
-                    
+
             theDate = theDate
         else:
             theDate = dt.date.today()
@@ -86,7 +81,7 @@ class JournalFiles:
         self.inputType = inputType
         self.settings.setValue('inputType', self.inputType)
         self.theDate = theDate
-        self.monthformat = "_%Y%m_%B" #TODO abstract the formats from scheme setting in a utility method
+        self.monthformat = "_%Y%m_%B"   # TODO abstract the formats from scheme setting in a utility method
         self.dayformat = "_%m%d_%A"
         self.root = os.getcwd()
         self.indir = indir if indir else os.path.join(self.root, 'data/')
@@ -94,7 +89,7 @@ class JournalFiles:
         self.infile = infile if infile else 'trades.csv'
         self.infile2 = infile2
         self.inpathfile2 = None
-        self.outfile = os.path.splitext(self.infile)[0] +  self.theDate.strftime("%A_%m%d.xlsx")
+        self.outfile = os.path.splitext(self.infile)[0] + self.theDate.strftime("%A_%m%d.xlsx")
 
         if not mydevel:
             self.inpathfile = os.path.join(self.indir, self.infile)
@@ -108,7 +103,7 @@ class JournalFiles:
             # Fail or succeed quietly here
             self.infile2 = None
             self.inpathfile2 = None
-        
+
         try:
             self._checkPaths()
         except NameError as ex:
@@ -123,7 +118,7 @@ class JournalFiles:
         :params outdir: Location to write the output file. If None set to indir/out
         :params infile: The name of the input file.
         '''
-        path="C:/trader/journal/" + self.monthformat + '/' + self.dayformat
+        path = "C:/trader/journal/" + self.monthformat + '/' + self.dayformat
         path = self.theDate.strftime(path)
         self.indir = indir if indir else os.path.realpath(path)
         self.inpathfile = os.path.join(self.indir, self.infile)
@@ -148,7 +143,7 @@ class JournalFiles:
 
     def _checkPaths(self):
         '''
-        Check the value of self.inpathfile, self.inpathfile2 (if the entry exists), and self.outdir 
+        Check the value of self.inpathfile, self.inpathfile2 (if the entry exists), and self.outdir
         for existance. Note that this is called by __init__
         :raise NameError: If not DB and inpathfile, inpathfile2 (if given) or outdir do not exist.
         '''
@@ -170,10 +165,9 @@ class JournalFiles:
 
         if not os.path.exists(self.indir):
             logging.error('fixme')
-        
 
         if self.inputType == 'DB':
-            
+
             if not os.path.exists(self.outdir):
                 if not os.path.exists(self.indir):
                     monthdir = os.path.join(self.indir, '..')
@@ -190,7 +184,7 @@ class JournalFiles:
                                 ix = scheme.find('\\')
                             if ix < 0:
                                 raise NameError('Please set the journal directory. Go to the file settings dialog.')
-                            dayScheme = scheme[ix+1:]
+                            dayScheme = scheme[ix + 1:]
                             dayScheme = dayScheme.format(DAY='%A', month='%m', day='%d')
                             scheme = scheme[:ix]
                             monthdir = os.path.join(journal, scheme)
@@ -199,7 +193,6 @@ class JournalFiles:
                             return
                     # TODO Decide whether to put qt dialog here.
                     raise NameError('Please set the journal directory. Go to the file settings dialog.')
-            
 
             checkUpOne = os.path.split(self.outdir)[0]
             if not checkUpOne:
