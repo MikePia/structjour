@@ -114,7 +114,7 @@ class SumControl(QMainWindow):
                 self.ui.dasImport.setChecked(True)
             elif intype == 'IB_HTML':
                 self.ui.ibImport.setChecked(True)
-            elif intype == 'DB':
+            elif intype == 'DB' or intype == 'IB_CSV':
                 self.ui.useDatabase.setChecked(True)
 
         pixmap = QPixmap(self.defaultImage)
@@ -904,7 +904,7 @@ class SumControl(QMainWindow):
             else:
                 dasinfile = self.settings.value('dasInfile')
                 infile = self.settings.value('dasInfile')
-        elif inputType == 'IB_HTML' or inputType == 'IB_CVS':
+        elif inputType == 'IB_HTML' or inputType == 'IB_CSV':
             self.ui.goBtn.setText('Read File')
             lineName = self.ui.infileEdit.text()
             if os.path.exists(lineName):
