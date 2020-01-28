@@ -671,7 +671,7 @@ class IbStatement:
         # is bound to produce errors. Eventually, this method, figureBAPL and figureAPL should be
         # combined or at least share code.
         rc = self.rc
-        ibdb = StatementDB(source='IB')
+        ibdb = StatementDB(db=self.db, source='IB')
         t[rc.bal] = np.nan
         t[rc.avg] = np.nan
         t[rc.PL] = np.nan
@@ -806,7 +806,7 @@ class IbStatement:
         df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares})
         x = self.cheatForBAPL(df)
         if not x.empty:
-            ibdb = StatementDB(source='IB')
+            ibdb = StatementDB(db=self.db, source='IB')
             ibdb.processStatement(x, self.account, self.beginDate, self.endDate)
             df = x.copy()
             return {'Trades': df}, {'Trades': 'Trades'}
@@ -1123,7 +1123,7 @@ class IbStatement:
             if not len(tables.keys()):
                 # TODO When enabling multi accounts-- fix this to not return
                 return tables, msg
-            ibdb = StatementDB(source='IB')
+            ibdb = StatementDB(db=self.db, source='IB')
             positions = None
             if 'POST' in tables.keys():
                 positions = tables['POST']
