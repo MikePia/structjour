@@ -88,7 +88,7 @@ class IbStatement:
 
         for acct in tt[rc.acct].unique():
             accounts = tt[tt[rc.acct] == acct]
-        
+
             for ticker in accounts[rc.ticker].unique():
 
                 LONG = True
@@ -109,7 +109,7 @@ class IbStatement:
                 # TODO account for account in tos
                 primo = False
                 side = LONG
-                
+
                 # Figure Balance first -- adjust offset for overnight
                 for i, row in tdf.iterrows():
                     quantity = row[rc.shares]
@@ -118,15 +118,15 @@ class IbStatement:
                     tdf.at[i, rc.bal] = balance
 
                     # Check for a flipped position. The flipper is figured like Opener; the average
-                    # changes, and no PL is taken 
+                    # changes, and no PL is taken
                     if primo and side == LONG and balance < 0:
                         side = SHORT
                     elif primo and side == SHORT and balance > 0:
                         side = LONG
 
-                    # This the first trade Open; average == price and set the side- 
+                    # This the first trade Open; average == price and set the side-
                     if not primo and balance == row[rc.shares]:
-                        
+
                         primo = True
                         average = row[rc.price]
                         tdf.at[i, rc.avg] = average
@@ -148,13 +148,12 @@ class IbStatement:
                         if balance == 0:
                             primo = False
                     else:
-                        # This should be the first trades for this statmenet/Symbol. 
+                        # This should be the first trades for this statmenet/Symbol.
                         # We are lacking the previous average so cannot reliably figure the
                         # average or PL. (IB uses Cost basis accounting and their PL may be wrong
                         #  for our purposes)
                         # logger.info(f'''There is a trade for {row[rc.ticker]} that lacks a tx.''')
                         pass
-
 
                 assert tdf.iloc[-1][rc.bal] == holding
                 newdf = newdf.append(tdf)
@@ -180,7 +179,6 @@ class IbStatement:
                 self.endDate = pd.Timestamp(endDate).date()
             except ValueError:
                 raise ValueError('Failed to parse the statement date:', t)
-            
 
         # broker = broker.strip()
         self.broker = broker
@@ -210,10 +208,10 @@ class IbStatement:
             self.account = account
             self.statementname = sname
 
-        except:
+        except Exception:
             raise ValueError('Failed to parse the statement date')
 
-    #Conversion stuff
+    # Conversion stuff
     def combinePartialsHtml(self, df):
         '''
         Combine the partial entries in a trades table. The Html refers to the origin of the table.
@@ -281,7 +279,7 @@ class IbStatement:
             if key in ['OpenPositions', 'Transactions', 'Trades', 'LongOpenPositions',
                        'ShortOpenPositions']:
                 df = tabd[key]
-                df = df[df['Symbol'].str.startswith('Total') == False]
+                df = df[df['Symbol'].str.startswith('Total') is False]
                 df = df.iloc[2:]
                 # Using 'tbl' prefix to identify the html specific table
                 ourcols = self.getColsByTabid('tbl' + key)
@@ -343,12 +341,10 @@ class IbStatement:
             assert self.endDate
         if 'Transactions' in tabd.keys():
             del tabd['Transactions']
-            
 
         if 'OpenPositions' in tabd.keys() and self.endDate:
             tabd['OpenPositions']['Date'] = self.endDate.strftime("%Y%m%d")
             tabd['OpenPositions']['Account'] = self.account
-
 
         return tabd
 
@@ -420,7 +416,7 @@ class IbStatement:
         '''
         df = pd.read_csv(infile, names=[x for x in range(0, 100)])
         # df = df
-        if df.iloc[0][0] == 'BOF'  or df.iloc[0][0] == 'HEADER':
+        if df.iloc[0][0] == 'BOF' or df.iloc[0][0] == 'HEADER':
             # This is a flex activity statement with multiple tables
             self.inputType = "A_FLEX"
             return self.openActivityFlexCSV(df)
@@ -669,7 +665,7 @@ class IbStatement:
         '''
         Check the db to find at least one trade for each ticker that matches a trade in t and get
         the balance. Then set the balance for that ticker
-        :return: Either a df that includes balance for all trades or an empty 
+        :return: Either a df that includes balance for all trades or an empty
         '''
         # TODO This is the third of three methods that do similar things. Its a bit complex and
         # is bound to produce errors. Eventually, this method, figureBAPL and figureAPL should be
@@ -720,10 +716,9 @@ class IbStatement:
                     tdf.at[i, rc.bal] = row[rc.shares] + balance
                     balance = tdf.at[i, rc.bal]
 
-
-                    # This the first trade Open; average == price and set the side- 
+                    # This the first trade Open; average == price and set the side-
                     if not pastPrimo and balance == row[rc.shares]:
-                        
+
                         pastPrimo = True
                         average = row[rc.price]
                         tdf.at[i, rc.avg] = average
@@ -732,7 +727,7 @@ class IbStatement:
                     # Here are openers -- adding to the trade; average changes
                     # newAverage = ((prevAverage * prevBalance) + (quantity * price)) / balance
                     elif (pastPrimo and side is LONG and quantity >= 0) or (
-                        pastPrimo and side is SHORT and quantity < 0):
+                          pastPrimo and side is SHORT and quantity < 0):
                         newAverage = ((average * prevBalance) + (quantity * row[rc.price])) / balance
                         average = newAverage
                         tdf.at[i, rc.avg] = average
@@ -753,7 +748,7 @@ class IbStatement:
 
                 newdf = newdf.append(tdf)
             else:
-                # If the balance for any trade is not found, return empty. 
+                # If the balance for any trade is not found, return empty.
                 return pd.DataFrame()
         return newdf
 
@@ -885,11 +880,10 @@ class IbStatement:
         newdf = pd.DataFrame()
         for tickerKey in t['Symbol'].unique():
             ticker = t[t['Symbol'] == tickerKey]
-            ##### New Code
+            # #### New Code
             codes = ticker['Codes'].unique()
             for code in codes:
                 if isinstance(code, float):
-                # if math.isnan(code):
                     continue
                 parts = ticker[ticker['Codes'] == code]
                 ticketKeys = parts['IBOrderID'].unique()
@@ -935,7 +929,7 @@ class IbStatement:
         elif 'DateTime' in t.columns:
             pass
         elif 'TradeDate' and 'TradeTime' in t.columns:
-            # The Time string in *some* IB statements lacks a beginning '0' for 9:30 etc. 
+            # The Time string in *some* IB statements lacks a beginning '0' for 9:30 etc.
             for i, row in t.iterrows():
                 if len(row['TradeTime']) == 5:
                     t.at[i, 'TradeTime'] = '0' + row['TradeTime']
@@ -983,7 +977,7 @@ class IbStatement:
         if 'order' in lod:
             t = t[t['LevelOfDetail'].str.lower() == 'order']
         elif 'execution' in lod:
-            if not 'IBOrderID' in t.columns:
+            if 'IBOrderID' not in t.columns:
                 self.beginDate = None
                 msg = '\n'.join(['This Activity Flex statement Includes EXECUTION level data'
                                  '(aka partials) To combine the partial executions',
@@ -992,8 +986,6 @@ class IbStatement:
                                  'select the Orders Options.'])
                 return pd.DataFrame(), msg
             t = t[t['LevelOfDetail'].str.lower() == 'execution']
-
-
 
             t = self.combinePartialsFlexCSV(t)
         elif len(t) > 0:
@@ -1008,7 +1000,7 @@ class IbStatement:
         dcolumns, mcolumns = self.verifyAvailableCols(
             list(t.columns), ['LevelOfDetail', 'IBOrderID', 'TradeDate'], 'utility')
         t = t.drop(dcolumns, axis=1)
-        ###### Set all the right names here
+        # ##### Set all the right names here
 
         return t, ''
 
@@ -1060,10 +1052,11 @@ class IbStatement:
             # dates for trades
             d = self.endDate if self.endDate else self.beginDate if self.beginDate else None
             if d is None:
-                # Bit of a catch 22 in the processing produces unsure  ???
-                if 'TRNT' in tables.keys():
-                    beginDate = tables['TRNT']['DateTime'].min()
-                    endDate = tables['TRNT']['DateTime'].max()
+                pass
+                # # Bit of a catch 22 in the processing produces unsure  ???
+                # if 'TRNT' in tables.keys():
+                #     beginDate = tables['TRNT']['DateTime'].min()
+                #     endDate = tables['TRNT']['DateTime'].max()
 
             tables['POST']['Date'] = d.strftime('%Y%m%d')
             tables['POST'] = tables['POST'].rename(columns={'ClientAccountID': 'Account'})
@@ -1118,7 +1111,7 @@ class IbStatement:
                 t.columns = headers
                 ourcols = self.getColsByTabid(tabid)
                 ourcols, missingcols = self.verifyAvailableCols(headers, ourcols, tabid)
-                if not  ourcols:
+                if not ourcols:
                     continue
                 t = t[ourcols]
                 mcd[tabid] = missingcols
@@ -1162,7 +1155,6 @@ class IbStatement:
         if tabid in ['POST', 'Open Positions', 'OpenPositions', 'tblOpenPositions']:
             return ['ClientAccountID', 'Symbol', 'Quantity']
 
-
         if tabid in ['Long Open Positions', 'Short Open Positions']:
             # DataDiscriminator is temporary to filter results
             return ['ClientAccountID', 'Symbol', 'Quantity', 'DataDiscriminator']
@@ -1193,7 +1185,7 @@ class IbStatement:
         if tabid == 'tblTransactions':
             return ['Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Comm/Fee', 'Code']
 
-        ####### Activity Statement non flex #######
+        # ###### Activity Statement non flex #######
         if tabid in ['Statement', 'Account Information']:
             return ['Field Name', 'Field Value']
 
@@ -1220,6 +1212,7 @@ def notmain():
     t = StatementDB(source='IB')
     t.popHol()
 
+
 def localStuff():
     '''Run local stuff'''
     d = pd.Timestamp('2019-06-01')
@@ -1240,8 +1233,8 @@ def localStuff():
     # files['act'] = ['ActivityStatement.html', getDirectory]
     # files['atrade'] = ['trades.643495.html', getDirectory]
 
-    das = 'trades.csv'                          # Search verbatim with searchParts=False
-                                                # TODO How to reconcile IB versus DAS input?
+    # das = 'trades.csv'                        # Search verbatim with searchParts=False
+    # TODO How to reconcile IB versus DAS input?
 
     badfiles = []
     goodfiles = []
@@ -1257,13 +1250,13 @@ def localStuff():
                 # for key in x[0]:
                 #     print(key, list(x[0][key].columns), len(x[0][key]))
 
-
             if x[1] and not x[0]:
                 badfiles.append([f, x[1]])
                 print("\nBAD", f, '\n', x[1])
             #     msg = f'\nStatement {f} \n{x[1]}'
             #     print(msg)
         # print()
+
 
 if __name__ == '__main__':
     # notmain()
