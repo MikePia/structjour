@@ -65,7 +65,7 @@ class Test_StatementDB(unittest.TestCase):
 
     def test_addTradeSummaries(self):
         '''
-        Tests addTradeSummaries
+        Tests addTradeSummaries. The method requires trades are already in the database
         '''
         ibdb = StatementDB(self.db)
         self.clearTables()
@@ -126,6 +126,28 @@ class Test_StatementDB(unittest.TestCase):
 
     def test_getNumTicketsForDay(self):
         pass
+
+    def test_ibstatement(self):
+        '''Test basic usage loading an ib statement and getting a statement'''
+
+        infile = "data/flex.369463.ActivityFlexMonth.20191008.20191106.csv"
+        theDate = pd.Timestamp('2019-10-16')
+
+        # Create these two objects
+        ibs = IbStatement(db=self.db)
+        ibdb = StatementDB(self.db)
+        ibdb.reinitializeTradeTables()
+
+        # This call loads the statement into the db
+        ibs.openIBStatementCSV(infile)
+        print()
+
+        # This call will then retrieve one day of trades as a dataframe. theDate is string or timestamp
+        df2 = ibdb.getStatement(theDate)
+        self.assertIsInstance(df2, pd.DataFrame)
+        self.assertFalse(df2.empty)
+        print()
+
 
     def test_StatementDB(self):
         '''Test table creation'''
@@ -253,7 +275,8 @@ def notmain():
     # t.test_getStatementDays()
     # t.test_insertTrade()
     # t.test_addTradeSummaries()
-    t.test_findTrade()
+    # t.test_findTrade()
+    t.test_ibstatement()
 
 
 if __name__ == '__main__':
