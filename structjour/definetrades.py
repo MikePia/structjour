@@ -66,9 +66,10 @@ class ReqCol(object):
 
 class DefineTrades(object):
     '''
-    DefineTrades moves the data from DataFrame representing the input file transactions to a
-    dataframe with added columns sorted into trades, showing trade start time, share balance for
-    each trade, and the duration of each trade.
+    DefineTrades moves the data from transaction centric to trade centric with a collection of
+    transactions make a single trade. The dataframe representing a trade will have multiple 
+    transactions and added columns for time, share balance for each trade, duration and user info
+    like stop loss, target and analasys.
     '''
 
     def __init__(self, source='DAS'):

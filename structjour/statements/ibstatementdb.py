@@ -597,6 +597,10 @@ class StatementDB:
         return False
 
     def findTrade(self, datetime, symbol, quantity, account, cur=None):
+        '''
+        Find a unique trade for date, symbol, quantity and account. This method is here
+        to prevent duplicate trades, not to get a collection of trades.
+        '''
         rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
@@ -618,7 +622,7 @@ class StatementDB:
         return False
 
     def insertTrade(self, row, cur):
-        '''Insert a trade. Commit not included'''
+        '''Insert a trade. Commit not included for speed'''
         rc = self.rc
         if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct], cur):
             return True
@@ -681,8 +685,18 @@ class StatementDB:
 
     def insertPositions(self, cur, posTab):
         '''
-        Stores the daily positions. Each statement can have only one day of positions. That is the
-        existing positions after close on the end day of the statemnet
+        This table is not being used 1/29/20. Will review its need with next iteration of db.
+        A helper for processStatement to create an entry in the positions table
+        Stores the daily overnight positions. Each statement can have only one day of positions.
+        The regulation is not enforced here but in processStatment.
+        Multiday statments make this entry unnecessary for all but the end day. That is the
+        existing positions after close on the end day of the statement. Likewise, consecutive
+        days of statements make this information unnecessary (but possibly rednudant) for all
+        but the 'outside' day before a missing day.
+        :params cur: a database cursor
+        :params posTab: A data frame with the headers 'Account', 'Symbol', 'Quantity'  'Date. It could
+            be retrieved from broker statement, created from a DAS export of positions window
+            (or just created for testing).
         '''
         if posTab is None or not posTab.any()[0]:
             return

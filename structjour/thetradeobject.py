@@ -404,15 +404,12 @@ sf = SumReqFields()
 
 class TheTradeObject:
     '''
-    Manages the creation of the Trade Summary objects from the the output DataFrame. These are
-    presented as trade review object--the excel or qt summary form the user sees to review a trade
-    showing entries and exits, targets and stops, strategy and user analysis. That is specifically
-    the the attribute TheTrade as a dataFrame. TheTrade is the model for the trade review summary.
-    It is the trade flattened out into one row.
-    :PreRequisite: The original DtaFrame should be transformed into the output DataFrame in which
-    trades are represented in tickets and are seperated and labeled. It will work
-        fine using the original input (still processed and labeled to the output DataFrame) but DAS
-        may provide 20 transactions for a single ticket purchase. No one likes to see that.
+    Create the flattened version of a trade summary, that is, take the multiple transactions included
+    in the trade_sum table and flatten the info to one row for use in the Qt/excel/whatever form.
+    Manages
+    :PreRequisite: The original DtaFrame need be transformed where partial trades are combined into
+    tickets and are combined into a list of dataframes (ldf), one list per trade. This includes the
+    work of DefineTrades.processDBTrades().
     '''
 
     def __init__(self, df, interview, sf):
