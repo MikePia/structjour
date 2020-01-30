@@ -52,10 +52,10 @@ class Test_StatementDB(unittest.TestCase):
         super(Test_StatementDB, self).__init__(*args, **kwargs)
         self.settings = QSettings('zero_substance', 'structjour')
 
-        self.db = "testdb.db"
+        self.db = "test/testdb.sqlite"
         jdir = self.settings.value('journal')
 
-        self.fulldb = os.path.join(jdir, self.db)
+        # self.fulldb = os.path.join(jdir, self.db)
 
     def setUp(self):
 
@@ -63,9 +63,51 @@ class Test_StatementDB(unittest.TestCase):
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
 
+    def test_findTradeSummary(self):
+        '''
+        Test findTradeSummary, a helper method for addTradeSummaries and updateTradeSummaries.
+        Note that one of those needs to have run and succeeded inorder to test this method.
+        '''
+        infile = "data/flex.369463.ActivityFlexMonth.20191008.20191106.csv"
+        theDate = pd.Timestamp('2019-10-16')
+
+        # Create these three objects
+        ibs = IbStatement(db=self.db)
+        ibdb = StatementDB(self.db)
+        ibdb.reinitializeTradeTables()
+        trades = DefineTrades("DB")
+
+        # This call loads the statement into the db
+        ibs.openIBStatementCSV(infile)
+
+        # Here is an example of processing a single day of trades (3 calls)
+        # This gets a collection of trades from a single day that can become a trade_sum entry
+        df = ibdb.getStatement(theDate)
+
+        # The following method and function process the statement transactions into a collection
+        # of trades where each trade is a single row representing multiple transactions
+        dframe, ldf = trades.processDBTrades(df)
+        tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
+
+        ibdb.addTradeSummaries(ts, ldf)
+        # summaries = ibdb.findTradeSummariesByDay(theDate)
+
+        # The test database trades_sum should now only the trades from theDate, one
+        # entry per trade
+        for i, trade in enumerate(tradeSummaries):
+            x = ibdb.findTradeSummary(theDate, trade['Start'].unique()[0])
+            self.assertEqual(trade['Name'].unique()[0], x[1])
+
     def test_addTradeSummaries(self):
         '''
-        Tests addTradeSummaries. The method requires trades are already in the database
+        Tests addTradeSummaries. The method requires trades are already in the database.
+        We achieve that with openStuff.
+        For this test, I load everything (openStuff) and run
+        addTradeSummaries on all covered days. Its slow. Could be partially sqlite but
+        all the APL BAPL stuff is probably the main crawler. In practice, this will add
+        daily or monthly statements. And in running the program there is no way to run
+        the trade summaries in mass. Its desinged to load up a single day. ITs day-trader
+        centric. Let it stay slow for now.
         '''
         ibdb = StatementDB(self.db)
         self.clearTables()
@@ -73,25 +115,26 @@ class Test_StatementDB(unittest.TestCase):
         # ibdb.getUncoveredDays
         covered = ibdb.getCoveredDays()
 
-        # rc = FinReqCol()
         for count, day in enumerate(covered):
             df = ibdb.getStatement(day)
             if not df.empty:
                 tu = DefineTrades("DB")
                 dframe, ldf = tu.processDBTrades(df)
                 tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
-                ibdb.addTradeSummaries(tradeSummaries, ldf)
+                ibdb.addTradeSummaries(ts, ldf)
                 summaries = ibdb.findTradeSummariesByDay(day)
                 for summary in summaries:
                     summary = ibdb.makeTradeSumDict(summary)
                     entryTrades = ibdb.getEntryTrades(summary['id'])
                     self.assertGreater(len(entryTrades), 0)
 
-                break
-
-        # getNumTicketsforDay
+                # break   # Use this to just test addTradeSummaries once
 
     def test_findTrade(self):
+        '''
+        Tests find a unique trade using findTrade with date, ticker, shares and account.
+        The method is meant to be more exclusive than inclusive.
+        '''
         rc = FinReqCol()
 
         ibdb = StatementDB(self.db)
@@ -118,11 +161,22 @@ class Test_StatementDB(unittest.TestCase):
         foundit = ibdb.findTrade(x.iloc[0]['DateTime'], x.iloc[0][rc.ticker], x.iloc[0][rc.shares], x.iloc[0][rc.acct])
         self.assertTrue(foundit)
 
-    def test_find_Trade(self):
-        pass
-
     def test_insertPositions(self):
+        '''
+        This is not used by anything anymore. might delete insertPositions
+        In making this test, I have discovered that stuctjour never uses this database table.
+        When the info is needed, the program checks the statement or export file. hmmm ....
+        The data in the active db has 339 rows between 20181231 and 20200122.
+        '''
         pass
+        # data = [['XXXXXXX', 'GOG', -349, '20170304'], ['XXXXXXX', 'ORNG', 550, '20170304']]
+
+        # posTab = pd.DataFrame(data=data, columns=['Account', 'Symbol', 'Quantity', 'Date'])
+        # conn = sqlite3.connect(self.db)
+        # cur = conn.cursor()
+        ibdb = StatementDB(db=self.db)
+        # ibdb.insertPositions(cur, posTab)
+        # print()
 
     def test_getNumTicketsForDay(self):
         pass
@@ -148,11 +202,10 @@ class Test_StatementDB(unittest.TestCase):
         self.assertFalse(df2.empty)
         print()
 
-
     def test_StatementDB(self):
-        '''Test table creation'''
-        StatementDB(self.fulldb)
-        conn = sqlite3.connect(self.fulldb)
+        '''Test table creation called from __init__'''
+        StatementDB(self.db)
+        conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         x = cur.execute('''SELECT name FROM sqlite_master WHERE type='table'; ''')
         x = x.fetchall()
@@ -160,7 +213,7 @@ class Test_StatementDB(unittest.TestCase):
         self.assertTrue(set(tabnames).issubset(set([y[0] for y in x])))
 
     def clearTables(self):
-        conn = sqlite3.connect(self.fulldb)
+        conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cur.execute('''delete from chart''')
         # cur.execute('''delete from holidays''')
@@ -191,7 +244,7 @@ class Test_StatementDB(unittest.TestCase):
         ibdb = StatementDB(self.db)
 
         self.clearTables()
-        conn = sqlite3.connect(self.fulldb)
+        conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         ibdb.insertTrade(row, cur)
         conn.commit()
@@ -211,7 +264,7 @@ class Test_StatementDB(unittest.TestCase):
     def openStuff(self, allofit=None):
         '''Site specific testing stuff-- open a multi  day statement'''
         # Site specific stuff here Open a monthly or yearly statemnet into the test db.
-        # Currently set to search the journal root dir, so it will load an annual or two.
+        # Currently set to search the journal root dir, so it may load an annual or two.
         bdir = ff.getBaseDir()
         fs = ff.findFilesInDir(bdir, 'U242.csv', True)
         ibs = IbStatement(db=self.db)
@@ -242,6 +295,7 @@ class Test_StatementDB(unittest.TestCase):
 
     def test_getStatementDays(self):
         '''
+        The tested method is not currently used by structjour.
         Test the method StatementDB.getStatementDays. Exercises getUncovered. Specifically test that
         when it returns data, it has the correct fields required in FinReqCol. And that the trades
         all occur within the specified dates (this tests on a single day). Noticd that openStuff
@@ -271,12 +325,14 @@ def main():
 
 def notmain():
     t = Test_StatementDB()
-    # t.test_getUncoveredDays()
+    # t.test_findTradeSummary()
+    t.test_getUncoveredDays()
     # t.test_getStatementDays()
     # t.test_insertTrade()
     # t.test_addTradeSummaries()
     # t.test_findTrade()
-    t.test_ibstatement()
+    # t.test_ibstatement()
+    # t.test_insertPositions()
 
 
 if __name__ == '__main__':
