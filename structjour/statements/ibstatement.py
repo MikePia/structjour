@@ -670,6 +670,7 @@ class IbStatement:
         # TODO This is the third of three methods that do similar things. Its a bit complex and
         # is bound to produce errors. Eventually, this method, figureBAPL and figureAPL should be
         # combined or at least share code.
+        
         rc = self.rc
         ibdb = StatementDB(db=self.db, source='IB')
         t[rc.bal] = np.nan

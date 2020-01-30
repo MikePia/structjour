@@ -1444,6 +1444,8 @@ class StatementDB:
 
     def getStatementDays(self, account, beg, end=None):
         '''
+        Not currently used in structjour (1/30/20). For a while, considered multi-day statements. 
+        Rejected the idea. Keep structjour day-trader centric.
         Retrieve all the trades for the given days.
         :account:
         :beg:
@@ -1505,13 +1507,14 @@ class StatementDB:
 
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
         '''
-        Get Market days between beg and end for which we are not covered by an IB statement.
+        Get Market days between beg and end for which we are not covered by a statement saved to the db.
         
         Paramaters:
         :params account:
         :params beg:
         :params end:
-        :params usecache: Use the default True is this is to be called repeatedly to check the same dates.
+        :params usecache: Use the default True is this is to be called repeatedly to check the same dates
+                   within a loop.
                    Use usecache=False to check for unique dates.
         '''
         if not beg:
@@ -1552,7 +1555,10 @@ class StatementDB:
         return notcovered
 
     def getMissingCoverage(self, account):
-        '''Get all the missing market days between the min and max covered days'''
+        '''
+        Structjour does not use this. (1/30/20)
+        Get all the missing market days between the min and max covered days.
+        '''
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
         cur.execute('''SELECT min(day), max(day)
@@ -1567,6 +1573,7 @@ class StatementDB:
 
     def getTradesByDates(self, account, sym, daMin, daMax):
         '''
+        Structjour does not use this (1/30/20)
         Get trades between  times min and max for a ticker/account
         '''
         conn = sqlite3.connect(self.db)
