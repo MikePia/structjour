@@ -160,9 +160,8 @@ class runController:
         dframe, ldf = tu.processDBTrades(df)
         lf = LayoutForms(self.sc, jf, dframe)
         lf.pickleitnow()
-        tradeSummaries = lf.runTtoSummaries(ldf)
-        # ts = lf.ts
-        statement.addTradeSummaries(tradeSummaries, ldf)
+        lf.runTtoSummaries(ldf)
+        statement.addTradeSummaries(lf.ts, ldf)
         return True
 
     def runnitDB(self):

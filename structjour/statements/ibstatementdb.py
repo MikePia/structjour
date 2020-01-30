@@ -196,6 +196,7 @@ class StatementDB:
 
     def findTradeSummariesByDay(self, date):
         '''
+        1/30/20 -- Is only being used in tests. getStatemnt() replaces it
         Get a trade summary record by date and time
 
         :params date: A Date string or Timestamp for the date to find.
@@ -235,9 +236,11 @@ class StatementDB:
 
     def findTradeSummary(self, date, start):
         '''
-        Get a trade summary record by date and time
+        A helper method for addTradeSummaries and updateTradeSummaries
+        Get a single trade summary record by date and time
         :date: A Date string or Timestamp for the date to find.
         :start: A Time string or Timestamp for the time to find
+        :return: The found record as a tuple or False
         '''
         sf = self.sf
         conn = sqlite3.connect(self.db)
@@ -509,13 +512,14 @@ class StatementDB:
         conn.commit()
         return newts
 
-    def addTradeSummaries(self, tradeSummaries, ldf):
+    def addTradeSummaries(self, tsDict, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
         # Summary Fields
         sf = self.sf
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        for ts, tdf in zip(tradeSummaries, ldf):
+        for dkey, tdf in zip(tsDict, ldf):
+            ts = tsDict[dkey]
             daDay = self.formatDate(ts[sf.date].unique()[0])
             daTime = self.formatTime(ts[sf.start].unique()[0])
             if not self.findTradeSummary(daDay, daTime):
@@ -575,8 +579,9 @@ class StatementDB:
                     conn.commit()
                 except Exception as ex:
                     logging.error('Commit failed for trades_sum table', ex)
-
+    
     def findTrades(self, datetime, symbol, quantity, price, account, cur=None):
+        '''return: a tuple'''
         rc = self.rc
         if not cur:
             conn = sqlite3.connect(self.db)
@@ -622,7 +627,13 @@ class StatementDB:
         return False
 
     def insertTrade(self, row, cur):
-        '''Insert a trade. Commit not included for speed'''
+        '''
+        Insert a trade into ib_trades table. Commit not included for speed.
+        :params row:A pandas object that includes the headers:
+            ticker, 'DateTime', shares, price, comm, acct, bal, avg, rc.PL. For the precise
+            names of the headers see the required columns object self.rc
+
+        '''
         rc = self.rc
         if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct], cur):
             return True
