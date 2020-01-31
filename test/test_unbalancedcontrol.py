@@ -28,6 +28,9 @@ import unittest
 from  unittest import TestCase
 
 import pandas as pd
+from PyQt5 import QtCore
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+from PyQt5 import QtWebEngineWidgets    # noqa F401
 from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
 
 from PyQt5.QtTest import QTest

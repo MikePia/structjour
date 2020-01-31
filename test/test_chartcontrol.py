@@ -22,9 +22,13 @@ Created on May 20, 2019
 @author: Mike Petersen
 '''
 
+import sys
+from PyQt5 import QtCore
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+from PyQt5 import QtWebEngineWidgets    # noqa F401
+from PyQt5 import QtWidgets
 
 import logging
-import sys
 import unittest
 from unittest import TestCase
 from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox

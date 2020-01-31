@@ -21,6 +21,7 @@ Created on May 22, 2019
 
 @author: Mike Petersen
 '''
+import os
 import sys
 import unittest
 import sqlite3
@@ -29,6 +30,9 @@ import pandas as pd
 
 
 # from PyQt5 import QtCore, QtWebEngineWidgets
+from PyQt5 import QtCore
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+from PyQt5 import QtWebEngineWidgets    # noqa F401
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication
 # from PyQt5.QtTest import QTest
@@ -47,6 +51,9 @@ class TestDailyCtrl(TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestDailyCtrl, self).__init__(*args, **kwargs)
+        ddiirr = os.path.dirname(__file__)
+        os.chdir(os.path.realpath(ddiirr))
+        os.chdir(os.path.realpath('../'))
 
         self.testdb = 'test/testdb.sqlite'
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')

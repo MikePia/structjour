@@ -21,9 +21,15 @@ and retrieval of trade info using self.ts, the other for everything else.
 Created on June 1, 2019
 
 @author: Mike Petersen
-'''
+''' 
 
-from collections import deque
+import sys
+from PyQt5 import QtCore
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+from PyQt5 import QtWebEngineWidgets    # noqa F401
+from PyQt5 import QtWidgets
+
+from collections import deque    
 import datetime as dt
 import os
 import random
@@ -43,8 +49,8 @@ from structjour.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
 
 from PyQt5.QtWidgets import QApplication
 
+app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
 
-app = QApplication(sys.argv)
 
 class Test_LayoutForms(TestCase):
     '''
@@ -324,5 +330,5 @@ def main():
     unittest.main()
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()
