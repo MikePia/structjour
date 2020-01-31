@@ -53,9 +53,6 @@ class Test_StatementDB(unittest.TestCase):
         self.settings = QSettings('zero_substance', 'structjour')
 
         self.db = "test/testdb.sqlite"
-        jdir = self.settings.value('journal')
-
-        # self.fulldb = os.path.join(jdir, self.db)
 
     def setUp(self):
 
@@ -128,7 +125,7 @@ class Test_StatementDB(unittest.TestCase):
                     entryTrades = ibdb.getEntryTrades(summary['id'])
                     self.assertGreater(len(entryTrades), 0)
 
-                # break   # Use this to just test addTradeSummaries once
+                break   # Use this to just test addTradeSummaries once
 
     def test_findTrade(self):
         '''
@@ -174,7 +171,7 @@ class Test_StatementDB(unittest.TestCase):
         # posTab = pd.DataFrame(data=data, columns=['Account', 'Symbol', 'Quantity', 'Date'])
         # conn = sqlite3.connect(self.db)
         # cur = conn.cursor()
-        ibdb = StatementDB(db=self.db)
+        # ibdb = StatementDB(db=self.db)
         # ibdb.insertPositions(cur, posTab)
         # print()
 
