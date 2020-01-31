@@ -197,7 +197,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             msg = msg + f'\nBarchart returned data beginning {rstart} and ending {rend}'
             msg += '''If you are seeking a chart from today, its possible Barchart has not made'''
             msg += 'the data available yet. (Should be available by 4:45PM but they are occasionally late)'
-            msg += 'You can wait or try AlphaVantage or IB if you have them available. Open File->StockAPI'
+            msg += 'You can copy the image yourself, wait, or try a different API. Open File->StockAPI'
             logging.warning(msg)
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
