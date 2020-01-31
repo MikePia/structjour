@@ -20,10 +20,21 @@ placement is lack of balance info-- overnight trades without a positions table. 
 single table statements that have only the trades table. For custom Activity statements, its a
 setup choice at the IB website.
 
-In most cases, its is probably possible to figure out the balance by querying the trades in the
-db. The code to do that is not there yet.
+In most cases, its is possible to figure out the balance when the appropriate trade is loaded. 
+The code to do that is there and its awful, but it seems to work (All the APL/BAPL methods here
+and in StatementDB). 
+
+I am Reducing the support of ib statement types to include only Activity csv types.
+That includes standard statements and flex statements. The code for html relies on BS4 but it
+presents problems between release versions. Additionally the csv statments just seem far more
+settled. The files are not messed with by javascript developers and front end designers.
+That also excludes the 'trade statements' which lack any overnight information
+Because I don't want to throw the code away, which mostly works nicely, but I don't want to
+sort through it whenever I approach this code, I will just stuff it onto another file for potential
+recovery should it be needed. (1/30/20)
 @author: Mike Petersen
 @creation_data: 07/8/19
+
 '''
 
 import logging
@@ -37,7 +48,7 @@ from bs4 import BeautifulSoup
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
-from structjour.statements.findfiles import getDirectory, findFilesSinceMonth
+from structjour.statements.findfiles import getDirectory, findFilesSinceMonth, getBaseDir
 from structjour.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -161,242 +172,6 @@ class IbStatement:
         newdf.reset_index(drop=True, inplace=True)
         return newdf
 
-    def parseTitle(self, t):
-        '''
-        The html title tag of the activity statement contains statement info. There are no specs to
-        the structure of the thing. So on failure, raise exceptions then fix it.
-        '''
-        result = t.split('-')
-        if len(result) == 2:
-
-            t = result[0]
-            broker = result[1].strip()
-        elif len(result) == 3:
-            t = result[0]
-            endDate = result[1].strip()
-            broker = result[2].strip()
-            try:
-                self.endDate = pd.Timestamp(endDate).date()
-            except ValueError:
-                raise ValueError('Failed to parse the statement date:', t)
-
-        # broker = broker.strip()
-        self.broker = broker
-        t = t.strip()
-        t = t.split(' ')
-
-        # The different lengths accout for Statement titles with different numbers of words, 1,
-        # 2, or 3
-        if len(t) == 7:
-            account = t[0]
-            sname = ''.join([t[1], t[2], t[3]])
-            theDate = ' '.join([t[4], t[5], t[6]])
-        elif len(t) == 6:
-            account = t[0]
-            sname = ' '.join([t[1], t[2]])
-            theDate = ' '.join([t[3], t[4], t[5]])
-        elif len(t) == 5:
-            account = t[0]
-            sname = t[1]
-            theDate = ' '.join([t[2], t[3], t[4]])
-        else:
-            raise ValueError('Failed to parse the statement date')
-
-        try:
-
-            self.beginDate = pd.Timestamp(theDate).date()
-            self.account = account
-            self.statementname = sname
-
-        except Exception:
-            raise ValueError('Failed to parse the statement date')
-
-    # Conversion stuff
-    def combinePartialsHtml(self, df):
-        '''
-        Combine the partial entries in a trades table. The Html refers to the origin of the table.
-        This is really more of a removing the details than combining them. This is a table without
-        a DataDiscriminator or LevelOfDetail column. The Partials were identified in html with
-        css and js and the user identifies them with expanding thingys. So woopdy do for that. The
-        discriminator now is equal[DateTime, Codes, Symbol](Codes must include a P). The first of
-        the bunch (with the javascript expanding thingy) has the summary Quantity, 'the rest' add
-        up to the first. Filter out 'the rest.'
-        '''
-        newdf = pd.DataFrame()
-        hasPartials = False
-        rc = self.rc
-        tickers = df[rc.ticker].unique()
-        for tickerKey in tickers:
-            if tickerKey.lower().startswith('closed') or tickerKey.lower().startswith('wash sale'):
-                hasPartials = True
-        if not hasPartials:
-            return df
-
-        for tickerKey in df[rc.ticker].unique():
-            ticker = df[df[rc.ticker] == tickerKey]
-            if len(tickerKey) > 6:
-                # This is probably not a ticker assert to verify
-                for code in ticker[rc.oc].unique():
-                    assert code.find('O') == -1
-                    assert code.find('C') == -1
-                    assert code.find('P') == -1
-                continue
-
-            codes = ticker[rc.oc].unique()
-            for code in codes:
-                parts = ticker[ticker[rc.oc] == code]
-                if code.find('P') > -1:
-                    if len(parts) == 1:
-                        pass
-
-                    else:
-                        addme = []
-                        curTotal = 0
-
-                        for count, (i, row) in enumerate(parts.iterrows()):
-                            share = int(row[rc.shares])
-                            if curTotal == 0:
-                                curTotal = share
-                                addme.append(count)
-                            else:
-                                curTotal = curTotal - share
-                        assert curTotal == 0
-                        x = 3
-                        for x in addme:
-                            newdf = newdf.append(parts.iloc[x])
-                else:
-                    newdf = newdf.append(parts)
-
-        return newdf
-
-    def doctorHtmlTables(self, tabd):
-        '''
-        Fix the idiosyncracies in the tables from an html IB Statement
-        '''
-        rc = self.rc
-        keys = list(tabd.keys())
-        for key in keys:
-            if key in ['OpenPositions', 'Transactions', 'Trades', 'LongOpenPositions',
-                       'ShortOpenPositions']:
-                df = tabd[key]
-                df = df[df['Symbol'].str.startswith('Total') is False]
-                df = df.iloc[2:]
-                # Using 'tbl' prefix to identify the html specific table
-                ourcols = self.getColsByTabid('tbl' + key)
-                if ourcols:
-                    ourcols, missingcols = self.verifyAvailableCols(list(df.columns), ourcols,
-                                                                    'tbl' + key)
-                    df = df[ourcols]
-                if key == 'Trades':
-                    df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares, 'Acct ID': rc.acct, 'Trade Date/Time': 'DateTime',
-                                            'Comm': rc.comm})
-                    df = self.unifyDateFormat(df)
-                    df = self.combineOrdersByTime(df)
-
-                if key == 'Transactions':
-                    df = df.rename(columns={'Symbol': rc.ticker, 'Date/Time': 'DateTime',
-                                            'T. Price': rc.price, 'Comm/Fee': rc.comm,
-                                            'Code': rc.oc, 'Quantity': rc.shares})
-
-                    df[rc.acct] = self.account
-                    df = self.fixNumericTypes(df)
-                    df = self.combinePartialsHtml(df)
-                    df = self.unifyDateFormat(df)
-                    df = self.combineOrdersByTime(df)
-                    key = 'Trades'
-                else:
-                    # small cringe
-                    df = self.fixNumericTypes(df)
-                tabd[key] = df.copy()
-
-            elif key == 'AccountInformation':
-                tabd[key].columns = ['Field Name', 'Field Value']
-
-            if key in ['LongOpenPositions', 'ShortOpenPositions']:
-                t = tabd[key]
-
-                if tabd[key]['Mult'].dtype == np.float:
-                    t = tabd[key][tabd[key]['Mult'] == 1]
-                else:
-                    t = tabd[key][tabd[key]['Mult'] == '1']
-
-                if 'OpenPositions' in tabd.keys():
-                    tabd['OpenPositions'] = tabd['OpenPositions'].append(t)
-                else:
-                    tabd['OpenPositions'] = t.copy()
-                del tabd[key]
-        if self.beginDate:
-            if not self.endDate:
-                self.endDate = self.beginDate
-        else:
-            if 'Trades' in tabd.keys():
-                beg = tabd['Trades']['DateTime'].min()
-                end = tabd['Trades']['DateTime'].max()
-                try:
-                    self.beginDate = pd.Timestamp(beg).date()
-                    self.endDate = pd.Timestamp(end).date()
-                except ValueError:
-                    logging.warning('Failed to get date from trades file')
-            assert self.beginDate
-            assert self.endDate
-        if 'Transactions' in tabd.keys():
-            del tabd['Transactions']
-
-        if 'OpenPositions' in tabd.keys() and self.endDate:
-            tabd['OpenPositions']['Date'] = self.endDate.strftime("%Y%m%d")
-            tabd['OpenPositions']['Account'] = self.account
-
-        return tabd
-
-    def openIBStatementHtml(self, infile):
-        '''
-        Open an IB Statement in html form
-        '''
-        if not os.path.exists(infile):
-            return
-        soup = BeautifulSoup(readit(infile), 'html.parser')
-        tbldivs = soup.find_all("div", id=lambda x: x and x.startswith('tbl'))
-        title = soup.find('title').text
-        self.parseTitle(title)
-        tables = dict()
-        tablenames = dict()
-        for tableTag in tbldivs:
-            continueit = True
-            tabKey = ''
-            for key in ['tblAccountInformation', 'tblOpenPositions', 'tblLongOpenPositions',
-                        'tblShortOpenPositions', 'tblTransactions', 'tblTrades']:
-                if tableTag['id'].startswith(key):
-                    continueit = False
-                    tabKey = key[3:]
-                    break
-            if continueit:
-                continue
-
-            tab = tableTag.find("table")
-            if not tab:
-                continue
-            df = pd.read_html(str(tab))
-            assert len(df) == 1
-            df = df[0]  # .replace(np.nan, '')
-            tables[tabKey] = df
-        if 'Transactions' not in tables.keys() and 'Trades' not in tables.keys():
-            msg = 'The statment lacks a trades table.'
-            return dict(), msg
-        self.doctorHtmlTables(tables)
-
-        posTab = None
-        if 'OpenPositions' in tables.keys():
-            posTab = tables['OpenPositions']
-            tables['Trades'] = self.figureBAPL(tables['Trades'], posTab)
-
-            ibdb = StatementDB(source='IB', db=self.db)
-            ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate, openPos=posTab)
-            for key in tables:
-                tablenames[key] = key
-            tablenames[tabKey] = tabKey
-            return tables, tablenames
-        return dict(), 'This statement lacks any overnight information.'
-
     def openIBStatement(self, infile):
         '''
         Open an IB Statement in either csv or html form
@@ -409,6 +184,8 @@ class IbStatement:
             # msg = 'Only htm or csv files are recognized'
             msg = 'Only csv files are currently supported'
             return dict(), msg
+
+    
 
     def openIBStatementCSV(self, infile):
         '''
@@ -670,7 +447,7 @@ class IbStatement:
         # TODO This is the third of three methods that do similar things. Its a bit complex and
         # is bound to produce errors. Eventually, this method, figureBAPL and figureAPL should be
         # combined or at least share code.
-        
+
         rc = self.rc
         ibdb = StatementDB(db=self.db, source='IB')
         t[rc.bal] = np.nan
@@ -753,67 +530,7 @@ class IbStatement:
                 return pd.DataFrame()
         return newdf
 
-    def openTradeFlexCSV(self, infile):
-        '''
-        Open a Trade flex statement csv file. This is a single table file. The headers are in the
-        top row so just reading it with read_csv will collect them. This table is missing the
-        Open/Close data.
-        '''
-        df = pd.read_csv(infile)
-        self.inputType = 'T_FLEX'
-        rc = self.rc
-
-        # This one table file has no tableid
-        currentcols = list(df.columns)
-        ourcols = self.getColsByTabid('FlexTrades')
-        ourcols, missingcols = self.verifyAvailableCols(currentcols, ourcols, 'DailyTrades')
-        df = df[ourcols].copy()
-        df = df.rename(columns={'Date/Time': 'DateTime', 'Code': 'Codes',
-                                'ClientAccountID': 'Account'})
-
-        lod = df['LevelOfDetail'].str.lower().unique()
-        if 'order' in lod:
-            pass
-        elif 'execution' in lod:
-            if 'OrderID' in missingcols:
-                msg = 'This table contains transaction level data but lacks OrderID.'
-                return dict(), msg
-            else:
-                # df = df.rename(columns={'OrderID': 'IBOrderID'})
-                df = self.combinePartialsFlexTrade(df)
-        else:
-            # TODO 2019-07-03 if this never trips, blitz the statmement for just in case
-            raise ValueError("If this trips, detemine if the data is savlagable")
-        # if len(df) < 1:
-        if df.empty:
-            msg = 'This statement has no trades.'
-            return dict(), msg
-
-        # The Codes col acks the OpenClose codes so were done with it.
-        df = df.drop(['LevelOfDetail', 'Codes'], axis=1)
-        df = self.unifyDateFormat(df)
-        self.account = df['Account'].unique()[0]
-
-        beg = df['DateTime'].min()
-        end = df['DateTime'].max()
-        assert beg
-        assert end
-        try:
-            self.beginDate = pd.Timestamp(beg).date()
-            self.endDate = pd.Timestamp(end).date()
-        except ValueError:
-            msg = f'Unknown date format error: {beg}, {end}'
-            return dict(), dict()
-        df = df.rename(columns={'Symbol': rc.ticker, 'Quantity': rc.shares})
-        x = self.cheatForBAPL(df)
-        if not x.empty:
-            ibdb = StatementDB(db=self.db, source='IB')
-            ibdb.processStatement(x, self.account, self.beginDate, self.endDate)
-            df = x.copy()
-            return {'Trades': df}, {'Trades': 'Trades'}
-
-        return {'Trades': df}, {'Trades': 'Trades'}
-
+    
     def combineOrdersByTime(self, t):
         '''
         There are a few seperate orders for equities that share the same order time. These cannot
@@ -1135,6 +852,8 @@ class IbStatement:
 
     def getColsByTabid(self, tabid):
         '''
+        html statments and all trade type statements are no longer supported.
+        But leaving the column information here. 
         Using the tableids from the Flex queries and other Statements, we are interetsed in these
         tables only and in the columns we define here only.
         The column headers are a subset as found in the input files. returns different
@@ -1221,18 +940,19 @@ def localStuff():
     # files['annual'] = ['U242.csv', getBaseDir]
 
     # files['stuff'] = ['U2.csv', getDirectory]
-    # files['stuff'] = ['FlexMonth.csv', getDirectory]
+    files['stuff'] = ['FlexMonth.activity.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
     # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
     # files['U242'] = ['U242.csv', getDirectory]
-    files['csvtrades'] = ['644223.csv', getDirectory]
     # files['multi'] = ['MULTI', getDirectory]
     # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
-    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
     # files['act'] = ['ActivityStatement.html', getDirectory]
+
+    # files['csvtrades'] = ['644223.csv', getDirectory]
+    # files['dtr'] = ['DailyTradeReport.html', getDirectory]
     # files['atrade'] = ['trades.643495.html', getDirectory]
+    # files['flexTid'] = ['TradeFlexMonth.csv', getDirectory]
 
     # das = 'trades.csv'                        # Search verbatim with searchParts=False
     # TODO How to reconcile IB versus DAS input?
@@ -1253,7 +973,8 @@ def localStuff():
 
             if x[1] and not x[0]:
                 badfiles.append([f, x[1]])
-                print("\nBAD", f, '\n', x[1])
+                # print("\nBAD", f, '\n', x[1])
+                print("BAD", f)
             #     msg = f'\nStatement {f} \n{x[1]}'
             #     print(msg)
         # print()
