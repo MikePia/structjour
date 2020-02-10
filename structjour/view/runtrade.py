@@ -36,6 +36,8 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.statement import getStatementType
 from structjour.stock.utilities import pd2qtime
+from structjour.utilities.util import autoGenCreateDirs
+
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.stock.utilities import qtime2pd
@@ -134,7 +136,6 @@ class runController:
                           mydevel=True)
 
         lf = LayoutForms(self.sc, jf, None)
-
 
         if not lf.loadTradesFromDB(daDate):
             msg = f'No user data has been saved for {daDate.strftime("%A %B %d")}. Loading trade data.'
@@ -302,7 +303,7 @@ class runController:
             self.sc.saveTradeObject(oldDate)
 
 
-def setuplog():
+def setuplog(settings):
     # basicConfig args level, filename, filemode, format
     settings = QSettings('zero_substance', 'structjour')
     level = settings.value('logfile_level', 'Debug')
@@ -323,7 +324,9 @@ def setuplog():
 
 def main():
     '''Run some local code'''
-    setuplog()
+    settings = QSettings('zero_substance', 'structjour')
+    setuplog(settings)
+    autoGenCreateDirs(settings)
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     os.chdir(os.path.realpath('../../'))

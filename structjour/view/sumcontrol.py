@@ -38,6 +38,7 @@ import pandas as pd
 
 from structjour.inspiration.inspire import Inspire
 from structjour.statements.ibstatementdb import StatementDB
+from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
 from structjour.view.filesetcontrol import FileSetCtrl
 from structjour.view.ejcontrol import EJControl
@@ -171,6 +172,7 @@ class SumControl(QMainWindow):
         self.ui.actionDB_Doctor.triggered.connect(self.dbDoctor)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
         self.ui.actionExport_TradeLog.triggered.connect(self.disciplineTradeLog)
+        self.ui.actionCreate_Directories.triggered.connect(self.createDirDlg)
 
         # Set the file related widgets
         d = pd.Timestamp.today()
@@ -1264,6 +1266,9 @@ class SumControl(QMainWindow):
     def disciplineTradeLog(self):
         self.w = DisciplineControl()
         self.w.show()
+
+    def createDirDlg(self):
+        self.w = CreateDirs()
 
 def verifyNameInfo(daDate, s):
     '''

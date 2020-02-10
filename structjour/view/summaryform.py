@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.1
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -16,7 +16,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(1868, 1546)
         MainWindow.setMouseTracking(True)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("../images/ZSLogo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(".\\../images/ZSLogo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -1127,7 +1127,7 @@ class Ui_MainWindow(object):
         self.chart1.setAcceptDrops(True)
         self.chart1.setStyleSheet("border: 1px solid black")
         self.chart1.setText("")
-        self.chart1.setPixmap(QtGui.QPixmap("../images/ZeroSubstanceCreation.png"))
+        self.chart1.setPixmap(QtGui.QPixmap(".\\../images/ZeroSubstanceCreation.png"))
         self.chart1.setObjectName("chart1")
         self.verticalLayout_4.addWidget(self.chart1)
         self.horizontalLayout_2.addLayout(self.verticalLayout_4)
@@ -1175,7 +1175,7 @@ class Ui_MainWindow(object):
         self.chart2.setMinimumSize(QtCore.QSize(500, 0))
         self.chart2.setStyleSheet("border: 1px solid black")
         self.chart2.setText("")
-        self.chart2.setPixmap(QtGui.QPixmap("../images/ZeroSubstanceCreation.png"))
+        self.chart2.setPixmap(QtGui.QPixmap(".\\../images/ZeroSubstanceCreation.png"))
         self.chart2.setObjectName("chart2")
         self.verticalLayout_6.addWidget(self.chart2)
         self.horizontalLayout_6.addLayout(self.verticalLayout_6)
@@ -1220,7 +1220,7 @@ class Ui_MainWindow(object):
         self.chart3.setMinimumSize(QtCore.QSize(500, 0))
         self.chart3.setStyleSheet("border: 1px solid black")
         self.chart3.setText("")
-        self.chart3.setPixmap(QtGui.QPixmap("../images/ZeroSubstanceCreation.png"))
+        self.chart3.setPixmap(QtGui.QPixmap(".\\../images/ZeroSubstanceCreation.png"))
         self.chart3.setObjectName("chart3")
         self.verticalLayout_5.addWidget(self.chart3)
         self.horizontalLayout_6.addLayout(self.verticalLayout_5)
@@ -1252,6 +1252,8 @@ class Ui_MainWindow(object):
         self.actionExport_to_Disciplined_TradeLog.setObjectName("actionExport_to_Disciplined_TradeLog")
         self.actionExport_TradeLog = QtWidgets.QAction(MainWindow)
         self.actionExport_TradeLog.setObjectName("actionExport_TradeLog")
+        self.actionCreate_Directories = QtWidgets.QAction(MainWindow)
+        self.actionCreate_Directories.setObjectName("actionCreate_Directories")
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
         self.menuFile.addAction(self.actionStock_API)
@@ -1259,6 +1261,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionStrategy_Browser)
         self.menuFile.addAction(self.actionDB_Doctor)
         self.menuFile.addAction(self.actionExport_TradeLog)
+        self.menuFile.addAction(self.actionCreate_Directories)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -1338,5 +1341,6 @@ class Ui_MainWindow(object):
         self.actionDB_Doctor.setText(_translate("MainWindow", "DB Doctor"))
         self.actionExport_to_Disciplined_TradeLog.setText(_translate("MainWindow", "Export to TradeLog"))
         self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
+        self.actionCreate_Directories.setText(_translate("MainWindow", "Create Directories"))
 from structjour.view.clickbrowser import ClickBrowser
 from structjour.view.clicklabel import ClickLabel

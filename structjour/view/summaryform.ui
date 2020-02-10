@@ -2200,6 +2200,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionStrategy_Browser"/>
     <addaction name="actionDB_Doctor"/>
     <addaction name="actionExport_TradeLog"/>
+    <addaction name="actionCreate_Directories"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -2245,6 +2246,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionExport_TradeLog">
    <property name="text">
     <string>Export TradeLog</string>
+   </property>
+  </action>
+  <action name="actionCreate_Directories">
+   <property name="text">
+    <string>Create Directories</string>
    </property>
   </action>
  </widget>
