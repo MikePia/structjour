@@ -25,16 +25,15 @@ import re
 import sys
 
 import pandas as pd
-from PyQt5.QtGui import QIcon, QPixmap, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
 
-from structjour.time import createDirsStructjour
 from structjour.view.filesettings import Ui_Dialog as FileSettingsDlg
 
 from structjour.stock.utilities import qtime2pd
 
-# pylint: disable = C0103
+
 class FileSetCtrl(QDialog):
     '''
     The file settings dialog. Top level dialg triggered by File->FileSettings menu. Display
@@ -85,8 +84,6 @@ class FileSetCtrl(QDialog):
         fui.structjourDbEdit.textChanged.connect(self.structjourDb)
         fui.tradeDbBtn.pressed.connect(self.tradeDbBrowse)
         fui.tradeDbEdit.textChanged.connect(self.tradeDb)
-
-        fui.createDirsBtn.pressed.connect(self.createDirs)
 
         fui.logfile_browse.pressed.connect(self.logfile_browse)
         fui.logfile_edit.textChanged.connect(self.logfile_edit)
@@ -141,15 +138,6 @@ class FileSetCtrl(QDialog):
             self.settings.setValue('theDate', daDate)
         fui.theDate.setDate(daDate)
 
-        lastDir = self.settings.value('lastDirCreated')
-        if lastDir:
-            dd = pd.Timestamp(lastDir)
-            year = dd.strftime('%Y')
-            month = dd.strftime('%B')
-            fui.createDirsYear.setCurrentText(year)
-            fui.createDirsMonth.setCurrentText(month)
-
-
         self.exec()
 
     def logfile_level(self, x):
@@ -175,28 +163,8 @@ class FileSetCtrl(QDialog):
             self.fui.logfile_edit.setStyleSheet("color: red;")
         else:
             self.fui.logfile_edit.setStyleSheet("color: green;")
-        
+
         self.settings.setValue('logfile', path)
-
-    def createDirs(self):
-        '''Create the sub directories in the journal directory'''
-        m = pd.Timestamp(f'{self.fui.createDirsMonth.currentText()} {self.fui.createDirsYear.currentText()}')
-        try:
-            createDirsStructjour(m)
-        except ValueError as m:
-            if m.args[0].startswith('Directory Already'):
-                msg = f'<h3>{m.args[0]}</h3>'
-                msg += f'<p>{m.args[1]}</p>'
-                msgbx = QMessageBox()
-                msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
-                msgbx.setText(msg)
-                msgbx.exec()
-            else:
-                raise ValueError(m)
-        else:
-            self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
-            
-
 
     def structjourDbBrowse(self):
         '''
@@ -209,7 +177,6 @@ class FileSetCtrl(QDialog):
         if path[0]:
             self.fui.structjourDbEdit.setText(path[0])
         # self.settings.setValue('structjourDb', path[0])
-        
 
     def structjourDb(self):
         '''
@@ -220,7 +187,7 @@ class FileSetCtrl(QDialog):
             self.fui.structjourDbEdit.setStyleSheet("color: red;")
         else:
             self.fui.structjourDbEdit.setStyleSheet("color: green;")
-        
+
         self.settings.setValue('structjourDb', path)
 
     def tradeDbBrowse(self):
@@ -234,8 +201,7 @@ class FileSetCtrl(QDialog):
         if path[0]:
             self.fui.tradeDbEdit.setText(path[0])
         # self.settings.setValue('tradeDb', path[0])
-        
-    
+
     def tradeDb(self):
         '''
         Set the tradeDB settings from the widget and color the widget text showing existance/not.
@@ -248,14 +214,9 @@ class FileSetCtrl(QDialog):
 
         self.settings.setValue('tradeDb', path)
 
-
-
-
-
-
     def setDisciplinedBrowse(self):
         '''
-        Open a file browse dialog and set the results to 'disciplinedEdit'. 
+        Open a file browse dialog and set the results to 'disciplinedEdit'.
         '''
 
         # path = QFileDialog.getExistingDirectory(None, "Select Directory")
@@ -274,7 +235,6 @@ class FileSetCtrl(QDialog):
         else:
             self.fui.disciplinedEdit.setStyleSheet("color: green;")
             self.settings.setValue('disciplined', path)
-
 
     def closeit(self):
         '''Nothing done here'''
@@ -299,7 +259,7 @@ class FileSetCtrl(QDialog):
         '''
         now = pd.Timestamp.today().date()
         if now.weekday() > 4:
-            now = now - pd.Timedelta(days=now.weekday()-4)
+            now = now - pd.Timedelta(days=now.weekday() - 4)
         now = QDate(now)
         self.settings.setValue('theDate', now)
         self.fui.theDate.setDate(now)
@@ -324,7 +284,6 @@ class FileSetCtrl(QDialog):
             self.fui.outdirLbl.setStyleSheet('color: green')
         else:
             self.fui.outdirLbl.setStyleSheet('color: red')
-
 
         self.settings.setValue('outdir', odd)
         self.fui.outdir.setText('out/')
@@ -434,7 +393,7 @@ class FileSetCtrl(QDialog):
     def setDASInfile2Default(self):
         '''Set the default name of 'positions.csv'''
         self.fui.dasInfile2.setText('positions.csv')
-    
+
     def setDASInfile2(self):
         '''Set the default name of positions.csv'''
         fname = self.fui.dasInfile2.text()
@@ -464,7 +423,6 @@ class FileSetCtrl(QDialog):
         else:
             self.fui.dasInfileLbl.setStyleSheet("color: red;")
         self.settings.setValue('dasInfile', fname)
-
 
     def setTheScheme(self, scheme):
         '''
@@ -529,7 +487,7 @@ class FileSetCtrl(QDialog):
             self.fui.journal.setStyleSheet("color: green;")
             self.settings.setValue('journal', path)
 
-    #============== DUPLICATED WHILE MOVING STUFF ================== FIX LATER  or not =======
+    # ============== DUPLICATED WHILE MOVING STUFF ================== FIX LATER  or not =======
     # It is convenient having these two nudgy accessors in a more central object. duplication
     # smooplication. Its not that hard or time consuming as long as it is clear.
 
@@ -575,6 +533,7 @@ class FileSetCtrl(QDialog):
                 # LOG THIS
                 logging.error(ex)
         return outdir
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
