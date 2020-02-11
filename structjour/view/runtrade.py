@@ -323,7 +323,7 @@ def setuplog(settings):
 
 
 def main():
-    '''Run some local code'''
+    '''This is the runner for the application'''
     settings = QSettings('zero_substance', 'structjour')
     setuplog(settings)
     autoGenCreateDirs(settings)

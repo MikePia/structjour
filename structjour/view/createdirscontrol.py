@@ -72,12 +72,20 @@ class CreateDirs(QDialog):
             self.ui.createDirsYear.setCurrentText(year)
             self.ui.createDirsMonth.setCurrentText(month)
 
-
         if not testSettings:
             self.show()
 
     def createDirs(self):
         '''Create the sub directories in the journal directory'''
+        if not self.settings.value('journal') or self.settings.value('journal') == "":
+            if hasattr(self, 'debug') and self.debug:
+                return ""
+            msg = f'<h3>Please select a journal directory</h3>'
+            msg += f'<p>Go to file->filesettings and select a location for your journal files.</p>'
+            msgbx = QMessageBox()
+            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
+            msgbx.setText(msg)
+            msgbx.exec()
         m = pd.Timestamp(f'{self.ui.createDirsMonth.currentText()} {self.ui.createDirsYear.currentText()}')
         try:
             theDir = createDirsStructjour(m, self.settings)
@@ -94,7 +102,7 @@ class CreateDirs(QDialog):
         else:
             # self.settings.setValue('lastDir')
             self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
-            if self.debug:
+            if hasattr(self, 'debug') and self.debug:
                 return theDir
             msg = f'<h3>Directories created</h3>'
             msg += f'<p>under {theDir}</p>'

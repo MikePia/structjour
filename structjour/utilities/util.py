@@ -27,10 +27,11 @@ from structjour.time import createDirsStructjour
 def autoGenCreateDirs(settings, testDate=None):
     '''
     Create the journal directories for the current month and next month. The QSettings
-    value for directories_autogen must not be false or just return quietly.
+    value journal must exist and the value for directories_autogen must not be false or
+    just return quietly.
     :params testDate: Override the date. Intended for testing only
     '''
-    if not settings.value('directories_autogen', True, bool):
+    if not settings.value('directories_autogen', True, bool) or not settings.value('journal'):
         return None, None
     theDate = pd.Timestamp.now()
     if testDate:

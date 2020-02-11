@@ -44,20 +44,25 @@ class TestCreateDirsControl(TestCase):
         self.regkey = 'zero_substance/test'
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
-        self.settings = QSettings(self.regkey, 'structjour')
-        realSettings = QSettings('zero_substance', 'structjour')
-        self.settings.setValue('scheme', realSettings.value('scheme'))
 
     def setUp(self):
+        self.settings = QSettings(self.regkey, 'structjour')
+        realSettings = QSettings('zero_substance', 'structjour')
+        # This setting required in createDirs
+        self.settings.setValue('scheme', realSettings.value('scheme'))
         self.settings.setValue('directories_autogen', 'true')
         cwd = os.getcwd()
         self.test_jdir = os.path.join(cwd, 'test/journal_test')
         self.settings.setValue('journal', self.test_jdir)
         self.w = CreateDirs(testSettings=self.settings)
+        self.w.debug = True
 
     def tearDown(self):
-        pass
-        # self.settings.clear()
+        # pass
+        self.settings.clear()
+        self.settings.sync()
+        if os.path.exists(self.test_jdir):
+            rmtree(self.test_jdir)
         # self.settings.remove(self.regkey)
 
     def test_enableAutoGen(self):
@@ -78,10 +83,15 @@ class TestCreateDirsControl(TestCase):
         cb_year.setCurrentIndex(cb_year.count() - 1)
         cb_month.setCurrentIndex(cb_month.count() - 1)
         # m = pd.Timestamp(f'{cb_year.currentText()} {cb_month.currentText()}')
-        self.w.debug = True
+
         theDir = self.w.createDirs()
         self.assertTrue(os.path.exists(theDir))
-        rmtree(self.test_jdir)
+
+    def test_CreateDirs_fail(self):
+        self.settings.setValue('journal', "")
+        theDir = self.w.createDirs()
+        self.assertEqual(theDir, "")
+        self.settings.setValue('journal', self.test_jdir)
 
 
 if __name__ == '__main__':
