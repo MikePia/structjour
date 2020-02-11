@@ -24,10 +24,17 @@ import pandas as pd
 from structjour.time import createDirsStructjour
 
 
-def autoGenCreateDirs(settings):
+def autoGenCreateDirs(settings, testDate=None):
+    '''
+    Create the journal directories for the current month and next month. The QSettings
+    value for directories_autogen must not be false or just return quietly.
+    :params testDate: Override the date. Intended for testing only
+    '''
     if not settings.value('directories_autogen', True, bool):
-        return
+        return None, None
     theDate = pd.Timestamp.now()
+    if testDate:
+        theDate = testDate
     nextMonth = pd.Timestamp(theDate.year, theDate.month + 1, 1)
     jdir = settings.value('journal')
     scheme = settings.value('scheme')
@@ -42,4 +49,4 @@ def autoGenCreateDirs(settings):
         createDirsStructjour(theDate)
     if not os.path.exists(theDir2):
         createDirsStructjour(nextMonth)
-
+    return theDir1, theDir2

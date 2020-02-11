@@ -21,7 +21,6 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
- 
 # pylint: disable = C0103, C0301
 
 # strftime formats:
@@ -36,12 +35,17 @@ from PyQt5.QtCore import QSettings
 # Implementing the following file structure names
 # theMonth.strftime("_%Y%m_%B")) // theDate.strftime(_%m%d_%A")
 
-def createDirsStructjour(theDate):
+
+def createDirsStructjour(theDate, testSettings=None):
     '''
     Wrapper to createDirs take care of the structjour journal directory and naming scheme from
     QSettings
+    :params testSettings: Override standard QSettings key. Intended for testing.
     '''
-    settings = QSettings('zero_substance', 'structjour')
+    if testSettings:
+        settings = testSettings
+    else:
+        settings = QSettings('zero_substance', 'structjour')
 
     jdir = settings.value('journal')
     scheme = settings.value('scheme')
@@ -51,6 +55,8 @@ def createDirsStructjour(theDate):
     theDir = theDate.strftime(schemex[0])
     theDir = os.path.join(jdir, theDir)
     createDirs(theDate, theDir, frmt=schemex[1])
+    return theDir
+
 
 def createDirs(theDate, theDir, frmt="_%m%d_%A"):
     '''
@@ -58,7 +64,7 @@ def createDirs(theDate, theDir, frmt="_%m%d_%A"):
     theDate to and the format given to create the names.
     :params theDate: A datetime object giving the starting date for the directories.
     :params theDir: The month directory in which to create the subdirectories. This subdir will
-        generally be placed in cwd. 
+        generally be placed in cwd.
     :params frmt: The strftime format used to create the directories.
     '''
     # theDate = dt.datetime(2019, 6, 3)
@@ -84,6 +90,7 @@ def createDirs(theDate, theDir, frmt="_%m%d_%A"):
 
     os.chdir(cwd)
 
+
 def getFirstWeekday(theMonth=None, theDir=None):
     '''
     The interactive portion of this method is deprectaed and will be removed at a future time.
@@ -105,11 +112,11 @@ def getFirstWeekday(theMonth=None, theDir=None):
         if len(ds) < 1:
             print(" You do not appear to be in your journal directory")
             return -1
-        dsw = ds[len(ds)-1]
+        dsw = ds[len(ds) - 1]
         if "journal" not in dsw.lower():
             print()
             print(f'''You don't appear to be in a journal folder.
-        {d} 
+        {d}
         Would you like to continue any way?  (y/n) : ''')
             r = input()
             if not r.lower().startswith('y'):
@@ -130,19 +137,20 @@ def getFirstWeekday(theMonth=None, theDir=None):
                     raise ValueError('Please use yyyymm or yyyy-mm')
                 r = r + '-01' if r.find('-') > 0 else r + '01'
                 theMonth = pd.Timestamp(r)
-            except  ValueError:
+            except ValueError:
                 print("I didn't understand that. (q to quit)")
                 continue
     #         r=input(f"{theDay.strftime('%B %Y')} Is this the month?")
             break
     theMonth = pd.Timestamp(theMonth)
     # print(theMonth)
-    advancedays = 8 - theMonth.isoweekday()  if theMonth.isoweekday() > 5 else 0
+    advancedays = 8 - theMonth.isoweekday() if theMonth.isoweekday() > 5 else 0
 
     day = 1 + advancedays
     theDay = dt.datetime(theMonth.year, theMonth.month, day)
 
     return theDay, theDir
+
 
 def main():
     # outdir = os.getcwd()
@@ -154,6 +162,7 @@ def main():
 
     monthDir = os.path.join(journaldir, theDate.strftime("_%Y%m_%B"))
     createDirs(theDate, monthDir)
+
 
 if __name__ == '__main__':
     main()

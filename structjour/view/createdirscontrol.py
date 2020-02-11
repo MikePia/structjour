@@ -33,9 +33,20 @@ from PyQt5.QtCore import QSettings
 
 
 class CreateDirs(QDialog):
-    def __init__(self):
+    '''
+    CreateDirs is a dialog that enables the user to disable the auto gen of directories
+    and provides a facility to choose what months of subdirectories to be created.
+    '''
+    def __init__(self, testSettings=None):
+        '''
+        :params testSettings: Override the settings key. Intended for testing. Proividing
+            a value for testSettings will prevent show from being called.
+        '''
         super().__init__(parent=None)
-        self.settings = QSettings('zero_substance', 'structjour')
+        if testSettings:
+            self.settings = testSettings
+        else:
+            self.settings = QSettings('zero_substance', 'structjour')
 
         self.ui = CreateDirsDialog()
         self.ui.setupUi(self)
@@ -53,13 +64,14 @@ class CreateDirs(QDialog):
             self.ui.disabledRb.setChecked(True)
             self.disableAutoGen()
 
-        self.show()
+        if not testSettings:
+            self.show()
 
     def createDirs(self):
         '''Create the sub directories in the journal directory'''
         m = pd.Timestamp(f'{self.ui.createDirsMonth.currentText()} {self.ui.createDirsYear.currentText()}')
         try:
-            theDir = createDirsStructjour(m)
+            theDir = createDirsStructjour(m, self.settings)
         except ValueError as m:
             if m.args[0].startswith('Directory Already'):
                 msg = f'<h3>{m.args[0]}</h3>'
@@ -71,7 +83,8 @@ class CreateDirs(QDialog):
             else:
                 raise ValueError(m)
         else:
-
+            if self.debug:
+                return theDir
             msg = f'<h3>Directories created</h3>'
             msg += f'<p>under {theDir}</p>'
             msgbx = QMessageBox()
@@ -79,6 +92,7 @@ class CreateDirs(QDialog):
             msgbx.setText(msg)
             msgbx.exec()
             self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
+        return theDir
 
     def disableAutoGen(self):
         self.settings.setValue('directories_autogen', 'false')
