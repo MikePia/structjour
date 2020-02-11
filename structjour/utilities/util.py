@@ -49,4 +49,5 @@ def autoGenCreateDirs(settings, testDate=None):
         createDirsStructjour(theDate)
     if not os.path.exists(theDir2):
         createDirsStructjour(nextMonth)
+    settings.setValue('lastDirCreated', nextMonth.strftime('%Y%m01'))
     return theDir1, theDir2

@@ -64,6 +64,15 @@ class CreateDirs(QDialog):
             self.ui.disabledRb.setChecked(True)
             self.disableAutoGen()
 
+        lastDir = self.settings.value('lastDirCreated')
+        if lastDir:
+            dd = pd.Timestamp(lastDir)
+            year = dd.strftime('%Y')
+            month = dd.strftime('%B')
+            self.ui.createDirsYear.setCurrentText(year)
+            self.ui.createDirsMonth.setCurrentText(month)
+
+
         if not testSettings:
             self.show()
 
@@ -83,6 +92,8 @@ class CreateDirs(QDialog):
             else:
                 raise ValueError(m)
         else:
+            # self.settings.setValue('lastDir')
+            self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
             if self.debug:
                 return theDir
             msg = f'<h3>Directories created</h3>'
@@ -91,7 +102,6 @@ class CreateDirs(QDialog):
             msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
-            self.settings.setValue('lastDirCreated', m.strftime('%Y%m01'))
         return theDir
 
     def disableAutoGen(self):
