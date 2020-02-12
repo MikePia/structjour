@@ -23,7 +23,6 @@ single day minute charts (1,5, 10 min etc)
 '''
 import datetime as dt
 import os
-import random
 import re
 
 import matplotlib
@@ -31,9 +30,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.dates as mdates
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import pandas as pd
-import PyQt5
 from matplotlib import markers, style
 from matplotlib.ticker import FuncFormatter
 from mpl_finance import candlestick_ohlc
@@ -139,26 +136,29 @@ class FinPlot:
     def getGridLines(self):
         y = self.chartSet.value('gridh', False, bool)
         x = self.chartSet.value('gridv', False, bool)
-        val = (True, 'both') if x and y else (True,'x') if x else (True,'y') if y else (False, None)
+        val = (True, 'both') if x and y else (True, 'x') if x else (True, 'y') if y else (False, None)
         return val
 
     def volFormat(self, vol, pos):
+        '''
+        A helper callback for ax2.yaxis.set_major_formatter
+        '''
         if vol < 1000:
             return vol
         elif vol < 1000000:
-            vol = vol/1000
+            vol = vol / 1000
             vol = '{:0.1f}K'.format(vol)
             return vol
         elif vol < 1000000000:
-            vol = vol/1000000
+            vol = vol / 1000000
             vol = '{:0.1f}M'.format(vol)
             return vol
         elif vol < 1000000000000:
-            vol = vol/1000000000
+            vol = vol / 1000000000
             vol = '{:0.1f}B'.format(vol)
             return vol
         else:
-            vol = vol/1000000000000
+            vol = vol / 1000000000000
             vol = '{:0.1f}Tr'.format(vol)
             return vol
 
@@ -201,7 +201,7 @@ class FinPlot:
     def apiChooserList(self, start, end, api=None):
         '''
         Given the current list of apis as av, bc, wtd, fh and ib, determine if the given api will
-            likely return data for the given times. 
+            likely return data for the given times.
         :params start: A datetime object or time stamp indicating the intended start of the chart.
         :params end: A datetime object or time stamp indicating the intended end of the chart.
         :params api: Param must be one of mab, bc, fh or ib. If given, the return value in
@@ -212,7 +212,7 @@ class FinPlot:
         '''
         start = pd.Timestamp(start)
         end = pd.Timestamp(end)
-        n = pd.Timestamp.now() + dt.timedelta(0, 60*120)        # Adding 2 hours for NY time
+        n = pd.Timestamp.now() + dt.timedelta(0, 60 * 120)        # Adding 2 hours for NY time
 
         violatedRules = []
         suggestedApis = self.preferences
@@ -237,25 +237,24 @@ class FinPlot:
                 'Barchart free data will not yesterdays data after 12 till today at  16:30')
 
         # Rule 2 No support any charts greater than 7 days prior to today for Alphavantage
-        # Rule 2 No support any charts greated than 7 days prior to tody for World Trade Data 
+        # Rule 2 No support any charts greated than 7 days prior to tody for World Trade Data
         # Rule 2 No support any charts greater than 30 days for Barchart
         if n > start:
             delt = n - start
             if delt.days > 31 and 'bc' in suggestedApis:
                 suggestedApis.remove('bc')
-                lastday = n-pd.Timedelta(days=31)
-                violatedRules.append('Barchart data before {} is unavailable.'.format(
-                lastday.strftime("%b %d")))
+                lastday = n - pd.Timedelta(days=31)
+                violatedRules.append('Barchart data before {} is unavailable.'.format(lastday.strftime("%b %d")))
             if delt.days > 6 and 'av' in suggestedApis:
                 suggestedApis.remove('av')
-                lastday = n-pd.Timedelta(days=6)
+                lastday = n - pd.Timedelta(days=6)
                 violatedRules.append('AlphaVantage data before {} is unavailable.'.format(
                     lastday.strftime("%b %d")))
             if delt.days > 6 and 'wtd' in suggestedApis:
                 suggestedApis.remove('wtd')
-                lastday = n-pd.Timedelta(days=6)
+                lastday = n - pd.Timedelta(days=6)
                 violatedRules.append('WorldTradeData data before {} is unavailable in 1 minute candles.'.format(
-                    lastday.strftime("%b %d")))            
+                    lastday.strftime("%b %d")))
 
         # Rule 3 Don't call ib if the library is not installed
         # Rule 4 Don't call ib if its not connected
@@ -264,8 +263,8 @@ class FinPlot:
                 suggestedApis.remove('ib')
                 violatedRules.append('IBAPI is not connected.')
         elif 'ib' in suggestedApis:
-             suggestedApis.remove('ib')
-             violatedRules.append('IBAPI is not installed')
+            suggestedApis.remove('ib')
+            violatedRules.append('IBAPI is not installed')
 
         # Rule 5 No data is available for the future
         if start > n:
@@ -293,7 +292,6 @@ class FinPlot:
         if not fh_key and 'fh' in suggestedApis:
             suggestedApis.remove('fh')
             violatedRules.append('There is no apikey in the database for finnhub')
-            
 
         api = api in suggestedApis if api else False
 
@@ -342,8 +340,8 @@ class FinPlot:
             xtime = 60
         else:
             xtime = 180
-        begin = begin - dt.timedelta(0, xtime*60)
-        end = end + dt.timedelta(0, xtime*60)
+        begin = begin - dt.timedelta(0, xtime * 60)
+        end = end + dt.timedelta(0, xtime * 60)
 
         # If beginning is before 10:15-- show the opening
         mopen = dt.datetime(beginday.year, beginday.month, beginday.day, 9, 30)
@@ -390,7 +388,7 @@ class FinPlot:
         if self.style:
             style.use(self.style)
 
-        ################ Prepare data ##############
+        # ############### Prepare data ##############
         # Get the data and prepare the DtaFrames from some stock api
         meta, df, maDict = (self.apiChooser())(
             symbol, start=start, end=end, minutes=minutes)
@@ -405,8 +403,8 @@ class FinPlot:
 
         df_ohlc = df[['date', 'open', 'high', 'low', 'close']]
         df_volume = df[['date', 'volume']]
-        ################ End Prepare data ##############
-        ####### PLOT and Graph #######
+        # ############### End Prepare data ##############
+        # ###### PLOT and Graph #######
         colup = self.chartSet.value('colorup', 'g')
         coldown = self.chartSet.value('colordown', 'r')
         ax1 = plt.subplot2grid((6, 1), (0, 0), rowspan=5, colspan=1)
@@ -420,15 +418,15 @@ class FinPlot:
         fig.subplots_adjust(hspace=0)
 
         # candle width is a percentage of a day
-        width = (minutes*35)/(3600 * 24)
+        width = (minutes * 35) / (3600 * 24)
         candlestick_ohlc(ax1, df_ohlc.values, width, colorup=colup, colordown=coldown, alpha=.99)
 
         for date, volume, dopen, close in zip(df_volume.date.values, df_volume.volume.values,
                                               df_ohlc.open.values, df_ohlc.close.values):
             color = colup if close > dopen else 'k' if close == dopen else coldown
             ax2.bar(date, volume, width, color=color)
-        ####### END PLOT and Graph #######
-        ####### ENTRY MARKER STUFF #######
+        # ###### END PLOT and Graph #######
+        # ###### ENTRY MARKER STUFF #######
         markersize = self.chartSet.value('markersize', 90)
         edgec = self.chartSet.value('markeredgecolor', '#000000')
         alpha = float(self.chartSet.value('markeralpha', 0.5))
@@ -442,8 +440,8 @@ class FinPlot:
                 assert len(e.split(':')) == 3
                 e = pd.Timestamp(start.strftime('%Y-%m-%d ') + e)
 
-            candleIndex = int((e -df_ohlc.index[0]).total_seconds()/60//minutes)
-            if candleIndex < 0 or candleIndex > (len(df_ohlc)-1):
+            candleIndex = int((e - df_ohlc.index[0]).total_seconds() / 60 // minutes)
+            if candleIndex < 0 or candleIndex > (len(df_ohlc) - 1):
                 continue
             x = df_ohlc.index[candleIndex]
             y = entry[0]
@@ -453,12 +451,12 @@ class FinPlot:
             else:
                 facec = self.chartSet.value('markercolordown', 'r')
                 mark = 'v'
-            l = ax1.scatter(x, y, color=facec, marker=markers.MarkerStyle(
+            sc = ax1.scatter(x, y, color=facec, marker=markers.MarkerStyle(
                 marker=mark, fillstyle='full'), s=markersize, zorder=10)
-            l.set_edgecolor(edgec)
-            l.set_alpha(alpha)
-        ####### END MARKER STUFF #######
-        ##### TICKS-and ANNOTATIONS #####
+            sc.set_edgecolor(edgec)
+            sc.set_alpha(alpha)
+        # ###### END MARKER STUFF #######
+        # #### TICKS-and ANNOTATIONS #####
 
         ax1.yaxis.tick_right()
         ax2.yaxis.tick_right()
@@ -472,25 +470,25 @@ class FinPlot:
         ax2.yaxis.set_major_formatter(FuncFormatter(self.volFormat))
         plt.locator_params(axis='y', tight=True, nbins=2)
 
-        numcand = ((end-start).total_seconds()/60)//minutes
+        numcand = ((end - start).total_seconds() / 60) // minutes
         ax2.xaxis.set_major_locator(mdates.MinuteLocator(
             byminute=self.setticks(minutes, numcand)))
 
-        idx = int(len(df_ohlc.date)*.39)
+        idx = int(len(df_ohlc.date) * .39)
 
         ax1.annotate(f'{symbol} {minutes} minute', (df_ohlc.date[idx], df_ohlc.low.max()),
                      xytext=(0.4, 0.85), textcoords='axes fraction', alpha=0.35, size=16)
-        ##### END TICKS-and ANNOTATIONS #####
-        ####### ma, ema and vwap #######
-        MA1 = 9
-        MA2 = 20
-        MA3 = 50
-        MA4 = 200
-        MA5 = 'vwap'
+        # #### END TICKS-and ANNOTATIONS #####
+        # ###### ma, ema and vwap #######
+        # MA1 = 9
+        # MA2 = 20
+        # MA3 = 50
+        # MA4 = 200
+        # MA5 = 'vwap'
         if maDict:
             maSetDict = getMASettings()
             for ma in maSetDict[0]:
-                if not ma in maDict.keys():
+                if ma not in maDict.keys():
                     continue
                 ax1.plot(df_ohlc.date, maDict[ma], lw=1, color=maSetDict[0][ma][1], label=f'{ma}MA')
             if 'vwap' in maDict.keys():
@@ -498,11 +496,11 @@ class FinPlot:
         if self.legend:
             leg = ax1.legend()
             leg.get_frame().set_alpha(0.35)
-        ##### Adjust margins and frame
+        # #### Adjust margins and frame
         top = df_ohlc.high.max()
         bottom = df_ohlc.low.min()
-        margin=(top-bottom) * .08
-        ax1.set_ylim(bottom=bottom-margin, top=top+(margin*2))
+        margin = (top - bottom) * .08
+        ax1.set_ylim(bottom=bottom - margin, top=top + (margin * 2))
 
         ad = self.adjust
         plt.subplots_adjust(left=ad['left'], bottom=ad['bottom'], right=ad['right'],
@@ -528,7 +526,7 @@ def localRun():
     # tdy = dt.datetime.today()
 
     fp = FinPlot()
-    x = fp.apiChooserList('20190903 093000', '20190903 091400' )
+    fp.apiChooserList('20190903 093000', '20190903 091400')
     # fp.apiChooser()
     # odate = dt.datetime(2019, 1, 19, 9, 40)
     # cdate = dt.datetime(2019, 1, 19, 16, 30)

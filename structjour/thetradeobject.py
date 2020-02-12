@@ -404,6 +404,7 @@ sf = SumReqFields()
 
 class TheTradeObject:
     '''
+    Note that this is called when opening a trade from a statment. 
     Create the flattened version of a trade summary, that is, take the multiple transactions included
     in the trade_sum table and flatten the info to one row for use in the Qt/excel/whatever form.
     Manages

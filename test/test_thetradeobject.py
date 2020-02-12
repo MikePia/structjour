@@ -41,7 +41,7 @@ from structjour.colz.finreqcol import FinReqCol
 # Global
 grf = SumReqFields()
 
-@unittest.skip("Uses the old stuff in setup")
+# @unittest.skip("Uses the old stuff in setup")
 class TestTheTradeObject(unittest.TestCase):
     '''
     Test the functions in methods in thetradeobject module. The tests for TheTradeObject test the
@@ -277,17 +277,9 @@ def main():
 
 
 def notmain():
-    '''
-    Test discovery is not working in vscode. Use this for debugging.
-    Then run cl python -m unittest discovery
-    '''
-    f = TestTheTradeObject()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
+    unittest.main()
 
-            if isinstance(attr, types.MethodType):
-                attr()
+
 def reallylocal():
     f = TestTheTradeObject()
     f.test_TheTradeObjectSetDur()
@@ -303,5 +295,5 @@ def reallylocal():
 
 if __name__ == "__main__":
     # notmain()
-    main()
-    # reallylocal()
+    # main()
+    reallylocal()

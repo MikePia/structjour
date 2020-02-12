@@ -22,7 +22,6 @@ Created on September 2, 2019
 @author: Mike Petersen
 '''
 import logging
-import os
 import sys
 
 from PyQt5.QtCore import QSettings
@@ -32,6 +31,7 @@ from PyQt5.QtWidgets import QApplication, QDialog
 from structjour.view.duplicatetrade import Ui_Dialog as DupDialog
 from structjour.statements.dbdoctor import DbDoctor
 # pylint: disable = C0103
+
 
 class DupControl(QDialog):
     '''
@@ -67,10 +67,8 @@ class DupControl(QDialog):
 
         acnt = self.settings.value('account')
         self.ui.accountEdit.setText(acnt)
-        self.account=acnt
+        self.account = acnt
         self.dbdr = None
-
-
 
     def deleteTrade(self):
         ts_id = self.ui.deleteTradeEdit.text()
@@ -161,7 +159,7 @@ class DupControl(QDialog):
             return
         if self.nextRecord < self.numDups - 1:
             self.nextRecord += 1
-            if self.nextRecord == self.numDups -1:
+            if self.nextRecord == self.numDups - 1:
                 self.ui.showDupBtn.setEnabled(False)
             else:
                 self.ui.showDupBtn.setEnabled(True)
@@ -180,7 +178,6 @@ class DupControl(QDialog):
             self.account = acnt
         if self.dbdr:
             self.dbdr.account = acnt
-
 
     def showTrades(self):
         id1 = self.dups[self.nextRecord][0]
@@ -241,19 +238,13 @@ class DupControl(QDialog):
                     tstab.append(ts_2)
 
                 msg += self.dictToTable(tstab)
-            
+
         msg += '</body></html>'
-        
+
         self.ui.showDuplicate.setHtml(msg)
-        
         # self.ui.deleteTxBtn.setEnabled(True)
 
         
-
-                
-
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     # fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'

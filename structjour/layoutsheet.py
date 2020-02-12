@@ -43,7 +43,7 @@ from structjour.colz.finreqcol import FinReqCol
 from structjour.xlimage import XLImage
 from structjour.tradestyle import c as tcell
 from structjour.tradestyle import style_range
-from structjour.thetradeobject import TheTradeObject, SumReqFields
+from structjour.thetradeobject import SumReqFields
 
 # pylint: disable=C0103, C0201, W0703
 

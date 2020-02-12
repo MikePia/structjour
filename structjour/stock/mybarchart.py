@@ -29,7 +29,6 @@ import pandas as pd
 # from structjour.stock.picklekey import getKey as getReg
 from structjour.stock.utilities import ManageKeys, getLastWorkDay, movingAverage
 
-# pylint: disable = C0103, R0912, R0914, R0915
 
 def getApiKey():
     '''Returns the key for the barchart API
@@ -54,12 +53,12 @@ def getFaq():
     faq = '''
         https://www.barchart.com/ondemand/free-market-data-api/faq
         https://www.barchart.com/ondemand/api gives api for several dozen calls.
-        The free api is limited to getQuote and getHistory. 
+        The free api is limited to getQuote and getHistory.
             https://www.barchart.com/ondemand/free-market-data-api
         Exchanges iclude AMEX, NYSE, NASDAQ.
         Within the last couple of years, the free API shrunk without warning.
         Every user is able to make 400 getQuote queries and 150 getHistory queries per day.
-        When your daily API account query limit is reached, the data will be disabled then 
+        When your daily API account query limit is reached, the data will be disabled then
             reset until the next day.
         Pricing info for other apis requires you contact a sales person (shudder).
         '''
@@ -103,6 +102,7 @@ def setParams(symbol, minutes, startDay):
     params['jerq'] = 'true'
     return params
 
+
 # Not getting the current date-- maybe after the market closes?
 def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     '''
@@ -134,7 +134,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         start = getLastWorkDay(start)
     end = pd.to_datetime(end)
     start = pd.to_datetime(start)
-    startDay = start.strftime("%Y%m%d")
+    # startDay = start.strftime("%Y%m%d")
 
     # Get the maximum data in order to set the 200 MA on a 60 minute chart
     fullstart = pd.Timestamp.today()
@@ -143,7 +143,6 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
 
     params = setParams(symbol, minutes, fullstart)
 
-
     response = requests.get(BASE_URL, params=params)
     if showUrl:
         logging.info(response.url)
@@ -151,24 +150,18 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if response.status_code != 200:
         raise Exception(
             f"{response.status_code}: {response.content.decode('utf-8')}")
-    if (
-            response.text
-            and isinstance(response.text, str)
-            and response.text.startswith('You have reached')):
+    if (response.text and isinstance(response.text, str) and response.text.startswith('You have reached')):
         logging.warning(f'API max queries: {response.text}')
         meta = {'code': 666, 'message': response.text}
         return meta, pd.DataFrame(), None
-
 
     result = response.json()
     if not result['results']:
         logging.warning('''Failed to retrieve any data. Barchart sends the following greeting: {result['status']}''')
         return result['status'], pd.DataFrame(), None
 
-
     keys = list(result.keys())
     meta = result[keys[0]]
-
 
     # JSONTimeSeries = result[keys[1]]
     df = pd.DataFrame(result[keys[1]])
@@ -181,7 +174,6 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     df.set_index(df.timestamp, inplace=True)
     df.index.rename('date', inplace=True)
     maDict = movingAverage(df.close, df, start)
-
 
     if start > df.index[0]:
         rstart = df.index[0]
@@ -203,18 +195,15 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             meta['message'] = meta['message'] + msg
             return meta, df, maDict
 
-
     if end < df.index[-1]:
         df = df.loc[df.index <= end]
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
 
-
-
         # If we just sliced off all our data. Set warning message
         lendf = len(df)
         if lendf == 0:
-            msg =  '\nWARNING: all data has been removed.'
+            msg = '\nWARNING: all data has been removed.'
             msg = msg + f'\nThe Requested end was({end}).'
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
@@ -230,7 +219,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     for key in deleteMe:
         del maDict[key]
 
-    # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv 
+    # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv
     df = df[['open', 'high', 'low', 'close', 'volume']].copy(deep=True)
     return meta, df, maDict
 
@@ -239,16 +228,18 @@ def main():
     '''Local runs for debugging'''
     symbol = 'SQ'
     showUrl = True
-    end = '2019-02-28 15:30'
-    start = pd.Timestamp('2019-02-27')
+    end = '2020-01-28 15:30'
+    start = pd.Timestamp('2020-01-27')
     minutes = 1
     dummy, d, daMas = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
     print(len(d))
+
 
 def notmain():
 
     print(getApiKey())
 
+
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()

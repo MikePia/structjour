@@ -174,7 +174,7 @@ class IbStatement:
 
     def openIBStatement(self, infile):
         '''
-        Open an IB Statement in either csv or html form
+        Open an IB Statement
         '''
         if os.path.splitext(infile)[1] == '.csv':
             return self.openIBStatementCSV(infile)
@@ -209,6 +209,10 @@ class IbStatement:
         return dict(), dict()
 
     def fixNumericTypes(self, t):
+        '''
+        In the DataFrame t, change some types from str to numeric.
+        :params t: DataFrame, a Trades or TRNT table from an IbStatement
+        '''
         rc = self.rc
         if 'Quantity' in t.columns and t['Quantity'].any():
             if isinstance(t['Quantity'].iloc[0], str):
@@ -940,12 +944,12 @@ def localStuff():
     # files['annual'] = ['U242.csv', getBaseDir]
 
     # files['stuff'] = ['U2.csv', getDirectory]
-    files['stuff'] = ['FlexMonth.activity.csv', getDirectory]
+    # files['stuff'] = ['FlexMonth.activity.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.369463.csv', getDirectory]
     # files['flexAid'] = ['ActivityFlexMonth.csv', getDirectory]
-    # files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
-    # files['U242'] = ['U242.csv', getDirectory]
-    # files['multi'] = ['MULTI', getDirectory]
+    files['activityDaily'] = ['ActivityDaily.663710.csv', getDirectory]
+    files['U242'] = ['U242.csv', getDirectory]
+    files['multi'] = ['MULTI', getDirectory]
     # files['activityMonth'] = ['CSVMonthly.644225.csv', getDirectory]
     # files['act'] = ['ActivityStatement.html', getDirectory]
 
