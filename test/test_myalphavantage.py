@@ -31,7 +31,7 @@ from structjour.stock import myalphavantage as mav
 from structjour.stock import utilities as util
 # pylint: disable = C0103
 
-@unittest.skip('Leave to deal with later')
+# @unittest.skip('Leave to deal with later')
 class TestMyalphavantage(unittest.TestCase):
     '''Test methods and functions from the modulemyalphavantage'''
 
@@ -75,9 +75,9 @@ class TestMyalphavantage(unittest.TestCase):
             dummy, df, maDict = mav.getmav_intraday("SQ", start=start, end=end,
                                             minutes=minutes, showUrl=True)
 
-            print("Requested...", start, end)
-            print("Received ...", df.index[0], df.index[-1])
-            print("     ", len(df))
+            # print("Requested...", start, end)
+            # print("Received ...", df.index[0], df.index[-1])
+            # print("     ", len(df))
 
             self.assertGreater(len(df), 0)
 
@@ -115,33 +115,12 @@ class TestMyalphavantage(unittest.TestCase):
                 if newnextt < 0:
                     # It took a minute plus to get through those 5 calls- reset for the next 5
                     nextt = time() + 60
+                    count += 1
                     continue
                 nextt = newnextt
                 sleep(nextt)
 
             count = count + 1
-
-                # # Without getting too noodly, this code just won't run between 9 and 10
-                # if nowInNewYork.hour < 9:
-                #     self.assertEqual(len(df), 0)
-                # elif nowInNewYork.hour > 9 and nowInNewYork.hour < 16:
-
-                # check that we got content, from  the day we asked, at the beginning of the day,
-                # ending now or at 16:00 or just now With a HACKED IN @ HOURS FOR tiME ZONE
-
-                #     self.assertGreater(len(df), 0)
-                #     self.assertEqual(bizMorn.date(), df.index[0].date())
-                #     self.assertEqual(df.index[0].date(), df.index[-1].date())
-
-                #     delt = (nowInNewYork - df.index[-1])
-                #     self.assertLess(delt.seconds, 60*5)
-                #     print(now, df.index[-1])
-                #     print(delt.seconds)
-                # else:
-                #     quittingTime = dt.datetime(
-                #         now.year, now.month, now.day, 16, 0)
-                #     delt = quittingTime - df.index[-1]
-                #     self.assertLess(delt.seconds, 60*5)
 
     def test_ni(self):
         '''

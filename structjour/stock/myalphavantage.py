@@ -312,7 +312,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
                 metaj['message'] = msg
                 return metaj, pd.DataFrame(), maDict
     # If we don't have a full ma, delete -- Later:, implement a 'delayed start' ma in graphstuff
-    keys = maDict.keys()
+    keys = list(maDict.keys())
     for key in keys:
         if len(df) != len(maDict[key]):
             del maDict[key]
@@ -325,7 +325,7 @@ def notmain():
 
 if __name__ == '__main__':
     theDate = pd.Timestamp.today().date()
-    metaj, df, maDict = getmav_intraday('SQ', minutes=5, start = theDate)
+    metaj, df, maDict = getmav_intraday('SQ', minutes=5, start=theDate)
     print(df.head())
     # notmain()
 

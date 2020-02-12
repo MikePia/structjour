@@ -21,85 +21,119 @@
 
 Test methods in the class ibstatement.IbStatement
 '''
+
 import unittest
+from unittest import TestCase
+import pandas as pd
+
 from structjour.statements.ibstatement import IbStatement
+from structjour.statements.ibstatementdb import StatementDB
+
+from PyQt5.QtCore import QSettings
 
 
-class Test_StatementDB(unittest.TestCase):
-    '''
-    Test functions and methods in the ibstatementdb module
-    '''
+class TestIbStatement(TestCase):
     def __init__(self, *args, **kwargs):
-        def test_figureBAPL(self):
-            pass
+        super(TestIbStatement, self).__init__(*args, **kwargs)
+        self.fred = 'Fred'
+        self.db = 'test/test.sqlite'
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
 
-        def test_parseTitle(self):
-            pass
+        # The date of file1
+        self.theDate = '20191101'
+        self.testfile1 = 'data/ActivityDaily.663710.20191101.csv'
 
-        def test_combinePartialsHtml(self):
-            pass
+        self.testfile2 = "data/flex.369463.ActivityFlexMonth.20191008.20191106.csv"
 
-        def test_doctorHtmlTables(self):
-            pass
+    def test_openIbStatement(self):
 
-        def test_openIBStatementHtml(self):
-            pass
+        ibs = IbStatement(db=self.db)
+        ibdb = StatementDB(db=self.db)
+        ibdb.reinitializeTradeTables()
+        x = ibs.openIBStatement(self.testfile1)
+        self.assertIsNotNone(x)
+        self.assertIsInstance(x[0], dict)
+        self.assertTrue('TRNT' in x[0].keys() or 'Trades' in x[0].keys())
+        st = ibdb.getStatement(self.theDate)
+        self.assertIsInstance(st, pd.DataFrame)
+        self.assertGreater(len(st), 0)
 
-        def test_openIbStatement(self):
-            pass
+    def test_openIbStatement_notcsv(self):
+        ibs = IbStatement(db=self.db)
+        ibdb = StatementDB(db=self.db)
+        ibdb.reinitializeTradeTables()
+        x = ibs.openIBStatement('data\alittleOrgTODO.txt')
+        self.assertEqual(len(x[0]), 0)
 
-        def test_openIbStatementCSV(self):
-            pass
+    def test_fixNumericTypes(self):
+        df = pd.DataFrame(data=[['2,344.78', '126.99', '3.50']], columns=['Quantity', 'Price', 'Commission'])
+        df2 = pd.DataFrame(data=[['2,344.78', ]], columns=['Qty', ])
+        ibs = IbStatement()
+        t = ibs.fixNumericTypes(df)
+        t2 = ibs.fixNumericTypes(df2)
+        self.assertIsInstance(t['Quantity'].unique()[0], float)
+        self.assertIsInstance(t['Price'].unique()[0], float)
+        self.assertIsInstance(t['Commission'].unique()[0], float)
+        self.assertIsInstance(t2['Qty'].unique()[0], float)
 
-        def test_fixNumericTypes(self):
-            pass
+    def test_unifyDateFormat(self):
+        ts = ('2020-03-04, 15:30:45')
+        df = pd.DataFrame(data=[[ts, ]], columns=['DateTime', ])
+        ibs = IbStatement()
 
-        def test_unifyDateFormat(self):
-            pass
+        df = ibs.unifyDateFormat(df)
+        self.assertTrue(df['DateTime'].unique()[0] == '20200304;153045')
 
-        def test_parseDefaultDSVPeriod(self):
-            pass
+    # def test_figureBAPL(self):
+    #     pass
 
-        def test_combinePartialsDefaultCSV(self):
-            pass
+    # def test_openIBStatementCSV(self):
+    #     # openIBStatment is now just a wrapper for openIbStatementCSV
+    #     pass
 
-        def test_doctorDefaultCSVStatement(self):
-            pass
+    # def test_parseDefaultCSVPeriod(self):
+    #     # tests = [ 'June 14, 2019', 'May 1, 2019 - June 13, 2019' '14-Jun-19']
+    #     pass
 
-        def test_getTablesFromDefaultStatement(self):
-            pass
+    # def test_combinePartialsDefaultCSV(self):
+    #     pass
 
-        def test_combinePartialsFlexTrade(self):
-            pass
+    # def test_doctorDefaultCSVStatement(self):
+    #     pass
 
-        def test_cheatForBAPL(self):
-            pass
+    # def test_getTablesFromDefaultStatement(self):
+    #     pass
 
-        def test_combineOrdersByTime(self):
-            pass
+    # def test_combinePartialsFlexTrade(self):
+    #     pass
 
-        def test_combinePartialsFlexCSV(self):
-            pass
+    # def test_cheatForBAPL(self):
+    #     pass
 
-        def test_doctorActivityFlexTrades(self):
-            pass
+    # def test_combineOrdersByTime(self):
+    #     pass
 
-        def test_getFrame(self):
-            pass
+    # def test_combinePartialsFlexCSV(self):
+    #     pass
 
-        def test_doctorFlexTables(self):
-            pass
+    # def test_doctorActivityFlexTrades(self):
+    #     pass
 
-        def test_openActivityFlexCSV(self):
-            pass
+    # def test_getFrame(self):
+    #     pass
 
-        def test_getColsByTabid(self):
-            pass
+    # def test_doctorFlexTables(self):
+    #     pass
 
-        def test_verifyAvailableCols(self):
-            pass
+    # def test_openActivityFlexCSV(self):
+    #     pass
+
+    # def test_getColsByTabid(self):
+    #     pass
+
+    # def test_verifyAvailableCols(self):
+    #     pass
 
 
 if __name__ == '__main__':
-    ibs = IbStatement('test/test.db')
-
+    unittest.main()

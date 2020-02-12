@@ -182,20 +182,8 @@ class TestMybarchart(unittest.TestCase):
 
 
 def main():
+    # not_main()
     unittest.main()
-    # '''test discovery is not working in vscode. Use this code for debugging.
-    # Then run cl python -m unittest discovery'''
-    # f = TestMybarchart()
-    # for name in dir(f):
-    #     if name.startswith('test'):
-    #         attr = getattr(f, name)
-
-    #         class B():
-    #             def a(self):
-    #                 pass
-    #         b = B()
-    #         if isinstance(attr, type(b.a)):
-    #             attr()
 
 
 def notmain():
