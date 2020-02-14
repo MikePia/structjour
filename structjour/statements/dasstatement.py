@@ -485,11 +485,13 @@ class DasStatement:
                         newdf = newdf.append(ticketdf)
         return newdf
 
-    def getTrades(self, listdf=None):
+    def getTrades(self, listdf=None, testFileLoc=None, testdb=None):
         '''
         Create an alternate dataFrame by ticket. For large share sizes this may have dramatically
         fewer transactions.
         :params listdf: Normally leave blank. If used, listdf should be the be a list of DFs.
+        :params testFileLoc: Override the location to place the file.
+        :params testdb: Override the database to use
         :return: The DataFrame created version of the data.
         :side effects: Saves a csv file of all transactions as single ticket transactions to
                         the settings inpathfile
@@ -510,13 +512,16 @@ class DasStatement:
         for i, row in newdf.iterrows():
             newdf.at[i, 'DateTime'] = row[self.rc.date].strftime('%Y%m%d;%H%M%S')
         newdf = self.combineOrdersByTime(newdf)
-
-        newinfile = self.setNewInfile("tradesByTicket.csv")
+        newinfile = "tradesByTicket.csv"
+        if not testFileLoc:
+            newinfile = self.setNewInfile(newinfile)
+        else:
+            newinfile = os.path.join(testFileLoc, newinfile)
         newdf.to_csv(newinfile)
         self.settings.setValue('inpathfile', newinfile)
         newdf = self.figureBalance(newdf)
         # newdf['DateTime'] = ''
-        ibdb = StatementDB(source='DAS')
+        ibdb = StatementDB(source='DAS', db=testdb)
 
         # TODO Note that the date is 'covered' in the DB if a statement is processed. That leaves
         # the possibility that the user exported a partial day. The trades should be added if/when
@@ -588,8 +593,7 @@ class DasStatement:
             ticker = SIMdf[SIMdf[rc.ticker] == tickKey].copy()
             for timeKey in ticker[rc.time].unique():
                 ticket = ticker[ticker[rc.time] == timeKey].copy()
-                tickName = "SIMTick_{0}".format(i)
-                ticket["Cloid"] = tickName
+                ticket["Cloid"] = f"SIMTick_{i}"
                 newdf = newdf.append(ticket)
                 i = i + 1
 
