@@ -109,12 +109,12 @@ class TestStructjour(TestCase):
 
         # Input test files can be added here. And place the test data in testdata.xlsx. Should add
         # files with potential difficulties
-        self.infiles = ['trades.1116_messedUpTradeSummary10.csv', 'trades.8.WithHolds.csv',
-                        'trades.8.csv', 'trades.907.WithChangingHolds.csv',
-                        'trades_190117_HoldError.csv', 'trades.8.ExcelEdited.csv',
-                        'trades.910.tickets.csv', 'trades_tuesday_1121_DivBy0_bug.csv',
-                        'trades.8.WithBothHolds.csv', 'trades1105HoldShortEnd.csv',
-                        'trades190221.BHoldPreExit.csv']
+        self.infiles = ['dastrades_20181116.csv.csv', 'trades.8.WithHolds.csv',
+                        'trades.8.csv', 'dastrades_20180907.csv',
+                        'dastrades_20190117.csv', 'trades.8.ExcelEdited.csv',
+                        'dastrades_20180910.csv', 'dastrades_20181120.csv',
+                        'trades.8.WithBothHolds.csv', 'dastrades_20181105.csv',
+                        'dastrades_20190221.csv']
 
         self.getTestData(r'data/')
 

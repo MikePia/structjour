@@ -39,6 +39,7 @@ from structjour.dfutil import DataFrameUtil
 from structjour.statements import findfiles as ff
 from structjour.statements.findfiles import findFilesSinceMonth
 from structjour.statements.ibstatementdb import StatementDB
+from structjour.stock.utilities import isNumeric
 
 # pylint: disable=C0103
 
@@ -105,6 +106,11 @@ class DasStatement:
         tdf.reset_index(drop=True, inplace=True)
         average = None
         # breakitup = False
+        if self.setSomeAverages(rc, tdf):
+            success, tdf = self.setSomeMoreAverages(rc, tdf)
+            if success:
+                return tdf, pd.DataFrame()
+                
         for i in range(len(tdf)):
             # Using this snaky iteration we go forwards to a point, backwards to the beginning
             # and forward to the end (to be successful and getting some  redundant results for
@@ -137,7 +143,7 @@ class DasStatement:
                 if (set(['B', 'S']) - set(sides)) and (set(['B', 'SS']) - set(sides)):
                     continue
                 moreBackwards = False
-                for j in range(i-1, -1, -1):
+                for j in range(i - 1, -1, -1):
                     # Iterate backward to beginning trade of statement --- note that this test is
                     # not what it seems It tests that the this trade's and the following closer
                     # trade's  sides  have opposite buy/sell Don't believe that guarantees the two
@@ -189,7 +195,101 @@ class DasStatement:
                                 balance = tdf.iloc[0][rc.bal] - tdf.iloc[0][rc.shares]
                                 ntdf, stdf = self.figureAPL(tdf, balance, 0)
                                 return ntdf, stdf
+                        else:
+                            print('what now?')
         return ttdf, pd.DataFrame()
+
+    def setSomeAverages(self, rc, tdf):
+        '''
+        This is going to find a single closer. Go backwards than break.
+        Set the average for the closer
+        Go backwards through the openers and set their average if possible
+            Two consecutive openers (going backwards) are possible, Three consecutive openers-- ??? 
+                Prbobaly possible with calculus- it would require 2 variables approaching an equality
+            Use this
+            ((Qty * Price) - (average * Qty)) / (average - PrevPrice)  = PrevBal 
+            and if PrevBaL == Qty--it is the opener
+            If not -- leave it alone-- catch it as bad trade in the db
+
+            Argh  nope-- have to figure the prevAverage first...
+        Until  when/if the average == price
+            At that point we have located the trade opener (for all practical purposes)
+            The opener is likely the first trade in the tdf- Don't think it could be anything else
+            The closer we found could be the last trade in the tdf or not
+                If not it could be a continuation of the current trade or a new trade
+        '''
+        setSome = False
+        for i in range(len(tdf)):
+            if tdf.at[i, rc.PL] != 0:
+                average = (tdf.at[i, rc.PL] / tdf.at[i, rc.shares]) + tdf.at[i, rc.price]
+                tdf.at[i, rc.avg] = average
+                tdf.at[i, rc.oc] = 'C'
+                setSome = True
+                for j in range(i - 1, -1, -1):
+                    # This is an opener by definition.
+                    # If the following row is a closer, then we share the average
+
+                    tdf.at[j, rc.oc] = 'O'
+                    if tdf.at[j + 1, rc.oc] == 'C':
+                        tdf.at[j, rc.avg] = average
+                    else:
+                        # Going backwards here-- prev (We lack the info) is this iteration (j): 'current' (we have the info) is (j+1)
+                        # ((Qty * Price) - (average * Qty)) / (average - PrevPrice) = PrevBal
+                        qty, price, prevPrice, prevQty = tdf.at[j + 1, rc.shares], tdf.at[j + 1, rc.price], tdf.at[j, rc.price], tdf.at[j, rc.shares]
+                        prevBal = ((qty * price) - (average * qty)) / (average - prevPrice)
+                        if prevQty == int(prevBal):
+                            tdf.at[j, rc.avg] = tdf.at[j, rc.price]
+                            tdf.at[j, rc.bal] = int(prevBal)
+                        else:
+                            # This is where the calculus could go (need some review here)
+                            pass
+                break
+        return setSome
+    
+    def setSomeMoreAverages(self, rc, tdf):
+        '''
+        This is for unbalanced trades, that is a  (ticker/account) set that has sum(qty) != 0
+        Fill in as many Balances, Averages as possible.
+        Prerequisite is there is at least one trade that has Average filled in.
+        '''
+        gotPrimo = False
+        LONG = True
+        retMe = False
+        for i, row in tdf.iterrows():
+            if not gotPrimo and isNumeric(row[rc.bal]) and isNumeric(row[rc.avg]) and len(row[rc.oc]) > 0:
+                # Note were reindexed in the calling method. Unless something has changed, the first index will be 0.
+                if i == 0:
+                    # If i is 0, the entire df will have been fixed up with bal, avg and oc
+                    retMe = True
+                print(f'got one {i}: {row[rc.shares]} {row[rc.price]} {row[rc.bal]} {row[rc.avg]} {row[rc.PL]} {row[rc.oc]}')
+                gotPrimo = True
+                if row[rc.oc] == 'O':
+                    if row[rc.shares] < 0: LONG = False
+                elif row[rc.oc] == 'C':
+                    if row[rc.shares] > 0: LONG = False
+                else:
+                    raise ValueError(f'''Unknown contents of row['OC']: {row[rc.oc]}''')
+            elif gotPrimo:
+                print(f'Fill in these guys {i} {row[rc.shares]}  {row[rc.bal]} {row[rc.oc]}  {row[rc.price]} {row[rc.avg]} ')
+                tdf.at[i, rc.bal] = int(tdf.at[i - 1, rc.bal] + tdf.at[i, rc.shares])
+                if int(tdf.at[i, rc.bal]) == int(tdf.at[i, rc.shares]):
+                    tdf.at[i, rc.oc] == 'O'
+                    tdf.at[i, rc.avg] == tdf.at[i, rc.price]
+                    continue
+                if len(row[rc.oc]) == 0:
+                    if LONG:
+                        tdf.at[i, rc.oc] = 'O' if len(row[rc.oc]) > 0 else 'C'
+                    else:
+                        tdf.at[i, rc.oc] = 'C' if len(row[rc.oc]) > 0 else 'O'
+                if tdf.at[i, rc.oc] == 'O':
+                    # ((PrevBal * PrevAvg) + (Qty * Price)) / (PrevBal + Qty)  = average
+                    prevBal, prevAvg, qty, price = tdf.at[i - 1, rc.bal], tdf.at[i - 1, rc.avg], tdf.at[i, rc.shares], tdf.at[i, rc.price],
+                    tdf.at[i, rc.avg] = ((prevBal * prevAvg) + (qty * price)) / (prevBal + qty)
+                else:
+                    tdf.at[i, rc.avg] = tdf.at[i - 1, rc.avg]
+
+            print(f'''{tdf.at[i, rc.shares]} {tdf.at[i, rc.bal]} {tdf.at[i, rc.avg]}''')
+        return retMe, tdf
 
     def figureAPL(self, tdf, balance, prevBalance):
         '''
@@ -343,11 +443,11 @@ class DasStatement:
             acnt = df[df[rc.acct] == acntKey]
             for ticker in acnt[rc.ticker].unique():
 
-                tdf = df[df[rc.ticker] == ticker]
+                tdf = acnt[acnt[rc.ticker] == ticker]
                 tdf = tdf.sort_values(rc.date, )
                 offset = tdf[rc.shares].sum()
                 holding = 0
-                pos = positions[(positions['Account'] == acntKey)  & (positions['Symb'] == ticker)]
+                pos = positions[(positions['Account'] == acntKey) & (positions['Symb'] == ticker)]
                 if ticker in pos['Symb'].unique():
                     assert pos['Symb'].unique()[0] == ticker
                     holding = pos['Shares'].unique()[0]

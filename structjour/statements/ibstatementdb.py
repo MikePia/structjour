@@ -610,8 +610,9 @@ class StatementDB:
         if not cur:
             conn = sqlite3.connect(self.db)
             cur = conn.cursor()
+        # The select order is that used by makeTradeDict
         cursor = cur.execute(f'''
-            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct}
+            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm}
                 FROM ib_trades
                     WHERE datetime = ?
                     AND {rc.ticker} = ?
@@ -626,7 +627,7 @@ class StatementDB:
             return x
         return False
 
-    def insertTrade(self, row, cur):
+    def insertTrade(self, row, cur, update=False):
         '''
         Insert a trade into ib_trades table. Commit not included for speed.
         :params row:A pandas object that includes the headers:
@@ -635,7 +636,11 @@ class StatementDB:
 
         '''
         rc = self.rc
-        if self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct], cur):
+        atrade = self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct], cur)
+        if atrade:
+            if update:
+                atrade = self.makeTradeDict(atrade[0])
+                self.updateAvgBalPlOC(cur, atrade, row[rc.avg], row[rc.bal], row[rc.PL], row[rc.oc])
             return True
         if rc.oc in row.keys():
             codes = row[rc.oc]
@@ -843,7 +848,8 @@ class StatementDB:
                 if math.isclose(tdict[i][rc.price], average, abs_tol=1e-2):
                     # Found a Trade beginning opener balance = quantity
                     # TODO don't leave this in.
-                    raise ValueError('Programming note: Not sure what I was thinking here.')
+                    return
+                    # raise ValueError('Programming note: Not sure what I was thinking here.')
                     balance = tdict[i][rc.shares]
                     tdict[i][rc.bal] = balance
                     for j in range(i - 1, -1, -1):
@@ -952,6 +958,7 @@ class StatementDB:
     def updateAvgBalPlOC(self, cur, atrade, avg, bal, pl, oc):
         '''
         DB update ib_trades for average, balance, PnL and OpenClose
+        :params atrade: A dict that includes the key 'id' for id value.
         '''
         rc = self.rc
         cur.execute(f'''UPDATE ib_trades SET {rc.avg} = ?, {rc.bal} = ?, {rc.PL} = ?, {rc.oc} = ?
@@ -1216,7 +1223,7 @@ class StatementDB:
         cur = conn.cursor()
         count = 0
         for i, row in tdf.iterrows():
-            if self.insertTrade(row, cur):
+            if self.insertTrade(row, cur, update=True):
                 count = count + 1
         if count == len(tdf):
             accounts = tdf[rc.acct].unique()

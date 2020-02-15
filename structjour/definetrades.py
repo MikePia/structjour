@@ -75,6 +75,7 @@ class DefineTrades(object):
     def __init__(self, source='DAS'):
         '''
         Constructor
+        Note: source is not used by this class. Argument could be probably be removed.
         '''
         self.source = source
         assert self.source in ['DAS', 'IB_HTML', 'IB_CSV', 'DB']
@@ -185,7 +186,7 @@ class DefineTrades(object):
 
     def addStartTimeDB(self, dframe):
         '''
-        Add the start time to the new column labeled Start or frc.start. Each transaction in each
+        Add the start time to the new column labeled Start or frc.start. Each transaction whthin a
         trade will share a start time.
         :params dframe: The output df to place the data
         :return dframe: The same dframe but with the new start data.

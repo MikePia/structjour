@@ -398,7 +398,7 @@ class SumReqFields:
         return maxrow
 
 
-# global variable for use in this module
+# global variable for use in this module. TODO redundant sf object in TheTradeObject
 sf = SumReqFields()
 
 
@@ -452,8 +452,7 @@ class TheTradeObject:
     def runSummary(self, imageName):
         '''
         Populate a DataFrame (self.TheTrade) with all the trade summary information, one row per
-        trade. The information will then populate the the openpyxl / excel Trade Summary. The user
-        interview for target stoploss, and strategy happen in their respective methods.
+        trade. The information will then populate the the openpyxl / excel Trade Summary.
         '''
         self.__setName()
         self.__setAcct()
@@ -500,7 +499,7 @@ class TheTradeObject:
         '''
         Sets the duration delta to a nicely formatted string for humans. Return just the number of
         days if its 1 or more. Otherwise return something like: 1 hour, 4:34
-        :raise: A couple of assertions could raise AssertionError. (Temporary for development)
+        :raise: A couple of assertions could raise AssertionError. (Keep until beta release)
         '''
 
         time = self.df.loc[self.ix][sf.dur]
@@ -523,8 +522,7 @@ class TheTradeObject:
             m = time.components.minutes
             s = time.components.seconds
 
-            dur = str(h) + ' hours, ' if h > 1 else str(h) + \
-                ' hour, ' if h == 1 else ''
+            dur = str(h) + ' hours, ' if h > 1 else str(h) + ' hour, ' if h == 1 else ''
             dur += str(m) + ':' + str(s)
         self.TheTrade[self.sf.dur] = dur
         return self.TheTrade
@@ -541,7 +539,7 @@ class TheTradeObject:
                         self.df.iloc[0][frc.oc].find('C') >= 0 and (self.df.iloc[0][frc.shares] < 0)) else False
 
         for oc in ocs:
-            if oc.find('O') >= 0:
+            if oc and oc.find('O') >= 0:
                 if Long:
                     self.shares = self.shares = self.df[frc.bal].max()
                 else:
