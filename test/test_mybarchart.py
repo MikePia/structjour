@@ -22,7 +22,6 @@
 '''
 
 import datetime as dt
-import types
 import unittest
 import pandas as pd
 
@@ -53,6 +52,7 @@ def getPrevTuesWed(td):
         deltdays = 4
     before = td - dt.timedelta(deltdays)
     return before
+
 
 # @unittest.skip('Leave to deal with later')
 class TestMybarchart(unittest.TestCase):
@@ -97,14 +97,14 @@ class TestMybarchart(unittest.TestCase):
         dateArray3 = [(None, yaft), (tomorrow, None)]
 
         # edays=list()
-        interval=5
+        interval = 5
         for start, end in dateArray:
             x, df, maList = bc.getbc_intraday('SQ', start=start, end=end, showUrl=True)
             if x['code'] == 666:
                 print('Abandon all hope of retrieving barchart data today.\n',
                       'You have run out of free queries until midnight')
                 return
-            
+
             if not start or start.date() == now.date():
                 # Retrieveing todays will retrieve butkis until the magictime
                 mt = util.getLastWorkDay()
@@ -117,15 +117,15 @@ class TestMybarchart(unittest.TestCase):
                     msg += '(wait a minute), or something is wrong (probably with the code).'
                     self.assertTrue(df.empty, msg)
                     continue
-            
-            else:        
+
+            else:
                 self.assertGreater(len(df), 0)
 
             # Given start == None, barchart returns data from previous weekday (holidays ignored)
             now = pd.Timestamp.today()
             if not start and not df.empty:
                 start = df.index[0]
-            
+
                 if now.isoweekday() > 5:
                     self.assertLess(df.index[0].isoweekday(), 6, "Is it a holiday? Go party now!")
             if not start:
@@ -134,23 +134,20 @@ class TestMybarchart(unittest.TestCase):
                 assert df.empty
                 continue
 
-            
-
             s = pd.Timestamp(start.year, start.month, start.day, 9, 29)
             e = pd.Timestamp(start.year, start.month, start.day, 16, 1)
             if start > s and start < e:
                 self.assertEqual(df.index[0], start)
-                
 
             msg = f'\nInput: {end} \nTest:  <> {e} \nIndex{df.index[-1]}'
             # print(msg)
             # Very internal noodly but barchart last index is always the next to the last time aka end - interval
             if end and end > s and end < e:
-                end2 = end - pd.Timedelta(minutes=interval)
+                # end2 = end - pd.Timedelta(minutes=interval)
                 msg = f'\nInput: {end} \nTest:  {e} \nIndex: {df.index[-1]}'
                 delt = df.index[-1] - end if df.index[-1] > end else end - df.index[-1]
 
-                self.assertLessEqual(int(delt.total_seconds()), interval*60)
+                self.assertLessEqual(int(delt.total_seconds()), interval * 60)
                 # self.assertEqual(df.index[-1], end2, msg)
 
         for start, end in dateArray2:
@@ -178,7 +175,7 @@ class TestMybarchart(unittest.TestCase):
             min0 = df.index[0]
             min1 = df.index[1]
 
-            self.assertEqual((min1-min0).total_seconds(), interval*60)
+            self.assertEqual((min1 - min0).total_seconds(), interval * 60)
 
 
 def main():

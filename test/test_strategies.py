@@ -29,6 +29,7 @@ from unittest import TestCase
 import unittest
 from structjour.strategy.strategies import Strategy
 
+
 class TestStrategy(TestCase):
     '''
     Test Strategy object
@@ -56,7 +57,7 @@ class TestStrategy(TestCase):
         link2 = 'http:/the/strategy/x/site.html'
         link3 = 'http:/the/strategy/y/site.html'
         link4 = 'http:/the/strategy/z/site.html'
-        
+
         links = [link, link2, link3, link4]
         for l in links:
             strat.setLink(addme, l)
@@ -77,7 +78,7 @@ class TestStrategy(TestCase):
         link2 = 'http:/the/strategy/x/site.html'
         link3 = 'http:/the/strategy/y/site.html'
         link4 = 'http:/the/strategy/z/site.html'
-        
+
         links = [link, link2, link3, link4]
         for l in links:
             strat.setLink(addme, l)
@@ -113,8 +114,6 @@ class TestStrategy(TestCase):
         im = strat.getImage2(addme)
         self.assertTrue(not im)
 
-
-
     def test_setImage1(self):
 
         strat = self.strat
@@ -129,8 +128,6 @@ class TestStrategy(TestCase):
         im = strat.getImage1(addme)
         self.assertEqual(imagename, im)
 
-
-
         imagename = 'C:/the/beginning/of/no/time.png'
         strat.setImage1(addme, imagename)
         im = strat.getImage1(addme)
@@ -140,7 +137,6 @@ class TestStrategy(TestCase):
         strat.setImage2(addme, imagename)
         im = strat.getImage2(addme)
         self.assertEqual(imagename, im)
-        
 
     def test_setDescription(self):
         desc = "Its the end of the world as we know it"
@@ -220,7 +216,7 @@ class TestStrategy(TestCase):
             ss = strat.getDescription(s)
             self.assertEqual(s, ss[0])
             self.assertGreater(len(ss[1]), 100)
-    
+
     def test_droptables(self):
         '''test Strategy.dropTables'''
         strat = self.strat
@@ -231,7 +227,7 @@ class TestStrategy(TestCase):
         slist = list()
 
         self.assertGreater(len(x), 3)
-        
+
         for s in x:
             slist.append(s[1])
         self.assertIn('ABCD', slist)
@@ -247,7 +243,6 @@ class TestStrategy(TestCase):
             tested = True
         self.assertTrue(tested, 'Failed to drop tables')
 
-
     def test_createTables(self):
         '''Test Strategy.createTables'''
         strat = self.strat
@@ -256,8 +251,8 @@ class TestStrategy(TestCase):
         strat.createTables()
         conn = strat.getConnection()
 
-        cursor = conn.execute('''SELECT name FROM sqlite_master 
-                                WHERE type ='table' 
+        cursor = conn.execute('''SELECT name FROM sqlite_master
+                                WHERE type ='table'
                                 AND name NOT LIKE 'sqlite_%';''')
         slist = list()
         for row in cursor:
@@ -281,6 +276,7 @@ class TestStrategy(TestCase):
 def main():
     unittest.main()
 
+
 def notmain():
     t = TestStrategy()
     t.test_createTables()
@@ -296,7 +292,7 @@ def notmain():
     t.test_setLink()
     t.test_removeLink()
 
+
 if __name__ == '__main__':
     # notmain()
     main()
-    

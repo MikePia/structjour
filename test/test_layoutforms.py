@@ -21,7 +21,7 @@ and retrieval of trade info using self.ts, the other for everything else.
 Created on June 1, 2019
 
 @author: Mike Petersen
-''' 
+'''
 
 import sys
 from PyQt5 import QtCore
@@ -29,25 +29,23 @@ QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 from PyQt5 import QtWebEngineWidgets    # noqa F401
 from PyQt5 import QtWidgets
 
-from collections import deque    
+from collections import deque
 import datetime as dt
 import os
 import random
-import sys
 
 
-from  unittest import TestCase
+from unittest import TestCase
 import unittest
 
-from openpyxl import Workbook, load_workbook
 import pandas as pd
 
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
-from structjour.rtg import getRandGenTradeStuff, getRandomFuture, getLdf
+from structjour.rtg import getRandGenTradeStuff, getRandomFuture
 
-from PyQt5.QtWidgets import QApplication
+# from PyQt5.QtWidgets import QApplication
 
 app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
 
@@ -72,8 +70,6 @@ class Test_LayoutForms(TestCase):
         tradeS, ts, entries, imageNames, df, ldf = getRandGenTradeStuff()
         # ldf, df = getLdf()
 
-
-
         sc = SumControl()
         theDate = pd.Timestamp('2008-06-06')
         # jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
@@ -89,13 +85,13 @@ class Test_LayoutForms(TestCase):
         # print(self.lf.ts.keys())
         for key in self.lf.ts:
             n = self.lf.getImageName(key, 'chart1')
-            tindex, symb, side, start, numday, x, end, widg = n.split('_');
+            tindex, symb, side, start, numday, x, end, widg = n.split('_')
             start = pd.Timestamp('20190101 ' + start).time()
             numday = int(numday)
             end = pd.Timestamp('20190101 ' + end).time()
 
             self.assertTrue(tindex.startswith('Trade'))
-            self.assertTrue(key.find(symb) >  0)
+            self.assertTrue(key.find(symb) > 0)
             self.assertTrue(side in ['Long', 'Short'])
             self.assertIsInstance(start, dt.time)
 
@@ -121,7 +117,7 @@ class Test_LayoutForms(TestCase):
             interval = interval.split('.')[0]
 
             self.assertTrue(tindex.startswith('Trade'))
-            self.assertTrue(key.find(symb) >  0)
+            self.assertTrue(key.find(symb) > 0)
             self.assertTrue(side in ['Long', 'Short'])
             self.assertIsInstance(start, dt.time)
 
@@ -136,18 +132,19 @@ class Test_LayoutForms(TestCase):
             (static: settings-outdir
             default: getDirectory()/out/)
         '''
-        name = self.lf.sc.getSaveName()
-    
+        # name = self.lf.sc.getSaveName()
+        pass
+
     def test_populateTradeSumForms(self):
         '''Populates the sc widgets. Depends on self.ts, sc'''
         pass
 
     def test_toggleTimeFormat(self):
         '''Used by sc to toggle the time with date and time in trade summary entries widgets
-        (called from sc). Values from self.ts are reformatted into widgets. 
+        (called from sc). Values from self.ts are reformatted into widgets.
         Depends on sc and self.ts'''
         pass
-    
+
     def test_runTtoSummaries(self):
         '''Nearly top level script called from runtrade.runnit-- fefactored most of it -- moved
         Creates TradeSummaries which will become self.ts dict.'''
@@ -173,10 +170,6 @@ class Test_LayoutForms(TestCase):
         pass
 
 
-
-
-
-
 class Test_LayoutForms_ts_data(TestCase):
     '''
     Test the methods that save to self.ts in LayoutForms
@@ -189,21 +182,17 @@ class Test_LayoutForms_ts_data(TestCase):
         super(Test_LayoutForms_ts_data, self).__init__(*args, **kwargs)
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
-    
+
     def setUp(self):
         theDate = pd.Timestamp('2008-06-06')
         jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
         tradeS, ts, entries, imageNames, df, ldf = getRandGenTradeStuff()
-
-
-
         sc = SumControl()
         theDate = pd.Timestamp('2008-06-06')
         jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False)
         self.lf = LayoutForms(sc, jf, df)
         self.lf.ts = ts
         self.lf.entries = entries
-
 
     def test_setChartData(self):
         # [start, end, interval, name]
@@ -216,7 +205,7 @@ class Test_LayoutForms_ts_data(TestCase):
             for i in range(0, 6):
                 starts.append(getRandomFuture(d1))
                 d1 = starts[-1]
-            interval = random.randint(0,60)
+            interval = random.randint(0, 60)
             namex = name + str(i)
             data.append([namex, starts.popleft(), starts.popleft(), interval])
             data.append([namex, starts.popleft(), starts.popleft(), interval])
@@ -230,7 +219,7 @@ class Test_LayoutForms_ts_data(TestCase):
                 self.assertEqual(pd.Timestamp(d[1]), pd.Timestamp(data[i][1]))
                 self.assertEqual(pd.Timestamp(d[2]), pd.Timestamp(data[i][2]))
                 self.assertEqual(d[3], data[i][3])
-            
+
     def test_getEntries(self):
         '''test getEntries. Specifically test there is key for entries for every tradekey. '''
         for key in self.lf.ts:
@@ -252,7 +241,7 @@ but a whisper, your deafness a shout! {(i+1) * 5} times!!!
             self.lf.setExplain(key, note)
             notex = (self.lf.ts[key]['Explain'].unique()[0])
             self.assertEqual(note, notex)
-    
+
     def test_setMstkVals(self):
         val = 33.33
         for i, key in enumerate(self.lf.ts):
@@ -262,8 +251,8 @@ Put him to a trade
 Teach him to play Monopoly
 Not to sing in the rain {(i+1) * 5} times!!!
 '''
-            val = val + i*34.12
-                      
+            val = val + i * 34.12
+
             self.lf.setMstkVals(key, val, note)
             valx = (self.lf.ts[key]['MstkVal'].unique()[0])
             notex = (self.lf.ts[key]['MstkNote'].unique()[0])
@@ -295,7 +284,7 @@ God is an overwhelming responsibility! {(i+1) * 5} times.
             self.assertEqual(maxloss, self.lf.ts[key]['MaxLoss'].unique()[0])
             stop = stop - (i * 10.48)
             diff = diff - (i * i * .2)
-            maxloss = maxloss - ((i+1) * 30.89)
+            maxloss = maxloss - ((i + 1) * 30.89)
 
         def test_setStrategy(self):
             for i, key in enumerate(self.lf.ts):
@@ -319,15 +308,16 @@ God is an overwhelming responsibility! {(i+1) * 5} times.
             diff = diff + (i * i * .2)
 
 
-
 def notmain():
     for i in range(100):
         t = Test_LayoutForms()
         t.setUp()
         t.test_getImageNameX()
 
+
 def main():
     unittest.main()
+
 
 if __name__ == '__main__':
     main()

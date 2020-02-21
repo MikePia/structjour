@@ -69,8 +69,8 @@ class TestTradeFormat(TestCase):
         # Write one cell for each named style in TradeFormat
         for i, key in enumerate(styleList):
             #     print(key, c((1, i+1)))
-            ws[c((1, i+1))] = key
-            ws[c((1, i+1))].style = tf.styles[key]
+            ws[c((1, i + 1))] = key
+            ws[c((1, i + 1))].style = tf.styles[key]
         wb.save(dispath)
 
         wb2 = load_workbook(dispath)
@@ -79,7 +79,7 @@ class TestTradeFormat(TestCase):
         # Open it back up and check the the named styles are where we think they are
         for i, key in enumerate(styleList):
             #     print(key,ws2[c((1, i+1))].style )
-            self.assertEqual(key, ws2[c((1, i+1))].style)
+            self.assertEqual(key, ws2[c((1, i + 1))].style)
         # print('Done')
 
     def test_mergeStuff(self):
@@ -147,12 +147,11 @@ class TestTradeFormat(TestCase):
                 self.assertEqual(ws2[c(address)].style, st)
 
         # test that each list element has a corresponding merged cell group in the worbook
-        listofmerge = [c(srf.tfcolumns[x][0][0], srf.tfcolumns[x][0][1])  for x in srf.tfcolumns if isinstance(srf.tfcolumns[x][0], list)]
+        listofmerge = [c(srf.tfcolumns[x][0][0], srf.tfcolumns[x][0][1]) for x in srf.tfcolumns if isinstance(srf.tfcolumns[x][0], list)]
         wsmerged = ws.merged_cells.ranges
         self.assertEqual(len(listofmerge), len(wsmerged))
         for msmerge in wsmerged:
             self.assertTrue(str(msmerge) in listofmerge)
-
 
     def test_c(self):
         '''Test the function c in the module tradestyle'''
@@ -162,6 +161,7 @@ class TestTradeFormat(TestCase):
         self.assertEqual(c((2, 3), (3, 7)), 'B3:C7')
 
         self.assertEqual(c((2, 3), (3, 7), (2, 2)), 'C4:D8')
+
 
 def notmain():
     '''Run some local code'''

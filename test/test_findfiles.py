@@ -36,8 +36,6 @@ from structjour.statements import findfiles as ff
 # pylint: disable = C0103
 
 
-
-
 class Test_FindFiles(unittest.TestCase):
     '''
     Test functions and methods in the graphstuff module
@@ -62,7 +60,7 @@ class Test_FindFiles(unittest.TestCase):
         d2 = pd.Timestamp('20190315')
 
         dadir = ff.getMonthDir(daDate=d1)
-        dadir2 = ff.getMonthDir(daDate= d2)
+        dadir2 = ff.getMonthDir(daDate=d2)
         print(dadir)
         assert dadir.find("201901") > -1
         assert dadir2.find("201903") > -1
@@ -97,7 +95,7 @@ class Test_FindFiles(unittest.TestCase):
                 # for p3 in names:
                 name = 'gobble/' + '.'.join([p1, p2]) + '.as'
                 Path(name).touch()
-                    
+
         x = ff.findFilesInDir('gobble', 'one.two.as', True)
         self.assertTrue(len(x) == 2)
 
@@ -112,9 +110,8 @@ class Test_FindFiles(unittest.TestCase):
         d1 = pd.Timestamp('20190303')
         fs = ff.findFilesSinceMonth(d1, 'trades.csv')
         self.assertTrue(len(fs) > 0)
-                
-        
-    
+
+
 def main():
     unittest.main()
 
@@ -123,6 +120,7 @@ def notmain():
 
     t = Test_FindFiles()
     t.test_getBaseDir()
+
 
 if __name__ == '__main__':
     # notmain()

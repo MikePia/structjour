@@ -24,7 +24,6 @@ import unittest
 import datetime as dt
 import os
 import types
-import pandas as pd
 from structjour.journalfiles import JournalFiles
 # pylint: disable = C0103, W0703, E1121
 
@@ -57,7 +56,6 @@ class TestJF(unittest.TestCase):
         When we initialze the object, ensure that we always run from src as the cwd
         '''
         super(TestJF, self).__init__(*args, **kwargs)
-
 
     def setUp(self):
         ddiirr = os.path.dirname(__file__)
@@ -95,10 +93,12 @@ def notmain():
     # t.test_DefaultCreate()
     t.test_DevelDefaultCreate()
 
+
 def clstyle():
     '''Run unittests cl style. Can debug'''
-    #import sys;sys.argv = ['', 'Test.testName']
+    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
+
 
 if __name__ == "__main__":
     # notmain()

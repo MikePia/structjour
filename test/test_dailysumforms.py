@@ -34,10 +34,6 @@ from structjour.dailysumforms import MistakeSummary
 from structjour.tradestyle import TradeFormat
 from structjour.tradestyle import c as tcell
 
-# pylint: disable = C0103
-
-
-
 
 class TestMistakeSummary(TestCase):
     '''
@@ -137,6 +133,7 @@ def notmain():
     t = TestMistakeSummary()
     t.test_mstkSumStyles()
     # t.test_dailySumStyle()
+
 
 def main():
     unittest.main()

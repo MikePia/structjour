@@ -118,8 +118,7 @@ class Test_DfUtil(unittest.TestCase):
         gotve = False
         try:
             DataFrameUtil.checkRequiredInputFields(fail, reqCol.columns)
-        except ValueError as ex:
-            # print(ex)
+        except ValueError:
             gotve = True
         finally:
             self.assertTrue(gotve, "Failed to throw value error")
@@ -127,7 +126,7 @@ class Test_DfUtil(unittest.TestCase):
         gotve = False
         try:
             DataFrameUtil.checkRequiredInputFields(rc, finReqCol.columns)
-        except ValueError as ex:
+        except ValueError:
             gotve = True
         finally:
             self.assertTrue(gotve, "Failed to throw a ValueError")
@@ -167,28 +166,29 @@ class Test_DfUtil(unittest.TestCase):
 
         y = DataFrameUtil.createDf(cols2, numRow, fill=fill)
         y = DataFrameUtil.addRows(y, numRow, fill=fill2)
-        self.assertEqual(len(y), numRow*2)
+        self.assertEqual(len(y), numRow * 2)
 
         for i in range(numRow):
             for ii in y.iloc[i]:
                 self.assertEqual(ii, fill)
 
-        for i in range(numRow, numRow*2):
+        for i in range(numRow, numRow * 2):
             for ii in y.iloc[i]:
                 self.assertEqual(ii, fill2)
 
 
-
 def main():
     '''Run unittests cl style'''
-    #import sys;sys.argv = ['', 'Test.testName']
+    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
+
 
 def notmain():
     '''Run some local code'''
     t = Test_DfUtil()
     # t.test_dfUtil_createDf()
     t.test_dfUtil_addRow()
+
 
 if __name__ == '__main__':
     # notmain()

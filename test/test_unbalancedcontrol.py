@@ -25,21 +25,22 @@ Created on May 20, 2019
 import os
 import sys
 import unittest
-from  unittest import TestCase
+from unittest import TestCase
 
 import pandas as pd
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 from PyQt5 import QtWebEngineWidgets    # noqa F401
-from PyQt5.QtWidgets import QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
+from PyQt5.QtWidgets import QApplication
 
 from PyQt5.QtTest import QTest
-from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtCore import Qt
 
 from structjour.view.unbalancedcontrol import UnbalControl
 # pylint: disable = C0103
 
 app = QApplication(sys.argv)
+
 
 class TestUnbalCtrl(TestCase):
     '''Test the user interaction stuff-- two editable QLineEdits and connections'''
@@ -48,17 +49,17 @@ class TestUnbalCtrl(TestCase):
         super(TestUnbalCtrl, self).__init__(*args, **kwargs)
 
     def setUp(self):
-        
+
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def justtestit(self, s, a, b, t):
         vals = [s, a, b]
-        for i in range(0,3):
+        for i in range(0, 3):
             try:
                 vals[i] = float(vals[i])
             except ValueError:
-                vals[i]  = 0.0
+                vals[i] = 0.0
         self.assertTrue(vals[0] + vals[1] - vals[2] == t)
 
     def test_shares(self):
@@ -92,7 +93,6 @@ class TestUnbalCtrl(TestCase):
         QTest.keyClick(before, Qt.Key_Enter)
         self.justtestit(shares.text(), after.text(), before.text(), self.balance)
 
-
         QTest.keyClick(after, Qt.Key_A, Qt.ControlModifier)
         QTest.keyClicks(after, str(-750))
         self.justtestit(shares.text(), after.text(), before.text(), self.balance)
@@ -105,9 +105,9 @@ class TestUnbalCtrl(TestCase):
                         -self.swingTrade['before'], self.balance)
 
 
-
 def main():
     unittest.main()
+
 
 if __name__ == '__main__':
     main()

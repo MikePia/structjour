@@ -25,17 +25,17 @@ import datetime as dt
 import random
 import unittest
 import pandas as pd
-import types
 
 from structjour.stock import myib as ib
 from structjour.stock import utilities as util
 # pylint: disable = C0103
 
+
 # @unittest.skip('Levae to deal with later')
 class TestMyib(unittest.TestCase):
     '''
     Test methods and functions in the myib module
-    This will currently retrive only market hours data. It will match the other APIs. But we 
+    This will currently retrive only market hours data. It will match the other APIs. But we
     can and should accomodate after hours data even with API chooser.
     '''
 
@@ -46,19 +46,19 @@ class TestMyib(unittest.TestCase):
         tests = [(False, ('1 min', 1, 1)),
                  (False, ('2 mins', 2, 2)),
                  (False, ('3 mins', 3, 3)),
-                 (True,  ('1 min', 1, 4)),
+                 (True, ('1 min', 1, 4)),
                  (False, ('5 mins', 5, 5)),
-                 (True,  ('1 min', 1, 6)),
-                 (True,  ('1 min', 1, 7)),
-                 (True,  ('1 min', 1, 8)),
-                 (True,  ('1 min', 1, 9)),
+                 (True, ('1 min', 1, 6)),
+                 (True, ('1 min', 1, 7)),
+                 (True, ('1 min', 1, 8)),
+                 (True, ('1 min', 1, 9)),
                  (False, ('10 mins', 10, 10)),
                  (True, ('1 min', 1, 11)),
                  (True, ('1 min', 1, 12)),
                  (True, ('1 min', 1, 13)),
                  (True, ('1 min', 1, 14)),
                  (False, ('15 mins', 15, 15)),
-                 (True, ('1 min', 1, 16)), 
+                 (True, ('1 min', 1, 16)),
                  (False, ('20 mins', 20, 20)),
                  (True, ('1 min', 1, 21)),
                  (False, ('30 mins', 30, 30)),
@@ -75,14 +75,14 @@ class TestMyib(unittest.TestCase):
         it serves you right :)
         '''
         msg = '''
-            
-            IB is not connected. To continue connect IB Gateway. 
+
+            IB is not connected. To continue connect IB Gateway.
             'test_getib_intraday cannont runMyib cannot run.
             '''
         if not ib.isConnected():
             msg = '''
-            
-            IB is not connected. To continue connect IB Gateway. 
+
+            IB is not connected. To continue connect IB Gateway.
             'test_getib_intraday cannont runMyib cannot run.
             '''
             print(msg)
@@ -105,29 +105,27 @@ class TestMyib(unittest.TestCase):
                      (specificStart, specificEnd),
                      (befAft, None),
                      (longBef, None),
-                     (None, None)
-                    ]
+                     (None, None)]
 
         for start, end in dateArray:
-            minutes = random.randint(1,10)
+            minutes = random.randint(1, 10)
 
             # Each of these should get results every time,beginning times are either before 9:31 or
             # between 9:30 (short days won't produce failures)
-            l, df, maDict = ib.getib_intraday("SQ", start=start, end=end,
+            lendf, df, maDict = ib.getib_intraday("SQ", start=start, end=end,
                                             minutes=minutes, showUrl=True)
-            if l == 0:
+            if lendf == 0:
                 continue
 
             print("Requested...", start, end)
             print("Received ...", df.index[0], df.index[-1])
-            print("     ", l)
+            print("     ", lendf)
             if not start:
                 start = df.index[0]
 
-            self.assertGreater(l, 0)
-            delt = int((df.index[1] - df.index[0]).total_seconds()/60)
+            self.assertGreater(lendf, 0)
+            delt = int((df.index[1] - df.index[0]).total_seconds() / 60)
             self.assertEqual(delt, minutes)
-
 
             # If the requested start time is before 9:30, start should be 9:30
             # This is no longer true. IB retrieves pre and post
@@ -139,15 +137,15 @@ class TestMyib(unittest.TestCase):
             #     delt = expected - d if expected > d else d - expected
             #     self.assertLessEqual(delt.total_seconds(), minutes * 60)
             # else:
-                # The start should be within the amount of the candle length
-            #WARNING afterhours data was assumed when theses tests were created.  If afterhours
+            # The start should be within the amount of the candle length
+            # WARNING afterhours data was assumed when theses tests were created.  If afterhours
             # is not set  in settings, there will be failures here. At some point, ccould update the
             # tests ... for now just keep after hours data
             if d != start:
                 # Can't tell with pre market data-- it may just start later than requested
-                if start.time() < dt.time(9,30):
-                    delt = (pd.Timestamp('9:30')-pd.Timedelta(minutes=minutes)).time()
-                    delt2 = (d-pd.Timedelta(minutes=minutes)).time()
+                if start.time() < dt.time(9, 30):
+                    delt = (pd.Timestamp('9:30') - pd.Timedelta(minutes=minutes)).time()
+                    delt2 = (d - pd.Timedelta(minutes=minutes)).time()
                     self.assertLessEqual(delt2, delt)
                     continue
 
@@ -161,6 +159,7 @@ def notmain():
     t = TestMyib()
     # t.test_ni()
     t.test_getib_intraday()
+
 
 def main():
     '''

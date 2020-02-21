@@ -30,8 +30,6 @@ import pandas as pd
 
 from PyQt5.QtCore import QSettings
 
-from structjour.rtg import randomTradeGenerator2
-
 from structjour.stock import mybarchart as bc
 
 from structjour.stock import utilities as util
@@ -43,7 +41,7 @@ class PickleSettings:
     def __init__(self):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
-        self.settings = QSettings('zero_substance', 'structjour') 
+        self.settings = QSettings('zero_substance', 'structjour')
         self.apisettings = QSettings('zero_substance/stockapi', 'structjour')
         self.chartsettings = QSettings('zero_substance/chart', 'structjour')
         self.setkeys = []
@@ -55,7 +53,7 @@ class PickleSettings:
         # print(self.name)
 
     def setUp(self):
-        
+
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -81,7 +79,6 @@ class PickleSettings:
         self.chartkeys = []
         self.chartvals = []
 
-
     def storeSettings(self, replacePickle=False):
         if os.path.exists(self.name):
             if not replacePickle:
@@ -98,7 +95,6 @@ class PickleSettings:
         self.chartkeys = self.chartsettings.allKeys()
         for k in self.chartkeys:
             self.chartvals.append(self.chartsettings.value(k))
-            
 
         setsnkeys = [self.setkeys, self.setvals, self.apisetkeys, self.apisetvals, self.chartkeys, self.chartvals]
 
@@ -112,7 +108,7 @@ class PickleSettings:
                 setsnkeys = pickle.load(f)
                 for k, v in zip(setsnkeys[0], setsnkeys[1]):
                     self.settings.setValue(k, v)
-            
+
                 for k2, v2 in zip(setsnkeys[2], setsnkeys[3]):
                     self.apisettings.setValue(k2, v2)
 
@@ -123,10 +119,11 @@ class PickleSettings:
         else:
             print(f'No pickle found at {self.name}')
 
+
 class TestUtilities(unittest.TestCase):
     '''Test functions in the stock.utilities module'''
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(TestUtilities, self).__init__(*args, **kwargs)
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
@@ -144,13 +141,13 @@ class TestUtilities(unittest.TestCase):
         interval = 5
         # print(start)
         x, df, maList = bc.getbc_intraday('SQ', start=start, end=end, minutes=interval, showUrl=True)
-       
+
         entries = util.makeupEntries(df, 5)
         for e in entries:
             cx = e[3]
             candleindex = df.index[e[1]]
             delt = cx - candleindex
-            assert delt.total_seconds()//60 <= interval
+            assert delt.total_seconds() // 60 <= interval
             # self.assertEqual(df.index[e[1]], cx)
             high = df.iloc[e[1]].high
             low = df.iloc[e[1]].low
@@ -158,13 +155,11 @@ class TestUtilities(unittest.TestCase):
             self.assertGreaterEqual(price, low)
             self.assertLessEqual(price, high)
 
-
-
     def test_getLastWorkDay(self):
         '''run some local code'''
         now = dt.datetime.today()
-        fmt = "%a, %B %d"
-        
+        # fmt = "%a, %B %d"
+
         for i in range(7):
             d = now - dt.timedelta(i)
             dd = util.getLastWorkDay(d)
@@ -173,14 +168,12 @@ class TestUtilities(unittest.TestCase):
             self.assertTrue(dd.isoweekday() < 6)
             self.assertTrue(dd.isoweekday() > 0)
 
-   
-
     def test_updateKey(self):
         t = PickleSettings()
         t.storeSettings()
         t.initializeSettings()
         settings = QSettings('zero_substance', 'structjour')
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
+        # apiset = QSettings('zero_substance/stockapi', 'structjour')
 
         settings.setValue('journal', self.p)
         testdb = 'test_db.db'
@@ -196,7 +189,6 @@ class TestUtilities(unittest.TestCase):
         # print(apiset.allKeys())
         # print(settings.allKeys())
         os.remove(testdb)
-
 
     def test_ibSettings(self):
         t = PickleSettings()
@@ -226,7 +218,7 @@ def notmain():
     # p.initializeSettings()
     # p.restoreSettings()
     t = TestUtilities()
-    
+
     t.test_makeupEntries()
     # t.test_getLastWorkDay()
     # t.test_setDB()
@@ -242,9 +234,11 @@ def notmain():
     # t.initializeSettings()
     # t.restoreSettings()
 
+
 def main():
-    #import sys;sys.argv = ['', 'Test.testName']
+    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
+
 
 def localrun():
     '''
@@ -257,6 +251,7 @@ def localrun():
             attr = getattr(f, name)
             if isinstance(attr, types.MethodType):
                 attr()
+
 
 if __name__ == '__main__':
     notmain()

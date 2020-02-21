@@ -1,6 +1,6 @@
 # Structjour -- a daily trade review helper
 # Copyright (C) 2019 Zero Substance Trading
-# 
+
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -25,7 +25,7 @@ Test the methods in the module exporttoexcel
 import os
 import sys
 
-from  unittest import TestCase
+from unittest import TestCase
 import unittest
 
 from openpyxl import Workbook, load_workbook
@@ -42,7 +42,7 @@ from structjour.tradestyle import TradeFormat, c as tcell
 from structjour.view.dailycontrol import DailyControl
 from structjour.view.exportexcel import ExportToExcel
 
-from PyQt5.QtTest import QTest
+# from PyQt5.QtTest import QTest
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 from PyQt5 import QtWebEngineWidgets    # noqa F401
@@ -66,7 +66,6 @@ class Test_ExportToExcel(TestCase):
         '''
         super(Test_ExportToExcel, self).__init__(*args, **kwargs)
 
-
     def setUp(self):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
@@ -76,7 +75,6 @@ class Test_ExportToExcel(TestCase):
         self.tradeS, self.ts, self.entries, self.imageNames, self.df, self.ldf = getRandGenTradeStuff()
         if os.path.exists(self.jf.outpathfile):
             os.remove(self.jf.outpathfile)
-
 
     def test_exportExcel(self):
         '''Using a random trade generator, test exportExcel creates a file'''
@@ -94,7 +92,7 @@ class Test_ExportToExcel(TestCase):
         dc = DailyControl(self.jf.theDate)
         note = 'Ipsum solarium magus coffeum brewum'
         dc.setNote(note)
-        
+
         t = ExportToExcel(self.ts, self.jf, self.df)
         wb = Workbook()
         ws = wb.active
@@ -102,16 +100,15 @@ class Test_ExportToExcel(TestCase):
         t.saveXL(wb, self.jf)
         wb2 = load_workbook(self.jf.outpathfile)
 
-
         cell = (1, 6)
         cell = tcell(cell)
         val = wb2.active[cell].value
-        self.assertEqual(note, val)         
+        self.assertEqual(note, val)
 
     def test_populateXLDailySummaryForm(self):
         '''
-        Test the method populateXLDailySummaryForm. Specifically test that given a specific anchor, 
-        12 specific spots are written to by default. 
+        Test the method populateXLDailySummaryForm. Specifically test that given a specific anchor,
+        12 specific spots are written to by default.
         '''
         NUMROWS = 6
         mstkAnchor = (3, 3)     # arbitrary
@@ -121,14 +118,15 @@ class Test_ExportToExcel(TestCase):
 
         t.populateXLDailySummaryForm(mistake, wb.active, mstkAnchor)
         # t.saveXL(wb, self.jf)
-        
+
         anchor = (mstkAnchor[0], mstkAnchor[1] + len(self.ldf) + 5)
         cell = tcell(mstkAnchor, anchor=anchor)
         for i in range(0, NUMROWS):
-            cell = tcell((mstkAnchor[0], mstkAnchor[1] + i), anchor = anchor)
-            cell2 = tcell((mstkAnchor[0]+1, mstkAnchor[1] + i), anchor = anchor)
+            cell = tcell((mstkAnchor[0], mstkAnchor[1] + i), anchor=anchor)
+            cell2 = tcell((mstkAnchor[0] + 1, mstkAnchor[1] + i), anchor=anchor)
             self.assertIsInstance(wb.active[cell].value, str)
             self.assertIsInstance(wb.active[cell2].value, str)
+
 
 class Test_ExportToExcel_MistakeData(TestCase):
     '''
@@ -141,12 +139,11 @@ class Test_ExportToExcel_MistakeData(TestCase):
         '''
         super(Test_ExportToExcel_MistakeData, self).__init__(*args, **kwargs)
 
-
     def setUp(self):
 
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
-        
+
         theDate = pd.Timestamp('2008-06-06')
         self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False, inputType='DAS')
         self.tradeS, self.ts, self.entries, self.imageNames, self.df, self.ldf = getRandGenTradeStuff()
@@ -158,10 +155,10 @@ class Test_ExportToExcel_MistakeData(TestCase):
 
         for i, key in enumerate(self.ts):
             tto = self.ts[key]
-            notex = note + str(i+1)
+            notex = note + str(i + 1)
             tto['MstkNote'] = notex
 
-        # Setup a couple images to add 
+        # Setup a couple images to add
         imdir = 'images/'
         img1 = os.path.join(imdir, 'fractal-art-fractals.jpg')
         img2 = os.path.join(imdir, 'psych.jpg')
@@ -170,9 +167,6 @@ class Test_ExportToExcel_MistakeData(TestCase):
         for key in self.ts:
             tto = self.ts[key]['chart1'] = img1
             tto = self.ts[key]['chart2'] = img2
-
-
-
 
         t = ExportToExcel(self.ts, self.jf, self.df)
         imageNames = t.getImageNamesFromTS()
@@ -183,8 +177,8 @@ class Test_ExportToExcel_MistakeData(TestCase):
         ls = LayoutSheet(t.topMargin, len(t.df))
         wb, ws, nt = ls.createWorkbook(dframe)
 
-        #Place both forms 2 cells to the right of the main table
-        mstkAnchor = (len(dframe.columns) + 2, 1) 
+        # Place both forms 2 cells to the right of the main table
+        mstkAnchor = (len(dframe.columns) + 2, 1)
         mistake = MistakeSummary(numTrades=len(self.ldf), anchor=mstkAnchor)
         self.imageLocation = imageLocation
         self.mistake = mistake
@@ -196,7 +190,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
     def test_populateXLMistakeForm_hyperlinks(self):
         '''
         Test the method populateXLMistakeForm has set up correct hyperlinks to the daily summary
-        forms. 
+        forms.
         '''
         ws = self.wb.active
         iloc = self.imageLocation
@@ -206,7 +200,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
 
         # cell = tcell(self.mistake.mistakeFields['tpl1'][0])
         for i in range(len(self.ldf)):
-            n = 'name' + str(i+1)
+            n = 'name' + str(i + 1)
             cell = tcell(self.mistake.mistakeFields[n][0][0], anchor=self.a)
             self.assertIsNotNone(ws[cell].hyperlink)
             link = ws[cell].hyperlink.target.split('!')[1]
@@ -225,7 +219,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
 
         # Here we will get the values that the simple formulas point to and test that the trade pl matches
         for i in range(len(self.ldf)):
-            tpl = 'tpl' + str(i+1)
+            tpl = 'tpl' + str(i + 1)
             cell = tcell(self.mistake.mistakeFields[tpl][0], anchor=self.a)
             vallink = ws[cell].value.replace('=', '')
             val = ws[vallink].value
@@ -244,7 +238,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
     def test_populateXLMistakeForm_noteLinks(self):
         '''
         This method knows way too much, but how else to deal with excel and test formula results...
-        Test that when data is included for the mistake note in ts, that data is linked with a 
+        Test that when data is included for the mistake note in ts, that data is linked with a
         simple formula (e.g. '=X98') in the mistake summary form
         '''
         ws = self.wb.active
@@ -255,8 +249,8 @@ class Test_ExportToExcel_MistakeData(TestCase):
 
         # Here we will get the values that the simple formulas point to and test that the note is what we wrote
         for i in range(len(self.ldf)):
-            m = 'mistake' + str(i+1)
-            note = self.note + str(i+1)
+            m = 'mistake' + str(i + 1)
+            note = self.note + str(i + 1)
             cell = tcell(self.mistake.mistakeFields[m][0][0], anchor=self.a)
             vallink = ws[cell].value.replace('=', '')
             val = ws[vallink].value
@@ -278,8 +272,8 @@ class Test_ExportToExcel_MistakeData(TestCase):
         # self.t.saveXL(self.wb, self.jf)
 
         for loc in self.imageLocation:
-            sumcell=tcell((1, loc[0][0][1]))
-            aboveSumCell = tcell((1, loc[0][0][1]-1))
+            sumcell = tcell((1, loc[0][0][1]))
+            aboveSumCell = tcell((1, loc[0][0][1] - 1))
             self.assertEqual(ws[sumcell].style, 'titleStyle', sumcell)
             self.assertEqual(ws[aboveSumCell].style, 'Normal', aboveSumCell)
             for iloc, fn in zip(loc[0], loc[1]):
@@ -311,6 +305,7 @@ class Test_ExportToExcel_MistakeData(TestCase):
                 # print(ws[valcell].value)
                 self.assertEqual(ws[valcell].value.find('='), 0)
 
+
 def main():
     unittest.main()
 
@@ -320,6 +315,7 @@ def notmain():
     t = Test_ExportToExcel()
     t.setUp()
     t.test_exportExcel()
+
 
 if __name__ == '__main__':
     # notmain()

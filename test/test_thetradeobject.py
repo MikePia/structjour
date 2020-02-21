@@ -80,9 +80,9 @@ class TestTheTradeObject(unittest.TestCase):
                'dastrades_20190221.csv', 'ActivityDaily.663710.20191101.csv']
     # thedates = ['20191101']
     thedates = ['20181116', '20180907',
-                 '20190117', '20180910',
-                 '20181120', '20181105',
-                 '20190221', '20191101']
+                '20190117', '20180910',
+                '20181120', '20181105',
+                '20190221', '20191101']
 
     # def __init__(self, *args, **kwargs):
     #     super(TestTheTradeObject, self).__init__(*args, **kwargs)

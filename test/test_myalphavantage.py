@@ -23,13 +23,12 @@ Test code for myalphavantage module.
 import datetime as dt
 import unittest
 from time import time, sleep
-import types
 
 import pandas as pd
 
 from structjour.stock import myalphavantage as mav
 from structjour.stock import utilities as util
-# pylint: disable = C0103
+
 
 # @unittest.skip('Leave to deal with later')
 class TestMyalphavantage(unittest.TestCase):
@@ -60,8 +59,7 @@ class TestMyalphavantage(unittest.TestCase):
                      (specificStart, specificEnd),
                      (befAft, None),
                      (longBef, None),
-                     (None, None)
-                    ]
+                     (None, None)]
         # dateArray2 = [(bizAft, None)]
         # now = pd.Timestamp.today()
 
@@ -106,9 +104,9 @@ class TestMyalphavantage(unittest.TestCase):
 
             # Could add some tests for what happens when request is for today during market hours
 
-            if count %5 == 4:
+            if count % 5 == 4:
                 # After 5 calls, sleep. 5 calls per minute is the max for the free API
-                newnextt = nextt-time()
+                newnextt = nextt - time()
                 nx = int(newnextt)
                 print(f'''Waiting for {nx} seconds. 5 calls per minute max
                        from AVantage free API''')
@@ -139,11 +137,11 @@ class TestMyalphavantage(unittest.TestCase):
             self.assertEqual(res, r)
 
         res = mav.ni(-42)
-        self.assertEqual(res, (False,('1min', 1, 1)))
-
+        self.assertEqual(res, (False, ('1min', 1, 1)))
 
         res = mav.ni(450)
-        self.assertEqual(res, (False,('60min', 60, 60)))
+        self.assertEqual(res, (False, ('60min', 60, 60)))
+
 
 def main():
     '''test discovery is not working in vscode. Use this for debugging. Then run cl python -m unittest discovery'''
@@ -156,12 +154,12 @@ def main():
     #             attr()
 
 
-
 def notmain():
     '''Run some local code for dev'''
     m = TestMyalphavantage()
     m.test_getmav_intraday()
     # m.test_ni()
+
 
 if __name__ == '__main__':
     # notmain()

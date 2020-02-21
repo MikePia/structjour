@@ -28,7 +28,7 @@ real data as input. Other tests a random trade generator.
 '''
 import os
 from unittest import TestCase
-from unittest.mock import patch
+# from unittest.mock import patch
 import unittest
 from collections import deque
 import re
@@ -41,6 +41,7 @@ import pandas as pd
 DD = deque()
 D = deque()
 
+
 def findTrade(df, t):
     '''
     Locate the trade represented by t in the dataFrame.
@@ -50,7 +51,7 @@ def findTrade(df, t):
 
     # iterate through each trade as a dataFrame dfx
     for i in range(12):
-        s = "Trade " + str(i+1)
+        s = "Trade " + str(i + 1)
         dfx = df[df['Tindex'] == s]
 
         # pick out trades with the symbol
@@ -75,17 +76,11 @@ def findTrade(df, t):
                     amnt = float(t[4])
                     wegood = True
             if wegood:
-                if(t[3].lower().strip().startswith('after') and
-                   dfx.iloc[-1].side.startswith('HOLD') and
-                   float(dfx.iloc[-2].bal) == amnt):
+                if(t[3].lower().strip().startswith('after') and (dfx.iloc[-1].side.startswith('HOLD')) and (float(dfx.iloc[-2].bal) == amnt)):
                     return dfx
-                if(t[3].lower().strip().startswith('before') and
-                   dfx.iloc[0].side.startswith('HOLD') and
-                   float(dfx.iloc[0].bal) == amnt):
+                if(t[3].lower().strip().startswith('before') and (dfx.iloc[0].side.startswith('HOLD')) and (float(dfx.iloc[0].bal) == amnt)):
                     return dfx
     return pd.DataFrame()
-
-
 
 
 class TestStructjour(TestCase):
@@ -96,7 +91,6 @@ class TestStructjour(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestStructjour, self).__init__(*args, **kwargs)
         global DD
-
 
         self.DD = DD
         if not DD or len(D) < 11:
@@ -132,8 +126,6 @@ class TestStructjour(TestCase):
 
         df = pd.read_excel(os.path.join(indir, 'testdata.xlsx'))
 
-        l = len(df)
-        # print(l)
         data = list()
 
         data = list()
@@ -144,7 +136,7 @@ class TestStructjour(TestCase):
                 j = i
                 trades = list()
                 begginning = True
-                while j < l and not pd.isnull(df.at[j, 'Ticker']):
+                while j < len(df) and not pd.isnull(df.at[j, 'Ticker']):
                     # Check these specific trades
                     if not begginning:
                         if isinstance(df.at[j, 'Name'], str):
@@ -153,13 +145,15 @@ class TestStructjour(TestCase):
                     trades.append([df.at[j, 'Ticker'], df.at[j, 'Account'],
                                    df.at[j, 'Side'], df.at[j, 'Held'], df.at[j, 'Pos'], ])
                     begginning = False
-                    j = j+1
+                    j = j + 1
                 entry.append(trades)
                 data.append(entry)
         self.tests = data
 
+
 def main():
     unittest.main()
+
 
 if __name__ == '__main__':
     # pylint: disable = E1120

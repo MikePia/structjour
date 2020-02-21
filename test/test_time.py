@@ -48,7 +48,7 @@ class Test_time(unittest.TestCase):
     def test_createDirs(self):
         '''
         Test the function time.createDirs. Specifically test that it creates the specified
-        directory and the subdirectories. Test that it throws ValueError if theDir already 
+        directory and the subdirectories. Test that it throws ValueError if theDir already
         exists. Test that cwd is the same before calling the function and after.
         '''
         cwd = os.getcwd()
@@ -63,7 +63,7 @@ class Test_time(unittest.TestCase):
             self.assertFalse(os.path.exists(sandbox), "The error here is in the test_createDirs")
             # os.removedirs(sandbox)
 
-        theDate = dt.datetime(2019,1,1)
+        theDate = dt.datetime(2019, 1, 1)
         wasThrown = False
         createDirs(theDate, sandbox)
         try:
@@ -72,23 +72,17 @@ class Test_time(unittest.TestCase):
             wasThrown = True
         finally:
             self.assertTrue(wasThrown)
-        
 
-        
         while True:
             if theDate.isoweekday() < 6:
                 break
             theDate = theDate + dt.timedelta(days=1)
         self.assertTrue(os.path.exists(sandbox))
-        
+
         cwd2 = os.getcwd()
         self.assertEqual(cwd, cwd2)
         if os.path.exists(sandbox):
             rmtree(sandbox)
-
-
-
-
 
     def test_getFirstWeekday(self):
         '''Test the function time.getFirstWeekday.'''
@@ -114,11 +108,14 @@ class Test_time(unittest.TestCase):
         finally:
             if not throw:
                 self.assertTrue(test2019[0][0] == 1, "Failed to throw a ValueError")
+
+
 def notmain():
     '''Run some local code'''
     t = Test_time()
     # t.test_getFirstWeekday()
     t.test_createDirs()
+
 
 def main():
     unittest.main()

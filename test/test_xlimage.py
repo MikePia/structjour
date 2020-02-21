@@ -32,8 +32,6 @@ import unittest
 # from openpyxl.drawing.image import Image
 
 from structjour.xlimage import XLImage
-# pylint: disable = C0103
-
 
 
 class TestXLImage(TestCase):
@@ -51,7 +49,7 @@ class TestXLImage(TestCase):
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
     def setUp(self):
-        
+
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -72,7 +70,6 @@ class TestXLImage(TestCase):
         im2 = xli2.getDefaultPILImage()
         self.assertGreater(len(im2.format), 1)
 
-
     def test_adjustSizeByHeight(self):
         '''
        Test the method XLImage.adjustSizeByHeight
@@ -81,28 +78,28 @@ class TestXLImage(TestCase):
         random.seed(dt.datetime.now())
 
         pixDelta = 0.02
-        #Test input tuple
+        # Test input tuple
         for dummy in range(10):
             insz = (random.randint(200, 2500), random.randint(200, 2500))
             w, h = xl.adjustSizeByHeight(insz)
-            self.assertAlmostEqual(insz[0]/insz[1], w/h, delta=pixDelta)
+            self.assertAlmostEqual(insz[0] / insz[1], w / h, delta=pixDelta)
 
-        #Test Figuring by cell number
+        # Test Figuring by cell number
         for dummy in range(10):
             insz = (random.randint(200, 2500), random.randint(200, 2500))
             nc = (random.randint(15, 35))
             xl = XLImage(heightInCells=nc)
             w, h = xl.adjustSizeByHeight(insz)
-            self.assertAlmostEqual(insz[0]/insz[1], w/h, delta=pixDelta)
+            self.assertAlmostEqual(insz[0] / insz[1], w / h, delta=pixDelta)
 
-        #test changing pixPerCell
+        # test changing pixPerCell
         for dummy in range(10):
             insz = (random.randint(200, 2500), random.randint(200, 2500))
             ppc = (random.uniform(30, 35))
             nc = (random.randint(15, 35))
             xl = XLImage(heightInCells=nc, pixPerCell=ppc)
             w, h = xl.adjustSizeByHeight(insz)
-            self.assertAlmostEqual(insz[0]/insz[1], w/h, delta=pixDelta)
+            self.assertAlmostEqual(insz[0] / insz[1], w / h, delta=pixDelta)
 
     def test_getResizeName(self):
         '''Test method journal.xlimage.XLImage.getResizeName'''
@@ -117,13 +114,9 @@ class TestXLImage(TestCase):
         self.assertEqual(torig, tnew)
 
 
-
-
-
 def main():
     '''Run unittest locally'''
     unittest.main()
-
 
 
 def notmain():
@@ -132,6 +125,7 @@ def notmain():
     # t.test_getDefault()
     # t.test_AdjustSizeByHeight()
     t.test_getResizeName()
+
 
 if __name__ == '__main__':
     # notmain()

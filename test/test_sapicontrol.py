@@ -25,7 +25,7 @@ Created on May 19, 2019
 import os
 import sys
 import unittest
-from  unittest import TestCase
+from unittest import TestCase
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 from PyQt5 import QtWebEngineWidgets    # noqa F401
@@ -38,6 +38,7 @@ from structjour.view.sapicontrol import StockApi
 # pylint: disable = C0103
 
 app = QApplication(sys.argv)
+
 
 class TestSapi(TestCase):
 
@@ -82,9 +83,9 @@ class TestSapi(TestCase):
         self.apiSet = apisettings
 
     def test_initFromSettings(self):
-        '''[ibRealPort, ibRealId, ibPaperPort, ibPaperId, 
-        ibRealCb, ibPaperCb, 
-        bcCb, avCb, wtdCb, fhCb, 
+        '''[ibRealPort, ibRealId, ibPaperPort, ibPaperId,
+        ibRealCb, ibPaperCb,
+        bcCb, avCb, wtdCb, fhCb,
         APIPref]'''
         for key in self.testWidgets:
             widg = self.testWidgets[key]
@@ -112,14 +113,16 @@ class TestSapi(TestCase):
         self.w.ui.APIPref.setText('ib, bc, av')
         s = self.w.ui.APIPref.styleSheet()
         self.assertTrue(s.find('red') > 0)
-        
+
         QTest.mouseClick(self.w.ui.avCb, Qt.LeftButton)
         QTest.mouseClick(self.w.ui.ibRealCb, Qt.LeftButton)
         QTest.mouseClick(self.w.ui.ibRealCb, Qt.LeftButton)
         self.assertEqual(self.w.ui.APIPref.text(), 'bc, av, ib')
 
+
 def main():
     unittest.main()
+
 
 if __name__ == '__main__':
     main()

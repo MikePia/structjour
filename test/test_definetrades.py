@@ -24,21 +24,16 @@ Test the methods in the module journal.definetrades
 '''
 from math import isclose
 import os
-import random
 import types
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 
-from structjour.dfutil import DataFrameUtil
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades, ReqCol
 
-from structjour.rtg import randomTradeGenerator2, floatValue
-
-# pylint: disable = C0103
-
+from structjour.rtg import randomTradeGenerator2
 
 
 class TestDefineTrades(TestCase):
@@ -77,13 +72,12 @@ class TestDefineTrades(TestCase):
         index iloc
         '''
         NUMTRADES = 4
-        trades = list()
         start = pd.Timestamp('2018-06-06 09:30:00')
         df = pd.DataFrame()
         exclude = []
         for i in range(NUMTRADES):
-            tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                                pdbool=True, exclude=exclude)
+            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                               pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
 
@@ -110,20 +104,18 @@ class TestDefineTrades(TestCase):
             assert df3.iloc[i][frc.bal] == df.iloc[i][frc.bal]
             # print('{:-20}     {}'.format(df3.iloc[i][frc.bal], df.iloc[i][frc.bal]))
 
-
     def test_addStartTime(self):
         '''
         Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
         the start field and then test the results for the start field.
         '''
-        NUMTRADES = 4   
-        trades = list()
+        NUMTRADES = 4
         start = pd.Timestamp('2019-01-01 09:30:00')
         df = pd.DataFrame()
         exclude = []
         for i in range(NUMTRADES):
-            tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                                pdbool=True, exclude=exclude)
+            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                               pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
 
@@ -134,7 +126,7 @@ class TestDefineTrades(TestCase):
         #                                         frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
         df2 = df.copy()
         df2[frc.start] = None
-        
+
         dtrades = DefineTrades()
         df3 = df2.copy()
         df3.sort_values(['Symb', 'Account', 'Time'], inplace=True)
@@ -142,22 +134,21 @@ class TestDefineTrades(TestCase):
         for i in range(len(df3)):
             # Tests that addtradeIndex recreated the same index locations that rtg did after sorting the trades
             if df3.loc[i][frc.start] != df.loc[i][frc.start]:
-                print ('Found and error at index', i)
+                print('Found and error at index', i)
                 print(df3.loc[i][frc.start], df.loc[i][frc.start])
             self.assertEqual(df3.loc[i][frc.start], df.loc[i][frc.start])
         for i in range(NUMTRADES):
             # Test all trades have a single start time
-            tradeNum = 'Trade ' + str(i+1)
+            tradeNum = 'Trade ' + str(i + 1)
             tdf = df3[df3.Tindex == tradeNum].copy()
             self.assertEqual(len(tdf.Start.unique()), 1)
-
 
     def test_addTradeIndex(self):
         '''
         Test addTradeIndex
         '''
         NUMRUNS = 10
-        NUMTRADES = 10 # Number of trades to aggregate into single statement
+        NUMTRADES = 10         # Number of trades to aggregate into single statement
         for i in range(NUMRUNS):
             # if not i % 20:
             #     print(f'{i}/{NUMRUNS} ', end='')
@@ -166,12 +157,11 @@ class TestDefineTrades(TestCase):
             df = pd.DataFrame()
             exclude = []
             for j in range(NUMTRADES):
-                tdf, earliest = randomTradeGenerator2(j+1, earliest=earliest,
+                tdf, earliest = randomTradeGenerator2(j + 1, earliest=earliest,
                                                     pdbool=True, exclude=exclude)
                 exclude.append(tdf.iloc[0].Symb)
                 df = df.append(tdf)
                 earliest = earliest + delt
-
 
                 df.reset_index(drop=True, inplace=True)
                 df = df.sort_values(['Symb', 'Account', 'Time'])
@@ -184,7 +174,7 @@ class TestDefineTrades(TestCase):
             ddf = dtrades.addTradeIndex(df2)
 
             for k in range(4):
-                tnum = 'Trade ' + str(k+1)
+                tnum = 'Trade ' + str(k + 1)
                 tdf = ddf[ddf.Tindex == tnum].copy()
                 xl = tdf.index[-1]
                 lastd = None
@@ -198,15 +188,14 @@ class TestDefineTrades(TestCase):
                     else:
                         if tdf.at[j, 'Balance'] != 0:
                             print('Found an error at index', xl, 'The balance should be 0')
-                            print(df[['Symb','Tindex',  'Account', 'Time', 'Side', 'Qty', 'Balance']])
+                            print(df[['Symb', 'Tindex', 'Account', 'Time', 'Side', 'Qty', 'Balance']])
                         self.assertEqual(tdf.at[j, 'Balance'], 0)
                     if lastd:
                         if lastd > thisd:
                             print('Found an error in the Time sequencing of', tnum)
-                            print(thisd, ' > ',  lastd, ' = ',  thisd > lastd)
-                            print(df[['Symb', 'Tindex',  'Account', 'Time', 'Side', 'Qty', 'Balance']])
-                            self.assertGreater(thisd,  lastd)
-        
+                            print(thisd, ' > ', lastd, ' = ', thisd > lastd)
+                            print(df[['Symb', 'Tindex', 'Account', 'Time', 'Side', 'Qty', 'Balance']])
+                            self.assertGreater(thisd, lastd)
 
     # TODO Redo this when the random trades are upgraded to creating accurate PL in all cases
     def test_addSummaryPL(self):
@@ -215,85 +204,79 @@ class TestDefineTrades(TestCase):
         the start field and then test the results for the start field.
         '''
         NUMTRADES = 4
-        trades = list()
         start = pd.Timestamp('2018-06-06 09:30:00')
         df = pd.DataFrame()
         exclude = []
         for i in range(4):
-            tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                                pdbool=True, exclude=exclude)
+            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                               pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
-            
+
         df.reset_index(drop=True, inplace=True)
 
         frc = FinReqCol()
         df2 = df.copy()
-        
+
         df2[frc.sum] = None
 
         df3 = df2.copy()
-        
+
         df3 = df3.sort_values(['Symb', 'Account', 'Time'])
         dtrades = DefineTrades()
         df3 = dtrades.addTradePL(df3)
-        
+
         for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i+1)
+            tnum = 'Trade ' + str(i + 1)
             tdf = df3[df3.Tindex == tnum]
             tdf_gen = df[df.Tindex == tnum]
 
-
-            
             for i, row in tdf.iterrows():
                 if row.Balance:
                     assert not row.Sum
                 else:
-                    
-                    assert tdf['P / L'].sum() ==  row.Sum
-                    assert row.Sum == tdf_gen.loc[tdf_gen.index[-1]].Sum    
 
+                    assert tdf['P / L'].sum() == row.Sum
+                    assert row.Sum == tdf_gen.loc[tdf_gen.index[-1]].Sum
 
     def test_addTradeDuration(self):
         '''
         Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
-        the start field and then test the results for the start field. Specifically 
+        the start field and then test the results for the start field. Specifically
         Test that Duration val is placed only when the trade has 0 Shares
         Test that the the original is the same dur as that created by addTradeDuration
         Test Duration is difference from each Last Trade - Start val
         '''
         NUMTRADES = 4
-        trades = list()
         start = pd.Timestamp('2018-06-06 09:30:00')
         df = pd.DataFrame()
         exclude = []
         for i in range(NUMTRADES):
-            tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                                pdbool=True, exclude=exclude)
+            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                               pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
-            
+
         df.reset_index(drop=True, inplace=True)
 
         frc = FinReqCol()
         df2 = df.copy()
         df2[frc.dur] = None
         df3 = df2.copy()
-        
+
         df3 = df3.sort_values(['Symb', 'Account', 'Time'])
         dtrades = DefineTrades()
         df3 = dtrades.addTradeDuration(df3)
-        
+
         for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i+1)
+            tnum = 'Trade ' + str(i + 1)
             tdf = df3[df3.Tindex == tnum]
             tdf_gen = df[df.Tindex == tnum]
-            xl = tdf.index[-1]
+            # xl = tdf.index[-1]
             xl_gen = tdf_gen.index[-1]
 
             assert len(tdf.Tindex.unique()) == 1
 
-            
             for i, row in tdf.iterrows():
                 if row.Balance:
                     assert not row.Duration
@@ -309,97 +292,89 @@ class TestDefineTrades(TestCase):
     def test_addTradePL(self):
         '''
         Test the method DefineTrades.addTradePL. Create random trade and remove the sum val
-        
-        Call addtradePL and compare the origianl generation with the new one. 
+
+        Call addtradePL and compare the origianl generation with the new one.
         Specifically Test that Sum val is placed only when the trade has 0 Shares
         Test that the the original is the same PL as that created by addTradeDuration
         Test Sum is sum or the PL values from the trade.
         '''
         NUMTRADES = 4
-        trades = list()
         start = pd.Timestamp('2018-06-06 09:30:00')
         df = pd.DataFrame()
         exclude = []
         for i in range(4):
-            tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                                pdbool=True, exclude=exclude)
+            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                               pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
-            
+
         df.reset_index(drop=True, inplace=True)
 
         frc = FinReqCol()
         df2 = df.copy()
-        
+
         df2[frc.sum] = None
-        
 
         df3 = df2.copy()
-        
+
         df3 = df3.sort_values(['Symb', 'Account', 'Time'])
         dtrades = DefineTrades()
         df3 = dtrades.addTradePL(df3)
-        
+
         for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i+1)
+            tnum = 'Trade ' + str(i + 1)
             tdf = df3[df3.Tindex == tnum]
             tdf_gen = df[df.Tindex == tnum]
 
-
-            
             for i, row in tdf.iterrows():
                 if row.Balance:
                     assert not row.Sum
                 else:
-                    
-                    assert isclose(tdf['PnL'].sum(),  row.Sum, abs_tol=1e-7)
+
+                    assert isclose(tdf['PnL'].sum(), row.Sum, abs_tol=1e-7)
                     assert isclose(row.Sum, tdf_gen.loc[tdf_gen.index[-1]].Sum, abs_tol=1e-7)
 
-                
-
-    def test_addSummaryPL(self):
+    def test_addSummaryPL_rtg(self):
         '''
         Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
         the start field and then test the results for the start field.
         '''
         NUMTRADES = 4
-        trades = list()
         start = pd.Timestamp('2018-06-06 09:30:00')
         df = pd.DataFrame()
         exclude = []
         for i in range(4):
-            tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                                pdbool=True, exclude=exclude)
+            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                               pdbool=True, exclude=exclude)
             df = df.append(tdf)
             exclude.append(tdf.Symb.unique()[0])
-            
+
         df.reset_index(drop=True, inplace=True)
 
         frc = FinReqCol()
         df2 = df.copy()
-        
+
         df2[frc.sum] = None
 
         df3 = df2.copy()
-        
+
         df3 = df3.sort_values(['Symb', 'Account', 'Time'])
         dtrades = DefineTrades()
         df3 = dtrades.addTradePL(df3)
-        
+
         for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i+1)
+            tnum = 'Trade ' + str(i + 1)
             tdf = df3[df3.Tindex == tnum]
             tdf_gen = df[df.Tindex == tnum]
 
-
-            
             for i, row in tdf.iterrows():
                 if row.Balance:
                     assert not row.Sum
                 else:
-                    
+
                     assert isclose(tdf['PnL'].sum(), row.Sum, abs_tol=1e-7)
                     assert isclose(row.Sum, tdf_gen.loc[tdf_gen.index[-1]].Sum, abs_tol=1e-7)
+
 
 def notmain():
     '''Run some local code'''
@@ -407,12 +382,12 @@ def notmain():
         t = TestDefineTrades()
         # t.test_addStartTime()
         # t.test_addTradeIndex()
-    
+
         # t.test_addTradeDuration()
         t.test_addSummaryPL()
         # t.test_addTradePL()
         # t.test_writeShareBalance()
-    
+
     # t.test_addSummaryPL()
 
 
@@ -428,6 +403,7 @@ def main():
 
             if isinstance(attr, types.MethodType):
                 attr()
+
 
 if __name__ == '__main__':
     # main()

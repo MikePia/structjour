@@ -23,12 +23,11 @@ Test the methods in the module layoutsheet
 @author: Mike Petersen
 '''
 
-import datetime as dt
 import os
 from random import randint
 from unittest import TestCase
 import unittest
-from unittest.mock import patch
+# from unittest.mock import patch
 from collections import deque
 
 import numpy as np
@@ -41,14 +40,14 @@ from PyQt5.QtCore import QSettings
 
 from structjour.layoutsheet import LayoutSheet
 from structjour.tradestyle import TradeFormat, c as tcell
-########: disable = C0103, W0613, W0603, W0212, R0914
+
 # pylint: disable = C0103, W0613, W0603, W0212, R0914
 
 
 D = deque()
 
 
-# Runs w/o error using discovery IFF its the first test to run. With mock, QTest, global data and 
+# Runs w/o error using discovery IFF its the first test to run. With mock, QTest, global data and
 # precarious data matching based on knowing too much, I am not going to take the time to fix it.
 # Its deprecated code- will soon remove all evidence of the console version and the cosole
 # interview. (It runs without error when run seperately)
@@ -96,7 +95,6 @@ class TestLayoutSheet(TestCase):
 
         df = pd.read_excel(os.path.join(indir, 'testdata.xlsx'))
 
-        l = len(df)
         data = list()
 
         data = list()
@@ -107,7 +105,7 @@ class TestLayoutSheet(TestCase):
                 j = i
                 trades = list()
                 begginning = True
-                while j < l and not pd.isnull(df.at[j, 'Ticker']):
+                while j < len(df) and not pd.isnull(df.at[j, 'Ticker']):
                     # Check these specific trades
                     if not begginning:
                         if isinstance(df.at[j, 'Name'], str):
@@ -116,7 +114,7 @@ class TestLayoutSheet(TestCase):
                     trades.append([df.at[j, 'Ticker'], df.at[j, 'Account'],
                                    df.at[j, 'Side'], df.at[j, 'Held'], df.at[j, 'Pos'], ])
                     begginning = False
-                    j = j+1
+                    j = j + 1
                 entry.append(trades)
                 data.append(entry)
         return data
@@ -135,7 +133,6 @@ class TestLayoutSheet(TestCase):
 
         wb, ws, df = ls.createWorkbook(df)
 
-
         for row, (i, dfrow) in zip(ws, df.iterrows()):
             # We inserted the column headers in this row (ws starts with 1, not 0)
             if i + 1 == ls.topMargin:
@@ -145,7 +142,6 @@ class TestLayoutSheet(TestCase):
             else:
                 for ms, x in zip(row, dfrow):
                     self.assertEqual(x, ms.value)
-
 
         wb.save("out/SCHNOrK.xlsx")
 
@@ -163,7 +159,7 @@ class TestLayoutSheet(TestCase):
         quoteStyle = 'normStyle'
         noteStyle = 'explain'
         margin = 25
-        inputlen = 50   #len(df)
+        inputlen = 50   # len(df)
 
         wb = Workbook()
         ws = wb.active
@@ -181,13 +177,12 @@ class TestLayoutSheet(TestCase):
         headers = ['Its', 'the', 'end', 'of', 'the', 'world', 'as', 'we',
                    'know', 'it.', 'Bout', 'Fn', 'Time!']
         for i in range(1, 14):
-            ws[tcell((i, 25))] = headers[i-1]
+            ws[tcell((i, 25))] = headers[i - 1]
 
         ls = LayoutSheet(margin, inputlen)
-        for x in range(ls.topMargin+1, ls.inputlen + ls.topMargin+1):
+        for x in range(ls.topMargin + 1, ls.inputlen + ls.topMargin + 1):
             for xx in range(1, 14):
                 ws[tcell((xx, x))] = randint(-1000, 10000)
-
 
         ls.styleTop(ws, 13, TradeFormat(wb))
 
@@ -197,8 +192,8 @@ class TestLayoutSheet(TestCase):
         ws2 = wb2.active
 
         listOfMerged = list()
-        listOfMerged.append(tcell((quoteRange[0])) + ':' +  tcell((quoteRange[1])))
-        listOfMerged.append(tcell((noteRange[0])) + ':' +  tcell((noteRange[1])))
+        listOfMerged.append(tcell((quoteRange[0])) + ':' + tcell((quoteRange[1])))
+        listOfMerged.append(tcell((noteRange[0])) + ':' + tcell((noteRange[1])))
         for xx in ws2.merged_cells.ranges:
             # print (str(xx) in listOfMerged)
             self.assertTrue(str(xx) in listOfMerged)
@@ -206,7 +201,6 @@ class TestLayoutSheet(TestCase):
         self.assertEqual(ws[tcell(noteRange[0])].style, noteStyle)
 
         self.assertEqual(len(ws._tables), 1)
-
 
         begin = tcell((1, ls.topMargin))
 
@@ -227,7 +221,7 @@ class TestLayoutSheet(TestCase):
         quoteStyle = 'normStyle'
         noteStyle = 'explain'
         margin = 25
-        inputlen = 50   #len(df)
+        inputlen = 50   # len(df)
 
         wb = Workbook()
         ws = wb.active
@@ -250,8 +244,8 @@ class TestLayoutSheet(TestCase):
         ws2 = wb2.active
 
         listOfMerged = list()
-        listOfMerged.append(tcell((quoteRange[0])) + ':' +  tcell((quoteRange[1])))
-        listOfMerged.append(tcell((noteRange[0])) + ':' +  tcell((noteRange[1])))
+        listOfMerged.append(tcell((quoteRange[0])) + ':' + tcell((quoteRange[1])))
+        listOfMerged.append(tcell((noteRange[0])) + ':' + tcell((noteRange[1])))
         for xx in ws2.merged_cells.ranges:
             # print (str(xx) in listOfMerged)
             self.assertIn(str(xx), listOfMerged)
@@ -259,7 +253,6 @@ class TestLayoutSheet(TestCase):
         self.assertEqual(ws[tcell(noteRange[0])].style, noteStyle)
 
         self.assertEqual(len(ws._tables), 1)
-
 
         begin = tcell((1, ls.topMargin))
 
@@ -270,11 +263,8 @@ class TestLayoutSheet(TestCase):
         os.remove(dispath)
 
 
-
-
 def notmain():
     '''Run some local code'''
-        # pylint: disable = E1120
     ttt = TestLayoutSheet()
     ttt.test_createWorkbook()
     ttt.test_styleTop()
@@ -285,12 +275,11 @@ def notmain():
     # ttt.test_runSummaries()
     # ttt.test_createImageLocation()
 
+
 def main():
     '''Run unittests cl style'''
-    #import sys;sys.argv = ['', 'Test.testName']
+    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
-
-
 
 
 if __name__ == '__main__':
