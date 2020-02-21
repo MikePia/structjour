@@ -1,3 +1,4 @@
+#
 # Structjour -- a daily trade review helper
 # Copyright (C) 2019 Zero Substance Trading
 #
@@ -38,6 +39,7 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.statement import getStatementType
 from structjour.statements.dasstatement import DasStatement
+from structjour.stock.utilities import isNumeric
 
 # pylint: disable = C0103, W0212, C0111
 
@@ -71,16 +73,16 @@ class TestTheTradeObject(unittest.TestCase):
     testdb = os.path.join(datadir, 'testdb.sqlite')
     inputType = ''
     ttos = []
-    infiles = ['dastrades_20180907.csv']
-    # infiles = ['dastrades_20181116.csv.csv', 'dastrades_20180907.csv',
-    #            'dastrades_20190117.csv', 'dastrades_20180910.csv',
-    #            'dastrades_20181120.csv', 'dastrades_20181105.csv',
-    #            'dastrades_20190221.csv', 'ActivityDaily.663710.20191101.csv']
-    thedates = ['20180907']
-    # thedates = ['20181116', '20180907',
-    #              '20190117', '20180910',
-    #              '20181120', '20181105',
-    #              '20190221', '20191101']
+    # infiles = ['ActivityDaily.663710.20191101.csv']
+    infiles = ['dastrades_20181116.csv.csv', 'dastrades_20180907.csv',
+               'dastrades_20190117.csv', 'dastrades_20180910.csv',
+               'dastrades_20181120.csv', 'dastrades_20181105.csv',
+               'dastrades_20190221.csv', 'ActivityDaily.663710.20191101.csv']
+    # thedates = ['20191101']
+    thedates = ['20181116', '20180907',
+                 '20190117', '20180910',
+                 '20181120', '20181105',
+                 '20190221', '20191101']
 
     # def __init__(self, *args, **kwargs):
     #     super(TestTheTradeObject, self).__init__(*args, **kwargs)
@@ -171,22 +173,21 @@ class TestTheTradeObject(unittest.TestCase):
 
     def test_TheTradeObjectSetShares_and_setMarketValue(self):
         '''
-        Tests the setMarketValue -- depends on shares
+        Tests the setMarketValue -- and setShares (because the setMarketValue depends on it.)
         Note that shares generally is what is in the db and with the error corrrecting stuff,
         (BAPL and all) any errors in the value generally will reside somewhere else.
-        
         '''
         for tto in self.ttos:
             x0 = tto.df.index[0]
 
-            side = tto.df.at[x0, 'Side']
-            minmax = True if side.startswith('B') or side.startswith('HOLD+') else False
-            bal = tto.df['Balance'].max() if minmax else tto.df['Balance'].min()
+            # side = tto.df.at[x0, 'Side']
+            # minmax = True if side.startswith('B') or side.startswith('HOLD+') else False
+            # bal = tto.df['Balance'].max() if minmax else tto.df['Balance'].min()
 
             tto._TheTradeObject__setShares()
 
             shares = tto.getShares()
-            ttoshares = int(tto.TheTrade['Shares'].unique()[0].split(' ')[0])
+            ttoshares = int(float(tto.TheTrade['Shares'].unique()[0].split(' ')[0]))
             self.assertEqual(ttoshares, shares, "Failed to set position correctly")
 
             tto._TheTradeObject__setMarketValue()
@@ -231,18 +232,23 @@ class TestTheTradeObject(unittest.TestCase):
             #     self.fail('This test requires a longer sample of transactions to run.')
             count = 0
             x0 = tto.df.index[0]
-            side = tto.df.at[x0, rc.side]
+
+            long = False
+            r = tto.df.loc[x0]
+            if len(r[rc.oc]) < 1 and (r[rc.side].startswith('B') or r[rc.side].lower().startswith('hold+')):
+                long = True
+            elif r[rc.oc] == 'O' and r[rc.shares] > 0 or r[rc.oc] == 'C' and r[rc.shares] < 0:
+                long = True
+
+            # side = r[rc.side]
             for i, row in tto.df.iterrows():
                 count += 1
-                # print (row[rc.price], row[rc.side], row[rc.PL])
-                if (side.startswith('B') and row[rc.side].startswith('B')) or (
-                        side.startswith('S') and row[rc.side].startswith('S')):
+                if (long and row[rc.shares] > 0) or (not long and row[rc.shares] < 0):
                     if row[rc.price] != 0:
                         entry = 'Entry' + str(count)
                         ttoprice = tto.TheTrade[entry].unique()[0]
                         self.assertEqual(ttoprice, row.Price, "Failed to set entry correctly")
-                elif (side.startswith('B') and row[rc.side].startswith('S')) or (
-                        side.startswith('S') and row[rc.side].startswith('B')):
+                else:
                     if row[rc.price] != 0:
                         entry = 'Exit' + str(count)
                         ttoprice = tto.TheTrade[entry].unique()[0]
@@ -250,8 +256,7 @@ class TestTheTradeObject(unittest.TestCase):
                 if row[rc.PL] != 0:
                     PLname = 'PL' + str(count)
                     ttopl = tto.TheTrade[PLname].unique()[0]
-
-                    self.assertEqual(ttopl, row[rc.PL], "Failed to set pl correctly")
+                    self.assertEqual(ttopl, row[rc.PL] if isNumeric(row[rc.PL]) else 0, "Failed to set pl correctly")
 
 
 def main():

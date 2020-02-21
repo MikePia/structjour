@@ -25,8 +25,8 @@ created: September 1, 2018
 
 import os
 import datetime as dt
+import logging
 
-import numpy as np
 import pandas as pd
 
 from PyQt5.QtCore import QSettings
@@ -34,6 +34,7 @@ from PyQt5.QtCore import QSettings
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
 from structjour.stock.graphstuff import FinPlot
+from structjour.stock.utilities import isNumeric
 
 # pylint: disable=C0103
 
@@ -42,7 +43,6 @@ from structjour.stock.graphstuff import FinPlot
 # Use sf (SumReqFields instance) to access
 # columns/data for the summary trade dataframe, known on this page as TheTrade.
 frc = FinReqCol()
-
 
 
 class SumReqFields:
@@ -55,7 +55,7 @@ class SumReqFields:
         placed in the workbooks in the trade summaries. The rc columns are used in a DataFrame (aka
         TheTrade) that summarizes each single trade with a single row. This summary information
         includes information from the user, target, stop, strategy, notes, saved images etc.
-    :attribute self.tfcolumns (The style): This the the tradeformat excel form. The form can be 
+    :attribute self.tfcolumns (The style): This the the tradeformat excel form. The form can be
         re-shaped by changing this data structure. These will style workbook in the trade summaries
     :attribute self.tfformulas (hybrid data): These entries will override the rc data. The entries
         represent excel formulas. Most formulas require a mapping of cells done just after the cell
@@ -122,7 +122,6 @@ class SumReqFields:
         'mstknote', 'explain', 'notes', 'date', 'id']
 
         self.tcols = dict(zip(dbkeys, dbvals))
-
 
         # This includes all the locations that are likely to have data associated with them.
         # Blank cells are added to tfcolumns. Tese have style, but no data. Each of the data
@@ -295,32 +294,32 @@ class SumReqFields:
             self.time7: [(11, 5), 'timeSub'],
             self.time8: [(12, 5), 'timeSubRight'],
 
-            self.eshare1:  [(5, 6), 'normalSubLeft'],
-            self.eshare2:  [(6, 6), 'normalSub'],
-            self.eshare3:  [(7, 6), 'normalSub'],
-            self.eshare4:  [(8, 6), 'normalSub'],
-            self.eshare5:  [(9, 6), 'normalSub'],
-            self.eshare6:  [(10, 6), 'normalSub'],
-            self.eshare7:  [(11, 6), 'normalSub'],
-            self.eshare8:  [(12, 6), 'normalSubRight'],
+            self.eshare1: [(5, 6), 'normalSubLeft'],
+            self.eshare2: [(6, 6), 'normalSub'],
+            self.eshare3: [(7, 6), 'normalSub'],
+            self.eshare4: [(8, 6), 'normalSub'],
+            self.eshare5: [(9, 6), 'normalSub'],
+            self.eshare6: [(10, 6), 'normalSub'],
+            self.eshare7: [(11, 6), 'normalSub'],
+            self.eshare8: [(12, 6), 'normalSubRight'],
 
-            self.diff1:  [(5, 7), 'normalSubLeft'],
-            self.diff2:  [(6, 7), 'normalSub'],
-            self.diff3:  [(7, 7), 'normalSub'],
-            self.diff4:  [(8, 7), 'normalSub'],
-            self.diff5:  [(9, 7), 'normalSub'],
-            self.diff6:  [(10, 7), 'normalSub'],
-            self.diff7:  [(11, 7), 'normalSub'],
-            self.diff8:  [(12, 7), 'normalSubRight'],
+            self.diff1: [(5, 7), 'normalSubLeft'],
+            self.diff2: [(6, 7), 'normalSub'],
+            self.diff3: [(7, 7), 'normalSub'],
+            self.diff4: [(8, 7), 'normalSub'],
+            self.diff5: [(9, 7), 'normalSub'],
+            self.diff6: [(10, 7), 'normalSub'],
+            self.diff7: [(11, 7), 'normalSub'],
+            self.diff8: [(12, 7), 'normalSubRight'],
 
-            self.pl1:  [(5, 8), 'normalSubNumberBottomLeft'],
-            self.pl2:  [(6, 8), 'normalSubNumberBottom'],
-            self.pl3:  [(7, 8), 'normalSubNumberBottom'],
-            self.pl4:  [(8, 8), 'normalSubNumberBottom'],
-            self.pl5:  [(9, 8), 'normalSubNumberBottom'],
-            self.pl6:  [(10, 8), 'normalSubNumberBottom'],
-            self.pl7:  [(11, 8), 'normalSubNumberBottom'],
-            self.pl8:  [(12, 8), 'normalSubNumberBottomRight'],
+            self.pl1: [(5, 8), 'normalSubNumberBottomLeft'],
+            self.pl2: [(6, 8), 'normalSubNumberBottom'],
+            self.pl3: [(7, 8), 'normalSubNumberBottom'],
+            self.pl4: [(8, 8), 'normalSubNumberBottom'],
+            self.pl5: [(9, 8), 'normalSubNumberBottom'],
+            self.pl6: [(10, 8), 'normalSubNumberBottom'],
+            self.pl7: [(11, 8), 'normalSubNumberBottom'],
+            self.pl8: [(12, 8), 'normalSubNumberBottomRight'],
 
             self.explain: [[(4, 9), (12, 14)], 'explain'],
             self.notes: [[(4, 15), (12, 20)], 'noteStyle']
@@ -404,7 +403,7 @@ sf = SumReqFields()
 
 class TheTradeObject:
     '''
-    Note that this is called when opening a trade from a statment. 
+    Note that this is called when opening a trade from a statment.
     Create the flattened version of a trade summary, that is, take the multiple transactions included
     in the trade_sum table and flatten the info to one row for use in the Qt/excel/whatever form.
     Manages
@@ -529,15 +528,15 @@ class TheTradeObject:
 
     def getSharesDB(self):
         '''
-        The DB statement has gotten rid of the 'Hold' entries. Determining a value for 
+        The DB statement has gotten rid of the 'Hold' entries. Determining a value for
         how many shares a trade has to be re thought
         '''
-        sf = self.sf
+        # sf = self.sf
         ocs = self.df[frc.oc].unique()
-        opens = list()
-        Long = True if (self.df.iloc[0][frc.oc].find('O') >= 0 and (self.df.iloc[0][frc.shares] > 0)) or (
-                        self.df.iloc[0][frc.oc].find('C') >= 0 and (self.df.iloc[0][frc.shares] < 0)) else False
+        Long = False
 
+        if self.df.iloc[0][frc.oc].find('O') >= 0 and self.df.iloc[0][frc.shares] > 0:
+            Long = True
         for oc in ocs:
             if oc and oc.find('O') >= 0:
                 if Long:
@@ -549,17 +548,28 @@ class TheTradeObject:
         self.shares = -self.df.iloc[0][frc.shares]
         return self.shares
 
-
-
     def getShares(self):
         '''
         Utility to get the number of shares in this Trade. Each TradeObject object represents a
-        single trade, or the part of a trade that happens on one day, with at least 1 
-        transaction/ticket. 
+        single trade, or the part of a trade that happens on one day, with at least 1
+        transaction/ticket.
         '''
+        if len(self.df.iloc[0][frc.oc]) == 0:
+            # If we are here, structjour has failed to determine long/short or balance
+            # With no balance set, we can still set some kind of shares for market val for the day.
+            # This value provides context info for the user. Set the best we can.
+            # If shares are unbalanced, this figure will be ok
+            self.shares = self.df[frc.shares].sum()
+            # If shares are balanced (This should never run but ...) find max purchase/sell
+            if self.shares == 0:
+                maxbuy = self.df[frc.shares].max()
+                maxsell = self.df[frc.shares].min()
+                self.shares = maxbuy if max(maxbuy, abs(maxsell)) else maxsell
+            return self.shares
+
         if self.settings.value('inputType') == 'DB':
             return self.getSharesDB()
-        elif self.shares == 0:
+        elif self.shares == 0 or not isNumeric(self.shares):
             if self.side.startswith("B") or self.side.startswith("HOLD+"):
                 self.shares = self.df[frc.bal].max()
             else:
@@ -591,14 +601,7 @@ class TheTradeObject:
                               self.sf.rrhead, self.sf.maxhead]]
 
     def __setEntriesDB(self, imageName):
-        Long = True if (self.df.iloc[0][frc.oc].find('O') >= 0 and (self.df.iloc[0][frc.shares] > 0)) or (
-                        self.df.iloc[0][frc.oc].find('C') >= 0 and (self.df.iloc[0][frc.shares] < 0)) else False
-
-        entries = list()
         fpentries = list()
-        # exits = list()
-        long = False
-        entry1 = 0
         count = 0
 
         for i, row in self.df.iterrows():
@@ -614,46 +617,42 @@ class TheTradeObject:
             average = row[frc.avg]
             if average:
                 if count == 0:
-                    entry1 = price
+                    # entry1 = price
                     average1 = average
-                    diff = average1-price
+                    diff = average1 - price
                 else:
                     diff = average1 - price
 
             fpentries.append([price, 'deprecated', row[frc.side], dtime])
-            
-
 
             # Entry Price
-            col = 'Entry' + str(count+1) if row[frc.oc].find('O') >= 0 else 'Exit' + str(count+1)
+            col = 'Entry' + str(count + 1) if row[frc.oc].find('O') >= 0 else 'Exit' + str(count + 1)
             self.TheTrade[col] = price
 
             # Entry Time
-            col = "Time" + str(count+1)
+            col = "Time" + str(count + 1)
             # self.TheTrade[col] = pd.Timestamp(price[1])
             self.TheTrade[col] = dtime
 
-
             # Entry Shares
-            col = "EShare" + str(count+1)
+            col = "EShare" + str(count + 1)
             self.TheTrade[col] = shares
 
             # Entry P/L
-            col = "PL" + str(count+1)
+            col = "PL" + str(count + 1)
             self.TheTrade[col] = row[frc.PL]
 
             # Entry diff
-            col = "Diff" + str(count+1)
+            col = "Diff" + str(count + 1)
             self.TheTrade[col] = diff
             count += 1
         self.entries = fpentries
-        
+
         if imageName:
             start = self.df.iloc[0][frc.date]
             end = self.df.iloc[-1][frc.date]
             self.setChartDataDefault(start, end, imageName)
         return self.TheTrade
-        
 
     def __setEntries(self, imageName=None):
         '''
@@ -668,19 +667,23 @@ class TheTradeObject:
         entries = list()
         fpentries = list()
         # exits = list()
-        long = False
         entry1 = 0
         count = 0
         exitPrice = 0
         partEntryPrice = 0
+        r = self.df.loc[self.ix0]
 
-        # If the first trade side is 'B' or HOLD+ we are long
-        sideat0 = self.df.loc[self.ix0][frc.side]
-        if sideat0.startswith('B') or sideat0.lower().startswith('hold+'):
+        long = False
+        if len(r[frc.oc]) < 1 and (r[frc.side].startswith('B') or r[frc.side].lower().startswith('hold+')):
+            long = True
+        elif r[frc.oc].find('O') >= 0 and r[frc.shares] > 0 or r[frc.oc].find('C') >= 0 and r[frc.shares] < 0:
             long = True
 
+        # If the first trade side is 'B' or HOLD+ we are long
+
         # Set the first entry price aka entry1 and place it in df. This method needs a test!
-        if self.df.loc[self.ix0][frc.price] == 0:
+        if r[frc.price] == 0:
+            logging.warning(f'Programmer warning. Check this trade: {r[frc.ticker]}: {r[frc.date]}')
             for i, row in self.df.iterrows():
                 if long and count and row[frc.side].startswith('S'):
                     exitPrice = exitPrice + \
@@ -721,13 +724,14 @@ class TheTradeObject:
             fpentries.append([price, 'deprecated', row[frc.side], dtime])
 
             if long:
-                    # entries.append(price, cindex, L_or_S,  dtime)
-                if (row[frc.side]).startswith('B') or (row[frc.side]).lower().startswith("hold+"):
+                # entries.append(price, cindex, L_or_S,  dtime)
+                if ((len(row[frc.oc]) > 0 and row[frc.oc].find('O') > 0)) or (
+                        row[frc.side]).startswith('B') or (row[frc.side]).lower().startswith("hold+"):
                     entries.append([price, dtime, shares, 0, diff, "Entry"])
                 else:
                     entries.append([price, dtime, shares, row[sf.pl], diff, "Exit"])
             else:
-                if (row[frc.side]).startswith('B'):
+                if ((len(row[frc.oc]) > 0 and row[frc.oc].find('C') > 0)) or(row[frc.side]).startswith('B'):
                     entries.append([price, dtime, shares, row[sf.pl], diff, "Exit"])
                 else:
                     entries.append([price, dtime, shares, 0, diff, "Entry"])
@@ -746,23 +750,23 @@ class TheTradeObject:
         for i, price in zip(range(len(entries)), entries):
 
             # Entry Price
-            col = "Entry" + str(i+1) if price[5] == "Entry" else "Exit" + str(i+1)
+            col = "Entry" + str(i + 1) if price[5] == "Entry" else "Exit" + str(i + 1)
             self.TheTrade[col] = price[0]
 
             # Entry Time
-            col = "Time" + str(i+1)
+            col = "Time" + str(i + 1)
             self.TheTrade[col] = pd.Timestamp(price[1])
 
             # Entry Shares
-            col = "EShare" + str(i+1)
+            col = "EShare" + str(i + 1)
             self.TheTrade[col] = price[2]
 
             # Entry P/L
-            col = "PL" + str(i+1)
+            col = "PL" + str(i + 1)
             self.TheTrade[col] = price[3]
 
             # Entry diff
-            col = "Diff" + str(i+1)
+            col = "Diff" + str(i + 1)
             self.TheTrade[col] = price[4]
         imageName = imageName if imageName else ''
         start = entries[0][1]
@@ -784,10 +788,10 @@ class TheTradeObject:
                 iName = ''
             begin, finish = fp.setTimeFrame(start, end, di)
 
-            self.TheTrade['chart'+ str(i+1)] = iName
-            self.TheTrade['chart'+ str(i+1) + 'Start'] = begin
-            self.TheTrade['chart'+ str(i+1) + 'End'] = finish
-            self.TheTrade['chart'+ str(i+1) + 'Interval'] = di
+            self.TheTrade['chart' + str(i + 1)] = iName
+            self.TheTrade['chart' + str(i + 1) + 'Start'] = begin
+            self.TheTrade['chart' + str(i + 1) + 'End'] = finish
+            self.TheTrade['chart' + str(i + 1) + 'Interval'] = di
 
         if self.df.loc[self.ix0][frc.side].lower().startswith('hold'):
             return self.TheTrade
@@ -802,6 +806,7 @@ class TheTradeObject:
         # self.TheTrade[self.sf.explain] = "Technical description of the trade"
         # self.TheTrade[self.sf.notes] = "Evaluation of the trade"
         pass
+
 
 def imageData(ldf):
     '''
@@ -826,13 +831,14 @@ def imageData(ldf):
         imageNames.append(imageName)
     return imageNames
 
+
 def setTradeSummaryHeaders(ts):
     '''
     A utility created to add the header fields for the tto object as stored in
-    the DB trade_sum table. Stuff the blank fields ex1 and ex2 so they are styled 
+    the DB trade_sum table. Stuff the blank fields ex1 and ex2 so they are styled
     '''
     sf = SumReqFields()
-    newts = dict()
+    # newts = dict()
     for key in ts:
         trade = ts[key]
         trade[sf.plhead] = "P/L"
@@ -850,6 +856,7 @@ def setTradeSummaryHeaders(ts):
         trade['ex2'] = ''
         # newts[key] = trade
     return ts
+
 
 def runSummaries(ldf):
     '''
@@ -883,10 +890,11 @@ def runSummaries(ldf):
     # self.tradeSummaries = tradeSummaries
     return tradeSummaries, ts, entries, initialImageNames
 
+
 def notmain():
     '''Run some local code'''
-    sf = SumReqFields()
-
+    # sf = SumReqFields()
+    pass
 
 
 if __name__ == '__main__':
