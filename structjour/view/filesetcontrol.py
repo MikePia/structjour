@@ -27,7 +27,7 @@ import sys
 import pandas as pd
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
-from PyQt5.QtCore import QSettings, QDate, QDateTime, Qt
+from PyQt5.QtCore import QSettings, QDate, QDateTime
 
 from structjour.view.filesettings import Ui_Dialog as FileSettingsDlg
 
@@ -55,9 +55,6 @@ class FileSetCtrl(QDialog):
         fui.journalBtn.pressed.connect(self.setJournalDlg)
         fui.journal.textChanged.connect(self.setJournalDir)
 
-        fui.schemeBtn.pressed.connect(self.setSchemeDefault)
-        fui.scheme.editingFinished.connect(self.setScheme)
-
         fui.dasInfileBtn.pressed.connect(self.setDASInfileDefault)
         fui.dasInfile.textChanged.connect(self.setDASInfile)
 
@@ -66,10 +63,6 @@ class FileSetCtrl(QDialog):
 
         fui.ibInfileBtn.pressed.connect(self.setIBInfileName)
         fui.ibInfile.editingFinished.connect(self.setIBInfile)
-
-        fui.outdirDefault.clicked.connect(self.setOutdirDefault)
-        fui.outdirStatic.clicked.connect(self.setOutdir)
-        fui.outdir.textChanged.connect(self.setOutdir)
 
         fui.disciplinedBtn.pressed.connect(self.setDisciplinedBrowse)
         fui.disciplinedEdit.textChanged.connect(self.setDisciplined)
@@ -93,7 +86,6 @@ class FileSetCtrl(QDialog):
         fui.journal.setText(self.settings.value('journal'))
         self.setJournalDir()
 
-        fui.scheme.setText(self.settings.value('scheme'))
         self.setScheme()
 
         fui.dasInfile.setText(self.settings.value('dasInfile'))
@@ -119,16 +111,9 @@ class FileSetCtrl(QDialog):
 
         fui.logfile_level_cb.setCurrentText(self.settings.value('logfile_level', 'Debug'))
 
-        if self.settings.value('outdirPolicy') == 'static':
-            self.fui.outdirStatic.setChecked(True)
-            outdir = self.settings.value('outdir')
-            self.fui.outdir.setText(outdir)
-        else:
-            self.fui.outdir.setText('out/')
-            self.fui.outdirDefault.setChecked(True)
-            self.setOutdirDefault()
+        self.setOutdirDefault()
         self.setOutdir()
-        # fui.outdir.setText(self.settings.value('outdir'))
+
         state = self.settings.value('setToday')
         state = True if state == "true" else False
         fui.theDateCbox.setChecked(state)
@@ -279,37 +264,16 @@ class FileSetCtrl(QDialog):
         '''
         indir = self.getDirectory()
         odd = os.path.join(indir, 'out/')
-        self.fui.outdirLbl.setText(odd)
-        if os.path.exists(odd):
-            self.fui.outdirLbl.setStyleSheet('color: green')
-        else:
-            self.fui.outdirLbl.setStyleSheet('color: red')
-
         self.settings.setValue('outdir', odd)
-        self.fui.outdir.setText('out/')
-        self.fui.outdir.setFocusPolicy(Qt.NoFocus)
-        self.settings.setValue('outdirPolicy', 'default')
 
     def setOutdir(self):
         '''
         Set the outdir and outdir policy settings using the policy and text widgets. Set the label
         color to show existance/not
         '''
-        if self.fui.outdirDefault.isChecked():
-            self.setOutdirDefault()
-            return
-        self.fui.outdir.setFocusPolicy(Qt.ClickFocus)
-        # self.fui.outdir.setFocusPolicy(Qt.TabFocus)
-        outdir = self.fui.outdir.text()
+        outdir = os.path.join(self.getDirectory(), 'out')
         outdirpath = os.path.abspath(outdir)
-        self.settings.setValue('outdirPolicy', 'static')
         self.settings.setValue('outdir', outdirpath)
-        self.fui.outdirLbl.setText(outdirpath)
-
-        if os.path.exists(outdirpath):
-            self.fui.outdirLbl.setStyleSheet("color: green;")
-        else:
-            self.fui.outdirLbl.setStyleSheet("color: red;")
 
     def setIBInfileName(self):
         '''
@@ -446,19 +410,11 @@ class FileSetCtrl(QDialog):
 
         indir = self.fui.journal.text()
         schemeFmt = os.path.join(indir, schemeFmt)
-        self.fui.schemeLbl.setText(schemeFmt)
-        if os.path.exists(schemeFmt):
-            self.fui.schemeLbl.setStyleSheet("color: green;")
-        else:
-            self.fui.schemeLbl.setStyleSheet("color: red;")
-
-        self.fui.scheme.setText(scheme)
         self.settings.setValue('scheme', scheme)
 
     def setScheme(self):
         ''' Set the directory naming scheme to the contents of the LineEdit (scheme)'''
-        scheme = self.fui.scheme.text()
-        self.setTheScheme(scheme)
+        self.setSchemeDefault()
 
     def setSchemeDefault(self):
         '''
@@ -475,6 +431,7 @@ class FileSetCtrl(QDialog):
         path = QFileDialog.getExistingDirectory(None, "Select Directory")
         self.fui.journal.setText(path)
         self.settings.setValue('journal', path)
+        self.setSchemeDefault()
 
     def setJournalDir(self):
         '''
