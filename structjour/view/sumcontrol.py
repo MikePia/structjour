@@ -41,6 +41,7 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
 from structjour.view.filesetcontrol import FileSetCtrl
+from structjour.view.getdatecontrol import GetDate
 from structjour.view.ejcontrol import EJControl
 from structjour.view.exportexcel import ExportToExcel
 from structjour.view.dailycontrol import DailyControl
@@ -59,11 +60,6 @@ from structjour.strategy.strategies import Strategy
 
 # To force the import of the pacakage_data in setup
 # from structjour.images import dummy
-
-
-# pylint: disable = C0103, W0612, W0613, R0904, R0912, R0914, R0915
-
-
 
 
 class SumControl(QMainWindow):
@@ -86,11 +82,9 @@ class SumControl(QMainWindow):
         self.settings = QSettings('zero_substance', 'structjour')
         self.chartSet = QSettings('zero_substance/chart', 'structjour')
         # self.setuplog()
-        while( not self.settings.value('journal') or not self.settings.value('structjourDb') or not self.settings.value('tradeDb')):
+        while(not self.settings.value('journal') or not self.settings.value('structjourDb') or not self.settings.value('tradeDb')):
             self.fileSetDlg()
 
-
-        defimage = "structjour/images/ZeroSubstanceCreation_220.png"
         self.defaultImage = 'structjour/images/ZeroSubstanceCreation.png'
         ui = Ui_MainWindow()
         ui.setupUi(self)
@@ -106,7 +100,7 @@ class SumControl(QMainWindow):
         if self.settings.value('setToday') == "true":
             now = pd.Timestamp.today().date()
             if now.weekday() > 4:
-                now = now - pd.Timedelta(days=now.weekday()-4)
+                now = now - pd.Timedelta(days=now.weekday() - 4)
             now = QDate(now)
             self.settings.setValue('theDate', now)
         intype = self.settings.value('inputType')
@@ -135,7 +129,7 @@ class SumControl(QMainWindow):
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.useDatabase.clicked.connect(self.useDatabase)
-    
+
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.lost.textEdited.connect(self.setMstkVal)
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
@@ -184,7 +178,6 @@ class SumControl(QMainWindow):
         # edit boxes-- calling them manually here.
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
-        
 
     # =================================================================
     # ==================== Main Form  methods =========================
@@ -199,19 +192,27 @@ class SumControl(QMainWindow):
     def browseInfile(self):
         indir = self.getDirectory()
         path = QFileDialog.getOpenFileName(self, "Select Chart", indir,
-                                               f'Statements(*.html *.csv))')
+                                           f'Statements(*.html *.csv))')
         if path[0]:
             self.ui.infileEdit.setText(path[0])
             self.ui.infileEdit.setStyleSheet('color: green;')
             if not checkDateDir(path[0]):
                 jdir = self.settings.value('journal')
                 jdir = os.path.normpath(jdir)
+                infile = os.path.normpath(path[0])
+                if not infile.startswith(jdir):
+                    getdate = GetDate()
+                    getdate.exec()
+                    self.ui.dateEdit.setDate(pd2qtime(self.settings.value('theDate'), qdate=True))
+                    self.ui.infileEdit.setText(path[0])
+                    return
 
                 scheme = self.settings.value('scheme')
                 if not jdir or not scheme:
                     return
                 d = parseDate(path[0], len(jdir), scheme)
-                self.ui.dateEdit.setDate(pd2qtime(d, qdate=True))         
+                self.ui.dateEdit.setDate(pd2qtime(d, qdate=True))
+                self.ui.infileEdit.setText(path[0])
 
     def exportExcel(self):
         ''' Signal callback when the exportBtn is pressed. Initiates an export to excel.'''
@@ -245,7 +246,7 @@ class SumControl(QMainWindow):
         allstrats = strat.getStrategies()
 
         strats = [x[1] for x in allstrats]
-        if not text in strats:
+        if text not in strats:
             msg = f'Would you like to add the strategy {text} to the database?'
             ok = QMessageBox.question(self, 'New strategy', msg,
                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -264,7 +265,7 @@ class SumControl(QMainWindow):
         key = self.ui.tradeList.currentText()
         self.lf.setStrategy(key, text)
 
-    def saveTradeObject(self, oldDate = None):
+    def saveTradeObject(self, oldDate=None):
         '''Signal call back from saveBtn. Initiates saving the data.'''
         if not self.lf:
             logging.info('Nothing to save')
@@ -278,7 +279,7 @@ class SumControl(QMainWindow):
             t = t[:-3]
             self.setWindowTitle(t)
 
-    def getSaveName(self, oldDate = None):
+    def getSaveName(self, oldDate=None):
         '''
         This needs to be a name that can be gleaned from the info on the form and settings
         loaded for each file name
@@ -335,7 +336,7 @@ class SumControl(QMainWindow):
         begin = entries[0][3]
         end = entries[-1][3]
 
-        #TODO Remove these arter a month or 2 (2/7/19). In the meantime, open all the
+        # TODO Remove these arter a month or 2 (2/7/19). In the meantime, open all the
         # imported/updated files (laod files from 10/25/18 on)and update some inserted images on each
         # Or write yet another date babysitter here
         daDate = qtime2pd(self.settings.value('TheDate'))
@@ -369,7 +370,7 @@ class SumControl(QMainWindow):
             logging.info('No trade to get chart for')
             return None
         key = self.ui.tradeList.currentText()
-        if not key in self.lf.ts.keys():
+        if key not in self.lf.ts.keys():
             # Catch pressing update before loading a statement
             return None
         makeys = getMAKeys()
@@ -379,8 +380,8 @@ class SumControl(QMainWindow):
         for i in range(0, 4):
             val = self.chartSet.value(makeys[i], False, bool)
             if val:
-                mas.append(['MA'+str(i+1), self.chartSet.value(makeys[i+5]),
-                            self.chartSet.value(makeys[i+9])])
+                mas.append(['MA' + str(i + 1), self.chartSet.value(makeys[i + 5]),
+                            self.chartSet.value(makeys[i + 9])])
         val = self.chartSet.value(makeys[4], False, bool)
         masl.append(mas)
 
@@ -390,7 +391,6 @@ class SumControl(QMainWindow):
             masl.append([])
         assert len(masl) == 2
         self.chartSet.setValue('getmas', masl)
-
 
         fp = FinPlot()
         fp.randomStyle = False
@@ -429,17 +429,17 @@ class SumControl(QMainWindow):
 
         entries = self.lf.getEntries(key)
         fpentries = list()
-        if entries and  len(entries[0]) == 6:
+        if entries and len(entries[0]) == 6:
             for e in entries:
                 etime = e[1]
-                diff = etime - begin if (etime > begin) else (begin-etime)
+                diff = etime - begin if (etime > begin) else (begin - etime)
 
-                candleindex = int(diff.total_seconds()/60//interval)
+                candleindex = int(diff.total_seconds() / 60 // interval)
                 candleindex = -candleindex if etime < begin else candleindex
                 L_or_S = 'B'
                 if e[2] < 0:
                     L_or_S = 'S'
-            
+
             fpentries.append([e[0], candleindex, L_or_S, etime])
         else:
             if entries:
@@ -478,18 +478,18 @@ class SumControl(QMainWindow):
 
     def chartMagic1(self):
         '''Update button was pressed for chart1. We will get a chart using a stock api'''
-        # if not self.lf.ts 
+        # if not self.lf.ts
 
-        interactive = self.chartSet.value('interactive', False, type=bool)
-        import matplotlib
+        # interactive = self.chartSet.value('interactive', False, type=bool)
+        # import matplotlib
 
         # OK... putting this in a thread caused the runtime error thing tom tkinter
-        # (backend for matplotlib at the time). It won't let me load tkagg after qt 
+        # (backend for matplotlib at the time). It won't let me load tkagg after qt
         # is loaded.ChartControl. QtAgg works for file but it freezes for interactive
 
         # self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
         #                     self.ui.chart1Name, self.ui.chart1, 'chart1')
-        x = threading.Thread(target=self.chartMage, 
+        x = threading.Thread(target=self.chartMage,
                             args=(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
                             self.ui.chart1Name, self.ui.chart1, 'chart1', ))
         x.start()
@@ -498,7 +498,7 @@ class SumControl(QMainWindow):
 
     def chartMagic2(self):
         '''Update button was pressed for chart2. We will get a chart using a stock api'''
-        x = threading.Thread(target=self.chartMage, 
+        x = threading.Thread(target=self.chartMage,
                              args=(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
                                self.ui.chart2Name, self.ui.chart2, 'chart2'))
         x.start()
@@ -737,8 +737,7 @@ class SumControl(QMainWindow):
             if not note:
                 self.lf.setClean(key, True)
                 self.stopLoss(stopval)
-            val = '0.0'
-        
+
         try:
             fval = float(lostval)
         except ValueError:
@@ -759,7 +758,7 @@ class SumControl(QMainWindow):
         '''
         if not key:
             return
-        
+
         title = self.windowTitle()
         self.lf.populateTradeSumForms(key)
         self.setWindowTitle(title)
@@ -847,8 +846,6 @@ class SumControl(QMainWindow):
         self.settings.setValue('inputType', 'DB')
         self.loadFromDate()
 
-        pass
-        inputType = self.settings.value('inputType')
         self.settings.setValue('dboutput', 'on')
         self.loadFromDate()
 
@@ -864,7 +861,7 @@ class SumControl(QMainWindow):
         msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
         msgBox.setDefaultButton(QMessageBox.Save)
         ret = msgBox.exec()
-        
+
         if ret == QMessageBox.Save:
             self.saveTradeObject(oldDate)
 
@@ -877,11 +874,11 @@ class SumControl(QMainWindow):
                 self.saveTradesQuestion(self.oldDate)
 
     def theDateChanged(self, val):
-        
+
         self.doWeSave()
 
         if self.oldDate and val != self.oldDate:
-             self.ui.infileEdit.setText('')
+            self.ui.infileEdit.setText('')
         self.oldDate = val
         self.loadFromDate()
 
@@ -896,7 +893,7 @@ class SumControl(QMainWindow):
         if not self.getDirectory():
             # Nothing to load
             return
-        infile=None
+        infile = None
         daDate = self.ui.dateEdit.date()
         if isinstance(daDate, (QDate, QDateTime)):
             daDate = qtime2pd(daDate)
@@ -910,7 +907,6 @@ class SumControl(QMainWindow):
                 self.settings.setValue('dasInfil', lineName)
                 infile = lineName
             else:
-                dasinfile = self.settings.value('dasInfile')
                 infile = self.settings.value('dasInfile')
         elif inputType == 'IB_HTML' or inputType == 'IB_CSV':
             self.ui.goBtn.setText('Read File')
@@ -922,7 +918,7 @@ class SumControl(QMainWindow):
                 ibinfile = self.settings.value('ibInfile')
                 infile = self.settings.value('ibInfile')
                 sglob = ibinfile
-                rgx = re.sub('{\*}', '.*', sglob)
+                rgx = re.sub('{\\*}', '.*', sglob)
 
                 fs = list()
                 if os.path.exists(indir):
@@ -965,7 +961,6 @@ class SumControl(QMainWindow):
             return
 
         if not indir or not infile:
-            #self.ui.infileEdit.setText('')
             self.ui.infileEdit.setStyleSheet('color: black;')
             return
 
@@ -1004,21 +999,20 @@ class SumControl(QMainWindow):
                 modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
                 statusstring = f'[{os.path.split(savename)[1]} ({modstring})]   '
                 self.ui.loadBtn.setStyleSheet('color: blue;')
-                statusstrine = statusstring + ' or saved object ready to load.'
+                statusstring = statusstring + ' or saved object ready to load.'
             else:
-                statusstrine = statusstring + '.'
+                statusstring = statusstring + '.'
                 self.ui.loadBtn.setStyleSheet('color: black;')
                 self.ui.loadBtn.setStyleSheet('color: black;')
-            
+
             d, xlname = os.path.split(savename)
-            xlname = os.path.splitext(xlname)[0] 
+            xlname = os.path.splitext(xlname)[0]
             xlname = xlname[1:] + '.xlsx'
             xlname = os.path.join(d, xlname)
             if os.path.exists(xlname):
                 tm = os.path.getmtime(xlname)
                 modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
                 statusstring = statusstring + f'Excel file is saved: {os.path.split(xlname)[1]} ({modstring})]'
-
 
         else:
             self.ui.infileEdit.setStyleSheet('color: red;')
@@ -1057,7 +1051,7 @@ class SumControl(QMainWindow):
             fval = float(val)
             fpl = float(self.ui.entry1.text())
 
-            fdiff = fval-fpl
+            fdiff = fval - fpl
             diff = '{:.02f}'.format(fdiff)
         except ValueError:
             diff = '0'
@@ -1084,7 +1078,7 @@ class SumControl(QMainWindow):
         try:
             fval = float(val)
             fpl = float(self.ui.entry1.text())
-            fdiff = fval-fpl
+            fdiff = fval - fpl
             diff = '{:.02f}'.format(fdiff)
         except ValueError:
             diff = '0'
@@ -1123,7 +1117,7 @@ class SumControl(QMainWindow):
             self.ui.rr.setText('')
             return ''
 
-        dval = abs(ftarg/fstop)
+        dval = abs(ftarg / fstop)
 
         f = Fraction(dval).limit_denominator(max_denominator=10)
         srr = f'{f.numerator} : {f.denominator}'
@@ -1215,7 +1209,7 @@ class SumControl(QMainWindow):
         The file settings dialog. Top level dialg triggered by File->FileSettings menu. Display
         the current settings (QSetting), define the dialog actions, and store the new settings.
         '''
-        w = FileSetCtrl(self.settings)
+        w = FileSetCtrl(self.settings)      # noqa:  F841
         try:
             if not self.lf:
                 logging.info('No trades loaded')
@@ -1270,6 +1264,7 @@ class SumControl(QMainWindow):
     def createDirDlg(self):
         self.w = CreateDirs()
 
+
 def verifyNameInfo(daDate, s):
     '''
     Test if the chart filename passes this very specific test to verify it has the info required
@@ -1315,7 +1310,6 @@ def verifyNameInfo(daDate, s):
 
                 return True, [start, end, interval]
     return False, []
-
 
 
 if __name__ == '__main__':
