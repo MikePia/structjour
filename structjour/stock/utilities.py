@@ -278,6 +278,17 @@ def getPrevTuesWed(td):
     return before
 
 
+def clearTables(db):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    cur.execute('''delete from chart''')
+    # cur.execute('''delete from holidays''')
+    cur.execute('''delete from ib_covered''')
+    cur.execute('''delete from ib_trades''')
+    cur.execute('''delete from ib_positions''')
+    cur.execute('''delete from trade_sum''')
+    conn.commit()
+
 class ManageKeys:
     def __init__(self, create=False, db=None):
         self.settings = QSettings('zero_substance', 'structjour')

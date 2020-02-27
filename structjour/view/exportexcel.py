@@ -48,6 +48,7 @@ from structjour.xlimage import XLImage
 from structjour.tradestyle import TradeFormat
 # pylint: disable = C0103
 
+
 class ExportToExcel:
     '''
     Export to excel from python objects
@@ -63,11 +64,11 @@ class ExportToExcel:
         '''
         Save wb as an excel file. If Permission Denied error is thrown, try renaming it.
         '''
-        #Write the file
+        # Write the file
         jf.mkOutdir()
         saveName = jf.outpathfile
         count = 1
-        saveName = saveName.replace('/', '\\')
+        saveName = os.path.normpath(saveName)
         while True:
             try:
                 wb.save(saveName)
@@ -78,7 +79,7 @@ class ExportToExcel:
                 (nm, ext) = os.path.splitext(jf.outpathfile)
                 saveName = "{0}({1}){2}".format(nm, count, ext)
                 logging.error("Will try to save as {0}".format(saveName))
-                count = count+1
+                count = count + 1
                 if count == 6:
                     raise (PermissionError(
                         "Failed to create file {0}".format(saveName)))
@@ -137,12 +138,12 @@ class ExportToExcel:
         # Populate the name fields as hyperlinks to tradeSummaries title cell and back.
         for i, (iloc, tradekey) in enumerate(zip(imageLocation, self.ts)):
             tsum = self.ts[tradekey]
-            key = "name" + str(i+1)
+            key = "name" + str(i + 1)
             cell = mistake.mistakeFields[key][0][0]
             cell = tcell(cell, anchor=mistake.anchor)
             targetcell = (1, iloc[0][0][1])
             targetcell = tcell(targetcell)
-            cellval = "{0} {1} {2}".format(i+1, tsum.Name.unique()[0], tsum.Account.unique()[0])
+            cellval = "{0} {1} {2}".format(i + 1, tsum.Name.unique()[0], tsum.Account.unique()[0])
             link = "#{}!{}".format(ws.title, targetcell)
 
             ws[cell].hyperlink = (link)
@@ -157,7 +158,7 @@ class ExportToExcel:
         tokens = ["tpl", "pl", "mistake"]
         for token in tokens:
             for i in range(len(self.ts)):
-                key = token + str(i+1)
+                key = token + str(i + 1)
                 if isinstance(mistake.mistakeFields[key][0], list):
                     cell = mistake.mistakeFields[key][0][0]
                 else:
@@ -178,11 +179,11 @@ class ExportToExcel:
         '''
 
         # tradeSummaries = list()
-        CELLS = 20 #trial and error here
+        CELLS = 20      # trial and error here
         srf = SumReqFields()
 
         for loc in imageLocation:
-            #Place the format shapes/styles in the worksheet
+            # Place the format shapes/styles in the worksheet
             tf.formatTrade(ws, srf, anchor=(1, loc[0][0][1]))
             for iloc, fn in zip(loc[0], loc[1]):
                 if not os.path.exists(fn):
@@ -197,7 +198,6 @@ class ExportToExcel:
                     cellname = tcell(iloc)
                     ws.add_image(img, cellname)
 
-
     def populateXLDailyFormulas(self, imageLocation, ws):
         '''
         Helper method for export to excel. Populate the excel formulas in the daily summary forms.
@@ -208,7 +208,7 @@ class ExportToExcel:
         for loc, tradekey in zip(imageLocation, self.ts):
             tto = self.ts[tradekey]
 
-            #populate the trade information
+            # populate the trade information
             for key in srf.tfcolumns:
                 cell = srf.tfcolumns[key][0]
                 if isinstance(cell, list):
@@ -231,7 +231,6 @@ class ExportToExcel:
                     tradeval = pd.Timestamp(tradeval)
                 elif isinstance(tradeval, bytes):
                     tradeval = None
-
 
                 ws[tcell(cell, anchor=(1, loc[0][0][1]))] = tradeval
 
@@ -295,7 +294,7 @@ class ExportToExcel:
             if len(imageName) > 1:
                 xtraimage = 21
             ilocs = []
-            #Need 1 entry even if there are no images
+            # Need 1 entry even if there are no images
             ilocs.append((c1col, len(tdf) + len(df) + spacing))
             for i in range(0, len(imageName)):
                 if i == 1:
@@ -352,7 +351,6 @@ class ExportToExcel:
         self.populateXLMistakeForm(mistake, ws, imageLocation)
         self.populateXLDailySummaryForm(mistake, ws, mstkAnchor)
         self.populateXLDailyNote(ws)
-
 
         self.saveXL(wb, self.jf)
         logging.info("Processing complete. Saved {}".format(self.jf.outpathfile))

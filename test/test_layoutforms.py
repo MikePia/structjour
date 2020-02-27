@@ -45,6 +45,7 @@ from structjour.statements.dasstatement import DasStatement
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
+from structjour.stock.utilities import clearTables
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
@@ -53,18 +54,6 @@ from structjour.rtgAgain import RTG
 # from PyQt5.QtWidgets import QApplication
 
 app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
-
-
-def clearTables(db):
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-    cur.execute('''delete from chart''')
-    # cur.execute('''delete from holidays''')
-    cur.execute('''delete from ib_covered''')
-    cur.execute('''delete from ib_trades''')
-    cur.execute('''delete from ib_positions''')
-    cur.execute('''delete from trade_sum''')
-    conn.commit()
 
 
 class Test_LayoutForms(unittest.TestCase):

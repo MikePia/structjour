@@ -29,18 +29,27 @@ from unittest import TestCase
 import unittest
 
 from openpyxl import Workbook, load_workbook
-import pandas as pd
 
-from structjour.rtg import getRandGenTradeStuff
+from PyQt5.QtCore import QSettings
 
-from structjour.journalfiles import JournalFiles
+# from structjour.rtg import getRandGenTradeStuff
+
 
 from structjour.dailysumforms import MistakeSummary
-from structjour.layoutsheet import LayoutSheet
-from structjour.thetradeobject import SumReqFields
-from structjour.tradestyle import TradeFormat, c as tcell
+from structjour.definetrades import DefineTrades
+from structjour.journalfiles import JournalFiles
+
+from structjour.rtgAgain import RTG
+from structjour.statements.ibstatement import IbStatement
+from structjour.statements.ibstatementdb import StatementDB
+from structjour.statements.statement import getStatementType
+from structjour.statements.dasstatement import DasStatement
+from structjour.stock.utilities import clearTables
+from structjour.tradestyle import c as tcell
 from structjour.view.dailycontrol import DailyControl
 from structjour.view.exportexcel import ExportToExcel
+from structjour.view.layoutforms import LayoutForms
+from structjour.view.sumcontrol import SumControl
 
 # from PyQt5.QtTest import QTest
 from PyQt5 import QtCore
@@ -60,250 +69,127 @@ class Test_ExportToExcel(TestCase):
     coordinated data)
     '''
 
-    def __init__(self, *args, **kwargs):
-        '''
-        When we initialze the object, ensure that we always run from src as the cwd
-        '''
-        super(Test_ExportToExcel, self).__init__(*args, **kwargs)
+    infiles = []
+    dates = []
+    lfs = []
+    infiles = []
+    dates = []
+    jfs = []
+    dframes = []
+    ldfs = []
 
-    def setUp(self):
+    rtg = None
+    db = ''
+    outdir = ''
+    sc = None
+    rtg = None
+    db = ''
+    outdir = ''
+    sc = None
+
+    @classmethod
+    def setUpClass(cls):
         ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr))
-        os.chdir(os.path.realpath('../'))
-        theDate = pd.Timestamp('2008-06-06')
-        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False, inputType='DAS')
-        self.tradeS, self.ts, self.entries, self.imageNames, self.df, self.ldf = getRandGenTradeStuff()
-        if os.path.exists(self.jf.outpathfile):
-            os.remove(self.jf.outpathfile)
+        os.chdir(os.path.realpath(ddiirr + '/../'))
+
+        outdir = 'test/out'
+        cls.outdir = os.path.realpath(outdir)
+        cls.db = 'data/testdb.sqlite'
+        cls.db = os.path.realpath(cls.db)
+        if os.path.exists(cls.db):
+            clearTables(cls.db)
+
+        cls.rtg = RTG(db=cls.db)
+        # cls.dates = ['20200203 09:30', '20200204 07:30', '20200205 09:35', '20200206 11:40', '20200207 10:39']
+        cls.dates = ['20200207 10:39']
+        cls.infiles = cls.rtg.saveSomeTestFiles(cls.dates, cls.outdir)
+
+        settings = QSettings('zero_substance', 'structjour')
+        for i, name in enumerate(cls.infiles):
+            name = os.path.join(cls.outdir, name)
+            x, cls.inputType = getStatementType(name)
+            # print(cls.inputType)
+            if cls.inputType == 'DAS':
+                ds = DasStatement(name, settings, cls.dates[i])
+                ds.getTrades(testFileLoc=cls.outdir, testdb=cls.db)
+            elif cls.inputType == "IB_CSV":
+                ibs = IbStatement(db=cls.db)
+                ibs.openIBStatement(name)
+            else:
+                continue
+            #     self.assertTrue(4 == 5, "Unsupported file type in test_TheTradeObject")
+
+            statement = StatementDB(db=cls.db)
+            df = statement.getStatement(cls.dates[i])
+            # self.assertFalse(df.empty, f"Found no trades in db on {daDate}")
+            dtrade = DefineTrades(cls.inputType)
+            dframe, ldf = dtrade.processDBTrades(df)
+            # tto = TheTradeObject(ldf[0], False, SumReqFields())
+            jf = JournalFiles(indir=cls.outdir, outdir=outdir, theDate=cls.dates[i], infile=name)
+            cls.sc = SumControl()
+            lf = LayoutForms(cls.sc, jf, dframe)
+            lf.runTtoSummaries(ldf)
+            cls.jfs.append(jf)
+            cls.dframes.append(dframe)
+            # cls.ttos.append(tto)
+            cls.ldfs.append(ldf)
+            cls.lfs.append(lf)
+        # rw = runController(w)
 
     def test_exportExcel(self):
         '''Using a random trade generator, test exportExcel creates a file'''
 
-        t = ExportToExcel(self.ts, self.jf, self.df)
-        t.exportExcel()
+        for jf, lf, df in zip(self.jfs, self.lfs, self.dframes):
 
-        self.assertTrue(os.path.exists(self.jf.outpathfile))
+            t = ExportToExcel(lf.ts, jf, df)
+            t.exportExcel()
+
+            self.assertTrue(os.path.exists(jf.outpathfile))
 
     def test_populateXLDailyNote(self):
         '''
         Test the method populateXLDailyNote. Specifically test after setting a note, calling the
         method the workbook contains the note as expected
         '''
-        dc = DailyControl(self.jf.theDate)
-        note = 'Ipsum solarium magus coffeum brewum'
-        dc.setNote(note)
+        for jf, lf, df in zip(self.jfs, self.lfs, self.dframes):
+            dc = DailyControl(jf.theDate)
+            note = 'Ipsum solarium magus coffeum brewum'
+            dc.setNote(note)
 
-        t = ExportToExcel(self.ts, self.jf, self.df)
-        wb = Workbook()
-        ws = wb.active
-        t.populateXLDailyNote(ws)
-        t.saveXL(wb, self.jf)
-        wb2 = load_workbook(self.jf.outpathfile)
+            t = ExportToExcel(lf.ts, jf, df)
+            wb = Workbook()
+            ws = wb.active
+            t.populateXLDailyNote(ws)
+            t.saveXL(wb, jf)
+            wb2 = load_workbook(jf.outpathfile)
 
-        cell = (1, 6)
-        cell = tcell(cell)
-        val = wb2.active[cell].value
-        self.assertEqual(note, val)
+            cell = (1, 6)
+            cell = tcell(cell)
+            val = wb2.active[cell].value
+            self.assertEqual(note, val)
 
     def test_populateXLDailySummaryForm(self):
         '''
         Test the method populateXLDailySummaryForm. Specifically test that given a specific anchor,
         12 specific spots are written to by default.
         '''
-        NUMROWS = 6
-        mstkAnchor = (3, 3)     # arbitrary
-        mistake = MistakeSummary(numTrades=len(self.ldf), anchor=mstkAnchor)
-        t = ExportToExcel(self.ts, self.jf, self.df)
-        wb = Workbook()
+        for jf, lf, df, ldf in zip(self.jfs, self.lfs, self.dframes, self.ldfs):
+            NUMROWS = 6
+            mstkAnchor = (3, 3)     # arbitrary
+            mistake = MistakeSummary(numTrades=len(ldf), anchor=mstkAnchor)
+            t = ExportToExcel(lf.ts, jf, df)
+            wb = Workbook()
 
-        t.populateXLDailySummaryForm(mistake, wb.active, mstkAnchor)
-        # t.saveXL(wb, self.jf)
+            t.populateXLDailySummaryForm(mistake, wb.active, mstkAnchor)
+            # t.saveXL(wb, self.jf)
 
-        anchor = (mstkAnchor[0], mstkAnchor[1] + len(self.ldf) + 5)
-        cell = tcell(mstkAnchor, anchor=anchor)
-        for i in range(0, NUMROWS):
-            cell = tcell((mstkAnchor[0], mstkAnchor[1] + i), anchor=anchor)
-            cell2 = tcell((mstkAnchor[0] + 1, mstkAnchor[1] + i), anchor=anchor)
-            self.assertIsInstance(wb.active[cell].value, str)
-            self.assertIsInstance(wb.active[cell2].value, str)
-
-
-class Test_ExportToExcel_MistakeData(TestCase):
-    '''
-    Test the forms data. Elaborate setup. Kind of eloborate tests. It Aint TDD
-    '''
-
-    def __init__(self, *args, **kwargs):
-        '''
-        When we initialze the object, ensure that we always run from src as the cwd
-        '''
-        super(Test_ExportToExcel_MistakeData, self).__init__(*args, **kwargs)
-
-    def setUp(self):
-
-        ddiirr = os.path.dirname(__file__)
-        os.chdir(os.path.realpath(ddiirr + '/../'))
-
-        theDate = pd.Timestamp('2008-06-06')
-        self.jf = JournalFiles(outdir='out/', theDate=theDate, mydevel=False, inputType='DAS')
-        self.tradeS, self.ts, self.entries, self.imageNames, self.df, self.ldf = getRandGenTradeStuff()
-        if os.path.exists(self.jf.outpathfile):
-            os.remove(self.jf.outpathfile)
-
-        # Setup mistake note fields to test
-        note = 'Ground control to Major Tom'
-
-        for i, key in enumerate(self.ts):
-            tto = self.ts[key]
-            notex = note + str(i + 1)
-            tto['MstkNote'] = notex
-
-        # Setup a couple images to add
-        imdir = 'images/'
-        img1 = os.path.join(imdir, 'fractal-art-fractals.jpg')
-        img2 = os.path.join(imdir, 'psych.jpg')
-        assert os.path.exists(img1)
-        assert os.path.exists(img2)
-        for key in self.ts:
-            tto = self.ts[key]['chart1'] = img1
-            tto = self.ts[key]['chart2'] = img2
-
-        t = ExportToExcel(self.ts, self.jf, self.df)
-        imageNames = t.getImageNamesFromTS()
-        imageLocation, dframe = t.layoutExcelData(t.df, self.ldf, imageNames)
-        assert len(self.ldf) == len(imageLocation)
-
-        # Create an openpyxl wb from the dataframe
-        ls = LayoutSheet(t.topMargin, len(t.df))
-        wb, ws, nt = ls.createWorkbook(dframe)
-
-        # Place both forms 2 cells to the right of the main table
-        mstkAnchor = (len(dframe.columns) + 2, 1)
-        mistake = MistakeSummary(numTrades=len(self.ldf), anchor=mstkAnchor)
-        self.imageLocation = imageLocation
-        self.mistake = mistake
-        self.wb = wb
-        self.t = t
-        self.a = mstkAnchor
-        self.note = note
-
-    def test_populateXLMistakeForm_hyperlinks(self):
-        '''
-        Test the method populateXLMistakeForm has set up correct hyperlinks to the daily summary
-        forms.
-        '''
-        ws = self.wb.active
-        iloc = self.imageLocation
-        self.t.populateXLDailyFormulas(iloc, ws)
-        self.t.populateXLMistakeForm(self.mistake, ws, iloc)
-        # self.t.saveXL(self.wb, self.jf)
-
-        # cell = tcell(self.mistake.mistakeFields['tpl1'][0])
-        for i in range(len(self.ldf)):
-            n = 'name' + str(i + 1)
-            cell = tcell(self.mistake.mistakeFields[n][0][0], anchor=self.a)
-            self.assertIsNotNone(ws[cell].hyperlink)
-            link = ws[cell].hyperlink.target.split('!')[1]
-            self.assertIsNotNone(ws[link].hyperlink)
-            link2 = ws[link].hyperlink.target.split('!')[1]
-            self.assertEqual(cell, link2)
-        # print(ws[cell].value)
-
-    def test_populateXLMistakeForm_correctTradePL(self):
-        '''This method knows way too much, but how else to deal with excel and test formula results...'''
-        ws = self.wb.active
-        iloc = self.imageLocation
-        self.t.populateXLDailyFormulas(iloc, ws)
-        self.t.populateXLMistakeForm(self.mistake, ws, iloc)
-        # self.t.saveXL(self.wb, self.jf)
-
-        # Here we will get the values that the simple formulas point to and test that the trade pl matches
-        for i in range(len(self.ldf)):
-            tpl = 'tpl' + str(i + 1)
-            cell = tcell(self.mistake.mistakeFields[tpl][0], anchor=self.a)
-            vallink = ws[cell].value.replace('=', '')
-            val = ws[vallink].value
-            try:
-                val = float(val)
-            except ValueError:
-                print(val)
-                if val == '':
-                    val = 0.0
-                else:
-                    raise ValueError('Unexpected value for a currency amount.', type(val), val)
-            self.assertIsInstance(val, float, val)
-            origval = float(self.ldf[i].iloc[-1].Sum)
-            self.assertAlmostEqual(val, origval)
-
-    def test_populateXLMistakeForm_noteLinks(self):
-        '''
-        This method knows way too much, but how else to deal with excel and test formula results...
-        Test that when data is included for the mistake note in ts, that data is linked with a
-        simple formula (e.g. '=X98') in the mistake summary form
-        '''
-        ws = self.wb.active
-        iloc = self.imageLocation
-        self.t.populateXLDailyFormulas(iloc, ws)
-        self.t.populateXLMistakeForm(self.mistake, ws, iloc)
-        # self.t.saveXL(self.wb, self.jf)
-
-        # Here we will get the values that the simple formulas point to and test that the note is what we wrote
-        for i in range(len(self.ldf)):
-            m = 'mistake' + str(i + 1)
-            note = self.note + str(i + 1)
-            cell = tcell(self.mistake.mistakeFields[m][0][0], anchor=self.a)
-            vallink = ws[cell].value.replace('=', '')
-            val = ws[vallink].value
-            self.assertEqual(val, note)
-
-    def test_placeImagesAndSumStyles(self):
-        '''
-        At a loss for how to test image placement---the image is in a zip, the links are not in
-        the worksheet. Openpyxl does not get the image info from load_workbook. While these asserts
-        are not satisfactory, they will probably fail if something has gone wrong with the insert
-        locations for images and the SumStyle forms.
-        '''
-        tf = TradeFormat(self.wb)
-        ws = self.wb.active
-        self.mistake.mstkSumStyle(ws, tf, self.a)
-        self.mistake.dailySumStyle(ws, tf, self.a)
-
-        self.t.placeImagesAndSumStyles(self.imageLocation, ws, tf)
-        # self.t.saveXL(self.wb, self.jf)
-
-        for loc in self.imageLocation:
-            sumcell = tcell((1, loc[0][0][1]))
-            aboveSumCell = tcell((1, loc[0][0][1] - 1))
-            self.assertEqual(ws[sumcell].style, 'titleStyle', sumcell)
-            self.assertEqual(ws[aboveSumCell].style, 'Normal', aboveSumCell)
-            for iloc, fn in zip(loc[0], loc[1]):
-                imgcell = tcell(iloc)
-                sumcell = tcell((1, iloc[1]))
-
-                self.assertIsNotNone(ws[imgcell].value)
-
-    def test_populateXLDailyFormulas(self):
-        '''
-        Test populateXLDailyFormulas. Specifically test that the value written to the
-        ws is a formula (it begins with =).
-        '''
-        srf = SumReqFields()
-        self.t.populateXLDailyFormulas
-        self.t.populateXLDailyFormulas(self.imageLocation, self.wb.active)
-        # self.t.saveXL(self.wb, self.jf)
-        ws = self.wb.active
-
-        # Get the anchor from imageLocation, Get the form coord from tfcolumns using a key
-        # common to tfcolumns and tfformulas
-        for loc in self.imageLocation:
-            anchor = (1, loc[0][0][1])
-            for key in srf.tfformulas:
-                cell = srf.tfcolumns[key][0]
-                if isinstance(cell, list):
-                    cell = cell[0]
-                valcell = tcell(cell, anchor=anchor)
-                # print(ws[valcell].value)
-                self.assertEqual(ws[valcell].value.find('='), 0)
+            anchor = (mstkAnchor[0], mstkAnchor[1] + len(ldf) + 5)
+            cell = tcell(mstkAnchor, anchor=anchor)
+            for i in range(0, NUMROWS):
+                cell = tcell((mstkAnchor[0], mstkAnchor[1] + i), anchor=anchor)
+                cell2 = tcell((mstkAnchor[0] + 1, mstkAnchor[1] + i), anchor=anchor)
+                self.assertIsInstance(wb.active[cell].value, str)
+                self.assertIsInstance(wb.active[cell2].value, str)
 
 
 def main():
@@ -312,9 +198,12 @@ def main():
 
 def notmain():
 
+    Test_ExportToExcel.setUpClass()
     t = Test_ExportToExcel()
-    t.setUp()
-    t.test_exportExcel()
+
+    # t.test_exportExcel()
+    # t.test_populateXLDailyNote()
+    t.test_populateXLDailySummaryForm()
 
 
 if __name__ == '__main__':
