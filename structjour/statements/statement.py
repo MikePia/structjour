@@ -22,23 +22,23 @@ Module to open any file and return the right statement type
 '''
 import os
 import pandas as pd
-import re
+# import re
 
 from bs4 import BeautifulSoup
 
-from PyQt5.QtCore import QSettings
+# from PyQt5.QtCore import QSettings
 from structjour.dfutil import DataFrameUtil
 
 from structjour.statements.findfiles import findFilesSinceMonth
-from structjour.statements.dasstatement import DasStatement
+# from structjour.statements.dasstatement import DasStatement
 from structjour.statements.findfiles import getDirectory, checkDateDir
-from structjour.statements.ibstatement import IbStatement, readit
+# from structjour.statements.ibstatement import IbStatement, readit
 from structjour.definetrades import ReqCol
 
 
 def getStatementType(infile):
     '''
-    Determine if infile is a statement. If it is return a tuple (data, type)
+    Determine if infile is a statement. If it is return a tuple (data, type) TODO: Not doing what I said...
     If it is a DAS statement, determine if it matches the current date. As DAS statements do not
     include dates, the date in structjour and the directory structure date must match.
     If they don't match, the program, at a higher level, will pop a query to get the date of the

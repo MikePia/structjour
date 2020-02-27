@@ -67,7 +67,7 @@ class ReqCol(object):
 class DefineTrades(object):
     '''
     DefineTrades moves the data from transaction centric to trade centric with a collection of
-    transactions make a single trade. The dataframe representing a trade will have multiple 
+    transactions make a single trade. The dataframe representing a trade will have multiple
     transactions and added columns for time, share balance for each trade, duration and user info
     like stop loss, target and analasys.
     '''

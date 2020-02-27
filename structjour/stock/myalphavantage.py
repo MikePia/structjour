@@ -35,9 +35,7 @@ import logging
 import time
 import requests
 import pandas as pd
-# from structjour.stock.picklekey import getKey as getPickledKey
 from structjour.stock.utilities import ManageKeys, movingAverage
-# import pickle
 
 BASE_URL = 'https://www.alphavantage.co/query?'
 EXAMPLES = {

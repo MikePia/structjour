@@ -283,9 +283,9 @@ def reallylocal():
 
 
 if __name__ == "__main__":
-    # notmain()
+    notmain()
     # main()
-    reallylocal()
+    # reallylocal()
 
     # def test_SumReqFields(self):
     #     '''

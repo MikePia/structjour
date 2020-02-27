@@ -61,7 +61,7 @@ def getLimits():
     '''
     Tell a little bit about the getHistory call
     '''
-    l = ''.join(['We are only interested, in this app, in chart info, aka historical data.\n',
+    lmt = ''.join(['We are only interested, in this app, in chart info, aka historical data.\n',
                  'IB will issue a Pacing violation when:...\n',
                  '       Making identical historical data requests within 15 seconds.\n',
                  '       Making six or more historical data requests for the same Contract',
@@ -70,7 +70,8 @@ def getLimits():
                  'Data older than 6 months for candles of 1 minute or less in unavailable.\n',
                  '      No hard limit for older data for intervals greater than 1 min (so they',
                  '      say in spite of the docs)\n'])
-    return l
+    return lmt
+
 
 def ni(i, minutes='minutes'):
     '''
@@ -91,6 +92,7 @@ def ni(i, minutes='minutes'):
     if isinstance(i, int):
         return (resamp, ('1 min', 1, i))
     return (False, ('', 0, 0))
+
 
 def validateDurString(s):
     '''
@@ -149,8 +151,8 @@ class TestWrapper(wrapper.EWrapper):
         Overriden Callback from EWrapper. Drops off data 1 bar at a time in each call.
         '''
         if self.counter == 0:
-            l = []
-            l.append(bar)
+            dat = []
+            dat.append(bar)
         self.counter = self.counter + 1
         self.data.append([bar.date, bar.open, bar.high,
                           bar.low, bar.close, bar.volume])
@@ -286,15 +288,15 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     fullstart = end
     fullstart = fullstart - pd.Timedelta(days=5)
     if start < fullstart:
-        delt = end-start
-        fullstart = end-delt
+        delt = end - start
+        fullstart = end - delt
 
-    if (end-fullstart).days < 1:
-        if ((end-fullstart).seconds//3600) > 8:
+    if (end - fullstart).days < 1:
+        if ((end - fullstart).seconds // 3600) > 8:
             dur = '2 D'
         else:
             dur = f'{(end-fullstart).seconds} S'
-    elif (end-fullstart).days < 7:
+    elif (end - fullstart).days < 7:
         dur = f'{(end-fullstart).days + 1} D'
     else:
         dur = f'{(end-fullstart).days} D'
@@ -307,7 +309,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
 
     symb = symbol
     (resamp, (interval, minutes, origminutes)) = ni(minutes)
-    
+
     # ib = TestApp(7496, 7878, '127.0.0.1')
     # ib = TestApp(4002, 7979, '127.0.0.1')
     x = IbSettings()
@@ -320,7 +322,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
     if lendf == 0:
         return 0, df, None
 
-    # Normalize the date to our favorite format 
+    # Normalize the date to our favorite format
     df.index = pd.to_datetime(df.index)
     if resamp:
         srate = f'{origminutes}T'
@@ -330,7 +332,6 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         df_ohlc['close'] = df[['close']].resample(srate).last()
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
-
 
     maDict = movingAverage(df.close, df, end)
 
@@ -351,7 +352,7 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
         # the latter probably better but inaccurate; would not reflect what the trader was using
         # Better suggestions?
         if key == 'vwap':
-            if len(maDict['vwap']) < 1 or ( df.index[0] < maDict['vwap'].index[0]):
+            if len(maDict['vwap']) < 1 or (df.index[0] < maDict['vwap'].index[0]):
                 removeMe.append(key)
                 # del maDict['vwap']
         else:
@@ -363,9 +364,6 @@ def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
 
     ib.disconnect()
     return len(df), df, maDict
-
-
-
 
 
 def isConnected():
@@ -384,6 +382,7 @@ def isConnected():
         ib.disconnect()
     return connected
 
+
 def main():
     '''test run'''
     start = dt.datetime(2019, 10, 10, 7, 0)
@@ -391,6 +390,7 @@ def main():
     minutes = 15
     x, ddf, maDict = getib_intraday('ROKU', start, end, minutes)
     print(x, ddf)
+
 
 def notmain():
     '''Run some local code'''

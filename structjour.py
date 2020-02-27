@@ -19,14 +19,8 @@ Created on Apr 1, 2019
 
 @author: Mike Petersen
 '''
-
-
-import os
-import sys
-
 from structjour.view.runtrade import main
 
-# pylint: disable = C0103
 
 if __name__ == '__main__':
     main()

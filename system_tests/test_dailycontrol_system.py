@@ -125,7 +125,6 @@ class TestDailyCtrl(TestCase):
         self.df, ldf = tu.processDBTrades(df2)
         sc = SumControl()
         lf = LayoutForms(sc, jf, self.df)
-        # lf.pickleitnow()
         lf.runTtoSummaries(ldf)
         self.ts = lf.ts
         ibdb.addTradeSummaries(self.ts, ldf)

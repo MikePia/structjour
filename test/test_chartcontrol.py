@@ -25,7 +25,7 @@ Created on May 20, 2019
 import sys
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
-from PyQt5 import QtWebEngineWidgets    # noqa F401
+from PyQt5 import QtWebEngineWidgets    # noqa:  F401
 # from PyQt5 import QtWidgets
 
 import logging

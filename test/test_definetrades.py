@@ -25,6 +25,7 @@ Test the methods in the module journal.definetrades
 from math import isclose
 import os
 import types
+import unittest
 from unittest import TestCase
 
 import numpy as np
@@ -391,7 +392,7 @@ def notmain():
     # t.test_addSummaryPL()
 
 
-def main():
+def mainx():
     '''
     Test discovery is not working in vscode. Use this for debugging.
     Then run cl python -m unittest discovery
@@ -403,6 +404,10 @@ def main():
 
             if isinstance(attr, types.MethodType):
                 attr()
+
+
+def main():
+    unittest.main()
 
 
 if __name__ == '__main__':

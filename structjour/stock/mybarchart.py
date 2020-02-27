@@ -26,7 +26,6 @@ import datetime as dt
 import logging
 import requests
 import pandas as pd
-# from structjour.stock.picklekey import getKey as getReg
 from structjour.stock.utilities import ManageKeys, getLastWorkDay, movingAverage
 
 

@@ -146,7 +146,7 @@ class DasStatement:
                 balance += row[rc.shares]
                 tdf.at[i, rc.bal] = balance
             return True
-            
+
         return False
 
     def hypotheticalBalance(self, rc, tdf):
@@ -651,7 +651,8 @@ class DasStatement:
             newdf = newdf.append(t)
 
         for i, row in newdf.iterrows():
-            newdf.at[i, 'DateTime'] = row[self.rc.date].strftime('%Y%m%d;%H%M%S')
+            d = pd.Timestamp(row[self.rc.date])
+            newdf.at[i, 'DateTime'] = d.strftime('%Y%m%d;%H%M%S')
         newdf = self.combineOrdersByTime(newdf)
         newinfile = "tradesByTicket.csv"
         if not testFileLoc:

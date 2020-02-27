@@ -45,7 +45,7 @@ from structjour.view.exportexcel import ExportToExcel
 # from PyQt5.QtTest import QTest
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
-from PyQt5 import QtWebEngineWidgets    # noqa F401
+from PyQt5 import QtWebEngineWidgets    # noqa:  F401
 from PyQt5.QtWidgets import QApplication
 
 # pylint: disable = C0103

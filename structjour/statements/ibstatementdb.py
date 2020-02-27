@@ -398,7 +398,7 @@ class StatementDB:
         '''
         Basically this fixes up my stuff (developer) and should be unnecessary by release time
         Fix up the legacy objects (which is every object that was ever saved as an
-        object [currently 8/8/19]). 
+        object [currently 8/8/19]).
         '''
         sf = self.sf
         if sf.date not in trade.columns:
@@ -579,7 +579,7 @@ class StatementDB:
                     conn.commit()
                 except Exception as ex:
                     logging.error('Commit failed for trades_sum table', ex)
-    
+
     def findTrades(self, datetime, symbol, quantity, price, account, cur=None):
         '''return: a tuple'''
         rc = self.rc
@@ -1451,7 +1451,7 @@ class StatementDB:
 
     def getStatementDays(self, account, beg, end=None):
         '''
-        Not currently used in structjour (1/30/20). For a while, considered multi-day statements. 
+        Not currently used in structjour (1/30/20). For a while, considered multi-day statements.
         Rejected the idea. Keep structjour day-trader centric.
         Retrieve all the trades for the given days.
         :account:
@@ -1515,7 +1515,7 @@ class StatementDB:
     def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
         '''
         Get Market days between beg and end for which we are not covered by a statement saved to the db.
-        
+
         Paramaters:
         :params account:
         :params beg:
