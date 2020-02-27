@@ -26,16 +26,15 @@ Random Trade Generator to for testing
 import logging
 import math
 from math import isclose
+import os
 import random
-from unittest import TestCase
 
 import pandas as pd
 
-from structjour.colz.finreqcol import FinReqCol
+# from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
 from structjour.thetradeobject import runSummaries
 
-# pylint: disable = C0103
 
 def getSide(firsttrade=False):
     '''
@@ -49,6 +48,7 @@ def getSide(firsttrade=False):
         side = 'B'if s < .35 else 'S' if s < .7 else 'HOLD+' if s < .85 else 'HOLD-'
     return side
 
+
 def getAccount():
     '''
     Get a randoms account real or sim
@@ -60,12 +60,14 @@ def getAccount():
     acct = real if r < percentReal else sim
     return acct
 
+
 def getNumTrades(maxt=8):
     '''
     Return a number between 2 and 8 by default
     '''
     t = random.randint(2, maxt)
     return t
+
 
 def getRandomFuture(earliest=pd.Timestamp('2019-01-01 09:30:00')):
     '''
@@ -74,6 +76,7 @@ def getRandomFuture(earliest=pd.Timestamp('2019-01-01 09:30:00')):
     rsec = random.randint(45, 1500)
     nextt = earliest + pd.Timedelta(seconds=rsec)
     return nextt
+
 
 def getPL():
     '''
@@ -85,20 +88,22 @@ def getPL():
     multiplier = random.randint(2, 200)
     return amnt * upordown * multiplier
 
+
 def getTicker(exclude=None):
     '''
     Get a random ticker symbol
-    :exclude: A list of tickers to exclude from consideration.  
+    :exclude: A list of tickers to exclude from consideration.
     '''
     tickers = ['SQ', 'AAPL', 'TSLA', 'ROKU', 'NVDA', 'NUGT', 'MSFT', 'CAG', 'ACRS', 'FRED', 'PCG',
                'AMD', 'GE', 'NIO', 'AMRN', 'FIVE', 'BABA', 'BPTH', 'Z', ]
-    tick = tickers[random.randint(0, len(tickers)-1)]
+    tick = tickers[random.randint(0, len(tickers) - 1)]
     if exclude and tick in exclude:
         if not set(tickers).difference(set(exclude)):
             # We could make up some random letters here if this ever ....-- or include more
             raise ValueError("You have excluded every stock in the method")
         return getTicker(exclude=exclude)
     return tick
+
 
 def floatValue(test, includezero=False):
     try:
@@ -110,6 +115,7 @@ def floatValue(test, includezero=False):
     if not includezero and addme == 0:
         return False, 0
     return True, addme
+
 
 def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
                           pdbool=True, exclude=None):
@@ -149,7 +155,7 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     account = getAccount()
     # account = 'U000000'
     ticker = getTicker(exclude=exclude)
-    name=''
+    name = ''
     daDate = pd.Timestamp(start.year, start.month, start.day)
 
     twoholds = True
@@ -184,7 +190,7 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
                 if side == 'HOLD-':
                     qty = -qty
                 start = nexttime
-                trade.append([tradenum, start, nowtime, ticker, side+'B', price, qty, qty,
+                trade.append([tradenum, start, nowtime, ticker, side + 'B', price, qty, qty,
                               account, pl, theSum, name, daDate, duration])
                 sumtotal = sumtotal + pl
                 prevBal = qty
@@ -196,9 +202,9 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
                 prevBal = 0
                 # nowtime = nexttime
                 break
-        elif i == numTrades -1:
+        elif i == numTrades - 1:
             side = 'S' if prevBal >= 0 else 'B'
-            pl = getPL() # if not side.startswith('HOLD') else 0
+            pl = getPL()
             trade.append([tradenum, start, nowtime, ticker, side, price, -prevBal, 0,
                           account, pl, theSum, name, daDate, duration])
             sumtotal = sumtotal + pl
@@ -209,12 +215,12 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
             qty = random.randint(1, 500)
             qty = -qty if (side == 'S' or side == 'HOLD-B') else qty
 
-            trade.append([tradenum, start, nowtime, ticker, side, price,  qty, prevBal+qty,
+            trade.append([tradenum, start, nowtime, ticker, side, price, qty, prevBal + qty,
                           account, pl, theSum, name, daDate, duration])
             sumtotal = sumtotal + pl
-            prevBal = prevBal+qty
+            prevBal = prevBal + qty
             if prevBal == 0:
-                #We are coincidentally at 0 balance. Trade is over. Must be a hotkey mistake ;-)
+                # We are coincidentally at 0 balance. Trade is over. Must be a hotkey mistake ;-)
                 break
 
         nowtime = nexttime
@@ -222,7 +228,7 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
     duration = nowtime - start
 
     # Hey programmer. If you edit the columns, adjust or fix these columns or make it more general
-    name = '{} {}'.format(ticker, 'Long' if trade[0][4].find('B') >=0 else 'Short')
+    name = '{} {}'.format(ticker, 'Long' if trade[0][4].find('B') >= 0 else 'Short')
     trade[-1][10] = sumtotal
     trade[-1][11] = name
     trade[-1][13] = duration
@@ -231,8 +237,14 @@ def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
                                                 'Balance', 'Account', 'PnL', 'Sum', 'Name', 'Date', 'Duration'])
     if not isclose(tradedf['PnL'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
         logging.warning(tradedf['PnL'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
-        
+
+    tradedf['OC'] = ''
+    tradedf['Cloid'] = ''
+    tradedf['Balance'] = float('nan')
+    tradedf['Average'] = float('nan')
+    tradedf['Commission'] = float('nan')
     return tradedf, latest
+
 
 def getRandomTradeDF(numTrades=None, start='2018-06-06 09:30:00'):
     '''
@@ -242,20 +254,30 @@ def getRandomTradeDF(numTrades=None, start='2018-06-06 09:30:00'):
     :start: The earliest possible trade start time.
     '''
 
-    trades = list()
-    if numTrades == None:
-        numTrades = random.randint(1,10)
+    if numTrades is None:
+        numTrades = random.randint(1, 10)
     start = pd.Timestamp(start)
     df = pd.DataFrame()
     exclude = []
     for i in range(numTrades):
-        tdf, start = randomTradeGenerator2(i+1, earliest=start,
-                                            pdbool=True, exclude=exclude)
+        tdf, start = randomTradeGenerator2(i + 1, earliest=start,
+                                           pdbool=True, exclude=exclude)
         df = df.append(tdf)
         exclude.append(tdf.Symb.unique()[0])
 
     df.reset_index(drop=True, inplace=True)
     return df
+
+
+def getDASimport(numTrades, start=None, outfile=None):
+    df = getRandomTradeDF()
+    if outfile:
+        d = os.path.dirname(outfile)
+        if os.path.exists(d):
+            df.to_csv(outfile)
+
+        print()
+
 
 def getLdf():
     '''
@@ -265,7 +287,8 @@ def getLdf():
 
     df = getRandomTradeDF()
     tu = DefineTrades()
-    ldf = tu.getTradeList(df)
+    dframe, ldf = tu.processDBTrades(df)
+    # ldf = tu.getTradeList(df)
     return ldf, df
 
 
@@ -273,7 +296,7 @@ def getRandGenTradeStuff():
     '''
     Gets random trade version of tradeSummaries, ts (the dict form of the same), entries, and
     initialImagenames and ldf. tradeSummaries and ts are redundant (list and dict). df and ldf are
-    redundant (dataframe and list of sub-dataframe). They are used at different points in the 
+    redundant (dataframe and list of sub-dataframe). They are used at different points in the
     program. They are all made available to test all parts.
     '''
     ldf, df = getLdf()
@@ -285,10 +308,15 @@ def notmain():
     '''Run some local code'''
     for i in range(0, 10):
         tradeSummaries, ts, entries, initialImageNames, df, ldf = getRandGenTradeStuff()
-        
+
         print(initialImageNames)
-    
-    # print(getRandomTradeDF())
+
+
+def localstuff():
+    outfile = 'C:/python/E/structjour/test/out/randomtrades.csv'
+    getDASimport(4, outfile=outfile)
+
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    localstuff()

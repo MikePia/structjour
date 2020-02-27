@@ -177,7 +177,7 @@ class LayoutForms:
                 df = pickle.load(f)
         if df is not None and self.df is None:
             # Will soon delete these pickled items from the project
-            logging.warning('Using a pickled trade table object in saveTheTradeObject')
+            logging.error(f'Using a pickled trade table object in saveTheTradeObject: {dfname}')
             self.df = df
         if self.df is None:
             logging.warning('Failed to locate the trades information. Pickle FAILED')
@@ -447,7 +447,7 @@ class LayoutForms:
                 return lost, note, clean
             if 'short' in name.lower() and diff <= maxloss:
                 return lost, note, clean
-            assert maxloss < 0
+            # assert maxloss < 0
             if maxloss > pl:
                 lost = maxloss - pl
                 tto[rc.mstkval] = lost
@@ -531,8 +531,7 @@ class LayoutForms:
             delt = end - begin
             bstring = begin.strftime('%H%M%S')
             estring = delt.__str__().replace(':', '.')
-            n = 'Trade{}_{}_{}_{}_{}.png'.format(
-                key, bstring, estring, wloc, uinfo)
+            n = 'Trade{}_{}_{}_{}_{}.png'.format(key, bstring, estring, wloc, uinfo)
             n = n.replace(' ', '_')
         if data[0] != n:
             data[0] = n

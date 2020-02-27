@@ -318,7 +318,7 @@ def setuplog(settings):
     filename = logfile
     filemode = 'a'
     datefmt = '%Y/%m/%d %H:%M:%S'
-    format = '%(asctime)s  - %(levelname)s - %(funcName)s - %(message)s'
+    format = '%(asctime)s  - %(levelname)s - %(filename)s - %(funcName)s %(lineno)s - %(message)s'
     logging.basicConfig(level=level, filename=filename, filemode=filemode, format=format, datefmt=datefmt)
 
 
