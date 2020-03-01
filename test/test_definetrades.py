@@ -22,39 +22,87 @@ Test the methods in the module journal.definetrades
 
 @author: Mike Petersen
 '''
-from math import isclose
+# from math import isclose
+import datetime as dt
+import logging
 import os
-import types
+# import types
 import unittest
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 
-from structjour.colz.finreqcol import FinReqCol
-from structjour.definetrades import DefineTrades, ReqCol
 
-from structjour.rtg import randomTradeGenerator2
+from structjour.colz.finreqcol import FinReqCol
+from structjour.definetrades import DefineTrades
+from structjour.statements.dasstatement import DasStatement
+from structjour.statements.ibstatement import IbStatement
+from structjour.statements.ibstatementdb import StatementDB
+from structjour.statements.statement import getStatementType
+from structjour.stock.utilities import clearTables
+
+from structjour.rtgAgain import RTG
+
+from PyQt5.QtCore import QSettings
 
 
 class TestDefineTrades(TestCase):
     '''
     Run all of structjour with a collection of input files and test the outcome
+    The methods called in the processDBTrades are dependent on their sequence.  The first part of the method
+    is re-created in setUpClass. Then the method is redundantly recreated in each subsequent test till the
+    appropriate place has been reached
     '''
 
-    def __init__(self, *args, **kwargs):
-        super(TestDefineTrades, self).__init__(*args, **kwargs)
+    outdir = 'test/out'
+    db = 'data/testdb.sqlite'
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
+        cls.outdir = os.path.realpath(cls.outdir)
+        cls.db = os.path.realpath(cls.db)
+
+        if os.path.exists(cls.db):
+            clearTables(cls.db)
+
+        cls.rtg = RTG(db=cls.db, overnight=100)
+        cls.theDate = '20200207 10:39'
+        cls.infile = cls.rtg.saveSomeTestFiles([cls.theDate], cls.outdir, strict=True, overwrite=False)[0]
+
+        settings = QSettings('zero_substance', 'structjour')
+        # for i, name in enumerate(cls.infiles):
+        name = os.path.join(cls.outdir, cls.infile)
+        x, cls.inputType = getStatementType(name)
+        if cls.inputType == 'DAS':
+            ds = DasStatement(name, settings, cls.theDate)
+            ds.getTrades(testFileLoc=cls.outdir, testdb=cls.db)
+        elif cls.inputType == "IB_CSV":
+            ibs = IbStatement(db=cls.db)
+            ibs.openIBStatement(name)
+        else:
+            raise ValueError(f'Unsupported File type: {cls.inputType}')
+
+        statement = StatementDB(db=cls.db)
+        cls.df = statement.getStatement(cls.theDate)
+        cls.dtrades = DefineTrades(cls.inputType)
+        cls.rc = FinReqCol(cls.inputType)
+        cls.trades = cls.dtrades.addFinReqCol(cls.df)
+        rccolumns = cls.rc.columns.copy()
+        rccolumns = cls.dtrades.appendCols(rccolumns)
+
+        cls.trades = cls.trades[rccolumns]
+        cls.trades.copy()
+        cls.trades = cls.trades.sort_values([cls.rc.ticker, cls.rc.acct, cls.rc.date])
 
     def test_addFinReqCol(self):
         '''
         Test the method journal.definetrades.TestDefineTrades.addFinReqCol
         '''
-        rc = ReqCol()
+        rc = self.rc
         frc = FinReqCol()
 
         df = pd.DataFrame(np.random.randint(0, 1000, size=(10, len(rc.columns))),
@@ -65,345 +113,159 @@ class TestDefineTrades(TestCase):
             self.assertIn(x, df.columns)
         self.assertGreaterEqual(len(df.columns), len(frc.columns))
 
-    def test_writeShareBalance(self):
-        '''
-        Test the method writeShareBalance. Send some randomly generated trades. Remove a bunch of
-        columns and call writeShareBalance. Test that the share balance was recreated correctly
-        test the share balance that returns. Sort both and compare the results using the place
-        index iloc
-        '''
-        NUMTRADES = 4
-        start = pd.Timestamp('2018-06-06 09:30:00')
-        df = pd.DataFrame()
-        exclude = []
-        for i in range(NUMTRADES):
-            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                               pdbool=True, exclude=exclude)
-            df = df.append(tdf)
-            exclude.append(tdf.Symb.unique()[0])
-
-        df.reset_index(drop=True, inplace=True)
-
-        frc = FinReqCol()
-        df2 = df.copy()
-
-        df2[frc.sum] = None
-        df2[frc.start] = None
-        df2[frc.tix] = None
-        df2[frc.PL] = None
-        df2[frc.dur] = None
-        df2[frc.bal] = 0
-
-        df3 = df2.copy()
-        df3 = df3.sort_values(['Symb', 'Account', 'Time'])
-        df3.reset_index(drop=True, inplace=True)
-        df = df.sort_values(['Symb', 'Account', 'Time'])
-
-        dtrades = DefineTrades()
-        df3 = dtrades.writeShareBalance(df3)
-        for i in range(len(df3)):
-            assert df3.iloc[i][frc.bal] == df.iloc[i][frc.bal]
-            # print('{:-20}     {}'.format(df3.iloc[i][frc.bal], df.iloc[i][frc.bal]))
-
-    def test_addStartTime(self):
+    def test_addStartTimeDB(self):
         '''
         Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
         the start field and then test the results for the start field.
         '''
-        NUMTRADES = 4
-        start = pd.Timestamp('2019-01-01 09:30:00')
-        df = pd.DataFrame()
-        exclude = []
-        for i in range(NUMTRADES):
-            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                               pdbool=True, exclude=exclude)
-            df = df.append(tdf)
-            exclude.append(tdf.Symb.unique()[0])
-
-        df.reset_index(drop=True, inplace=True)
-
-        frc = FinReqCol()
-        # df = pd.DataFrame(data=trades, columns=[frc.tix, frc.start, frc.time, frc.ticker, frc.side, frc.shares,
-        #                                         frc.bal, frc.acct, frc.PL, frc.sum, frc.dur])
-        df2 = df.copy()
-        df2[frc.start] = None
-
-        dtrades = DefineTrades()
-        df3 = df2.copy()
-        df3.sort_values(['Symb', 'Account', 'Time'], inplace=True)
-        df3 = dtrades.addStartTime(df3)
-        for i in range(len(df3)):
-            # Tests that addtradeIndex recreated the same index locations that rtg did after sorting the trades
-            if df3.loc[i][frc.start] != df.loc[i][frc.start]:
-                print('Found and error at index', i)
-                print(df3.loc[i][frc.start], df.loc[i][frc.start])
-            self.assertEqual(df3.loc[i][frc.start], df.loc[i][frc.start])
-        for i in range(NUMTRADES):
-            # Test all trades have a single start time
-            tradeNum = 'Trade ' + str(i + 1)
-            tdf = df3[df3.Tindex == tradeNum].copy()
-            self.assertEqual(len(tdf.Start.unique()), 1)
+        nt = self.trades.copy()
+        nt = self.dtrades.addStartTimeDB(nt)
+        for i, row in nt.iterrows():
+            start = row['Start']
+            self.assertEqual(len(start), 8)
+            x = pd.Timestamp(start).time()
+            self.assertIsInstance(x, dt.time)
 
     def test_addTradeIndex(self):
         '''
-        Test addTradeIndex
+        Test addTradeIndex. Test that the index is properly formed, balance is only (possibly) 0 on
+        the last transaction in the trade and the Times are in the right sequence
         '''
-        NUMRUNS = 10
-        NUMTRADES = 10         # Number of trades to aggregate into single statement
-        for i in range(NUMRUNS):
-            # if not i % 20:
-            #     print(f'{i}/{NUMRUNS} ', end='')
-            earliest = pd.Timestamp('2018-06-06 09:30:00')
-            delt = pd.Timedelta(minutes=1)
-            df = pd.DataFrame()
-            exclude = []
-            for j in range(NUMTRADES):
-                tdf, earliest = randomTradeGenerator2(j + 1, earliest=earliest,
-                                                    pdbool=True, exclude=exclude)
-                exclude.append(tdf.iloc[0].Symb)
-                df = df.append(tdf)
-                earliest = earliest + delt
+        rc = self.rc
+        nt = self.trades.copy()
+        nt = self.dtrades.addStartTimeDB(nt)
+        nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
+        nt = self.dtrades.addTradeIndex(nt)
 
-                df.reset_index(drop=True, inplace=True)
-                df = df.sort_values(['Symb', 'Account', 'Time'])
-            frc = FinReqCol()
-            df2 = df.copy()
-            df2[frc.tix] = ''
-            df2.sort_values(['Symb', 'Account', 'Time'], inplace=True)
-
-            dtrades = DefineTrades()
-            ddf = dtrades.addTradeIndex(df2)
-
-            for k in range(4):
-                tnum = 'Trade ' + str(k + 1)
-                tdf = ddf[ddf.Tindex == tnum].copy()
-                xl = tdf.index[-1]
-                lastd = None
-                thisd = None
-                for j, row in tdf.iterrows():
-                    if j != xl:
-                        if tdf.at[j, 'Balance'] == 0:
-                            print('Found an error at index', j, 'The Balance should not be 0')
-                            print(tdf[['Symb', 'Tindex', 'Account', 'Time', 'Side', 'Qty', 'Balance']])
-                        self.assertNotEqual(tdf.at[j, 'Balance'], 0)
-                    else:
-                        if tdf.at[j, 'Balance'] != 0:
-                            print('Found an error at index', xl, 'The balance should be 0')
-                            print(df[['Symb', 'Tindex', 'Account', 'Time', 'Side', 'Qty', 'Balance']])
-                        self.assertEqual(tdf.at[j, 'Balance'], 0)
-                    if lastd:
-                        if lastd > thisd:
-                            print('Found an error in the Time sequencing of', tnum)
-                            print(thisd, ' > ', lastd, ' = ', thisd > lastd)
-                            print(df[['Symb', 'Tindex', 'Account', 'Time', 'Side', 'Qty', 'Balance']])
-                            self.assertGreater(thisd, lastd)
-
-    # TODO Redo this when the random trades are upgraded to creating accurate PL in all cases
-    def test_addSummaryPL(self):
-        '''
-        Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
-        the start field and then test the results for the start field.
-        '''
-        NUMTRADES = 4
-        start = pd.Timestamp('2018-06-06 09:30:00')
-        df = pd.DataFrame()
-        exclude = []
-        for i in range(4):
-            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                               pdbool=True, exclude=exclude)
-            df = df.append(tdf)
-            exclude.append(tdf.Symb.unique()[0])
-
-        df.reset_index(drop=True, inplace=True)
-
-        frc = FinReqCol()
-        df2 = df.copy()
-
-        df2[frc.sum] = None
-
-        df3 = df2.copy()
-
-        df3 = df3.sort_values(['Symb', 'Account', 'Time'])
-        dtrades = DefineTrades()
-        df3 = dtrades.addTradePL(df3)
-
-        for i in range(NUMTRADES):
+        lastd = None
+        for i, tindex in enumerate(list(nt['Tindex'].unique())):
             tnum = 'Trade ' + str(i + 1)
-            tdf = df3[df3.Tindex == tnum]
-            tdf_gen = df[df.Tindex == tnum]
+            tdf = nt[nt.Tindex == tnum].copy()
+            xl = tdf.index[-1]
+            lasttime = None
+            for j, row in tdf.iterrows():
 
-            for i, row in tdf.iterrows():
-                if row.Balance:
-                    assert not row.Sum
-                else:
+                if j != xl:
+                    self.assertNotEqual(tdf.at[j, 'Balance'], 0)
 
-                    assert tdf['P / L'].sum() == row.Sum
-                    assert row.Sum == tdf_gen.loc[tdf_gen.index[-1]].Sum
-
-    def test_addTradeDuration(self):
-        '''
-        Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
-        the start field and then test the results for the start field. Specifically
-        Test that Duration val is placed only when the trade has 0 Shares
-        Test that the the original is the same dur as that created by addTradeDuration
-        Test Duration is difference from each Last Trade - Start val
-        '''
-        NUMTRADES = 4
-        start = pd.Timestamp('2018-06-06 09:30:00')
-        df = pd.DataFrame()
-        exclude = []
-        for i in range(NUMTRADES):
-            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                               pdbool=True, exclude=exclude)
-            df = df.append(tdf)
-            exclude.append(tdf.Symb.unique()[0])
-
-        df.reset_index(drop=True, inplace=True)
-
-        frc = FinReqCol()
-        df2 = df.copy()
-        df2[frc.dur] = None
-        df3 = df2.copy()
-
-        df3 = df3.sort_values(['Symb', 'Account', 'Time'])
-        dtrades = DefineTrades()
-        df3 = dtrades.addTradeDuration(df3)
-
-        for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i + 1)
-            tdf = df3[df3.Tindex == tnum]
-            tdf_gen = df[df.Tindex == tnum]
-            # xl = tdf.index[-1]
-            xl_gen = tdf_gen.index[-1]
-
-            assert len(tdf.Tindex.unique()) == 1
-
-            for i, row in tdf.iterrows():
-                if row.Balance:
-                    assert not row.Duration
-                else:
-                    if not row.Duration:
-                        assert len(tdf) == 2
-                        assert tdf.loc[tdf.index[0]].Side.startswith('HOLD')
-                    # assert row.Duration
-                    diff = row.Time - row.Start
-                    assert diff == row.Duration
-                    assert row.Duration == tdf_gen.loc[xl_gen].Duration
+                if lasttime:
+                    self.assertEqual(row['Start'], lasttime)
+                lasttime = row['Start']
+            if lastd:
+                self.assertGreater(tdf['Start'].unique()[0], lastd)
+            lastd = tdf['Start'].unique()[0]
 
     def test_addTradePL(self):
         '''
-        Test the method DefineTrades.addTradePL. Create random trade and remove the sum val
-
-        Call addtradePL and compare the origianl generation with the new one.
-        Specifically Test that Sum val is placed only when the trade has 0 Shares
-        Test that the the original is the same PL as that created by addTradeDuration
-        Test Sum is sum or the PL values from the trade.
+        Test the method DefineTrades.addTradePL. The method creates a summary pl for each trade
+        Check the summary PL for each trade and that the summary pl is placed only in the
+        last transaction of each trade.
         '''
-        NUMTRADES = 4
-        start = pd.Timestamp('2018-06-06 09:30:00')
-        df = pd.DataFrame()
-        exclude = []
-        for i in range(4):
-            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                               pdbool=True, exclude=exclude)
-            df = df.append(tdf)
-            exclude.append(tdf.Symb.unique()[0])
+        rc = self.rc
+        nt = self.trades.copy()
+        nt = self.dtrades.addStartTimeDB(nt)
+        nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
+        nt = self.dtrades.addTradeIndex(nt)
+        nt = self.dtrades.addTradePL(nt)
 
-        df.reset_index(drop=True, inplace=True)
+        for i, tindex in enumerate(list(nt['Tindex'].unique())):
+            tdf = nt[nt.Tindex == tindex]
+            daSum = tdf[rc.PL].sum()
+            daSum2 = tdf.loc[tdf.index[-1]][rc.sum]
+            self.assertAlmostEquals(daSum, daSum2, 5, 'The pl summary amount is not equal to the pnl summary')
 
-        frc = FinReqCol()
-        df2 = df.copy()
+    def test_addTradeDurationDB(self):
+        '''
+        Test that Duration val is placed only in the last transaction
+        Test Duration is difference from each Last Trade - Start val
+        '''
+        rc = self.rc
+        nt = self.trades.copy()
+        nt = self.dtrades.addStartTimeDB(nt)
+        nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
+        nt = self.dtrades.addTradeIndex(nt)
+        nt = self.dtrades.addTradePL(nt)
+        nt = self.dtrades.addTradeDurationDB(nt)
+        for i, tindex in enumerate(list(nt['Tindex'].unique())):
+            tdf = nt[nt.Tindex == tindex]
+            for i, row in tdf.iterrows():
+                if i != tdf.index[-1]:
+                    itsnothing = row[rc.dur]
+                    self.assertTrue(itsnothing == '' or itsnothing is None)
+                else:
+                    theDur = pd.Timestamp(row[rc.time]) - pd.Timestamp(row[rc.start])
+                    self.assertEqual(row[rc.dur], theDur, f'The duration is incorrect for {tindex}: {row[rc.ticker]}')
 
-        df2[frc.sum] = None
+    def test_addTradeNameDB(self):
+        '''
+        Test the name is created correctly. Note that flipped trades are figured after addTradeName and,
+        if found, the trade name is updated. This tests only the last transaction, as does addTradeName
+        '''
+        rc = self.rc
+        nt = self.trades.copy()
+        nt = self.dtrades.addStartTimeDB(nt)
+        nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
+        nt = self.dtrades.addTradeIndex(nt)
+        nt = self.dtrades.addTradePL(nt)
+        nt = self.dtrades.addTradeDurationDB(nt)
+        nt = self.dtrades.addTradeNameDB(nt)
+        for i, tindex in enumerate(list(nt['Tindex'].unique())):
+            tdf = nt[nt.Tindex == tindex]
+            long = None
+            for i, row in tdf.iterrows():
+                if i != tdf.index[-1]:
+                    self.assertTrue(row[rc.name] == '' or row[rc.name] is None)
+                else:
+                    long = 'long' if (row[rc.oc].find('O') >= 0 and row[rc.shares] > 0) or (
+                                      row[rc.oc].find('C') >= 0 and row[rc.shares] < 0) else 'short'
+                    self.assertEqual(long.lower(), row[rc.name].split(' ')[-1].lower())
+            print(tdf[rc.name].unique())
 
-        df3 = df2.copy()
-
-        df3 = df3.sort_values(['Symb', 'Account', 'Time'])
-        dtrades = DefineTrades()
-        df3 = dtrades.addTradePL(df3)
-
-        for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i + 1)
-            tdf = df3[df3.Tindex == tnum]
-            tdf_gen = df[df.Tindex == tnum]
+    def test_postProcessingDB(self):
+        '''
+        Test add Overnight and/or Flipped to name if it is called for.
+        Test fix db relation for tsid
+        '''
+        rc = self.rc
+        nt = self.trades.copy()
+        nt = self.dtrades.addStartTimeDB(nt)
+        nt = nt.sort_values([rc.start, rc.ticker, rc.acct, rc.date, rc.time], ascending=True)
+        nt = self.dtrades.addTradeIndex(nt)
+        nt = self.dtrades.addTradePL(nt)
+        nt = self.dtrades.addTradeDurationDB(nt)
+        nt = self.dtrades.addTradeNameDB(nt)
+        ldf, nt = self.dtrades.postProcessingDB(self.dtrades.getTradeList(nt))
+        for i, tindex in enumerate(list(nt['Tindex'].unique())):
+            tdf = nt[nt.Tindex == tindex]
+            if not tdf[rc.oc].unique()[0] or tdf[rc.oc].unique()[0] == '':
+                logging.error(f'Bad Trade:{self.db}: {self.theDate} {tdf[rc.ticker].unique()[0]}')
+                continue
+            x0 = tdf.index[0]
+            xl = tdf.index[-1]
+            blong = True if (tdf.loc[x0][rc.oc].find('O') >= 0 and tdf.loc[x0][rc.shares] > 0) or (
+                             tdf.loc[x0][rc.oc].find('C') >= 0 and tdf.loc[x0][rc.shares] < 0) else False
 
             for i, row in tdf.iterrows():
-                if row.Balance:
-                    assert not row.Sum
-                else:
-
-                    assert isclose(tdf['PnL'].sum(), row.Sum, abs_tol=1e-7)
-                    assert isclose(row.Sum, tdf_gen.loc[tdf_gen.index[-1]].Sum, abs_tol=1e-7)
-
-    def test_addSummaryPL_rtg(self):
-        '''
-        Test the method DefineTrades.addStartTime. Send some randomly generated trades excluding
-        the start field and then test the results for the start field.
-        '''
-        NUMTRADES = 4
-        start = pd.Timestamp('2018-06-06 09:30:00')
-        df = pd.DataFrame()
-        exclude = []
-        for i in range(4):
-            tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                               pdbool=True, exclude=exclude)
-            df = df.append(tdf)
-            exclude.append(tdf.Symb.unique()[0])
-
-        df.reset_index(drop=True, inplace=True)
-
-        frc = FinReqCol()
-        df2 = df.copy()
-
-        df2[frc.sum] = None
-
-        df3 = df2.copy()
-
-        df3 = df3.sort_values(['Symb', 'Account', 'Time'])
-        dtrades = DefineTrades()
-        df3 = dtrades.addTradePL(df3)
-
-        for i in range(NUMTRADES):
-            tnum = 'Trade ' + str(i + 1)
-            tdf = df3[df3.Tindex == tnum]
-            tdf_gen = df[df.Tindex == tnum]
-
-            for i, row in tdf.iterrows():
-                if row.Balance:
-                    assert not row.Sum
-                else:
-
-                    assert isclose(tdf['PnL'].sum(), row.Sum, abs_tol=1e-7)
-                    assert isclose(row.Sum, tdf_gen.loc[tdf_gen.index[-1]].Sum, abs_tol=1e-7)
+                if (blong is True and row[rc.bal] < 0) or (blong is not True and row[rc.bal] > 0):
+                    self.assertGreaterEqual(tdf.loc[xl][rc.name].lower().find('flipped'), 0)
+                    break
 
 
 def notmain():
     '''Run some local code'''
-    for i in range(3):
-        t = TestDefineTrades()
-        # t.test_addStartTime()
-        # t.test_addTradeIndex()
-
-        # t.test_addTradeDuration()
-        t.test_addSummaryPL()
-        # t.test_addTradePL()
-        # t.test_writeShareBalance()
-
+    # for i in range(3):
+    TestDefineTrades.setUpClass()
+    t = TestDefineTrades()
+    t.test_addFinReqCol()
+    t.test_addStartTimeDB()
+    t.test_addTradeIndex()
+    t.test_addTradePL()
+    t.test_addTradeDurationDB()
+    t.test_addTradeNameDB()
+    t.test_postProcessingDB()
     # t.test_addSummaryPL()
 
-
-def mainx():
-    '''
-    Test discovery is not working in vscode. Use this for debugging.
-    Then run cl python -m unittest discovery
-    '''
-    f = TestDefineTrades()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
-
-            if isinstance(attr, types.MethodType):
-                attr()
+    # t.test_addSummaryPL()
 
 
 def main():
@@ -411,5 +273,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()

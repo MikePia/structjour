@@ -289,6 +289,7 @@ def clearTables(db):
     cur.execute('''delete from trade_sum''')
     conn.commit()
 
+
 class ManageKeys:
     def __init__(self, create=False, db=None):
         self.settings = QSettings('zero_substance', 'structjour')

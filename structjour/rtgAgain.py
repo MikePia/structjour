@@ -35,7 +35,11 @@ from PyQt5.QtCore import QSettings
 
 
 class RTG:
-    def __init__(self, settings=None, db=None):
+    def __init__(self, settings=None, db=None, overnight=0):
+        '''
+        :params overnight:Percentage of trades to include overnight transaction.
+        '''
+        self.overnight = overnight
         if settings:
             self.settings = settings
         else:
@@ -49,6 +53,7 @@ class RTG:
     def makeRandomDASImport(self, numTrades, start, outfile=None, strict=False, overwrite=True):
         start = pd.Timestamp(start)
         df = self.getRandomTradeDF(numTrades=numTrades, start=start, strict=strict)
+
         if outfile:
             outfile, ext = os.path.splitext(outfile)
             outfile = f'''{outfile}_{start.strftime('%Y%m%d')}{ext}'''
@@ -61,6 +66,14 @@ class RTG:
                 logging.error(f'Failed to save file. Directory {d} does not exist')
 
         return outfile, df
+
+    def makeOvernight(self, df):
+
+        if len(df) > 2 and random.randint(0, 99) < self.overnight:
+            r = random.random()
+            delrow = df.index[0] if r < .5 else df.index[-1]
+            df.drop(delrow, inplace=True)
+        return df
 
     def saveSomeTestFiles(self, dates, outdir, outfile='DASrandomTrades.csv', strict=False, overwrite=False):
         '''
@@ -198,6 +211,7 @@ class RTG:
         tradedf = pd.DataFrame(data=trade, columns=['Time', 'Symb', 'Side', 'Price', 'Qty',
                                                     'Balance', 'Account', 'P / L', 'Date', 'Cloid', 'Average', 'OC'])
         tradedf['Commission'] = float('nan')
+        tradedf = self.makeOvernight(tradedf)
         return tradedf, latest
 
     def getPrice(self, price=None, long=True):

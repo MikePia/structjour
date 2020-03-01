@@ -163,8 +163,10 @@ class LayoutForms:
 
     def saveTheTradeObject(self, name):
         '''pickle tto list'''
-        assert self.ts
-        assert self.entries
+        # I believe this renders this toothless. Next step is delete it after awaiting
+        # errors as fallout
+        if not self.ts or not self.entries:
+            return
         ibdb = StatementDB()
         self.ts = ibdb.updateTradeSummaries(self.ts)
 
