@@ -39,7 +39,7 @@ from structjour.dailysumforms import MistakeSummary
 from structjour.definetrades import DefineTrades
 from structjour.journalfiles import JournalFiles
 
-from structjour.rtgAgain import RTG
+from structjour.rtg import RTG
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
@@ -82,10 +82,6 @@ class Test_ExportToExcel(TestCase):
     db = ''
     outdir = ''
     sc = None
-    rtg = None
-    db = ''
-    outdir = ''
-    sc = None
 
     @classmethod
     def setUpClass(cls):
@@ -102,7 +98,7 @@ class Test_ExportToExcel(TestCase):
         cls.rtg = RTG(db=cls.db)
         # cls.dates = ['20200203 09:30', '20200204 07:30', '20200205 09:35', '20200206 11:40', '20200207 10:39']
         cls.dates = ['20200207 10:39']
-        cls.infiles = cls.rtg.saveSomeTestFiles(cls.dates, cls.outdir)
+        cls.infiles = cls.rtg.saveSomeTestFiles(cls.dates, cls.outdir, strict=True, overwrite=True)
 
         settings = QSettings('zero_substance', 'structjour')
         for i, name in enumerate(cls.infiles):

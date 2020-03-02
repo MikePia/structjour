@@ -49,7 +49,7 @@ from structjour.stock.utilities import clearTables
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
-from structjour.rtgAgain import RTG
+from structjour.rtg import RTG
 
 # from PyQt5.QtWidgets import QApplication
 

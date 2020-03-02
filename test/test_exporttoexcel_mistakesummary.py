@@ -38,7 +38,7 @@ from structjour.definetrades import DefineTrades
 from structjour.journalfiles import JournalFiles
 from structjour.layoutsheet import LayoutSheet
 
-from structjour.rtgAgain import RTG
+from structjour.rtg import RTG
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
@@ -52,6 +52,7 @@ from structjour.view.sumcontrol import SumControl
 
 app = QtWidgets.qApp = QtWidgets.QApplication(sys.argv)
 
+
 class Test_ExportToExcel_MistakeData(TestCase):
     '''
     Test the forms data. Elaborate setup. Kind of eloborate tests. It Aint TDD
@@ -64,10 +65,6 @@ class Test_ExportToExcel_MistakeData(TestCase):
     dframe = None
     ldf = None
 
-    rtg = None
-    db = ''
-    outdir = ''
-    sc = None
     rtg = None
     db = ''
     outdir = ''

@@ -42,7 +42,7 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
 from structjour.stock.utilities import clearTables
 
-from structjour.rtgAgain import RTG
+from structjour.rtg import RTG
 
 from PyQt5.QtCore import QSettings
 
@@ -172,7 +172,7 @@ class TestDefineTrades(TestCase):
             tdf = nt[nt.Tindex == tindex]
             daSum = tdf[rc.PL].sum()
             daSum2 = tdf.loc[tdf.index[-1]][rc.sum]
-            self.assertAlmostEquals(daSum, daSum2, 5, 'The pl summary amount is not equal to the pnl summary')
+            self.assertAlmostEqual(daSum, daSum2, 5, 'The pl summary amount is not equal to the pnl summary')
 
     def test_addTradeDurationDB(self):
         '''
@@ -249,7 +249,7 @@ class TestDefineTrades(TestCase):
                 if (blong is True and row[rc.bal] < 0) or (blong is not True and row[rc.bal] > 0):
                     self.assertGreaterEqual(tdf.loc[xl][rc.name].lower().find('flipped'), 0)
                     break
-    
+
     # def test_fixTsid(self):
     #     pass
 

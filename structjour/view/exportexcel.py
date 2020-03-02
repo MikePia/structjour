@@ -286,9 +286,12 @@ class ExportToExcel:
         newdf = DataFrameUtil.createDf(df, self.topMargin)
 
         df = newdf.append(df, ignore_index=True)
-
-        for tdf in ldf:
+        deleteme = []
+        for i, tdf in enumerate(ldf):
             theKey = tdf[frq.tix].unique()[-1]
+            if len(theKey) == 0:
+                deleteme.append(i)
+                continue
             imageName = imageNames[theKey]
             xtraimage = 0                       # Add space for second/third image
             if len(imageName) > 1:
@@ -311,6 +314,8 @@ class ExportToExcel:
             # Append the mini trade table then add rows to fit the tradeSummary form
             df = df.append(tdf, ignore_index=True)
             df = DataFrameUtil.addRows(df, summarySize + xtraimage)
+        for d in deleteme:
+            ldf.pop(d)
         return imageLocation, df
 
     def exportExcel(self):

@@ -16,307 +16,301 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 '''
-Random Trade Generator to for testing
+Random Trade Generator for testing only
 
-@created_on Mar 31, 2019
+@re-created_on Feb 24, 2020
 
 @author: Mike Petersen
 '''
 
 import logging
-import math
-from math import isclose
 import os
 import random
 
 import pandas as pd
 
+from PyQt5.QtCore import QSettings
+
 # from structjour.colz.finreqcol import FinReqCol
-from structjour.definetrades import DefineTrades
-from structjour.thetradeobject import runSummaries
 
 
-def getSide(firsttrade=False):
-    '''
-    Get a random distribution of 'B', 'S', 'HOLD+', 'HOLD-'. Set the probabilities here.
-    HOLDs provide the weirdest exceptions. They should be relatively likely for tests.
-    '''
-    s = random.random()
-    if firsttrade:
-        side = 'B'if s < .30 else 'S' if s < .6 else 'HOLD+B' if s < .8 else 'HOLD-B'
-    else:
-        side = 'B'if s < .35 else 'S' if s < .7 else 'HOLD+' if s < .85 else 'HOLD-'
-    return side
+class RTG:
+    def __init__(self, settings=None, db=None, overnight=0):
+        '''
+        :params overnight:Percentage of trades to include overnight transaction.
+        '''
+        self.overnight = overnight
+        if settings:
+            self.settings = settings
+        else:
+            self.settings = QSettings("zero_substance", "structjour")
+        if db is not None:
+            self.db = db
+        else:
+            self.db = self.settings.value('tradeDb')
+        self.testfiles = []
 
+    def makeRandomDASImport(self, numTrades, start, outfile=None, strict=False, overwrite=True):
+        start = pd.Timestamp(start)
+        df = self.getRandomTradeDF(numTrades=numTrades, start=start, strict=strict)
 
-def getAccount():
-    '''
-    Get a randoms account real or sim
-    '''
-    real = 'U000000'
-    sim = 'TRIB0000'
-    percentReal = .75
-    r = random.random()
-    acct = real if r < percentReal else sim
-    return acct
-
-
-def getNumTrades(maxt=8):
-    '''
-    Return a number between 2 and 8 by default
-    '''
-    t = random.randint(2, maxt)
-    return t
-
-
-def getRandomFuture(earliest=pd.Timestamp('2019-01-01 09:30:00')):
-    '''
-    Get a time that is in the future a random amount of seconds from earliset
-    '''
-    rsec = random.randint(45, 1500)
-    nextt = earliest + pd.Timedelta(seconds=rsec)
-    return nextt
-
-
-def getPL():
-    '''
-    Get a random dollar amount
-    '''
-    amnt = random.random()
-    upordown = random.random()
-    upordown = 1 if upordown > .4 else -1
-    multiplier = random.randint(2, 200)
-    return amnt * upordown * multiplier
-
-
-def getTicker(exclude=None):
-    '''
-    Get a random ticker symbol
-    :exclude: A list of tickers to exclude from consideration.
-    '''
-    tickers = ['SQ', 'AAPL', 'TSLA', 'ROKU', 'NVDA', 'NUGT', 'MSFT', 'CAG', 'ACRS', 'FRED', 'PCG',
-               'AMD', 'GE', 'NIO', 'AMRN', 'FIVE', 'BABA', 'BPTH', 'Z', ]
-    tick = tickers[random.randint(0, len(tickers) - 1)]
-    if exclude and tick in exclude:
-        if not set(tickers).difference(set(exclude)):
-            # We could make up some random letters here if this ever ....-- or include more
-            raise ValueError("You have excluded every stock in the method")
-        return getTicker(exclude=exclude)
-    return tick
-
-
-def floatValue(test, includezero=False):
-    try:
-        addme = float(test)
-    except ValueError:
-        return False, 0
-    if math.isnan(addme):
-        return False, 0
-    if not includezero and addme == 0:
-        return False, 0
-    return True, addme
-
-
-def randomTradeGenerator2(tnum, earliest=pd.Timestamp('2019-01-01 09:30:00'),
-                          pdbool=True, exclude=None):
-    '''
-    Creates a list of transacations to make up a trade. Uses columns for tradenum, start, time,
-    side, qty and balance. The PL is not worked out to coincide with shares or price; will work
-    that out after working out how IB handles PL, qty and split transactions for flipped positions.
-    Each trade ends with a 0 balance. Side can be one of 'S', 'B', 'HOLD+', 'HOLD-','HOLD+B',
-    'HOLD-B', The HOLD{-,+} afters have 0 qty/bal, HOLD{-,+}B befores are openers so have no PL.
-    There are ways this can create impossible trades if you aggregated these. Specifically
-    stocks of the same Symb/Account that have trades with overlapping times will sort as a single.
-    This cannont happen from one broker in reality. Before HOLDs can mess up by sorting to give
-    consecutive HOLDSxB with messed up balances. To prevent problems add each stock in the
-    generated statement to exclude parameter. (have not implemented Symb/Accnt combo).
-
-    :parmas tnum: Number used for TradeX the trade number index
-    :params earliest: Transaction progress in time with earliest as the easliest possible trade
-                       except for before HOLDs.
-    :params pdbool: Setting to True will cause the return to be a DataFrame instead of an array.
-                    Deprecated. Changed to allways return a dataframe
-    :params exclude: A list of symbols to exclude as candidates for this trade
-    :return pd.DataFrame:  DataFrame or list of transactions making up a single trade.
-    '''
-    tradenum = 'Trade {}'.format(tnum)
-    earliest = pd.Timestamp(earliest)
-    latest = earliest
-    start = earliest
-    nowtime = start
-    numTrades = getNumTrades(maxt=10)
-    trade = list()
-    prevBal = 0
-    price = 99.99
-    long = True
-    theSum = None
-    duration = ''
-    sumtotal = 0
-    account = getAccount()
-    # account = 'U000000'
-    ticker = getTicker(exclude=exclude)
-    name = ''
-    daDate = pd.Timestamp(start.year, start.month, start.day)
-
-    twoholds = True
-    for i in range(numTrades):
-        firsttrade = True if i == 0 else False
-        nexttime = getRandomFuture(nowtime)
-        latest = nexttime
-        pl = 0
-        side = getSide(firsttrade=firsttrade)
-        if firsttrade:
-            if side == 'S' or side.find('-') >= 0:
-                long = False
-            if side.startswith('HOLD'):
-                n = nowtime
-                nowtime = pd.Timestamp(n.year, n.month, n.day, 0, 0, 1)
-                start = nexttime
-        # Prevent a trade to consist only of two HOLDs with no transaction
-        elif twoholds:
-            if side.startswith('HOLD'):
-                side = 'S' if side.find('-') > -1 else 'B'
-            twoholds = False
-        if long and side == 'S':
-            pl = getPL()
-        elif not long and side == 'B':
-            pl = getPL()
-
-        if side.startswith('HOLD') and not firsttrade:
-            n = nowtime
-            nowtime = pd.Timestamp(n.year, n.month, n.day, 23, 59, 59)
-            if i == 0:
-                qty = random.randint(1, 500)
-                if side == 'HOLD-':
-                    qty = -qty
-                start = nexttime
-                trade.append([tradenum, start, nowtime, ticker, side + 'B', price, qty, qty,
-                              account, pl, theSum, name, daDate, duration])
-                sumtotal = sumtotal + pl
-                prevBal = qty
+        if outfile:
+            outfile, ext = os.path.splitext(outfile)
+            outfile = f'''{outfile}_{start.strftime('%Y%m%d')}{ext}'''
+            d = os.path.dirname(outfile)
+            if not overwrite and os.path.exists(outfile):
+                return outfile, df
+            if os.path.exists(d):
+                df.to_csv(outfile, index=False)
             else:
-                qty = -qty if side == 'S' else qty
-                trade.append([tradenum, start, nowtime, ticker, side, price, 0, 0,
-                              account, pl, theSum, name, daDate, duration])
+                logging.error(f'Failed to save file. Directory {d} does not exist')
+
+        return outfile, df
+
+    def makeOvernight(self, df):
+
+        if len(df) > 2 and random.randint(0, 99) < self.overnight:
+            r = random.random()
+            delrow = df.index[0] if r < .5 else df.index[-1]
+            df.drop(delrow, inplace=True)
+        return df
+
+    def saveSomeTestFiles(self, dates, outdir, outfile='DASrandomTrades.csv', strict=False, overwrite=False):
+        '''
+        Create DAS export like random trades.csv files for testing purposes
+        :params dates: Create one file for each date. Date will be appended to the name
+        :parmas outdir: The directory to place the files
+        :params outfile: The name for the file. Date will be appended to each file
+        :params outfile: The base name for the files. Final name will be {outfile}_yyyymmdd{ext}
+        :params strict: If False, files will include Balance and Date fields
+        :params overwrite: If False files already exist will be overwritten. Otherwise writing the file is quietly skipped.
+        '''
+        savedfiles = []
+        for date in dates:
+            date = pd.Timestamp(date)
+            filename = os.path.join(outdir, outfile)
+            filename, df = self.makeRandomDASImport(random.randint(3, 5), date, outfile=filename, strict=strict, overwrite=overwrite)
+            savedfiles.append(filename)
+        return savedfiles
+
+    def getRandomTradeDF(self, numTrades=None, start='2018-06-06 09:30:00', strict=False):
+        '''
+        Creates a day of trades in the same form with the required columns from a DAS export
+        plus a Balance and Date column. Use strict=True to remove them
+        :numTrades: The number of trades in the statemnt
+        :start: The earliest possible trade start time.
+        '''
+
+        if numTrades is None:
+            numTrades = random.randint(1, 10)
+        start = pd.Timestamp(start)
+        df = pd.DataFrame()
+        exclude = []
+        for i in range(numTrades):
+            tdf, start = self.randomTradeGenerator2(earliest=start,
+                                            pdbool=True, exclude=exclude)
+            if strict is True:
+                tdf = tdf.drop(['Balance', 'Date'], axis=1)
+            df = df.append(tdf)
+            exclude.append(tdf.Symb.unique()[0])
+
+        df.reset_index(drop=True, inplace=True)
+        return df
+
+    def randomTradeGenerator2(self, earliest=pd.Timestamp('2019-01-01 09:30:00'),
+                            pdbool=True, exclude=None):
+        '''
+        Create a passable DAS import
+        :params earliest: Transaction progress in time with earliest as the easliest possible trade
+                        except for before HOLDs.
+        :params pdbool: Setting to True will cause the return to be a DataFrame instead of an array.
+                        Deprecated. Changed to allways return a dataframe
+        :params exclude: A list of symbols to exclude as candidates for this trade
+        :return pd.DataFrame:  DataFrame or list of transactions making up a single trade.
+        '''
+        earliest = pd.Timestamp(earliest)
+        latest = earliest
+        start = earliest
+        nowtime = start
+        numTrades = self.getNumTrades(maxt=10)
+        trade = list()
+        prevBal = 0
+        price = 0
+        long = True
+        # duration = ''
+        sumtotal = 0
+        account = self.getAccount()
+        # account = 'U000000'
+        ticker = self.getTicker(exclude=exclude)
+        daDate = pd.Timestamp(start.year, start.month, start.day)
+        cloid = -1
+        average = 0
+        oc = ''
+
+        for i in range(numTrades):
+            firsttrade = True if i == 0 else False
+            nexttime = self.getRandomFuture(nowtime)
+            latest = nexttime
+            pl = 0
+            side = self.getSide(firsttrade=firsttrade)
+            if firsttrade:
+                # Note: not using these yet. If we start, may need to add a test identifier and convert to string
+                cloid = random.randint(-999999999999, -100000000000)
+
+                if side == 'S' or side.find('-') >= 0:
+                    long = False
+                price = self.getPrice()
+                average = price
+                oc = 'O'
+            else:
+                price = self.getPrice(price, long)
+
+            time = nowtime.strftime("%H:%M:%S")
+            daDate = pd.Timestamp(daDate.year, daDate.month, daDate.day, nowtime.hour, nowtime.minute, nowtime.second)
+            cloid += 1
+
+            if i == numTrades - 1:
+                side = 'S' if prevBal >= 0 else 'B'
+                # pl = self.getPL()
+                pl = (average - price) * -prevBal
+                trade.append([time, ticker, side, price, -prevBal, 0, account, pl, daDate, cloid, average, 'C'])
                 sumtotal = sumtotal + pl
                 prevBal = 0
-                # nowtime = nexttime
                 break
-        elif i == numTrades - 1:
-            side = 'S' if prevBal >= 0 else 'B'
-            pl = getPL()
-            trade.append([tradenum, start, nowtime, ticker, side, price, -prevBal, 0,
-                          account, pl, theSum, name, daDate, duration])
-            sumtotal = sumtotal + pl
-            prevBal = 0
-            break
-        else:
+            else:
+                qty = random.randint(1, 500)
+                qty = -qty if (side == 'S' or side == 'HOLD-B') else qty
 
-            qty = random.randint(1, 500)
-            qty = -qty if (side == 'S' or side == 'HOLD-B') else qty
+                # Check for flippers
+                if long and (prevBal + qty) < 0:
+                    long = False
+                elif not long and (prevBal + qty) > 0:
+                    long = True
+                if (long is True and side == 'B') or (long is not True and side != 'B'):
+                    # An opener -- adjust the average
+                    # Average = ((PrevAvg * PrevBal) + (Qty * Price))/ Balance
+                    average = ((average * prevBal) + (qty * price)) / (prevBal + qty)
+                    oc = 'O'
 
-            trade.append([tradenum, start, nowtime, ticker, side, price, qty, prevBal + qty,
-                          account, pl, theSum, name, daDate, duration])
-            sumtotal = sumtotal + pl
-            prevBal = prevBal + qty
-            if prevBal == 0:
-                # We are coincidentally at 0 balance. Trade is over. Must be a hotkey mistake ;-)
-                break
+                else:
+                    # a closer-- figure the pl
+                    #  pl = (average - price) * qty
+                    pl = (average - price) * qty
+                    oc = 'C'
 
-        nowtime = nexttime
-        price = price + .03
-    duration = nowtime - start
+                trade.append([time, ticker, side, price, qty, prevBal + qty, account, pl, daDate, cloid, average, oc])
+                sumtotal = sumtotal + pl
+                prevBal = prevBal + qty
+                if prevBal == 0:
+                    # We are coincidentally at 0 balance. Trade is over. Must be a hotkey mistake ;-)
+                    break
 
-    # Hey programmer. If you edit the columns, adjust or fix these columns or make it more general
-    name = '{} {}'.format(ticker, 'Long' if trade[0][4].find('B') >= 0 else 'Short')
-    trade[-1][10] = sumtotal
-    trade[-1][11] = name
-    trade[-1][13] = duration
-    # if pdbool:
-    tradedf = pd.DataFrame(data=trade, columns=['Tindex', 'Start', 'Time', 'Symb', 'Side', 'Price', 'Qty',
-                                                'Balance', 'Account', 'PnL', 'Sum', 'Name', 'Date', 'Duration'])
-    if not isclose(tradedf['PnL'].sum(), tradedf.loc[tradedf.index[-1]].Sum, abs_tol=1e-7):
-        logging.warning(tradedf['PnL'].sum(), ' != ', tradedf.loc[tradedf.index[-1]].Sum)
+            nowtime = nexttime
+        # duration = nowtime - start
 
-    tradedf['OC'] = ''
-    tradedf['Cloid'] = ''
-    tradedf['Balance'] = float('nan')
-    tradedf['Average'] = float('nan')
-    tradedf['Commission'] = float('nan')
-    return tradedf, latest
+        tradedf = pd.DataFrame(data=trade, columns=['Time', 'Symb', 'Side', 'Price', 'Qty',
+                                                    'Balance', 'Account', 'P / L', 'Date', 'Cloid', 'Average', 'OC'])
+        tradedf['Commission'] = float('nan')
+        tradedf = self.makeOvernight(tradedf)
+        return tradedf, latest
 
+    def getPrice(self, price=None, long=True):
+        if price is None:
+            price = random.randint(3, 300) + random.randint(0, 99) / 100
+            return price
 
-def getRandomTradeDF(numTrades=None, start='2018-06-06 09:30:00'):
-    '''
-    Creates a statment for testing purposes in the form of a processed input statment. Initialze fields
-    to test their creaion in the program.
-    :numTrades: The number of trades in the statemnt
-    :start: The earliest possible trade start time.
-    '''
+        change = (random.random() / 70)
+        upordown = random.random()
+        if long and upordown > .62:
+            change *= -1
+        elif not long and upordown > .38:
+            change *= -1
 
-    if numTrades is None:
-        numTrades = random.randint(1, 10)
-    start = pd.Timestamp(start)
-    df = pd.DataFrame()
-    exclude = []
-    for i in range(numTrades):
-        tdf, start = randomTradeGenerator2(i + 1, earliest=start,
-                                           pdbool=True, exclude=exclude)
-        df = df.append(tdf)
-        exclude.append(tdf.Symb.unique()[0])
+        return price + (price * change)
 
-    df.reset_index(drop=True, inplace=True)
-    return df
+    def getNumTrades(self, maxt=8):
+        '''
+        Return a number between 2 and 8 by default
+        '''
+        t = random.randint(2, maxt)
+        return t
 
+    def getAccount(self):
+        '''
+        Get a randoms account real or sim
+        '''
+        real = 'U000000'
+        sim = 'TRIB0000'
+        percentReal = .75
+        r = random.random()
+        acct = real if r < percentReal else sim
+        return acct
 
-def getDASimport(numTrades, start=None, outfile=None):
-    df = getRandomTradeDF()
-    if outfile:
-        d = os.path.dirname(outfile)
-        if os.path.exists(d):
-            df.to_csv(outfile)
+    def getTicker(self, exclude=None):
+        '''
+        Get a random ticker symbol
+        :exclude: A list of tickers to exclude from consideration.
+        '''
+        tickers = ['SQ', 'AAPL', 'TSLA', 'ROKU', 'NVDA', 'NUGT', 'MSFT', 'CAG', 'ACRS', 'FRED', 'PCG',
+                'AMD', 'GE', 'NIO', 'AMRN', 'FIVE', 'BABA', 'BPTH', 'Z', ]
+        tick = tickers[random.randint(0, len(tickers) - 1)]
+        if exclude and tick in exclude:
+            if not set(tickers).difference(set(exclude)):
+                # We could make up some random letters here if this ever ....-- or include more
+                raise ValueError("You have excluded every stock in the method")
+            return self.getTicker(exclude=exclude)
+        return tick
 
-        print()
+    def getRandomFuture(self, earliest=pd.Timestamp('2019-01-01 09:30:00')):
+        '''
+        Get a time that is in the future a random amount of seconds from earliset
+        '''
+        rsec = random.randint(45, 1500)
+        nextt = earliest + pd.Timedelta(seconds=rsec)
+        return nextt
 
+    def getSide(self, firsttrade=False):
+        '''
+        Get a random distribution of 'B', 'S', 'HOLD+', 'HOLD-'. Set the probabilities here.
+        HOLDs provide the weirdest exceptions. They should be relatively likely for tests.
+        '''
+        s = random.random()
+        side = 'B'if s < .55 else 'S'
+        return side
 
-def getLdf():
-    '''
-    Get a random version of ldf (a list of dataframes each one has all the transactions from one
-    trade)
-    '''
-
-    df = getRandomTradeDF()
-    tu = DefineTrades()
-    dframe, ldf = tu.processDBTrades(df)
-    # ldf = tu.getTradeList(df)
-    return ldf, df
-
-
-def getRandGenTradeStuff():
-    '''
-    Gets random trade version of tradeSummaries, ts (the dict form of the same), entries, and
-    initialImagenames and ldf. tradeSummaries and ts are redundant (list and dict). df and ldf are
-    redundant (dataframe and list of sub-dataframe). They are used at different points in the
-    program. They are all made available to test all parts.
-    '''
-    ldf, df = getLdf()
-    tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
-    return tradeSummaries, ts, entries, initialImageNames, df, ldf
+    def getPL(self):
+        '''
+        Get a random dollar amount
+        '''
+        amnt = random.random()
+        upordown = random.random()
+        upordown = 1 if upordown > .4 else -1
+        multiplier = random.randint(2, 200)
+        return amnt * upordown * multiplier
 
 
 def notmain():
     '''Run some local code'''
-    for i in range(0, 10):
-        tradeSummaries, ts, entries, initialImageNames, df, ldf = getRandGenTradeStuff()
-
-        print(initialImageNames)
+    pass
 
 
 def localstuff():
-    outfile = 'C:/python/E/structjour/test/out/randomtrades.csv'
-    getDASimport(4, outfile=outfile)
+    outdir = 'C:/python/E/structjour/test/out'
+    rtg = RTG()
+    # rtg.makeRandomDASImport(7, start='20200202', outfile=outfile, strict=True)
+    dates = ['20200203 09:35', '20200204 10:02', '20200205 13:59', '20200206 07:30', '20200207 05:58']
+    rtg.saveSomeTestFiles(dates, outdir)
+
+
+def reallylocal():
+    rtg = RTG()
+    price = None
+    for i in range(10):
+        price = rtg.getPrice(price=price)
+        print(price)
 
 
 if __name__ == '__main__':
     # notmain()
     localstuff()
+    # reallylocal()
