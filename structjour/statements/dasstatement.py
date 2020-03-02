@@ -194,6 +194,8 @@ class DasStatement:
                 else:
                     t.at[i, rc.oc] = 'O'
                 average = row[rc.price]
+                if isNumeric(row[rc.PL]) and row[rc.PL] != 0:
+                    return False, None
                 if isNumeric(row[rc.avg]) and not math.isclose(row[rc.avg], average, abs_tol=0.005):
                     return False, None
                 if not foundPotentialOpener:
@@ -239,7 +241,12 @@ class DasStatement:
                     average = (row[rc.PL] / row[rc.shares]) + row[rc.price]
                     if isNumeric(row[rc.avg]) and row[rc.avg] > 0 and not math.isclose(average, row[rc.avg], abs_tol=0.005):
                         return False, None
-
+                    beginNewTrade = True
+            elif isNumeric(row[rc.PL]) and row[rc.PL] != 0:
+                # An opener cannot have a pnl
+                if (prevBalance < 0 and row[rc.shares] < 0) or (prevBalance > 0 and row[rc.shares] > 0):
+                    return False, None
+                prevBalance = balance
             else:
                 prevBalance = balance
 
@@ -248,7 +255,7 @@ class DasStatement:
             # Check the previous trade
             if t.at[i - 1, rc.oc] == 'C':
                 if t.at[i, rc.shares] * t.at[i - 1, rc.shares] < 0 or (
-                        not math.isclose(t.at[i - 1, rc.PL] / row[rc.shares], row[rc.price], abs_tol=0.005)):
+                        not math.isclose((-t.at[i - 1, rc.PL] / t.at[i - 1, rc.shares]) + t.at[i - 1, rc.avg], t.at[i - 1, rc.price], abs_tol=0.005)):
                     return False, None
             else:
                 if self.checkEverythinInTdf(rc, t):
