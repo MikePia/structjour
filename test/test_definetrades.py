@@ -249,6 +249,9 @@ class TestDefineTrades(TestCase):
                 if (blong is True and row[rc.bal] < 0) or (blong is not True and row[rc.bal] > 0):
                     self.assertGreaterEqual(tdf.loc[xl][rc.name].lower().find('flipped'), 0)
                     break
+    
+    # def test_fixTsid(self):
+    #     pass
 
 
 def notmain():

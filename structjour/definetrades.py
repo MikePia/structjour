@@ -249,7 +249,7 @@ class DefineTrades(object):
         and will break when new brokers are added.  Uxxxxxxxx is live, TRxxxxxx is sim. When new
         brokers are added do something else.
         :prerequisites: 2 blank rows added at the bottom of the df
-        :raise ValueError: If blank lines are not in df.
+        :raise AssertionError: If blank lines are not in df. 
         '''
         rc = self._frc
         df.reset_index(drop=True, inplace=True)
@@ -267,44 +267,6 @@ class DefineTrades(object):
 
         df.at[ixs[0], rc.PL] = total
         return df
-
-    def addSummaryPLold(self, dframe):
-        '''
-        Create a summary of the P/L for the day, place it in new row.
-        Sum up the transactions in c.PL for Live and Sim Seperately.
-        We rely on the account number starting with 'U' or 'TR' to determine
-        live or SIM. These two columns should add to the same amount. '''
-        # Note that .sum() should work on this but it failed when I tried it.
-        # because the two extra rows had PL Strings as ''
-        c = self._frc
-
-        count = 0
-        tot = 0.0
-        tot2 = 0.0
-        totLive = 0.0
-        totSim = 0.0
-        for i, row in dframe.iterrows():
-            count = count + 1
-            if count < len(dframe) - 1:
-                tot = tot + row[c.PL]
-                if row[c.bal] == 0:
-                    tot2 = tot2 + row[c.sum]
-                    if row[c.acct].startswith('TR'):
-                        totSim = totSim + row[c.sum]
-                    else:
-                        assert(row[c.acct].startswith('U'))
-                        totLive = totLive + row[c.sum]
-                # if count == len(dframe) -2 :
-                #     lastCol = row[c.PL]
-
-            elif count == len(dframe) - 1:
-                dframe.at[i, c.PL] = tot
-                dframe.at[i, c.sum] = totSim
-            else:
-                assert (count == len(dframe))
-                dframe.at[i, c.sum] = totLive
-
-        return dframe
 
     def getTradeList(self, dframe):
         '''
@@ -382,76 +344,6 @@ class DefineTrades(object):
 
             dframe = dframe.append(tdf)
         return ldf, dframe
-
-    # def postProcessing(self, ldf):
-    #     '''
-    #     A few items that need fixing up in names and initial HOLD entries. This method is called
-    #     after the creation of the DataFrameList (ldf). We locate flipped positions and overnight
-    #     holds and change the name appropriately. Also update initial HOLD prices, and balance with
-    #     the calculated average price of pre owned shares and initial shares respectively.
-    #     :params ldf: A ist of DataFrames, each DataFrame represents a trade defined by the initial
-    #                  purchase or short of a stock, and all transactions until the transaction which
-    #                  returns the share balance to 0. Last entry may be a HOLD indicating shares
-    #                  were held overnight in the amount of the previous transaction share balance.
-    #                  After HOLDs are nontransactions. shares are listed as 0 indicating the
-    #                  number of shares owned is in the previous transaction. Before HOLDs attempt to
-    #                  show the current status of previous transctions not given explicity.
-    #     :return (ldf, nt): The updated versions of the list of DataFrames, and the updated single
-    #                   DataFrame.
-
-    #     '''
-    #     c = self._frc
-    #     dframe = pd.DataFrame()
-    #     for count, tdf in enumerate(ldf):
-    #         tdf.copy()
-    #         if tdf.iloc[-1][c.bal] == 0:
-    #             x0 = tdf.index[0]
-    #             xl = tdf.index[-1]
-    #             if tdf.at[x0, c.side].startswith('HOLD') or tdf.at[xl, c.side].startswith('HOLD'):
-    #                 tdf.at[xl, c.name] = tdf.at[xl, c.name] + " OVERNIGHT"
-    #                 # Apparent double testing to cover trades with holds both before and after
-    #                 if tdf.at[xl, c.side].startswith('HOLD'):
-    #                     tdf.at[xl, c.bal] = 0
-    #                 if tdf.at[x0, c.side].startswith('HOLD'):
-    #                     sharelist = list()
-    #                     pricelist = list()
-    #                     for dummy, row in tdf.iterrows():
-    #                         # Here we set initial entries' average price of shares previously held
-    #                         # based on the P/L of the first exit. The math gets complicated if
-    #                         # there are more than 2 entrances before # the first exit. This
-    #                         # currently only works without extra opens before the first close.
-    #                         # TODO Send in some SIM trades to model it.
-    #                         sharelist.append(row[c.shares])
-    #                         pricelist.append(row[c.price])
-    #                         if row[c.PL] != 0:
-    #                             # TODO This does not cover the possibilities-- still have no models
-    #                             originalPrice = row[c.price] + (row[c.PL] / row[c.shares])
-    #                             tdf.at[x0, c.price] = originalPrice
-    #                             break
-    #             elif tdf.at[x0, c.side].startswith('B') and tdf.at[xl, c.side].startswith('B'):
-    #                 # Still not sure how IB deals with flipped trades. I think they break down the
-    #                 # shares to figure, for ex, PL from shares sold closed to 0 balance, and avg
-    #                 # price change from Shares sold Open to bal
-    #                 # TODO: Get a an IB Statement with a flipped position
-    #                 tdf.at[xl, c.name] = tdf.at[xl, c.name] + " FLIPPED"
-
-    #                 msg = '\nFound a flipper long to short.\n'
-    #                 msg = msg + "Use this file for devel and testing if this is an IB statement\n"
-    #             elif not tdf.at[x0, c.side].startswith('B') and not tdf.at[xl, c.side].startswith('B'):
-    #                 # tdf.iloc[-1][c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
-    #                 tdf.at[xl, c.name] = tdf.iloc[-1][c.name] + " FLIPPED"
-    #                 msg = '\nFound a flipper short to long.\n'
-    #                 msg = msg + "Use this file for devel and testing if this is an IB statement\n"
-    #         else:
-    #             msg = ('This should never run. What happned in postProcessing?',
-    #                   'It means we have a non 0 balance at the end of a trade.(!?!)',
-    #                   str(tdf.iloc[-1][c.bal], tdf.iloc[-1][c.name]))
-    #             logging.error(msg)
-    #         if count == 0:
-    #             dframe = tdf
-    #         else:
-    #             dframe = dframe.append(tdf)
-    #     return ldf, dframe
 
     def addFinReqCol(self, dframe):
         '''
