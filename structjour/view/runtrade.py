@@ -306,14 +306,25 @@ class runController:
 def setuplog(settings):
     # basicConfig args level, filename, filemode, format
     settings = QSettings('zero_substance', 'structjour')
-    level = settings.value('logfile_level', 'Debug')
+    jdir = settings.value('journal', 'nojournal')
+    if jdir == 'nojournal':
+        # No log file available until journal dir is set
+        return
+    level = settings.value('logfile_level', 'Warning')
     lvls = {'Debug': logging.DEBUG,
             'Info': logging.INFO,
             'Warning': logging.WARNING,
             'Error': logging.ERROR,
             'Critical': logging.CRITICAL
             }
-    logfile = settings.value('logfile', 'app.log')
+            
+    # Set a default log name if none is set
+    logfile = settings.value('logfile', 'structjour.log')
+    if logfile == 'structjour.log':
+        logfile = os.path.join(settings.value('journal'), logfile)
+        logfile = os.path.normpath(logfile)
+        settings.setValue('logfile', logfile)
+
     level = lvls[level]
     filename = logfile
     filemode = 'a'

@@ -40,9 +40,9 @@ from structjour.inspiration.inspire import Inspire
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
+from structjour.view.ejcontrol import EJControl
 from structjour.view.filesetcontrol import FileSetCtrl
 from structjour.view.getdatecontrol import GetDate
-from structjour.view.ejcontrol import EJControl
 from structjour.view.exportexcel import ExportToExcel
 from structjour.view.dailycontrol import DailyControl
 from structjour.view.sapicontrol import StockApi
@@ -83,6 +83,17 @@ class SumControl(QMainWindow):
         self.chartSet = QSettings('zero_substance/chart', 'structjour')
         # self.setuplog()
         while(not self.settings.value('journal') or not self.settings.value('structjourDb') or not self.settings.value('tradeDb')):
+            jdir = self.settings.value('journal')
+            if not jdir:
+                logging.info('Please set the location of your journal directory')
+                EJControl()
+                jdir = self.settings.value('journal')
+                if not jdir:
+                    continue
+            if not self.settings.value('structjourDb'):
+                self.settings.setValue('structjourDb', os.path.normpath(os.path.join(jdir, 'structjourDb.sqlite')))
+            if not self.settings.value('tradeDb'):
+                self.settings.setValue('tradeDb', os.path.normpath(os.path.join(jdir, 'tradeDb.sqlite')))
             self.fileSetDlg()
 
         self.defaultImage = 'structjour/images/ZeroSubstanceCreation.png'
