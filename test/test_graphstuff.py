@@ -23,16 +23,15 @@
 import datetime as dt
 import os
 import random
-import types
 import unittest
 
-import numpy as np
 import pandas as pd
 
 from structjour.stock import utilities as util
 if util.checkForIbapi():
     from structjour.stock import myib as ib
 from structjour.stock.graphstuff import FinPlot, dummyName
+from structjour.stock.apichooser import APIChooser
 from PyQt5.QtCore import QSettings
 
 
@@ -47,6 +46,7 @@ def getTicker():
                'MSFT', 'CAG', 'ACRS', 'WORK', 'NFLX', 'MU', 'AAPL']
     return tickers[random.randint(0, 12)]
 
+
 class TestGraphstuff(unittest.TestCase):
     '''
     Test functions and methods in the graphstuff module
@@ -59,48 +59,6 @@ class TestGraphstuff(unittest.TestCase):
     def setUp(self):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
-
-    def test_apiChooser(self):
-        '''
-        Test the method FinPlot.apiChooser for the same interface in each api
-        '''
-        fp = FinPlot()
-        biz = util.getLastWorkDay()
-        start = dt.datetime(biz.year, biz.month, biz.day, 12, 30)
-        end = dt.datetime(biz.year, biz.month, biz.day, 16, 1)
-        minutes = 1
-        apis = fp.preferences
-        symbol = 'SQ'
-        for api in apis:
-            fp.api = api
-            result = fp.apiChooserList(start, end, api)
-            if result[0]:
-                dummy, df, maDict = fp.apiChooser()(symbol, start=start, end=end,
-                                            minutes=minutes, showUrl=True)
-                self.assertEqual(len(df.columns), 5,
-                                 f"Failed to retrieve data with the {fp.api} api.")
-                self.assertTrue(isinstance(df.index[0], dt.datetime),
-                                f'Failed to set index to datetime in {fp.api} api')
-                cols = ['open', 'high', 'low', 'close', 'volume']
-                for col in cols:
-                    # print(col, type(df[col][0]), isinstance(df[col][0], (np.float, np.integer)))
-                    self.assertTrue(col in df.columns)
-                    self.assertTrue(isinstance(
-                        df[col][0], (np.float, np.integer)))
-
-                # This call should retrieve data within 1 bar of the requested start and finish.
-                # Idiosyncracies of the APIs vary as to inclusion of first and last time index
-                delt = df.index[0] - \
-                    start if df.index[0] > start else start - df.index[0]
-                self.assertLessEqual(delt.seconds, minutes*60)
-
-                print('Retrieved {} candles from {} to {} for {}'.format(
-                    len(df), df.index[0], df.index[-1], symbol))
-                print()
-            else:
-                print('Skipped {api} at {start} to {end} because...')
-                for rule in result[1]:
-                    print(rule)
 
     def test_dummyName(self):
         '''
@@ -126,7 +84,7 @@ class TestGraphstuff(unittest.TestCase):
             n = dummyName(fp, symbol, tradenum, begin, end)
             self.assertTrue(n is None, 'Failed to raise ValueError')
         except ValueError:
-            pass # success
+            pass     # success
 
         try:
             n is None
@@ -148,9 +106,9 @@ class TestGraphstuff(unittest.TestCase):
 
     def makeupEntries(self, symbol, start, end, minutes, fp):
         if not ib.isConnected():
-            print()
-            print("ib gateway is not connected.")
-            print()
+            # print()
+            # print("ib gateway is not connected.")
+            # print()
             return
 
         meta, df, maDict = ib.getib_intraday(symbol, start, end, minutes)
@@ -159,11 +117,11 @@ class TestGraphstuff(unittest.TestCase):
         for i in range(random.randint(2, 9)):
             if len(df) < 2:
                 break
-            candle = random.randint(0, len(df)-1)
+            candle = random.randint(0, len(df) - 1)
             high = df.iloc[candle].high
             low = df.iloc[candle].low
             entry = ((high - low) * random.random()) + low
-            x = int(minutes*60 * random.random())
+            x = int(minutes * 60 * random.random())
             tix = df.index[candle]
             tix = tix + pd.Timedelta(seconds=x)
 
@@ -174,10 +132,10 @@ class TestGraphstuff(unittest.TestCase):
         fp.entries = entries
         fp.exits = exits
 
-    @unittest.skipUnless(util.checkForIbapi(), 'Requires ibapi to run')
+    # @unittest.skipUnless(util.checkForIbapi(), 'Requires ibapi to run')
     def test_graph_candlestick(self):
         '''
-        Test the FinPlot.graph_candlestick method. Currently requires ibapi and is too complex to 
+        Test the FinPlot.graph_candlestick method. Currently requires ibapi and is too complex to
         be an effective test. Redo it
         '''
         fp = FinPlot()
@@ -205,11 +163,12 @@ class TestGraphstuff(unittest.TestCase):
         for count, (tick, time) in enumerate(zip(tickers, times)):
             start = d.strftime('%Y-%m-%d ') + time[0]
             end = d.strftime('%Y-%m-%d ') + time[1]
-            trades.append([tick, count+1, start, end, 1])
+            trades.append([tick, count + 1, start, end, 1])
             # print (trades[-1])
         for trade in trades:
             start, end = fp.setTimeFrame(trade[2], trade[3], trade[4])
-            (dummy, rules, apilist) = fp.apiChooserList(trade[2], trade[3])
+            chooser = APIChooser(self.apiset)
+            (dummy, rules, apilist) = chooser.apiChooserList(trade[2], trade[3])
             print(f'{apilist}/n{rules}')
             minutes = 2
             self.makeupEntries(trade[0], start, end, minutes, fp)
@@ -220,7 +179,7 @@ class TestGraphstuff(unittest.TestCase):
                     trade[0], start, end, minutes=minutes, save=name)
                 cwd = os.getcwd()
                 if name:
-            
+
                     msg = 'error creating ' + name + " IN ", cwd
                     self.assertTrue(os.path.exists(name), msg)
                 else:

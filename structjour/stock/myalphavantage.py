@@ -20,16 +20,13 @@ Alphavantage  stuff using their own intraday RESTful  API. Only implemented TIME
 @creation_date:2018-12-11
 Calls the RESTapi for intraday. There is a limit on the free API of 5 calls per minute
     500 calls per day. But the data is good. The Premium option is rather pricey.
-        Free for 5/min  (1 every 12 seconds)  Write a API chooser, maybe cache the data
+    Note that the 500 limit is really difficult reach with the 5 per minute throttle.
+        Free for 5/min  (1 every 12 seconds)
         $20 for 15/min  (1 every 4 seconds)
-
         $100 for 120/min
         $250 for 600/min
         As of 1/9/19
 '''
-# pylint: disable = C0103
-# pylint: disable = C0301
-
 import datetime as dt
 import logging
 import time
@@ -44,9 +41,9 @@ EXAMPLES = {
     'api3': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey={key}',
     'api4': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&outputsize=full&apikey={key}',
     'api5': 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&apikey={key}',
-'web_site': 'https://www.alphavantage.co/documentation/#intraday'
-    }
-FUNCTION = {'intraday':  'TIME_SERIES_INTRADAY',
+    'web_site': 'https://www.alphavantage.co/documentation/#intraday'}
+
+FUNCTION = {'intraday': 'TIME_SERIES_INTRADAY',
             'daily': 'TIME_SERIES_DAILY',
             'dailyadj': 'TIME_SERIES_DAILY_ADJUSTED',
             'weekly': 'TIME_SERIES_WEEKLY',
@@ -60,18 +57,18 @@ FUNCTION = {'intraday':  'TIME_SERIES_INTRADAY',
             'atr': 'ATR'
             }
 
-PARAMS = {'intraday':  ['symbol', 'datatype', 'apikey', 'outputsize', 'interval'],
-          'daily':  ['symbol', 'datatype', 'apikey', 'outputsize'],
-          'dailyadj':  ['symbol', 'datatype', 'apikey', 'outputsize'],
-          'weekly':  ['symbol', 'datatype', 'apikey'],
-          'weeklyadj':  ['symbol', 'datatype', 'apikey'],
-          'monthly':  ['symbol', 'datatype', 'apikey'],
-          'monthlyadj':  ['symbol', 'datatype', 'apikey'],
-          'quote':  ['symbol', 'datatype', 'apikey'],
-          'search':  ['keywords', 'datatype', 'apikey'],
-          'sma':  ['symbol', 'datatype', 'apikey', 'interval', 'time_period', 'series_type'],
-          'ema':  ['symbol', 'datatype', 'apikey', 'interval', 'time_period', 'series_type'],
-          'atr':  ['symbol', 'datatype', 'apikey', 'interval', 'time_period']
+PARAMS = {'intraday': ['symbol', 'datatype', 'apikey', 'outputsize', 'interval'],
+          'daily': ['symbol', 'datatype', 'apikey', 'outputsize'],
+          'dailyadj': ['symbol', 'datatype', 'apikey', 'outputsize'],
+          'weekly': ['symbol', 'datatype', 'apikey'],
+          'weeklyadj': ['symbol', 'datatype', 'apikey'],
+          'monthly': ['symbol', 'datatype', 'apikey'],
+          'monthlyadj': ['symbol', 'datatype', 'apikey'],
+          'quote': ['symbol', 'datatype', 'apikey'],
+          'search': ['keywords', 'datatype', 'apikey'],
+          'sma': ['symbol', 'datatype', 'apikey', 'interval', 'time_period', 'series_type'],
+          'ema': ['symbol', 'datatype', 'apikey', 'interval', 'time_period', 'series_type'],
+          'atr': ['symbol', 'datatype', 'apikey', 'interval', 'time_period']
           }
 
 DATATYPES = ('json', 'csv')       # json is default
@@ -79,8 +76,9 @@ OUTPUTSIZE = ('compact', 'full')  # compact is default
 INTERVAL = ('1min', '5min', '15min', '30min',
             '60min', 'daily', 'weekly', 'monthly')
 
+
 def getKey():
-    mk=ManageKeys()
+    mk = ManageKeys()
     return mk.getKey('av')
 
 
@@ -94,18 +92,9 @@ def getapis():
             EXAMPLES['api4'].format(key=key),
             EXAMPLES['api5'].format(key=key))
 
+
 def getLimits():
     '''alphavantage limits on usage'''
-    print()
-    # print('Your api key is:', getKey('alphavantage')['key'])
-    print('Limits 5 calls per minute, 500 per day. (Is it time to implement caching?')
-    print("They say these are realtime. Need to test it against ib api.")
-    print("Intraday goes back 1 week.")
-    print("Strangely, currently I find 1 min data goes 1 week")
-    print("5 min data goes back about 25 days")
-    print("15 and 40 min data goes to the beginning of last month or say 50 days")
-    print("60 minute goes back about 3 months")
-    print("There is no guarantee, I think maybe the 1 week is the only guarantee.")
     print(__doc__)
 
 
@@ -151,13 +140,19 @@ def ni(i):
         f"interval={i} is not supported by alphavantage. Setting to 1min candle as if it were requested")
     return False, ('1min', 1, 1)
 
+
 RETRY = 3
+
+
 class Retries:
     '''Number of retries when AV returns a 1 minute violation'''
     def __init__(self):
         self.retries = RETRY
         self.setTime = time.time()
+
+
 R = None
+
 
 def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     '''
@@ -171,7 +166,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
 
     :returns: (status, df, maDict) The DataFrame has minute data indexed by time with columns open, high, low
          low, close, volume and indexed by pd timestamp. If not specified, this
-         will return a weeks data. 
+         will return a weeks data.
     '''
     logging.info('======= Called alpha 500 calls per day limit, 5/minute =======')
     start = pd.to_datetime(start) if start else None
@@ -236,11 +231,11 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     if end:
         if end < df.index[0]:
             msg = 'WARNING: You have requested data that is unavailable:'
-            msg = msg + f'\Your end date ({end}) is before the earliest first date ({df.index[0]}).'
+            msg = msg + f'\nYour end date ({end}) is before the earliest first date ({df.index[0]}).'
             logging.warning(msg)
             metaj['code'] = 666
             metaj['message'] = msg
-            
+
             return metaj, pd.DataFrame(), None
 
     df.rename(columns={'1. open': 'open',
@@ -277,7 +272,6 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
 
     maDict = movingAverage(df.close, df, start)
 
-
     # Trim the data to the requested time frame. If we slice it all off set status message and return
     if start:
         # Remove preemarket hours from the start variable
@@ -289,8 +283,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             df = df[df.index >= start]
             for ma in maDict:
                 maDict[ma] = maDict[ma].loc[maDict[ma].index >= start]
-            l = len(df)
-            if l == 0:
+            if len(df) == 0:
                 msg = f"\nWARNING: you have sliced off all the data with the end date {start}"
                 logging.warning(msg)
                 metaj['code'] = 666
@@ -302,8 +295,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
             df = df[df.index <= end]
             for ma in maDict:
                 maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
-            l = len(df)
-            if l < 1:
+            if len(df) < 1:
                 msg = f"\nWARNING: you have sliced off all the data with the end date {end}"
                 logging.warning(msg)
                 metaj['code'] = 666
@@ -317,9 +309,11 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
 
     return metaj, df, maDict
 
+
 def notmain():
     for ex in getapis():
         print(ex)
+
 
 if __name__ == '__main__':
     theDate = pd.Timestamp.today().date()

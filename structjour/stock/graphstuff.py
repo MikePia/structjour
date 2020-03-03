@@ -198,125 +198,6 @@ class FinPlot:
             retList = (self.matchFont(default))
         return retList
 
-    def apiChooserList(self, start, end, api=None):
-        '''
-        Given the current list of apis as av, bc, wtd, fh and ib, determine if the given api will
-            likely return data for the given times.
-        :params start: A datetime object or time stamp indicating the intended start of the chart.
-        :params end: A datetime object or time stamp indicating the intended end of the chart.
-        :params api: Param must be one of mab, bc, fh or ib. If given, the return value in
-            (api, x, x)[0] will reflect the bool result of the api
-        :return: (bool, rulesviolated, suggestedStocks) The first entry is only valid if api is
-            an argument.
-
-        '''
-        start = pd.Timestamp(start)
-        end = pd.Timestamp(end)
-        n = pd.Timestamp.now() + dt.timedelta(0, 60 * 120)        # Adding 2 hours for NY time
-
-        violatedRules = []
-        suggestedApis = self.preferences
-        if suggestedApis[0] is None:
-            return (False, ['No stock Api is selected'], [])
-        # nopen = dt.datetime(n.year, n.month, n.day, 9, 30)
-        nclose = dt.datetime(n.year, n.month, n.day, 16, 30)
-
-        # Rule 1 Barchart will not return todays data till 16:30
-        # Rule 1a Barchart will not return yesterdays data after 12 till 1630
-        tradeday = pd.Timestamp(start.year, start.month, start.day)
-        todayday = pd.Timestamp(n.year, n.month, n.day)
-        yday = todayday - pd.Timedelta(days=1)
-        y = pd.Timestamp(yday.year, yday.month, yday.day, 11, 59)
-        if tradeday == todayday and n < nclose and 'bc' in suggestedApis:
-            suggestedApis.remove('bc')
-            violatedRules.append(
-                'Barchart free data will not return todays data till 16:30')
-        if tradeday == yday and end > y and n < nclose and 'bc' in suggestedApis:
-            suggestedApis.remove('bc')
-            violatedRules.append(
-                'Barchart free data will not yesterdays data after 12 till today at  16:30')
-
-        # Rule 2 No support any charts greater than 7 days prior to today for Alphavantage
-        # Rule 2 No support any charts greated than 7 days prior to tody for World Trade Data
-        # Rule 2 No support any charts greater than 30 days for Barchart
-        if n > start:
-            delt = n - start
-            if delt.days > 31 and 'bc' in suggestedApis:
-                suggestedApis.remove('bc')
-                lastday = n - pd.Timedelta(days=31)
-                violatedRules.append('Barchart data before {} is unavailable.'.format(lastday.strftime("%b %d")))
-            if delt.days > 6 and 'av' in suggestedApis:
-                suggestedApis.remove('av')
-                lastday = n - pd.Timedelta(days=6)
-                violatedRules.append('AlphaVantage data before {} is unavailable.'.format(
-                    lastday.strftime("%b %d")))
-            if delt.days > 6 and 'wtd' in suggestedApis:
-                suggestedApis.remove('wtd')
-                lastday = n - pd.Timedelta(days=6)
-                violatedRules.append('WorldTradeData data before {} is unavailable in 1 minute candles.'.format(
-                    lastday.strftime("%b %d")))
-
-        # Rule 3 Don't call ib if the library is not installed
-        # Rule 4 Don't call ib if its not connected
-        if self.apiset.value('gotibapi', type=bool):
-            if 'ib' in suggestedApis and not ib.isConnected():
-                suggestedApis.remove('ib')
-                violatedRules.append('IBAPI is not connected.')
-        elif 'ib' in suggestedApis:
-            suggestedApis.remove('ib')
-            violatedRules.append('IBAPI is not installed')
-
-        # Rule 5 No data is available for the future
-        if start > n:
-            suggestedApis = []
-            violatedRules.append('No data is available for the future.')
-        # Rule No 6 Don't call barchart if there is no apikey in settings
-        # Rule No 6 Don't call WorldTradeDate if there is no apikey in settings
-        # Rule No 6 Don't call alphavantage if there is no apikey in settings
-        # Rule No 6 Don't call finnhub if there is no api key in settings
-        mk = ManageKeys()
-        bc_key = mk.getKey('bc')
-        av_key = mk.getKey('av')
-        wtd_key = mk.getKey('wtd')
-        fh_key = mk.getKey('fh')
-        if not bc_key and 'bc' in suggestedApis:
-            suggestedApis.remove('bc')
-            violatedRules.append('There is no apikey in the database for barchart')
-        if not av_key and 'av' in suggestedApis:
-            suggestedApis.remove('av')
-            violatedRules.append('There is no apikey in the database for alphavantage')
-
-        if not wtd_key and 'wtd' in suggestedApis:
-            suggestedApis.remove('wtd')
-            violatedRules.append('There is no apikey in the database for WorldTradeData')
-        if not fh_key and 'fh' in suggestedApis:
-            suggestedApis.remove('fh')
-            violatedRules.append('There is no apikey in the database for finnhub')
-
-        api = api in suggestedApis if api else False
-
-        return(api, violatedRules, suggestedApis)
-
-    def apiChooser(self):
-        '''
-        Get a data method as set in self.api
-        :return the method
-        '''
-        # self.api = api
-        if self.api == 'bc':
-            # retrieves previous biz day until about 16:30
-            return bc.getbc_intraday
-        if self.api == 'av':
-            return mav.getmav_intraday
-        if self.api == 'ib':
-            return ib.getib_intraday
-        if self.api == 'wtd':
-            return wtd.getWTD_intraday
-        if self.api == 'fh':
-            return fh.getFh_intraday
-
-        return None
-
     def setTimeFrame(self, begin, end, interval):
         '''
         Set the amount of time before the first transaction and after the last transaction
@@ -366,13 +247,14 @@ class FinPlot:
         self.adjust['top'] = top
         self.adjust['bottom'] = bottom
 
-    def graph_candlestick(self, symbol, start=None, end=None, minutes=1,
+    def graph_candlestick(self, symbol, intraday, start=None, end=None, minutes=1,
                           dtFormat="%H:%M", save='trade'):
         '''
         Currently this will retrieve the data using apiChooser. Set self.preferences to limit
             acceptible apis. To place tx markers, set (or clear) fp.entries and fp.exits prior
             to calling
         :params symbol: The stock ticker
+        :params intraday: The stock api method to use to get chart data
         :params start: A datetime object or time string for the begining of the graph. The day must
                     be within the last 7 days. This may change in the future.
         :params end: A datetime object or time string for the end of a graph. Defaults to whatever
@@ -390,8 +272,7 @@ class FinPlot:
 
         # ############### Prepare data ##############
         # Get the data and prepare the DtaFrames from some stock api
-        meta, df, maDict = (self.apiChooser())(
-            symbol, start=start, end=end, minutes=minutes)
+        meta, df, maDict = intraday(symbol, start=start, end=end, minutes=minutes)
         if df.empty:
             if not isinstance(meta, int):
                 self.apiset.setValue('errorCode', str(meta['code']))

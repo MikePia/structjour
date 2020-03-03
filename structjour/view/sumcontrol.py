@@ -50,6 +50,7 @@ from structjour.view.stratcontrol import StratControl
 from structjour.view.summaryform import Ui_MainWindow
 from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
+from structjour.stock.apichooser import APIChooser
 from structjour.stock.utilities import getMAKeys, qtime2pd, pd2qtime
 from structjour.view.duplicatecontrol import DupControl
 
@@ -189,6 +190,9 @@ class SumControl(QMainWindow):
         # edit boxes-- calling them manually here.
         self.diffTarget(self.ui.targ.text())
         self.stopLoss(self.ui.stop.text())
+        self.chartErrorMessage = ''
+        self.tmpBegin = None
+        self.tmpEnd = None
 
     # =================================================================
     # ==================== Main Form  methods =========================
@@ -342,29 +346,24 @@ class SumControl(QMainWindow):
         val = self.ui.chart3Interval.value()
         self.chartIntervalChanged(val, 'chart3')
 
-    def resetChartTimes(self, key, swidg, ewidg):
+    def getChartTimes(self, key):
         entries = self.lf.getEntries(key)
         begin = entries[0][3]
         end = entries[-1][3]
 
-        # TODO Remove these arter a month or 2 (2/7/19). In the meantime, open all the
-        # imported/updated files (laod files from 10/25/18 on)and update some inserted images on each
-        # Or write yet another date babysitter here
         daDate = qtime2pd(self.settings.value('TheDate'))
         datestring = daDate.strftime('%Y-%m-%d')
         if isinstance(begin, str):
             assert len(begin.split(':')) == 3
-            # begin = pd.Timestamp(daDate.strftime('%Y-%m-%d ') + begin)
-            # end = pd.Timestamp(daDate.strftime('%Y-%m-%d ') + end)
         elif isinstance(begin, pd.Timestamp):
             begin = begin.strftime('%H:%M:%S')
             end = end.strftime('%H:%M:%S')
         else:
             raise ValueError('Programmer alert, add more babysitters here')
+
         begin = pd.Timestamp(f'{datestring} {begin}')
         end = pd.Timestamp(f'{datestring} {end}')
-        swidg.setDateTime(begin)
-        ewidg.setDateTime(end)
+
         return begin, end
 
     def chartMage(self, swidg, ewidg, iwidg, nwidg, widg, c):
@@ -377,9 +376,11 @@ class SumControl(QMainWindow):
         :widg: The QLabel widget for c
         :c: A string, one of 'chart1, chart2 or chart3'
         '''
+
         if not self.lf:
             logging.info('No trade to get chart for')
             return None
+        apiset = QSettings('zero_substance/stockapi', 'structjour')
         key = self.ui.tradeList.currentText()
         if key not in self.lf.ts.keys():
             # Catch pressing update before loading a statement
@@ -408,26 +409,24 @@ class SumControl(QMainWindow):
         begin = qtime2pd(swidg.dateTime())
         end = qtime2pd(ewidg.dateTime())
         if qtime2pd(self.settings.value('TheDate')).date() != begin.date():
-            begin, end = self.resetChartTimes(key, swidg, ewidg)
-        (dummy, rules, apilist) = fp.apiChooserList(begin, end, fp.api)
+            begin, end = self.getChartTimes(key)
+            # Update the chart widgets after returning from this thread in chartMagicX
+            self.tmpBegin = begin
+            self.tmpEnd = end
+        chooser = APIChooser(apiset)
+        (dummy, rules, apilist) = chooser.apiChooserList(begin, end)
         if apilist:
-            fp.api = apilist[0]
+            chooser.api = apilist[0]
         else:
-            # TODO for some reason I cannot figure out, this message box does not work-- it just hangs w/o returning
-            # Test it by unchecking all stock apis
 
-            # msg = '<h3>No stock api is selected</h3><ul> '
-            msg = ''
+            msg = '<h3>No stock api is selected</h3><ul> '
             for rule in rules:
                 msg = msg + f'<div><strong>Violated rule: {rule}</strong></div>'
-            # if not rule:
-            #     msg = msg + '<div>Please select Chart API from the menu</div>'
+            if not rule:
+                msg = msg + '<div>Please select Chart API from the menu</div>'
 
-            # title = 'Warning'
-            # msgbx = QMessageBox(QMessageBox.Warning, title, msg, QMessageBox.Ok)
-            # # msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
-            # msgbx.exec()
             logging.info(msg)
+            self.chartErrorMessage = msg
             return None
 
         interval = iwidg.value()
@@ -436,7 +435,7 @@ class SumControl(QMainWindow):
         outdir = self.getOutdir()
         ticker = self.ui.tradeList.currentText().split(' ')[1]
 
-        pname = os.path.join(outdir, name)
+        pname = os.path.normpath(os.path.join(outdir, name))
 
         entries = self.lf.getEntries(key)
         fpentries = list()
@@ -459,7 +458,7 @@ class SumControl(QMainWindow):
 
         fp.entries = fpentries
 
-        pname = fp.graph_candlestick(ticker, begin, end, interval, save=pname)
+        pname = fp.graph_candlestick(ticker, chooser.apiChooser(), begin, end, interval, save=pname)
         if pname:
             pixmap = QPixmap(pname)
             pixmap = pixmap.scaled(widg.width(), widg.height(), Qt.IgnoreAspectRatio)
@@ -473,7 +472,6 @@ class SumControl(QMainWindow):
             logging.info('Thread returning successful')
             return pname
 
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
         errorCode = apiset.value('errorCode')
         errorMessage = apiset.value('errorMessage')
         if errorMessage:
@@ -489,23 +487,19 @@ class SumControl(QMainWindow):
 
     def chartMagic1(self):
         '''Update button was pressed for chart1. We will get a chart using a stock api'''
-        # if not self.lf.ts
-
-        # interactive = self.chartSet.value('interactive', False, type=bool)
-        # import matplotlib
-
-        # OK... putting this in a thread caused the runtime error thing tom tkinter
-        # (backend for matplotlib at the time). It won't let me load tkagg after qt
-        # is loaded.ChartControl. QtAgg works for file but it freezes for interactive
-
-        # self.chartMage(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
-        #                     self.ui.chart1Name, self.ui.chart1, 'chart1')
         x = threading.Thread(target=self.chartMage,
                             args=(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
                             self.ui.chart1Name, self.ui.chart1, 'chart1', ))
         x.start()
         x.join()
         self.markDataChanged()
+        if self.chartErrorMessage:
+            self.warnNoApi()
+
+        elif self.tmpBegin is not None:
+            self.ui.chart1Start.setDateTime(self.tmpBegin)
+            self.ui.chart1End.setDateTime(self.tmpEnd)
+            self.tmpBegin = self.tmp.End = None
 
     def chartMagic2(self):
         '''Update button was pressed for chart2. We will get a chart using a stock api'''
@@ -515,6 +509,13 @@ class SumControl(QMainWindow):
         x.start()
         x.join()
         self.markDataChanged()
+        if self.chartErrorMessage:
+            self.warnNoApi()
+
+        elif self.tmpBegin is not None:
+            self.ui.chart2Start.setDateTime(self.tmpBegin)
+            self.ui.chart2End.setDateTime(self.tmpEnd)
+            self.tmpBegin = self.tmp.End = None
 
     def chartMagic3(self):
         '''Update button was pressed for chart3. We will get a chart using a stock api'''
@@ -524,6 +525,20 @@ class SumControl(QMainWindow):
         x.start()
         x.join()
         self.markDataChanged()
+        if self.chartErrorMessage:
+            self.warnNoApi()
+
+        elif self.tmpBegin is not None:
+            self.ui.chart3Start.setDateTime(self.tmpBegin)
+            self.ui.chart3End.setDateTime(self.tmpEnd)
+            self.tmpBegin = self.tmp.End = None
+
+    def warnNoApi(self):
+        title = 'Warning'
+        msgbx = QMessageBox(QMessageBox.Warning, title, self.chartErrorMessage, QMessageBox.Ok)
+        msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
+        msgbx.exec()
+        self.chartErrorMessage = ''
 
     def toggleDate(self):
         '''
@@ -877,12 +892,14 @@ class SumControl(QMainWindow):
             self.saveTradeObject(oldDate)
 
     def doWeSave(self, yes=False):
+        # Changing this to always save if its marked changed. Preperation for automatic loading of days
         t = self.windowTitle()
         if t[-1] == '*':
-            if yes is True:
-                self.saveTradeObject(self.oldDate)
-            else:
-                self.saveTradesQuestion(self.oldDate)
+            self.saveTradeObject(self.oldDate)
+            # if yes is True:
+            #     self.saveTradeObject(self.oldDate)
+            # else:
+            #     self.saveTradesQuestion(self.oldDate)
 
     def theDateChanged(self, val):
 
