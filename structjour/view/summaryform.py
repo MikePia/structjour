@@ -52,6 +52,7 @@ class Ui_MainWindow(object):
         self.dateEdit = QtWidgets.QDateEdit(self.centralwidget)
         font = QtGui.QFont()
         font.setFamily("Arial Rounded MT Bold")
+        font.setPointSize(16)
         self.dateEdit.setFont(font)
         self.dateEdit.setObjectName("dateEdit")
         self.gridLayout.addWidget(self.dateEdit, 3, 2, 1, 1)

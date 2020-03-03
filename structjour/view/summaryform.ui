@@ -73,6 +73,7 @@
               <property name="font">
                <font>
                 <family>Arial Rounded MT Bold</family>
+                <pointsize>16</pointsize>
                </font>
               </property>
              </widget>
