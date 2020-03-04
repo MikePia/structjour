@@ -18,7 +18,7 @@
 A module to access WorldTradingData API. From the REStful source. This looks like an amazing addition to structjour
 @author: Mike Petersen
 @creation_date: 9/30/19
-WorldTradingData. 
+WorldTradingData.
 '''
 
 import logging
@@ -48,18 +48,22 @@ def getApiKey():
     key = mk.getKey('wtd')
     return key
 
+
 def getLimits():
     '''
     Some useful info
     '''
-    return ('\nThis is a very simple API that provides 250 daily requests.\n'
-            'For Structjour, we need only the intraday endpoint. It provides data from market\n'
-            'open to close. Can retrieve 1 minute historical days up to 7 and 30 days for\n'
-            '[2, 5, 15, 60] days by providing the range parameter. Its not encouraging that the\n'
-            'docs say "what is currently available" to describe it.  You can customize the\n'
-            'interval within [1,2,5,15,60]. We will provide resampling to get intervasl 1-60.\n'
-            'See the number of daily requests (of 250) made today at\n'
-            'https://www.worldtradingdata.com/home  aka the members area\n\n')
+    return ('\nThis is a very simple API that provides 25 intraday daily requests.\n'
+            'For Structjour, we need only the intraday endpoint.\n'
+            'https://www.worldtradingdata.com/documentation#intraday-market-data\n'
+            'It provides data from market open to close. WTD can retrieve 1 minute historical\n'
+            'days up to 7 days. And 30 days for candle intervals [2, 5, 15, 60] days by\n'
+            'providing the range parameter. Its not encouraging that the\n'
+            'docs say "what is currently available" to describe it.\n\n'
+            'Structjour provides resampling to get intervasl 1-60 for 7 days.\n'
+            'The dashboard is informative.\n'
+            'https://www.worldtradingdata.com  and login\n\n')
+
 
 def getParams(symbol, interval, daRange):
     '''
@@ -80,10 +84,11 @@ def getParams(symbol, interval, daRange):
     params['api_token'] = getApiKey()
     return params
 
+
 def ni(i):
     '''
     Return a usable interval. Note that ni accepts D W and M but we are not  going
-    to use them in structjour. 
+    to use them in structjour.
     :return: The given argument if its supported or 1, enabling resample for all other (int) values
     '''
     # These are the accepted values for the 'resolution' parameter
@@ -94,6 +99,7 @@ def ni(i):
     elif isinstance(i, int):
         return 1
     return 5
+
 
 # Implement the common interface for the api chooser
 def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
@@ -119,22 +125,20 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if not isinstance(minutes, int) or minutes < 0 or minutes > 60:
         raise ValueError('Only candle intervals between 1 and 60 are supported')
 
-
     if not start:
         tdy = pd.Timestamp.now()
         tdy = getLastWorkDay(tdy)
         start = pd.Timestamp(tdy.year, tdy.month, tdy.day, 9, 25)
     else:
         start = pd.Timestamp(start)
-    
+
     if not end:
         tdy = pd.Timestamp.now()
         tdy = getLastWorkDay(tdy)
         end = pd.Timestamp(tdy.year, tdy.month, tdy.day, 16, 5)
     else:
         end = pd.Timestamp(end)
-    
-    
+
     # Retrieve the maximum data to get the longest possible moving averages
     daRange = 30
     if minutes == 1:
@@ -178,7 +182,6 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
 
-
     # Get requested moving averages
     maDict = movingAverage(df.close, df, start)
 
@@ -194,7 +197,7 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         if lendf == 0:
             msg = '\nWARNING: all data has been removed.'
             msg += f'\nThe Requested start was({start}).'
-            
+
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
             return meta, df, maDict
@@ -204,12 +207,10 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
 
-
-
         # If we just sliced off all our data. Set warning message
         lendf = len(df)
         if lendf == 0:
-            msg =  '\nWARNING: all data has been removed.'
+            msg = '\nWARNING: all data has been removed.'
             msg = msg + f'\nThe Requested end was({end}).'
             meta['code2'] = 199
             meta['message'] = meta['message'] + msg
@@ -221,28 +222,31 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             continue
         assert len(df) == len(maDict[key])
 
-    # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv 
+    # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv
     df = df.copy(deep=True)
     return meta, df, maDict
+
 
 def notmain():
     for u in getExamples():
         print(u)
 
+
 def main():
     symbol = 'ROKU'
-    start = None
+    start = '20200110'
     end = None
-    minutes = 7
+    minutes = 2
 
     meta, df, maDict = getWTD_intraday(symbol, start, end, minutes, False)
     if not df.empty:
-        print(df.head(9))
+        print(meta)
+        print(df.head(2))
+        print(df.tail(2))
     else:
         print(meta['message'])
+
 
 if __name__ == '__main__':
     # notmain()
     main()
-
-

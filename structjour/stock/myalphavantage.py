@@ -205,17 +205,19 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     # If we exceed the requests/min, we get a friendly html string sales pitch.
     metaj = result[keys[0]]
     if len(keys) < 2:
-        global R            # pylint: disable = W0603
-        if not R:
-            R = 1
-            r = Retries()
-        if r.retries > 0:
-            logging.info(f'{metaj}')
-            logging.info(f'Will retry in 60 seconds: {RETRY - r.retries + 1} of {RETRY} tries.')
-            r.retries = r.retries - 1
+        # global R            # pylint: disable = W0603
+        # if not R:
+        #     R = 1
+        #     r = Retries()
+        # if r.retries > 0:
+        
+        logging.warning(f'{metaj}')
+        print(metaj)
+            # logging.info(f'Will retry in 60 seconds: {RETRY - r.retries + 1} of {RETRY} tries.')
+            # r.retries = r.retries - 1
 
-            time.sleep(60)
-            return getmav_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
+            # time.sleep(60)
+            # return getmav_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
         # This tells us we have exceeded the limit and gives the premium link. AARRGH. Yahoo come back
         return None, None, None
 
@@ -327,3 +329,7 @@ if __name__ == '__main__':
     # x, ddf = getmav_intraday("SPY", start=dastart, end=daend, minutes='60min')
     # print(ddf.head(2))
     # print(ddf.tail(2))
+    text1 = '''Thank you for using Alpha Vantage! Our standard API call frequency is 5 calls per minute and 500 calls per day. 
+    Please visit https://www.alphavantage.co/premium/ if you would like to target a higher API call frequency.'''
+
+

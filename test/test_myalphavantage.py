@@ -34,7 +34,7 @@ from structjour.stock import utilities as util
 class TestMyalphavantage(unittest.TestCase):
     '''Test methods and functions from the modulemyalphavantage'''
 
-    def test_getmav_intraday(self):
+    def test_getmav_intraday(self, count=None):
         '''
         This will provide time based failures on market holidays. If you are woking on a holiday,
         it serves you right :)
@@ -64,8 +64,8 @@ class TestMyalphavantage(unittest.TestCase):
         # now = pd.Timestamp.today()
 
         # Prevent more than 5 calls per minute, sleep after 5 for the remainder
-        nextt = time() + 60
-        count = 0
+        nextt = time() + 80
+        # count = 0
         for start, end in dateArray:
 
             # Each of these should get results every time,beginning times are either before 9:31 or
@@ -76,7 +76,8 @@ class TestMyalphavantage(unittest.TestCase):
             # print("Requested...", start, end)
             # print("Received ...", df.index[0], df.index[-1])
             # print("     ", len(df))
-
+            if df is None:
+                continue
             self.assertGreater(len(df), 0)
 
             if not start and not end:
@@ -104,21 +105,21 @@ class TestMyalphavantage(unittest.TestCase):
 
             # Could add some tests for what happens when request is for today during market hours
 
-            if count % 5 == 4:
+            if count[0] % 5 == 4:
                 # After 5 calls, sleep. 5 calls per minute is the max for the free API
                 newnextt = nextt - time()
-                nx = int(newnextt)
+                nx = max(int(newnextt), 80)
                 print(f'''Waiting for {nx} seconds. 5 calls per minute max
                        from AVantage free API''')
                 if newnextt < 0:
                     # It took a minute plus to get through those 5 calls- reset for the next 5
-                    nextt = time() + 60
-                    count += 1
+                    nextt = time() + 80
+                    count[0] += 1
                     continue
                 nextt = newnextt
                 sleep(nextt)
 
-            count = count + 1
+            count[0] += 1
 
     def test_ni(self):
         '''
@@ -157,10 +158,13 @@ def main():
 def notmain():
     '''Run some local code for dev'''
     m = TestMyalphavantage()
-    m.test_getmav_intraday()
+    count = [0]
+    for i in range(40):
+        print('==================', i, '===================')
+        m.test_getmav_intraday(count)
     # m.test_ni()
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

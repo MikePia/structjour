@@ -28,7 +28,7 @@ import requests
 # pylint: disable=C0103
 
 
-# The system has completely changed to. 
+# The system has completely changed to.
 console = 'https://iexcloud.io/console'
 newstuff = 'https://iexcloud.io/docs/api/#rest-how-to'
 publishkey = 'pk_194005def30849edaa93d704e8bd68e2'
@@ -252,7 +252,7 @@ def get_historical_chart(symb, start=None, end=None, showUrl=False, filt=False):
         # This will round up to get an extra month (or less) when we are close to the 5 year limit
         now = pd.Timestamp.today()
         start = pd.to_datetime(start)
-        reqmonths = (((now - start).days)/30) + 1
+        reqmonths = (((now - start).days) / 30) + 1
         if reqmonths > 60:
             print('You have requested data beginning {}'.format(
                 start.strftime("%B,%Y")))
