@@ -174,7 +174,11 @@
       <item>
        <widget class="QCheckBox" name="bcCb">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use Barchart get a free key from &lt;/span&gt;&lt;a href=&quot;https://www.barchart.com/ondemand/free-market-data-api&quot;&gt;&lt;span style=&quot; font-size:9pt; font-weight:600; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.barchart.com/ondemand/free-market-data-api&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt; Write the api key in box. The licencse will allow 150 getHistory queries per day. The previous 30 days of data are available.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Barchart data for the current day is available by 16:45.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Additionally yesterdays data after 12PM is unavailable during market hours. It also becames available by 16:45&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;h2&gt;To use BarChart APIs get a free API key from&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&quot;https://www.barchart.com/ondemand/free-market-data-api&quot;&gt;&quot;https://www.barchart.com/ondemand/free-market-data-api&quot;&lt;/a&gt;
+&lt;span style=&quot; font-size:11pt;&quot;&gt;Data is available for the last 30 days. Data limts are 150 calls per day. Barchart data for the current day is available by 16:45. Additionally yesterdays data after 12PM is unavailable during market hours. It also becames available by 16:45
+&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Barchart</string>
@@ -209,7 +213,10 @@
       <item>
        <widget class="QCheckBox" name="avCb">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use Alphavantage APIs get a free API key from &lt;/span&gt;&lt;a href=&quot;https://www.alphavantage.co/support/#api-key&quot;&gt;&lt;span style=&quot; font-size:9pt; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.alphavantage.co/support/#api-key &lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;   The data is realtime Historical data is available for the last 7 days. Data limts are 500 calls per day and 5 per minute.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;h2&gt;To use AlphaVantage APIs get a free API key from&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&quot;https://www.alphavantage.co/support/#api-key&quot;&gt;https://www.alphavantage.co/support/#api-key &lt;/a&gt;
+&lt;span style=&quot; font-size:11pt;&quot;&gt;The data is realtime Historical data is available for the last 7 days. Data limts are 500 calls per day and 5 per minute.&lt;/span&gt;&lt;/p&gt;</string>
         </property>
         <property name="text">
          <string>Alphavantage</string>
@@ -244,7 +251,12 @@
       <item>
        <widget class="QCheckBox" name="wtdCb">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use World Trading Data APIs get a free API key from  &lt;/span&gt;&lt;a href=&quot;https://www.worldtradingdata.com/register&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://www.worldtradingdata.com/register&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt; The data is realtime Historical data is available for the last 7 days. But the data limits are only 25 trades per call.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;h2&gt;To use World Trade Data APIs get a free API key from&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&quot;https://www.worldtradingdata.com/register&quot; &lt;/a&gt;
+&lt;span style=&quot; font-size:11pt;&quot;&gt;The data is realtime Historical data  available for the last 7 days. Data limits are 25 trades per day.&lt;/span&gt;&lt;/p&gt;
+
+</string>
         </property>
         <property name="text">
          <string>WorldTradeData</string>
@@ -288,7 +300,10 @@
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;To use Finnhub APIs get a free API key from &lt;/span&gt;&lt;a href=&quot;https://finnhub.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://finnhub.io &lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;The data is realtime Historical data  Data limts are 60 calls per minute and no practical limits per day.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;h2&gt;To use Finnhub APIs get a free API key from&lt;/h2&gt;
+&lt;p&gt;
+&lt;a href=&quot;https://finnhub.io/&quot;&gt;https://finnhub.io &lt;/a&gt;
+&lt;span style=&quot; font-size:11pt;&quot;&gt;The data is realtime Historical data Data limts are 60 calls per minute. AND data is available ro 20 years! This seems too good to be true.&lt;/span&gt;&lt;/p&gt;</string>
         </property>
         <property name="text">
          <string>Finnhub</string>

@@ -37,16 +37,7 @@ from mpl_finance import candlestick_ohlc
 from pandas.plotting import register_matplotlib_converters
 from PyQt5.QtCore import QSettings
 
-from structjour.stock import myalphavantage as mav
-from structjour.stock import mybarchart as bc
-from structjour.stock import myFinhub as fh
-from structjour.stock import myWTD as wtd
-from structjour.stock.utilities import ManageKeys, checkForIbapi, getMASettings
-
-if checkForIbapi():
-    from structjour.stock import myib as ib
-
-# pylint: disable = C0103, W0603
+from structjour.stock.utilities import getMASettings
 
 FILL = 2
 

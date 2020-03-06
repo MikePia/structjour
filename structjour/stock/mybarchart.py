@@ -17,7 +17,8 @@
 '''
 Some barchart calls beginning (and ending now) with getHistory. Note that the docs show SOAP code
 to run this in python but as of 12/29/18 the suds module (suds not suds-py3) does not work on my
-system. I am goingto implement the straight RESTful free API using request.
+system. I am goingto implement the straight RESTful free API using request. All we need is
+getHistory and to implement the APIChooser interface for it.
 
 @author: Mike Petersen
 @creation_data: 12/19/18
@@ -26,7 +27,7 @@ import datetime as dt
 import logging
 import requests
 import pandas as pd
-from structjour.stock.utilities import ManageKeys, getLastWorkDay, movingAverage
+from structjour.stock.utilities import ManageKeys, getLastWorkDay, movingAverage, setLimitReached, getLimitReached
 
 
 def getApiKey():
@@ -121,6 +122,11 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         seperate from request status_code.
     :raise: ValueError if response.status_code is not 200.
     '''
+    if getLimitReached('bc'):
+        msg = 'BarChart limit was reached'
+        logging.info(msg)
+        return {'code': 666, 'message': msg}, pd.DataFrame(), None
+
     logging.info('======= Called Barchart -- 150 call limit, data available after market close =======')
     if not end:
         tdy = dt.datetime.today()
@@ -149,9 +155,14 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if response.status_code != 200:
         raise Exception(
             f"{response.status_code}: {response.content.decode('utf-8')}")
+    meta = {'code': 200}
     if (response.text and isinstance(response.text, str) and response.text.startswith('You have reached')):
+        d = pd.Timestamp.now()
+        dd = pd.Timestamp(d.year, d.month, d.day + 1, 3, 0, 0)
+        setLimitReached('bc', dd)
+
         logging.warning(f'API max queries: {response.text}')
-        meta = {'code': 666, 'message': response.text}
+        meta['message'] = response.text
         return meta, pd.DataFrame(), None
 
     result = response.json()
@@ -159,11 +170,8 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         logging.warning('''Failed to retrieve any data. Barchart sends the following greeting: {result['status']}''')
         return result['status'], pd.DataFrame(), None
 
-    keys = list(result.keys())
-    meta = result[keys[0]]
-
-    # JSONTimeSeries = result[keys[1]]
-    df = pd.DataFrame(result[keys[1]])
+    meta['message'] = result['status']['message']
+    df = pd.DataFrame(result['results'])
 
     for i, row in df.iterrows():
         d = pd.Timestamp(row['timestamp'])
@@ -230,8 +238,9 @@ def main():
     end = '2020-01-28 15:30'
     start = pd.Timestamp('2020-01-27')
     minutes = 1
-    dummy, d, daMas = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
+    meta, d, daMas = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
     print(len(d))
+    print(meta)
 
 
 def notmain():

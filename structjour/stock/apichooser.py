@@ -22,7 +22,7 @@ Choose which API intraday call to get chart data based on rules
 '''
 import datetime as dt
 import pandas as pd
-from structjour.stock.utilities import ManageKeys, checkForIbapi
+from structjour.stock.utilities import ManageKeys, checkForIbapi, getLimitReached
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
 from structjour.stock import myFinhub as fh
@@ -32,20 +32,28 @@ if checkForIbapi():
 
 
 class APIChooser:
-    def __init__(self, apiset):
+    def __init__(self, apiset, orprefs=None):
         '''
         The currenly supported apis are barchart, alphavantage, world trade data, finnhub and ibapi
         These are represented by the tokens bc, av, wtd, fh, and ib
         :params apiset: QSettings with key 'APIPref'
+        :params orprefs: List: Override the api prefs in settings
         '''
         self.apiset = apiset
+        self.orprefs = orprefs
+        self.preferences = self.getPreferences()
+        self.api = self.preferences[0]
+
+    def getPreferences(self):
+        if self.orprefs:
+            return self.orprefs.copy()
         p = self.apiset.value('APIPref')
         if p:
             p = p.replace(' ', '')
-            self.preferences = p.split(',')
+            p = p.split(',')
         else:
-            self.preferences = [None]
-        self.api = self.preferences[0]
+            p = [None]
+        return p
 
     def apiChooserList(self, start, end, api=None):
         '''
@@ -61,11 +69,12 @@ class APIChooser:
         '''
         start = pd.Timestamp(start)
         end = pd.Timestamp(end)
-        n = pd.Timestamp.now() + dt.timedelta(0, 60 * 120)        # Adding 2 hours for NY time
+        n = pd.Timestamp.now()
 
         violatedRules = []
-        suggestedApis = self.preferences
-        if suggestedApis[0] is None:
+        suggestedApis = self.getPreferences()
+        if len(suggestedApis) == 0:
+            self.api = None
             return (False, ['No stock Api is selected'], [])
         # nopen = dt.datetime(n.year, n.month, n.day, 9, 30)
         nclose = dt.datetime(n.year, n.month, n.day, 16, 30)
@@ -142,7 +151,20 @@ class APIChooser:
             suggestedApis.remove('fh')
             violatedRules.append('There is no apikey in the database for finnhub')
 
+        # Rule No 7 API limit has been reached [bc, av, fh, wtd]
+        deleteme = []
+        for token in suggestedApis:
+            if token == 'ib':
+                continue
+            if getLimitReached(token, self.apiset):
+                deleteme.append(token)
+                violatedRules.append(f'You have reached your quota for {token}')
+        for token in deleteme:
+            suggestedApis.remove(token)
         api = api in suggestedApis if api else False
+
+        self.api = suggestedApis[0] if suggestedApis else None
+        self.violatedRules = violatedRules
 
         return(api, violatedRules, suggestedApis)
 

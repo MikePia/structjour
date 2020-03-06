@@ -25,10 +25,9 @@ import logging
 import requests
 import pandas as pd
 
-from structjour.stock.utilities import ManageKeys, movingAverage, getLastWorkDay
 
+from structjour.stock.utilities import ManageKeys, movingAverage, getLastWorkDay, setLimitReached, getLimitReached
 
-# Example-- open postman to play with them. We only need intraday here
 
 base_wtd = 'https://api.worldtradingdata.com/api/v1/'
 
@@ -57,10 +56,11 @@ def getLimits():
             'For Structjour, we need only the intraday endpoint.\n'
             'https://www.worldtradingdata.com/documentation#intraday-market-data\n'
             'It provides data from market open to close. WTD can retrieve 1 minute historical\n'
-            'days up to 7 days. And 30 days for candle intervals [2, 5, 15, 60] days by\n'
-            'providing the range parameter. Its not encouraging that the\n'
+            'days up to 7 days. And 30 days for candle intervals [2, 5, 15, 60] days.\n'
+            'This is complicated for APIChooser. The current signature does not include interval size\n'
+            'And it probably should not change. Its not encouraging that the\n'
             'docs say "what is currently available" to describe it.\n\n'
-            'Structjour provides resampling to get intervasl 1-60 for 7 days.\n'
+            'Structjour provides resampling to get intervals 1-60 for 7 days (same in all apis)\n'
             'The dashboard is informative.\n'
             'https://www.worldtradingdata.com  and login\n\n')
 
@@ -115,6 +115,11 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     :depends: On the settings of 'zero_substance/chart' for moving average settings
     '''
     # Intraday base differs from others. It has the intrday subdomain instead of api subdomain
+    if getLimitReached('wtd'):
+        msg = 'World Trade Data limit was reached'
+        logging.info(msg)
+        return {'code': 666, 'message': msg}, pd.DataFrame(), None
+
     logging.info('======= called WorldTradingData. 25 calls per day limit =======')
     base = 'https://intraday.worldtradingdata.com/api/v1/intraday?'
 
@@ -146,17 +151,21 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     params = getParams(symbol, minutes, daRange)
     response = requests.get(base, params=params)
 
+    meta = {'code': response.status_code}
     if response.status_code != 200:
-        # TODO get the message they send for reaching data limit
         meta = {'code': 666, 'message': response.text}
         return meta, pd.DataFrame(), None
     result = response.json()
     if 'intraday' not in result.keys():
         if 'message' in result.keys():
-            msg = result['message']
+            d = pd.Timestamp.now()
+            dd = pd.Timestamp(d.year, d.month, d.day + 1, 3, 0, 0)
+            setLimitReached('wtd', dd)
+            logging.warning(f"WorldTradeData limit reached: {result['message']}")
+            meta['message'] = result['message']
         else:
-            msg = 'Failed to retrieve data from WorldTradingData'
-        return {'code': 666, 'message': msg}, pd.DataFrame(), None
+            meta['message'] = 'Failed to retrieve data from WorldTradingData'
+        return meta, pd.DataFrame(), None
 
     if result['timezone_name'] != 'America/New_York':
         msg = f'''Time zone returned a non EST zone: {result['timezone_name']}'''
@@ -217,10 +226,11 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             logging.error(f'{meta}')
             return meta, df, maDict
 
-    for key in maDict:
-        if key == 'vwap':
-            continue
-        assert len(df) == len(maDict[key])
+    # If we don't have a full ma, delete -- Later:, implement a 'delayed start' ma in graphstuff and remove this stuff
+    keys = list(maDict.keys())
+    for key in keys:
+        if len(df) != len(maDict[key]):
+            del maDict[key]
 
     # Note we are dropping columns  ['symbol', 'timestamp', 'tradingDay[] in favor of ohlcv
     df = df.copy(deep=True)
@@ -234,7 +244,7 @@ def notmain():
 
 def main():
     symbol = 'ROKU'
-    start = '20200110'
+    start = '20200220'
     end = None
     minutes = 2
 
@@ -249,4 +259,5 @@ def main():
 
 if __name__ == '__main__':
     # notmain()
+    text = 'You have reached your request limit for the day. Upgrade to get more daily requests.'
     main()

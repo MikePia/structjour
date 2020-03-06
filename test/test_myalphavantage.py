@@ -30,7 +30,6 @@ from structjour.stock import myalphavantage as mav
 from structjour.stock import utilities as util
 
 
-# @unittest.skip('Leave to deal with later')
 class TestMyalphavantage(unittest.TestCase):
     '''Test methods and functions from the modulemyalphavantage'''
 

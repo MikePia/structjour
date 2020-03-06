@@ -47,7 +47,6 @@ from structjour.stock.utilities import isNumeric
 grf = SumReqFields()
 
 
-# @unittest.skip("Uses the old stuff in setup")
 class TestTheTradeObject(unittest.TestCase):
     '''
     Test the functions and methods in thetradeobject module. TheTradeObject input requires a bunch of

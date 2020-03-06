@@ -39,6 +39,36 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon
 
 
+def setLimitReached(token, resetTime, settings=None):
+    if token not in ['av', 'bc', 'fh', 'wtd']:
+        raise ValueError(f'Not a valid stock api token: {token}')
+    if settings is None:
+        settings = QSettings('zero_substance/stockapi', 'structjour')
+    token = token + 'limitreached'
+    resetTime = pd.Timestamp(resetTime)
+    now = pd.Timestamp.now()
+    if now > resetTime:
+        settings.remove(token)
+    else:
+        settings.setValue(token, resetTime)
+
+
+def getLimitReached(token, settings=None):
+    if token not in ['av', 'bc', 'fh', 'wtd']:
+        raise ValueError(f'Not a valid stock api token: {token}')
+    if settings is None:
+        settings = QSettings('zero_substance/stockapi', 'structjour')
+
+    resetTime = settings.value(token + 'limitreached', None)
+    if resetTime is None: return False
+
+    now = pd.Timestamp.now()
+    if now <= resetTime:
+        return True
+    settings.remove(token + 'limitreached')
+    return False
+
+
 def isNumeric(l):
     '''
     Not to be confused with str.isnumeric. Takes an arg or a list and tests if all members are

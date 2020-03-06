@@ -23,6 +23,7 @@ Choose which API intraday call to get chart data based on rules
 
 import datetime as dt
 import numpy as np
+import pandas as pd
 import unittest
 from structjour.stock import utilities as util
 
@@ -76,10 +77,46 @@ class TestAPIChooser(unittest.TestCase):
                 for rule in result[1]:
                     print(rule)
 
+    def test_apiChooserLimitReached(self):
+        '''
+        This is designed to hit the limits of the apis. Do not want to run this with
+        tests most of the time. Just fiddle with the orprefs and the REPEATS and watch the result
+        '''
+        REPEATS = 15
+        orprefs = ['av', 'wtd']
+        symbol = 'AAPL'
+        minutes = 1
+        d = util.getPrevTuesWed(pd.Timestamp.now())
+        start = pd.Timestamp(d.strftime("%Y%m%d " + '09:36:42'))
+        end = pd.Timestamp(d.strftime("%Y%m%d " + '09:38:53'))
+        chooser = APIChooser(QSettings('zero_substance/stockapi', 'structjour'), orprefs=orprefs)
+        for i in range(REPEATS):
+            chooser.apiChooserList(start, end)
+            if chooser.api:
+                intraday = chooser.apiChooser()
+                meta, df, ma = intraday(symbol, start, end, minutes)
+                if not df.empty:
+                    print(i + 1, ' ', end='')
+                else:
+                    print()
+                    print(meta)
+                    print()
+            else:
+                print()
+                print('Call number', i)
+                for rule in chooser.violatedRules:
+                    print(rule)
+
+
+def notmain():
+    t = TestAPIChooser()
+    t.test_apiChooserLimitReached()
+
 
 def main():
     unittest.main()
 
 
 if __name__ == '__main__':
-    main()
+    notmain()
+    # main()

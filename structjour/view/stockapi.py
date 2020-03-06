@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\stockapi.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -198,19 +198,34 @@ class Ui_Dialog(object):
         self.label_3.setText(_translate("Dialog", "Port"))
         self.label_4.setText(_translate("Dialog", "Client Id"))
         self.label_5.setText(_translate("Dialog", "<html><head/><body><p><a href=\"https://www.barchart.com/ondemand/free-market-data-api\"><span style=\" text-decoration: underline; color:#0000ff;\">Barchar free api (right click)</span></a></p></body></html>"))
-        self.bcCb.setToolTip(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:9pt;\">To use Barchart get a free key from </span><a href=\"https://www.barchart.com/ondemand/free-market-data-api\"><span style=\" font-size:9pt; font-weight:600; text-decoration: underline; color:#0000ff;\">https://www.barchart.com/ondemand/free-market-data-api</span></a><span style=\" font-size:9pt;\"> Write the api key in box. The licencse will allow 150 getHistory queries per day. The previous 30 days of data are available.</span></p><p><span style=\" font-size:9pt;\">Barchart data for the current day is available by 16:45.</span></p><p><span style=\" font-size:9pt;\">Additionally yesterdays data after 12PM is unavailable during market hours. It also becames available by 16:45</span></p></body></html>"))
+        self.bcCb.setToolTip(_translate("Dialog", "<h2>To use BarChart APIs get a free API key from</h2>\n"
+"<p>\n"
+"<a href=\"https://www.barchart.com/ondemand/free-market-data-api\">\"https://www.barchart.com/ondemand/free-market-data-api\"</a>\n"
+"<span style=\" font-size:11pt;\">Data is available for the last 30 days. Data limts are 150 calls per day. Barchart data for the current day is available by 16:45. Additionally yesterdays data after 12PM is unavailable during market hours. It also becames available by 16:45\n"
+"</span></p></body></html>"))
         self.bcCb.setText(_translate("Dialog", "Barchart"))
         self.label_6.setText(_translate("Dialog", "API Key"))
         self.label_7.setText(_translate("Dialog", "<html><head/><body><p><a href=\"https://www.alphavantage.co/support/#api-key\"><span style=\" text-decoration: underline; color:#0000ff;\">Alph vantage free api (right click)</span></a></p></body></html>"))
-        self.avCb.setToolTip(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:9pt;\">To use Alphavantage APIs get a free API key from </span><a href=\"https://www.alphavantage.co/support/#api-key\"><span style=\" font-size:9pt; text-decoration: underline; color:#0000ff;\">https://www.alphavantage.co/support/#api-key </span></a><span style=\" font-size:9pt;\">   The data is realtime Historical data is available for the last 7 days. Data limts are 500 calls per day and 5 per minute.</span></p></body></html>"))
+        self.avCb.setToolTip(_translate("Dialog", "<h2>To use AlphaVantage APIs get a free API key from</h2>\n"
+"<p>\n"
+"<a href=\"https://www.alphavantage.co/support/#api-key\">https://www.alphavantage.co/support/#api-key </a>\n"
+"<span style=\" font-size:11pt;\">The data is realtime Historical data is available for the last 7 days. Data limts are 500 calls per day and 5 per minute.</span></p>"))
         self.avCb.setText(_translate("Dialog", "Alphavantage"))
         self.label_8.setText(_translate("Dialog", "API Key"))
         self.label_12.setText(_translate("Dialog", "<html><head/><body><p><a href=\"https://www.worldtradingdata.com/register\"><span style=\" text-decoration: underline; color:#0000ff;\">World Trade Data free api (right click)</span></a></p></body></html>"))
-        self.wtdCb.setToolTip(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:9pt;\">To use World Trading Data APIs get a free API key from  </span><a href=\"https://www.worldtradingdata.com/register\"><span style=\" text-decoration: underline; color:#0000ff;\">https://www.worldtradingdata.com/register</span></a><span style=\" font-size:9pt;\"> The data is realtime Historical data is available for the last 7 days. But the data limits are only 25 trades per call.</span></p></body></html>"))
+        self.wtdCb.setToolTip(_translate("Dialog", "<h2>To use World Trade Data APIs get a free API key from</h2>\n"
+"<p>\n"
+"<a href=\"https://www.worldtradingdata.com/register\" </a>\n"
+"<span style=\" font-size:11pt;\">The data is realtime Historical data  available for the last 7 days. Data limits are 25 trades per day.</span></p>\n"
+"\n"
+""))
         self.wtdCb.setText(_translate("Dialog", "WorldTradeData"))
         self.label_11.setText(_translate("Dialog", "API Key"))
         self.label_9.setText(_translate("Dialog", "<html><head/><body><p><a href=\"https://finnhub.io/\"><span style=\" text-decoration: underline; color:#0000ff;\">Finnhub API (right click)</span></a></p></body></html>"))
-        self.fhCb.setToolTip(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:9pt;\">To use Finnhub APIs get a free API key from </span><a href=\"https://finnhub.io/\"><span style=\" text-decoration: underline; color:#0000ff;\">https://finnhub.io </span></a><span style=\" font-size:9pt;\">The data is realtime Historical data  Data limts are 60 calls per minute and no practical limits per day.</span></p></body></html>"))
+        self.fhCb.setToolTip(_translate("Dialog", "<h2>To use Finnhub APIs get a free API key from</h2>\n"
+"<p>\n"
+"<a href=\"https://finnhub.io/\">https://finnhub.io </a>\n"
+"<span style=\" font-size:11pt;\">The data is realtime Historical data Data limts are 60 calls per minute. AND data is available ro 20 years! This seems too good to be true.</span></p>"))
         self.fhCb.setText(_translate("Dialog", "Finnhub"))
         self.label_15.setText(_translate("Dialog", "API Key"))
         self.label_10.setText(_translate("Dialog", "Order the tokens ib, bc, av, wtd and fh for preference"))

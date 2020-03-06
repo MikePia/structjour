@@ -32,7 +32,7 @@ import logging
 import time
 import requests
 import pandas as pd
-from structjour.stock.utilities import ManageKeys, movingAverage
+from structjour.stock.utilities import ManageKeys, movingAverage, setLimitReached, getLimitReached
 
 BASE_URL = 'https://www.alphavantage.co/query?'
 EXAMPLES = {
@@ -168,6 +168,11 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
          low, close, volume and indexed by pd timestamp. If not specified, this
          will return a weeks data.
     '''
+    if getLimitReached('av'):
+        msg = 'AlphaVantage limit was reached'
+        logging.info(msg)
+        return {'code': 666, 'message': msg}, pd.DataFrame(), None
+
     logging.info('======= Called alpha 500 calls per day limit, 5/minute =======')
     start = pd.to_datetime(start) if start else None
     end = pd.to_datetime(end) if end else None
@@ -196,30 +201,17 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
         raise Exception(
             f"{response.status_code}: {response.content.decode('utf-8')}")
     result = response.json()
-    # tsj = dict()
     keys = list(result.keys())
 
-    if 'Error Message' in keys:
-        raise Exception(f"{result['Error Message']}")
+    msg = f'{keys[0]}: {result[keys[0]]}'
+    metaj = {'code': 200, 'message': msg}
+    if len(keys) == 1:
+        d = pd.Timestamp.now()
+        dd = pd.Timestamp(d.year, d.month, d.day, d.hour, d.minute + 2, d.second)
+        setLimitReached('av', dd)
 
-    # If we exceed the requests/min, we get a friendly html string sales pitch.
-    metaj = result[keys[0]]
-    if len(keys) < 2:
-        # global R            # pylint: disable = W0603
-        # if not R:
-        #     R = 1
-        #     r = Retries()
-        # if r.retries > 0:
-        
-        logging.warning(f'{metaj}')
-        print(metaj)
-            # logging.info(f'Will retry in 60 seconds: {RETRY - r.retries + 1} of {RETRY} tries.')
-            # r.retries = r.retries - 1
-
-            # time.sleep(60)
-            # return getmav_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
-        # This tells us we have exceeded the limit and gives the premium link. AARRGH. Yahoo come back
-        return None, None, None
+        logging.warning(msg)
+        return metaj, pd.DataFrame(), None
 
     dataJson = result[keys[1]]
 
@@ -319,17 +311,10 @@ def notmain():
 
 if __name__ == '__main__':
     theDate = pd.Timestamp.today().date()
-    metaj, df, maDict = getmav_intraday('SQ', minutes=5, start=theDate)
-    print(df.head())
-    # notmain()
-
-    # dastart = "2019-01-11 11:30"
-    # daend = "2019-01-14 18:40"
-    # d = dt.datetime(2018, 12, 20)
-    # x, ddf = getmav_intraday("SPY", start=dastart, end=daend, minutes='60min')
-    # print(ddf.head(2))
-    # print(ddf.tail(2))
-    text1 = '''Thank you for using Alpha Vantage! Our standard API call frequency is 5 calls per minute and 500 calls per day. 
-    Please visit https://www.alphavantage.co/premium/ if you would like to target a higher API call frequency.'''
-
-
+    metaj, df, maDict = getmav_intraday('ROKU', minutes=5, start=theDate)
+    if not df.empty:
+        print(df.tail(2))
+    else:
+        print(metaj)
+    # text1 = '''Thank you for using Alpha Vantage! Our standard API call frequency is 5 calls per minute and 500 calls per day.
+    # Please visit https://www.alphavantage.co/premium/ if you would like to target a higher API call frequency.'''

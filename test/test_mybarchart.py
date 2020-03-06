@@ -54,7 +54,6 @@ def getPrevTuesWed(td):
     return before
 
 
-# @unittest.skip('Leave to deal with later')
 class TestMybarchart(unittest.TestCase):
     '''
     Test functions in module bybarchart
