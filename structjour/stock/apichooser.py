@@ -187,3 +187,13 @@ class APIChooser:
             return fh.getFh_intraday
 
         return None
+
+    def get_intraday(self, symbol, start=None, end=None, minutes=5, showUrl=False):
+        self.apiChooserList(start, end)
+        for token in self.preferences:
+            self.api = token
+            meta, df, ma = self.apiChooser()(symbol, start, end, minutes)
+            if not df.empty:
+                return meta, df, ma
+        msg = f'Failed to retrieve data from APIS: {self.preferences}'
+        return {'code': 666, 'message': msg}, pd.DataFrame(), None

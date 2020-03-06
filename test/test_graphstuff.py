@@ -172,18 +172,15 @@ class TestGraphstuff(unittest.TestCase):
             print(f'{apilist}/n{rules}')
             minutes = 2
             self.makeupEntries(trade[0], start, end, minutes, fp)
-            for api in apilist:
-                fp.api = api
-                name = dummyName(fp, trade[0], trade[1], trade[2], trade[3])
-                name = fp.graph_candlestick(
-                    trade[0], start, end, minutes=minutes, save=name)
-                cwd = os.getcwd()
-                if name:
+            chooser = APIChooser(self.apiset)
+            name = fp.graph_candlestick(trade[0], chooser, start, end, minutes=minutes, save=name)
+            cwd = os.getcwd()
+            if name:
 
-                    msg = 'error creating ' + name + " IN ", cwd
-                    self.assertTrue(os.path.exists(name), msg)
-                else:
-                    print('Failed to get data', fp.api)
+                msg = 'error creating ' + name + " IN ", cwd
+                self.assertTrue(os.path.exists(name), msg)
+            else:
+                print('Failed to get data', fp.api)
 
     def test_setTimeFrame(self):
         '''

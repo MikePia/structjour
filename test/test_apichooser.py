@@ -22,6 +22,7 @@ Choose which API intraday call to get chart data based on rules
 '''
 
 import datetime as dt
+import logging
 import numpy as np
 import pandas as pd
 import unittest
@@ -34,12 +35,15 @@ from PyQt5.QtCore import QSettings
 
 class TestAPIChooser(unittest.TestCase):
 
+    def __init__(self, *args, **kwargs):
+        super(TestAPIChooser, self).__init__(*args, **kwargs)
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
+
     def test_apiChooser(self):
         '''
         Test the method FinPlot.apiChooser for the same interface in each api
         '''
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
-        chooser = APIChooser(apiset)
+        chooser = APIChooser(self.apiset)
         biz = util.getLastWorkDay()
         start = dt.datetime(biz.year, biz.month, biz.day, 12, 30)
         end = dt.datetime(biz.year, biz.month, biz.day, 16, 1)
@@ -77,6 +81,7 @@ class TestAPIChooser(unittest.TestCase):
                 for rule in result[1]:
                     print(rule)
 
+    @unittest.SkipTest
     def test_apiChooserLimitReached(self):
         '''
         This is designed to hit the limits of the apis. Do not want to run this with
@@ -89,7 +94,7 @@ class TestAPIChooser(unittest.TestCase):
         d = util.getPrevTuesWed(pd.Timestamp.now())
         start = pd.Timestamp(d.strftime("%Y%m%d " + '09:36:42'))
         end = pd.Timestamp(d.strftime("%Y%m%d " + '09:38:53'))
-        chooser = APIChooser(QSettings('zero_substance/stockapi', 'structjour'), orprefs=orprefs)
+        chooser = APIChooser(self.apiset, orprefs=orprefs)
         for i in range(REPEATS):
             chooser.apiChooserList(start, end)
             if chooser.api:
@@ -107,10 +112,39 @@ class TestAPIChooser(unittest.TestCase):
                 for rule in chooser.violatedRules:
                     print(rule)
 
+    def test_get_intraday(self):
+        '''
+        Test that it rolls over when there are 2 members of APIPrefs and the
+        first one fails. Note that this will fail if one of the APIS has exhausted
+        its limit today (or fails some other rule)
+        SO ... if this test follows extensive testing of APIS
+        '''
+        # First exhaust the 1 minute quota of AlphaVantage
+        avonly = APIChooser(self.apiset, orprefs=['av'])
+        d = util.getPrevTuesWed(pd.Timestamp.now())
+        symbol = 'TSLA'
+        start = pd.Timestamp(d.strftime("%Y%m%d " + '09:36:42'))
+        end = pd.Timestamp(d.strftime("%Y%m%d " + '10:38:53'))
+        minutes = 5
 
+        for i in range(20):
+            meta, df, ma = avonly.get_intraday(symbol, start, end, minutes)
+            if df.empty:
+                break
+
+        # Now create new APIChoosers and test that the call rolls over
+        for token in ['bc', 'fh', 'wtd']:
+            chooser = APIChooser(self.apiset, orprefs=['av', token])
+            meta, df, ma = chooser.get_intraday(symbol, start, end, minutes)
+            if df.empty:
+                logging.info(meta)
+            self.assertTrue(not df.empty, f"Failed to retrieve data from {token}. Have you exhausted the quota today?")
+
+ 
 def notmain():
     t = TestAPIChooser()
-    t.test_apiChooserLimitReached()
+    # t.test_apiChooserLimitReached()
+    t.test_get_intraday()
 
 
 def main():

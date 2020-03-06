@@ -238,14 +238,14 @@ class FinPlot:
         self.adjust['top'] = top
         self.adjust['bottom'] = bottom
 
-    def graph_candlestick(self, symbol, intraday, start=None, end=None, minutes=1,
+    def graph_candlestick(self, symbol, chooser, start=None, end=None, minutes=1,
                           dtFormat="%H:%M", save='trade'):
         '''
         Currently this will retrieve the data using apiChooser. Set self.preferences to limit
             acceptible apis. To place tx markers, set (or clear) fp.entries and fp.exits prior
             to calling
         :params symbol: The stock ticker
-        :params intraday: The stock api method to use to get chart data
+        :params chooser: APIChooser object
         :params start: A datetime object or time string for the begining of the graph. The day must
                     be within the last 7 days. This may change in the future.
         :params end: A datetime object or time string for the end of a graph. Defaults to whatever
@@ -263,7 +263,7 @@ class FinPlot:
 
         # ############### Prepare data ##############
         # Get the data and prepare the DtaFrames from some stock api
-        meta, df, maDict = intraday(symbol, start=start, end=end, minutes=minutes)
+        meta, df, maDict = chooser.get_intraday(symbol, start=start, end=end, minutes=minutes)
         if df.empty:
             if not isinstance(meta, int):
                 self.apiset.setValue('errorCode', str(meta['code']))
@@ -394,16 +394,7 @@ class FinPlot:
 
 def localRun():
     '''Just running through the paces'''
-
-    # tdy = dt.datetime.today()
-
-    fp = FinPlot()
-    fp.apiChooserList('20190903 093000', '20190903 091400')
-    # fp.apiChooser()
-    # odate = dt.datetime(2019, 1, 19, 9, 40)
-    # cdate = dt.datetime(2019, 1, 19, 16, 30)
-    # interval = 60
-
+    pass
 
 if __name__ == '__main__':
     localRun()

@@ -458,7 +458,7 @@ class SumControl(QMainWindow):
 
         fp.entries = fpentries
 
-        pname = fp.graph_candlestick(ticker, chooser.apiChooser(), begin, end, interval, save=pname)
+        pname = fp.graph_candlestick(ticker, chooser, begin, end, interval, save=pname)
         if pname:
             pixmap = QPixmap(pname)
             pixmap = pixmap.scaled(widg.width(), widg.height(), Qt.IgnoreAspectRatio)
