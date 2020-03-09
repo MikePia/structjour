@@ -164,11 +164,16 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if 'o' not in j.keys():
         meta['code'] = 666
         logging.error('Error-- no data')
-        return meta, pd.DataFrame, None
+        return meta, pd.DataFrame(), None
     assert set(['o', 'h', 'l', 'c', 't', 'v', 's']).issubset(set(j.keys()))
 
     d = {'open': j['o'], 'high': j['h'], 'low': j['l'],
          'close': j['c'], 'timestamp': j['t'], 'volume': j['v']}
+    if len(d['open']) == 0:
+        meta['code'] = 666
+        logging.error('Error-- no data')
+        return meta, pd.DataFrame(), None
+
     df = pd.DataFrame(data=d)
     tradeday = unix2pd(int(df.iloc[-1]['timestamp']))
     tzdelt = getNewyorkTZ(tradeday) * 60 * 60
