@@ -123,12 +123,8 @@ class runController:
         '''
         Load saved objects
         '''
-        # oldDate = self.loadedDate
-        # t = self.sc.windowTitle()
-        # if t[-1] == '*':
-        #     self.saveTradesQuestion(oldDate)
 
-        self.sc.doWeSave(yes=True)
+        self.sc.doWeSave()
         daDate = self.ui.dateEdit.date()
         daDate = qtime2pd(daDate)
         self.loadedDate = daDate
@@ -192,16 +188,13 @@ class runController:
         '''
         Load an initial input file and process it.
         '''
-        # t = self.sc.windowTitle()
-        # if t[-1] == '*':
-        #     self.saveTradesQuestion()
         self.sc.dateInSync = True
         if self.sc.ui.useDatabase.isChecked() and loaditrun is False:
             if not self.gotTrades():
                 return
             return self.loadit()
 
-        self.sc.doWeSave(yes=True)
+        self.sc.doWeSave()
         self.initialize()
         if not self.indir:
             logging.info('No file to load?')
@@ -296,19 +289,6 @@ class runController:
             msgbx.setText(msg)
             msgbx.exec()
             return
-
-    def saveTradesQuestion(self, oldDate):
-        msgBox = QMessageBox()
-        msgBox.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
-        name = self.sc.ui.tradeList.currentText()  # + oldDate.
-        msgBox.setText(f"User data for {name}  on {oldDate.strftime('%A %B %d')} has been modified.")
-        msgBox.setInformativeText("Do you want to commit your changes?")
-        msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
-        msgBox.setDefaultButton(QMessageBox.Save)
-        ret = msgBox.exec()
-
-        if ret == QMessageBox.Save:
-            self.sc.saveTradeObject(oldDate)
 
 
 def setuplog(settings):

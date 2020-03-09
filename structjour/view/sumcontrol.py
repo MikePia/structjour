@@ -898,15 +898,11 @@ class SumControl(QMainWindow):
         if ret == QMessageBox.Save:
             self.saveTradeObject(oldDate)
 
-    def doWeSave(self, yes=False):
-        # Changing this to always save if its marked changed. Preperation for automatic loading of days
+    def doWeSave(self):
+        # Always save if its marked changed.
         t = self.windowTitle()
         if t[-1] == '*':
             self.saveTradeObject(self.oldDate)
-            # if yes is True:
-            #     self.saveTradeObject(self.oldDate)
-            # else:
-            #     self.saveTradesQuestion(self.oldDate)
 
     def theDateChanged(self, val):
 
