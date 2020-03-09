@@ -189,8 +189,8 @@ class APIChooser:
         return None
 
     def get_intraday(self, symbol, start=None, end=None, minutes=5, showUrl=False):
-        self.apiChooserList(start, end)
-        for token in self.preferences:
+        api, vr, suggested = self.apiChooserList(start, end)
+        for token in suggested:
             self.api = token
             meta, df, ma = self.apiChooser()(symbol, start, end, minutes)
             if not df.empty:

@@ -31,7 +31,7 @@ from structjour.stock import utilities as util
 if util.checkForIbapi():
     from structjour.stock import myib as ib
 from structjour.stock.graphstuff import FinPlot, dummyName
-from structjour.stock.apichooser import APIChooser
+# from structjour.stock.apichooser import APIChooser
 from PyQt5.QtCore import QSettings
 
 
@@ -132,55 +132,56 @@ class TestGraphstuff(unittest.TestCase):
         fp.entries = entries
         fp.exits = exits
 
-    # @unittest.skipUnless(util.checkForIbapi(), 'Requires ibapi to run')
-    def test_graph_candlestick(self):
-        '''
-        Test the FinPlot.graph_candlestick method. Currently requires ibapi and is too complex to
-        be an effective test. Redo it
-        '''
-        fp = FinPlot()
-        # fp.interactive = True
-        fp.randomStyle = True
+    # # @unittest.skipUnless(util.checkForIbapi(), 'Requires ibapi to run')
+    # def test_graph_candlestick(self):
+    #     '''
+    #     Test the FinPlot.graph_candlestick method. Currently requires ibapi and is too complex to
+    #     be an effective test. Redo it
+    #     '''
+    #     fp = FinPlot()
+    #     # fp.interactive = True
+    #     fp.randomStyle = True
 
-        # trades = [
-        #     ['AAPL', 1, '2019-01-18 08:31', '2019-01-18 09:38', 1],
-        #     ['AMD', 2, '2019-01-18 08:32', '2019-01-18 09:41', 1],
-        #     ['NFLX', 3, '2019-01-18 09:39', '2019-01-18 09:46', 1],
-        #     ['NFLX', 4, '2019-01-18 09:47', '2019-01-18 09:51', 1]]
+    #     # trades = [
+    #     #     ['AAPL', 1, '2019-01-18 08:31', '2019-01-18 09:38', 1],
+    #     #     ['AMD', 2, '2019-01-18 08:32', '2019-01-18 09:41', 1],
+    #     #     ['NFLX', 3, '2019-01-18 09:39', '2019-01-18 09:46', 1],
+    #     #     ['NFLX', 4, '2019-01-18 09:47', '2019-01-18 09:51', 1]]
 
-        d = util.getPrevTuesWed(pd.Timestamp.now())
-        # d = pd.Timestamp('2019-02-25')
-        times = [['08:31', '09:38'],
-                 ['08:32', '09:41'],
-                 ['09:39', '12:46'],
-                 ['09:47', '13:51']]
+    #     d = util.getPrevTuesWed(pd.Timestamp.now())
+    #     # d = pd.Timestamp('2019-02-25')
+    #     times = [['08:31', '09:38'],
+    #              ['08:32', '09:41'],
+    #              ['09:39', '12:46'],
+    #              ['09:47', '13:51']]
 
-        tickers = []
-        for i in range(4):
-            tickers.append(getTicker())
+    #     tickers = []
+    #     for i in range(4):
+    #         tickers.append(getTicker())
 
-        trades = []
-        for count, (tick, time) in enumerate(zip(tickers, times)):
-            start = d.strftime('%Y-%m-%d ') + time[0]
-            end = d.strftime('%Y-%m-%d ') + time[1]
-            trades.append([tick, count + 1, start, end, 1])
-            # print (trades[-1])
-        for trade in trades:
-            start, end = fp.setTimeFrame(trade[2], trade[3], trade[4])
-            chooser = APIChooser(self.apiset)
-            (dummy, rules, apilist) = chooser.apiChooserList(trade[2], trade[3])
-            print(f'{apilist}/n{rules}')
-            minutes = 2
-            self.makeupEntries(trade[0], start, end, minutes, fp)
-            chooser = APIChooser(self.apiset)
-            name = fp.graph_candlestick(trade[0], chooser, start, end, minutes=minutes, save=name)
-            cwd = os.getcwd()
-            if name:
+    #     trades = []
+    #     for count, (tick, time) in enumerate(zip(tickers, times)):
+    #         start = d.strftime('%Y-%m-%d ') + time[0]
+    #         end = d.strftime('%Y-%m-%d ') + time[1]
+    #         trades.append([tick, count + 1, start, end, 1])
+    #         # print (trades[-1])
+    #     for trade in trades:
+    #         start, end = fp.setTimeFrame(trade[2], trade[3], trade[4])
+    #         chooser = APIChooser(self.apiset)
+    #         (dummy, rules, apilist) = chooser.apiChooserList(trade[2], trade[3])
+    #         print(f'{apilist}/n{rules}')
+    #         minutes = 2
+    #         self.makeupEntries(trade[0], start, end, minutes, fp)
+    #         chooser = APIChooser(self.apiset)
 
-                msg = 'error creating ' + name + " IN ", cwd
-                self.assertTrue(os.path.exists(name), msg)
-            else:
-                print('Failed to get data', fp.api)
+    #         name = fp.graph_candlestick(trade[0], chooser, start, end, minutes=minutes, save=dummyName(fp, ))
+    #         cwd = os.getcwd()
+    #         if name:
+
+    #             msg = 'error creating ' + name + " IN ", cwd
+    #             self.assertTrue(os.path.exists(name), msg)
+    #         else:
+    #             print('Failed to get data', fp.api)
 
     def test_setTimeFrame(self):
         '''

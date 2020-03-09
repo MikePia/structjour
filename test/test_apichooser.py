@@ -140,7 +140,7 @@ class TestAPIChooser(unittest.TestCase):
                 logging.info(meta)
             self.assertTrue(not df.empty, f"Failed to retrieve data from {token}. Have you exhausted the quota today?")
 
- 
+
 def notmain():
     t = TestAPIChooser()
     # t.test_apiChooserLimitReached()
