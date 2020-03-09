@@ -501,7 +501,7 @@ class SumControl(QMainWindow):
         x.join()
         self.markDataChanged()
         if self.chartErrorMessage:
-            self.warnNoApi()
+            self.warnChartError()
 
         elif self.tmpBegin is not None:
             self.ui.chart1Start.setDateTime(self.tmpBegin)
@@ -517,7 +517,7 @@ class SumControl(QMainWindow):
         x.join()
         self.markDataChanged()
         if self.chartErrorMessage:
-            self.warnNoApi()
+            self.warnChartError()
 
         elif self.tmpBegin is not None:
             self.ui.chart2Start.setDateTime(self.tmpBegin)
@@ -533,14 +533,14 @@ class SumControl(QMainWindow):
         x.join()
         self.markDataChanged()
         if self.chartErrorMessage:
-            self.warnNoApi()
+            self.warnChartError()
 
         elif self.tmpBegin is not None:
             self.ui.chart3Start.setDateTime(self.tmpBegin)
             self.ui.chart3End.setDateTime(self.tmpEnd)
             self.tmpBegin = self.tmpEnd = None
 
-    def warnNoApi(self):
+    def warnChartError(self):
         title = 'Warning'
         msgbx = QMessageBox(QMessageBox.Warning, title, self.chartErrorMessage, QMessageBox.Ok)
         msgbx.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
