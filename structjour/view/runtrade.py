@@ -80,8 +80,14 @@ class runController:
         self.inputtype = None
 
         self.ui.goBtn.pressed.connect(self.runnit)
-        self.ui.loadBtn.pressed.connect(self.loadit)
+        self.sc.ui.dateEdit.dateChanged.connect(self.theDateChanged)
+        # self.ui.loadBtn.pressed.connect(self.loadit)
         self.loadedDate = None
+    
+    def theDateChanged(self, val):
+        self.sc.theDateChanged(val)
+        if self.sc.ui.useDatabase.isChecked() and self.gotTrades():
+            self.runnit()
 
     def initialize(self):
         '''
@@ -143,7 +149,7 @@ class runController:
             msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
             msgbx.setText(msg)
             msgbx.exec()
-            self.runnit()
+            self.runnit(True)
 
     def runDBInput(self, daDate, jf):
         '''
@@ -165,41 +171,34 @@ class runController:
         statement.addTradeSummaries(lf.ts, ldf)
         return True
 
-    def runnitDB(self):
+    def gotTrades(self):
         '''
-        Load an initial input file and process it.
+        From the text in the infileEdit box, determine if we have
+        trades in the db. We can tell because the first token is an
+        int showing how many trades are held.
         '''
+        text = self.sc.ui.infileEdit.text()
+        if len(text):
+            try:
+                num = int(text.split(' ')[0])
+                if num > 0:
+                    return True
+            except Exception:
+                pass
+        return False
 
-        logging.info('did this go to the right file?')
-        self.initialize()
-        if not self.indir:
-            logging.info('No file to load?')
-            return
-        jf = JournalFiles(indir=self.indir, outdir=self.outdir, theDate=self.theDate,
-                          infile=self.infile, inputType=self.inputtype, infile2=self.positions,
-                          mydevel=True)
-        local = os.path.normpath(self.ui.infileEdit.text())
-        if os.path.normpath(jf.inpathfile) != local:
-            if os.path.exists(local):
-                d, jf.infile = os.path.split(local)
-                jf.inpathfile = local
-
-        if self.inputtype == 'IB_HTML':
-            jf.inputType = 'IB_HTML'
-            statement = IbStatement()
-            statement.openIBStatement(jf.inpathfile)
-        elif self.inputtype == 'DAS':
-            theDate = self.settings.value('theDate')
-            ds = DasStatement(jf.infile, self.settings, theDate)
-            ds.getTrades()
-
-    def runnit(self):
+    def runnit(self, loaditrun=False):
         '''
         Load an initial input file and process it.
         '''
         # t = self.sc.windowTitle()
         # if t[-1] == '*':
         #     self.saveTradesQuestion()
+        if self.sc.ui.useDatabase.isChecked() and loaditrun is False:
+            if not self.gotTrades():
+                return
+            return self.loadit()
+
         self.sc.doWeSave(yes=True)
         self.initialize()
         if not self.indir:
@@ -214,6 +213,9 @@ class runController:
 
             windowTitle = f'{self.sc.baseWindowTitle}: {self.sc.ui.infileEdit.text()}: no user data'
             self.sc.setWindowTitle(windowTitle)
+            if self.gotTrades():
+                self.sc.ui.useDatabase.setChecked(True)
+                self.sc.dbDefault(True)
             return
         local = os.path.normpath(self.ui.infileEdit.text())
         if os.path.normpath(jf.inpathfile) != local:
@@ -248,6 +250,8 @@ class runController:
                 gotToday = self.runDBInput(self.theDate, jf)
 
                 if gotToday:
+                    if self.gotTrades():
+                        self.sc.ui.dbDefault.setChecked()
                     return
                 else:
                     msg = f'<h3>No trades found on date {self.theDate.date()}</h3><ul> '
@@ -280,6 +284,8 @@ class runController:
             ds = DasStatement(jf.infile, self.settings, self.theDate)
             ds.getTrades()
             self.runDBInput(self.theDate, jf)
+            if self.gotTrades():
+                self.sc.ui.dbDefault.setChecked(True)
             return
         else:
             msg = '<h3>Unrecognized input:</h3><ul> '
@@ -317,7 +323,7 @@ def setuplog(settings):
             'Error': logging.ERROR,
             'Critical': logging.CRITICAL
             }
-            
+
     # Set a default log name if none is set
     logfile = settings.value('logfile', 'structjour.log')
     if logfile == 'structjour.log':

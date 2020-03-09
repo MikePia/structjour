@@ -201,7 +201,7 @@ class LayoutForms:
         '''
         if self.sc.ui.dasImport.isChecked() or self.sc.ui.ibImport.isChecked():
             self.sc.ui.useDatabase.setChecked(True)
-            self.sc.useDatabase(True)
+            self.sc.dbDefault(True)
             return 1
 
         ibdb = StatementDB()

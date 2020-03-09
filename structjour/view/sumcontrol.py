@@ -136,11 +136,11 @@ class SumControl(QMainWindow):
         self.ui.inFileBtn.pressed.connect(self.browseInfile)
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
-        self.ui.dateEdit.dateChanged.connect(self.theDateChanged)
+        # self.ui.dateEdit.dateChanged.connect(self.theDateChanged)
         # self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
-        self.ui.useDatabase.clicked.connect(self.useDatabase)
+        self.ui.useDatabase.clicked.connect(self.dbDefault)
 
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.lost.textEdited.connect(self.setMstkVal)
@@ -475,12 +475,12 @@ class SumControl(QMainWindow):
         errorCode = apiset.value('errorCode')
         errorMessage = apiset.value('errorMessage')
         if errorMessage:
-            mbox = QMessageBox()
+            # mbox = QMessageBox()
             msg = errorCode + '\n' + errorMessage
-            mbox.setText(msg)
-            mbox.exec()
-            apiset.setValue('code', '')
-            apiset.setValue('message', '')
+            # mbox.setText(msg)
+            # mbox.exec()
+            apiset.setValue('code', 8765)
+            apiset.setValue('message', msg)
 
         logging.info('Thread returning failed')
         return None
@@ -499,7 +499,7 @@ class SumControl(QMainWindow):
         elif self.tmpBegin is not None:
             self.ui.chart1Start.setDateTime(self.tmpBegin)
             self.ui.chart1End.setDateTime(self.tmpEnd)
-            self.tmpBegin = self.tmp.End = None
+            self.tmpBegin = self.tmpEnd = None
 
     def chartMagic2(self):
         '''Update button was pressed for chart2. We will get a chart using a stock api'''
@@ -515,7 +515,7 @@ class SumControl(QMainWindow):
         elif self.tmpBegin is not None:
             self.ui.chart2Start.setDateTime(self.tmpBegin)
             self.ui.chart2End.setDateTime(self.tmpEnd)
-            self.tmpBegin = self.tmp.End = None
+            self.tmpBegin = self.tmpEnd = None
 
     def chartMagic3(self):
         '''Update button was pressed for chart3. We will get a chart using a stock api'''
@@ -531,7 +531,7 @@ class SumControl(QMainWindow):
         elif self.tmpBegin is not None:
             self.ui.chart3Start.setDateTime(self.tmpBegin)
             self.ui.chart3End.setDateTime(self.tmpEnd)
-            self.tmpBegin = self.tmp.End = None
+            self.tmpBegin = self.tmpEnd = None
 
     def warnNoApi(self):
         title = 'Warning'
@@ -867,7 +867,7 @@ class SumControl(QMainWindow):
         self.settings.setValue('inputType', 'IB_HTML')
         self.loadFromDate()
 
-    def useDatabase(self, b):
+    def dbDefault(self, b):
         self.settings.setValue('dboutput', 'on')
         self.settings.setValue('inputType', 'DB')
         self.loadFromDate()
@@ -958,9 +958,10 @@ class SumControl(QMainWindow):
                         ibinfile = fs[0]
                         infile = fs[0]
                         self.settings.setValue('ibInfileName', ibinfile)
+
         elif inputType == 'DB':
             infile = 'DB'
-            self.ui.goBtn.setText('Read DB Data')
+            self.ui.goBtn.setText('Load DB Data')
             # dbDate = daDate.strftime('%Y%m%d')
             statementDb = StatementDB()
             count, t_count = statementDb.getNumTicketsforDay(daDate)
@@ -971,7 +972,6 @@ class SumControl(QMainWindow):
             self.ui.infileEdit.setText(s)
             if t_count:
                 self.ui.infileEdit.setStyleSheet('color: blue;')
-                self.ui.loadBtn.setStyleSheet('color: blue;')
                 statusstring = "Ready to load trades (press load or change the date)"
             elif count:
                 self.ui.infileEdit.setStyleSheet('color: green;')
@@ -979,7 +979,7 @@ class SumControl(QMainWindow):
                 statusstring = "Ready to process transactions (press go or change the date)"
             else:
                 self.ui.infileEdit.setStyleSheet('color: red;')
-                self.ui.loadBtn.setStyleSheet('color: black;')
+                # self.ui.loadBtn.setStyleSheet('color: black;')
                 self.ui.goBtn.setStyleSheet('color: black;')
                 statusstring = "No tickets or trades have been saved to the DB for this date"
             # statement = statementDb.getStatementDays(account, beg=daDate)
@@ -1026,12 +1026,11 @@ class SumControl(QMainWindow):
                 tm = os.path.getmtime(savename)
                 modstring = dt.datetime.fromtimestamp(tm).strftime('%d/%m/%y %H:%M')
                 statusstring = f'[{os.path.split(savename)[1]} ({modstring})]   '
-                self.ui.loadBtn.setStyleSheet('color: blue;')
                 statusstring = statusstring + ' or saved object ready to load.'
             else:
                 statusstring = statusstring + '.'
-                self.ui.loadBtn.setStyleSheet('color: black;')
-                self.ui.loadBtn.setStyleSheet('color: black;')
+                # self.ui.loadBtn.setStyleSheet('color: black;')
+                # self.ui.loadBtn.setStyleSheet('color: black;')
 
             d, xlname = os.path.split(savename)
             xlname = os.path.splitext(xlname)[0]

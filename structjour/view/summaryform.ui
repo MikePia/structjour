@@ -147,20 +147,6 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="loadBtn">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#2d04fa;&quot;&gt;Load the saved data.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string>Load</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout">
-            <item>
              <widget class="QPushButton" name="saveBtn">
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save all current data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

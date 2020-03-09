@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -96,19 +96,13 @@ class Ui_MainWindow(object):
         self.goBtn = QtWidgets.QPushButton(self.centralwidget)
         self.goBtn.setObjectName("goBtn")
         self.verticalLayout_2.addWidget(self.goBtn)
-        self.loadBtn = QtWidgets.QPushButton(self.centralwidget)
-        self.loadBtn.setObjectName("loadBtn")
-        self.verticalLayout_2.addWidget(self.loadBtn)
-        self.horizontalLayout_4.addLayout(self.verticalLayout_2)
-        self.verticalLayout = QtWidgets.QVBoxLayout()
-        self.verticalLayout.setObjectName("verticalLayout")
         self.saveBtn = QtWidgets.QPushButton(self.centralwidget)
         self.saveBtn.setObjectName("saveBtn")
-        self.verticalLayout.addWidget(self.saveBtn)
+        self.verticalLayout_2.addWidget(self.saveBtn)
         self.exportBtn = QtWidgets.QPushButton(self.centralwidget)
         self.exportBtn.setObjectName("exportBtn")
-        self.verticalLayout.addWidget(self.exportBtn)
-        self.horizontalLayout_4.addLayout(self.verticalLayout)
+        self.verticalLayout_2.addWidget(self.exportBtn)
+        self.horizontalLayout_4.addLayout(self.verticalLayout_2)
         self.inspireQuote = ClickBrowser(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
@@ -1277,8 +1271,6 @@ class Ui_MainWindow(object):
         self.ibImport.setText(_translate("MainWindow", "IB import"))
         self.goBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#00aa00;\">Load the transactions shown in the file edit box.</span></p></body></html>"))
         self.goBtn.setText(_translate("MainWindow", "GO"))
-        self.loadBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; color:#2d04fa;\">Load the saved data.</span></p></body></html>"))
-        self.loadBtn.setText(_translate("MainWindow", "Load"))
         self.saveBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Save all current data</p></body></html>"))
         self.saveBtn.setText(_translate("MainWindow", "Save"))
         self.exportBtn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Export data and graphs to an Excel file.</p></body></html>"))
