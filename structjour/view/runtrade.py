@@ -85,6 +85,7 @@ class runController:
         self.loadedDate = None
     
     def theDateChanged(self, val):
+        self.sc.dateInSync = False
         self.sc.theDateChanged(val)
         if self.sc.ui.useDatabase.isChecked() and self.gotTrades():
             self.runnit()
@@ -194,6 +195,7 @@ class runController:
         # t = self.sc.windowTitle()
         # if t[-1] == '*':
         #     self.saveTradesQuestion()
+        self.sc.dateInSync = True
         if self.sc.ui.useDatabase.isChecked() and loaditrun is False:
             if not self.gotTrades():
                 return

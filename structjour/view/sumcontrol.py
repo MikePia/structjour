@@ -193,6 +193,7 @@ class SumControl(QMainWindow):
         self.chartErrorMessage = ''
         self.tmpBegin = None
         self.tmpEnd = None
+        self.dateInSync = False
 
     # =================================================================
     # ==================== Main Form  methods =========================
@@ -379,6 +380,12 @@ class SumControl(QMainWindow):
 
         if not self.lf:
             logging.info('No trade to get chart for')
+            return None
+        if self.dateInSync is False:
+            msg = 'The date widget does not appear to be in sync with the loaded trades. Not going to retrieve chart data.'
+            self.chartErrorMessage = msg
+            msg += f'\n    {self.ui.dateEdit.date()}\n    {self.windowTitle()}'
+            logging.warning(msg)
             return None
         apiset = QSettings('zero_substance/stockapi', 'structjour')
         key = self.ui.tradeList.currentText()
