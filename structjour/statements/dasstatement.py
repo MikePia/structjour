@@ -493,7 +493,7 @@ class DasStatement:
                 pos = positions[(positions[rc.acct] == acntKey) & (positions[rc.ticker] == ticker)]
                 if ticker in pos[rc.ticker].unique():
                     assert pos[rc.ticker].unique()[0] == ticker
-                    holding = pos[rc.shares].unique()[0]
+                    holding = pos["Shares"].unique()[0]
                     offset = offset - holding
                 elif tdf[rc.shares].sum() != 0:
                     offset = tdf[rc.shares].sum()
@@ -535,8 +535,8 @@ class DasStatement:
         rc = self.rc
         self.theDate = pd.Timestamp(self.theDate)
         if not os.path.exists(self.infile):
-            self.infile = os.path.join(ff.getDirectory(self.theDate), self.infile)
-            self.positions = os.path.join(ff.getDirectory(self.theDate), self.positions)
+            self.infile = os.path.normpath(os.path.join(ff.getDirectory(self.theDate), self.infile))
+            self.positions = os.path.normpath(os.path.join(ff.getDirectory(self.theDate), self.positions))
         if not os.path.exists(self.infile):
             logging.warning(f'File does not exist: {self.infile}')
             return pd.DataFrame()
