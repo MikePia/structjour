@@ -20,7 +20,7 @@ Created on Oct 31, 2018
 
 @author: Mike Petersen
 '''
-# pylint: disable = C0103
+
 
 class TheStrategyObject(object):
     '''
@@ -182,7 +182,7 @@ it marks a reversal then this is the strategy:
         self.s2 = stratlist2
         self.strats = strats
 
-    def getStrat(self, index,  long=0):
+    def getStrat(self, index, long=0):
         tso = TheStrategyObject()
         if len(tso.s1[index]) > 1:
             return tso.s1[index][long]
@@ -198,5 +198,3 @@ it marks a reversal then this is the strategy:
             return self.strats[self.getStrat(i, 0)][1]
         else:
             return None
-
-

@@ -24,9 +24,8 @@ Created on September 20, 2019
 
 from PyQt5.QtWidgets import QTextBrowser
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import  QContextMenuEvent
+from PyQt5.QtGui import QContextMenuEvent
 
-# pylint: disable = C0103
 
 class ClickBrowser(QTextBrowser):
     '''Add a context menu to a QLabel'''

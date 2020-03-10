@@ -1,6 +1,6 @@
 import setuptools
 from shutil import copyfile
-import os
+# import os
 
 copyfile('readme.md', 'structjour/readme.md')
 

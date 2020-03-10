@@ -87,7 +87,7 @@ class SumReqFields:
         # pylint: disable = C0301
         rcvals = ['Name', 'Account', 'Strategy', 'Link1',
                   'P/LHead', 'PnL', 'StartHead', 'Start', 'DurHead', 'Duration', 'ShareHead', 'Shares', 'MktHead', 'MktVal',
-                  'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff', 'RRHead', 'RR', 'MaxHead', 'MaxLoss',
+                  'TargHead', 'Target', 'TargDiff', 'StopHead', 'StopLoss', 'SLDiff', 'RRHead', 'RR', 'RealRR', 'MaxHead', 'MaxLoss',
                   'MstkHead', 'MstkVal', 'MstkNote',
 
                   'EntryHead', 'Entry1', 'Entry2', 'Entry3', 'Entry4', 'Entry5', 'Entry6', 'Entry7', 'Entry8',
@@ -101,7 +101,7 @@ class SumReqFields:
 
         rckeys = ['name', 'acct', 'strat', 'link1',
                   'plhead', 'pl', 'starthead', 'start', 'durhead', 'dur', 'sharehead', 'shares', 'mkthead', 'mktval',
-                  'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff', 'rrhead', 'rr', 'maxhead', 'maxloss',
+                  'targhead', 'targ', 'targdiff', 'stophead', 'stoploss', 'sldiff', 'rrhead', 'rr', 'realrr', 'maxhead', 'maxloss',
                   'mstkhead', 'mstkval', 'mstknote',
 
                   'entryhead', 'entry1', 'entry2', 'entry3', 'entry4', 'entry5', 'entry6', 'entry7', 'entry8',
@@ -118,7 +118,7 @@ class SumReqFields:
                  'MstkNote', 'Explain', 'Notes', 'Date', 'id']
 
         dbkeys = ['name', 'acct', 'strat', 'link1', 'pl', 'start', 'dur', 'shares',
-        'mktval', 'targ', 'targdiff', 'stoploss', 'sldiff', 'rr', 'maxloss', 'mstkval',
+        'mktval', 'targ', 'targdiff', 'stoploss', 'sldiff', 'rr', 'realrr' 'maxloss', 'mstkval',
         'mstknote', 'explain', 'notes', 'date', 'id']
 
         self.tcols = dict(zip(dbkeys, dbvals))
@@ -160,6 +160,7 @@ class SumReqFields:
 
         self.rrhead = rc['rrhead']
         self.rr = rc['rr']
+        self.realrr = rc['realrr']
 
         self.maxhead = rc['maxhead']
         self.maxloss = rc['maxloss']

@@ -1,5 +1,5 @@
 '''
-Created this module to mess with my own saved objects which needed updating as 
+Created this module to mess with my own saved objects which needed updating as
 structjour evolved. Its currenlty not used for anything but some of this might
 be useful starting point. The load from xl stuff for example. Saving and loading
 everything from DB now. But Edits done in excel have no current path to the db.
@@ -19,9 +19,9 @@ from PyQt5.QtWidgets import QApplication
 from structjour.discipline.disciplined import getTradeSummary, getTradeTable
 from structjour.view.dailycontrol import DailyControl
 
-# pylint: disable = C0103
 
 app = QApplication(sys.argv)
+
 
 class manageSavedStuff:
     '''
@@ -42,7 +42,7 @@ class manageSavedStuff:
         scheme = self.settings.value('scheme')
         self.frmt = scheme.format(Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
 
-    def getIbInfiles(self,  indir):
+    def getIbInfiles(self, indir):
         '''
         Using the glob for ib files in settings, search for ib files in the directory indir
         '''
@@ -61,9 +61,7 @@ class manageSavedStuff:
             x = re.search((rgx), f)
             if x:
                 fs.append(x.string)
-        if len(fs) > 1:
-            msg = '<h3>You have matched multiple files:</h3><ul> '
-        
+
         return fs
 
     def getSaveName(self, infile, theDate):
@@ -98,7 +96,6 @@ class manageSavedStuff:
         for ts, entries, df, fname, note, key in zip(tslist, fpentries, dframelist, fnameslist, dailynoteslist, keylist):
             self.pickleADay(ts, entries, df, fname, note, key)
 
-
     def loadXlFileAsTS(self, sumList):
         '''
         Deprecated
@@ -109,8 +106,6 @@ class manageSavedStuff:
         Finally let the user load it to DB.
         '''
 
-        from structjour.thetradeobject import TheTradeObject, SumReqFields
-
         ldflist = list()
         dframelist = list()
         dailynoteslist = list()
@@ -118,7 +113,7 @@ class manageSavedStuff:
         tslist = list()
         fnameslist = list()
         keylist = list()
-        srf = SumReqFields()
+        # srf = SumReqFields()
         for key in sumList:
             outdirfrmt = self.frmt + 'out/'
             outdir = key.strftime(outdirfrmt)
@@ -150,7 +145,7 @@ class manageSavedStuff:
         Relies on the structjour file layout implemented using the 'scheme' and 'journal' settings.
         :begin: Earliest input file day
         '''
-        if not  os.path.exists(self.basedir):
+        if not os.path.exists(self.basedir):
             return
         os.chdir(self.basedir)
         # prefix=prefix
@@ -162,7 +157,7 @@ class manageSavedStuff:
         sumfiles = dict()
 
         while now >= theDate:
-            indir=theDate.strftime(self.frmt)
+            indir = theDate.strftime(self.frmt)
             infiles = list()
             indir = os.path.join(self.basedir, indir)
             filesfordate = list()
@@ -184,25 +179,25 @@ class manageSavedStuff:
                         inf = os.path.splitext(inf)[0]
                         savedfile = self.getSaveName(inf, theDate)
                         for f in fnames:
-                            if f.startswith(inf) and  f.endswith('.xlsx'):
+                            if f.startswith(inf) and f.endswith('.xlsx'):
                                 xlfiles.append(f)
-                        if not savedfile in fnames:
+                        if savedfile not in fnames:
                             savedfile = ''
-                    filesfordate.append([inf, xlfiles, savedfile])    
+                    filesfordate.append([inf, xlfiles, savedfile])
             sumfiles[theDate] = filesfordate
-            theDate = theDate+delt
+            theDate = theDate + delt
         return sumfiles
+
 
 def main():
     settings = QSettings('zero_substance', 'structjour')
     begin = pd.Timestamp('2018-10-25')
 
     t = manageSavedStuff(settings)
-    l = t.gatherDailySumList(begin)
+    t.gatherDailySumList(begin)
     # everything = t.loadXlFileAsTS(l)
     # df = get
 
-# os.listdir()
 
 if __name__ == '__main__':
     main()

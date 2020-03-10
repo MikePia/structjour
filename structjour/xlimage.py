@@ -26,7 +26,7 @@ import os
 from PIL import Image as PILImage
 from PIL import ImageGrab
 from openpyxl.drawing.image import Image
-# pylint: disable=C0103
+
 
 class XLImage:
     '''Handle image stuff'''
@@ -54,8 +54,7 @@ class XLImage:
         self.pixPerCell = pixPerCell
         self.name = None
 
-
-    def adjustSizeByHeight(self, sz, cells = None):
+    def adjustSizeByHeight(self, sz, cells=None):
         '''
         Adjust size to keep the aspect ratio the same as determined by self.numCells and
         self.pixPerCell
@@ -63,7 +62,7 @@ class XLImage:
         w, h = sz
         cells = cells if cells else self.numCells
         newHeight = cells * self.pixPerCell
-        newWidth = newHeight * w/h
+        newWidth = newHeight * w / h
         nw = int(newWidth)
         nh = int(newHeight)
         return(nw, nh)
@@ -76,13 +75,13 @@ class XLImage:
     def getPilImageNoDramaForReal(self, name):
         '''
         '''
-        #Setting  a default size for this method-- this should go in pref somehow
+        # Setting  a default size for this method-- this should go in pref somehow
         img = None
         try:
 
             pilImage = ImageGrab.grabclipboard()
             if not pilImage:
-                return None, 'Failed to retrieve image from clipboard.' 
+                return None, 'Failed to retrieve image from clipboard.'
             nn, ext = os.path.splitext(name)
             pilImage.save(name, ext[1:])
 
@@ -95,7 +94,7 @@ class XLImage:
             return None, e.__str__()
 
         return img, name
-    
+
     def getPilImageNoDrama(self, name, outdir):
         '''
         Grab the contents of the clipboard to image. Warn the user if no image is retrieved. Then
@@ -106,7 +105,7 @@ class XLImage:
                             message
         '''
 
-        #Setting  a default size for this method-- this should go in pref somehow
+        # Setting  a default size for this method-- this should go in pref somehow
         CELLS = 33
         img = None
         try:
@@ -117,7 +116,7 @@ class XLImage:
             pilImage = ImageGrab.grabclipboard()
             # ext = pilImage.format.lower()
             if not pilImage:
-                return None, 'Failed to retrieve image from clipboard.' 
+                return None, 'Failed to retrieve image from clipboard.'
             newSize = self.adjustSizeByHeight(pilImage.size, CELLS)
             pilImage = pilImage.resize(newSize, PILImage.ANTIALIAS)
 
@@ -143,10 +142,11 @@ class XLImage:
         :return: A tuple (newFileName, extension)
         '''
         import re
+
         def resub(s):
             '''Callable for re.sub. I am sure there is very cool concise re thing to do this but wtf.'''
-            digit = s.string[s.span()[0]+1:s.span()[1]-1]
-            digit = str((int(digit)+1))
+            digit = s.string[s.span()[0] + 1:s.span()[1] - 1]
+            digit = str((int(digit) + 1))
             return '(' + digit + ')'
 
         orig = orig.replace(":", "-")
@@ -161,7 +161,6 @@ class XLImage:
             # count += 1
             if os.path.exists(newName):
 
-        
                 nn, ext = os.path.splitext(newName)
                 nn2 = re.sub('\\((-?\\d+)\\)', resub, nn)
                 if nn2 == nn:

@@ -40,7 +40,6 @@ class EJControl(QDialog):
     def __init__(self):
         super().__init__()
 
-
         ui = EjDlg()
         ui.setupUi(self)
         self.ui = ui
@@ -73,4 +72,3 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = EJControl()
     # sys.exit(app.exec_())
-    

@@ -26,7 +26,7 @@ import re
 import pandas as pd
 from PyQt5.QtCore import QSettings, QDate, QDateTime
 from structjour.stock.utilities import qtime2pd
-# pylint: disable = C0103
+
 
 class FindFiles:
     '''
@@ -37,11 +37,12 @@ class FindFiles:
     def __init__(self):
         self.settings = QSettings('zero_substance', 'structjour')
 
+
 def checkDateDir(infile):
     '''
     Get the date from the path
     '''
-    settings = QSettings('zero_substance', 'structjour')
+    # settings = QSettings('zero_substance', 'structjour')
     directory = getDirectory()
     indir, f = os.path.split(infile)
     if not os.path.normpath(directory) == os.path.normpath(indir):
@@ -59,8 +60,8 @@ def parseDate(fn, lenJournalDir, scheme):
     '''
     fn = os.path.normpath(fn)
     directory, f = os.path.split(fn)
-    vals = re.findall('\{(.+?)\}', scheme)
-    vals2 = re.findall('\d+', directory)
+    vals = re.findall('\\{(.+?)\\}', scheme)
+    vals2 = re.findall('\\d+', directory)
     vals2 = ''.join(vals2)
     removeme = ['YEAR', 'MONTH', 'DAY']
     for r in removeme:
@@ -94,11 +95,13 @@ def parseDate(fn, lenJournalDir, scheme):
     d = pd.Timestamp(year, month, day)
     return d
 
+
 def getBaseDir(nothing=None):
     '''Get the journal base directory using settings'''
     ff = FindFiles()
     journal = ff.settings.value('journal')
     return journal
+
 
 def getMonthDir(daDate=None):
     '''Get the monthe in the journal subdirs that represents the month from daDate '''
@@ -128,6 +131,7 @@ def getMonthDir(daDate=None):
         return None
     inpath = os.path.join(journal, schemeFmt)
     return inpath
+
 
 def getDirectory(daDate=None):
     '''
@@ -160,6 +164,7 @@ def getDirectory(daDate=None):
     inpath = os.path.join(journal, schemeFmt)
     return inpath
 
+
 def findFilesInDir(direct, fn, searchParts):
     '''
     Find the files in direct that match fn, either exactly or including the same parts.
@@ -191,6 +196,7 @@ def findFilesInDir(direct, fn, searchParts):
 
     return found
 
+
 def findFilesInMonth(daDate, fn, searchParts, DAS=False):
     '''
     Match the file in the given month that contain the name fn. Relies on
@@ -205,7 +211,7 @@ def findFilesInMonth(daDate, fn, searchParts, DAS=False):
     delt = pd.Timedelta(days=1)
     current = m
     files = []
-    dasfiles = []
+    # dasfiles = []
     currentMonth = current.month
     while True:
         if current.month != currentMonth:
@@ -227,6 +233,7 @@ def findFilesInMonth(daDate, fn, searchParts, DAS=False):
 
         current = current + delt
     return files
+
 
 def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True, DAS=False):
     '''
@@ -254,9 +261,9 @@ def findFilesSinceMonth(daDate, fn, freq='DailyDir', searchParts=True, DAS=False
             files.extend(addme)
         month = current.month
         if month == 12:
-            current = pd.Timestamp(current.year+1, 1, 1)
+            current = pd.Timestamp(current.year + 1, 1, 1)
         else:
-            current = pd.Timestamp(current.year, month+1, 1)
+            current = pd.Timestamp(current.year, month + 1, 1)
     return files
 
     # def findDasFilesSinceMonth

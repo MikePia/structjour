@@ -24,10 +24,7 @@ Created on April 8, 2019
 
 from PyQt5.QtWidgets import QTextEdit, QAction, QLabel
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import  QContextMenuEvent
-
-# pylint: disable = C0103
-
+from PyQt5.QtGui import QContextMenuEvent
 
 
 class MyTextEdit(QTextEdit):
@@ -39,7 +36,6 @@ class MyTextEdit(QTextEdit):
         stdMenu = self.createStandardContextMenu()
         commitAction = QAction("Commit", self)
         commitAction.setShortcut("Ctrl+S")
-
 
         stdMenu.addAction(commitAction)
         action = stdMenu.exec(event.globalPos())

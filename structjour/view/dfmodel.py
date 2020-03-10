@@ -15,8 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
-A Pandas data model for qt model/view. 
-From ellyansic's answer on SO 
+A Pandas data model for qt model/view.
+From ellyansic's answer on SO
 Created on Apr 16, 2019
 @author: Mike Petersen
 '''
@@ -26,11 +26,12 @@ from PyQt5 import QtCore
 import pandas as pd
 from PyQt5.QtCore import QAbstractTableModel
 
+
 class PandasModel(QAbstractTableModel):
     '''
     A gift from Stack. Seems to work well
     '''
-    def __init__(self, df = pd.DataFrame(), parent=None): 
+    def __init__(self, df=pd.DataFrame(), parent=None):
         QAbstractTableModel.__init__(self, parent=parent)
         self._df = df
 
@@ -85,7 +86,7 @@ class PandasModel(QAbstractTableModel):
         self._df.set_value(row, col, value)
         return True
 
-    def rowCount(self, parent=QtCore.QModelIndex()): 
+    def rowCount(self, parent=QtCore.QModelIndex()):
         if self._df is None:
             return 0
         return len(self._df.index)
@@ -98,6 +99,6 @@ class PandasModel(QAbstractTableModel):
     def sort(self, column, order):
         colname = self._df.columns.tolist()[column]
         self.layoutAboutToBeChanged.emit()
-        self._df.sort_values(colname, ascending= order == QtCore.Qt.AscendingOrder, inplace=True)
+        self._df.sort_values(colname, ascending=order == QtCore.Qt.AscendingOrder, inplace=True)
         self._df.reset_index(inplace=True, drop=True)
         self.layoutChanged.emit()

@@ -29,7 +29,6 @@ import sys
 from openpyxl import load_workbook
 
 from PyQt5.QtGui import QIcon
-from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QDialog
 from PyQt5.QtCore import QSettings
 
@@ -37,7 +36,6 @@ from structjour.discipline.disciplined import registerTrades
 from structjour.stock.utilities import qtime2pd, pd2qtime
 from structjour.view.disciplinedform import Ui_Dialog as DisciplineDialog
 
-# pylint: disable = C0103
 
 class DisciplineControl(QDialog):
     '''
@@ -46,7 +44,6 @@ class DisciplineControl(QDialog):
     def __init__(self):
         super().__init__(parent=None)
 
-
         self.ui = DisciplineDialog()
         self.ui.setupUi(self)
         # self.setWindowTitle('Database Tool')
@@ -54,13 +51,11 @@ class DisciplineControl(QDialog):
         self.setWindowIcon(QIcon("structjour/images/ZSLogo.png"))
 
         self.settings = QSettings('zero_substance', 'structjour')
-        
 
         self.ui.startBtn.pressed.connect(self.start)
         today = pd.Timestamp.today().date()
         today = pd2qtime(today, qdate=True)
         self.ui.importDateEdit.setDate(today)
-
 
     def start(self):
         if not self.settings.value('disciplined'):
@@ -69,7 +64,7 @@ class DisciplineControl(QDialog):
         fn = self.settings.value('disciplined')
         if not os.path.exists(fn):
             msg = f'Your set file: {fn} does not exist'
-            msg +='\nPlease re-set your disciplined file location in file->settings'
+            msg += '\nPlease re-set your disciplined file location in file->settings'
             self.ui.showResults.setText(msg)
             return
         if not self.ui.importDateRadio.isChecked() and not self.ui.importSinceDateRadio.isChecked():
@@ -87,7 +82,7 @@ class DisciplineControl(QDialog):
                     msg = f'''Processed date: {current.strftime('%A, %B %d, %Y')}'''
                 self.ui.showResults.append(msg)
                 # self.ui.showResults.update()
-                QApplication.processEvents() #update gui for pyqt
+                QApplication.processEvents()   # update gui for pyqt
                 current += delt
         else:
             msg = registerTrades(wb, begin)
@@ -97,14 +92,11 @@ class DisciplineControl(QDialog):
 
         wb.save(fn)
         self.ui.showResults.append('done!')
-    
-        
-
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    w  = DisciplineControl()
+    w = DisciplineControl()
     w.show()
     # w.runDialog()
 

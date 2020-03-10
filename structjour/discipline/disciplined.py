@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 import datetime as dt
+import logging
 import os
 from openpyxl import load_workbook
 
@@ -78,7 +79,8 @@ class DisReqCol(object):
         self.rc = rc
         self.tfcolumns = tfcolumns
 
-def doctorTheTrade(newdf, daDate, ts,  fname):
+
+def doctorTheTrade(newdf, daDate, ts, fname):
     '''
     Fix up the time entries to contain the dates as Timestamps and charts entries. Plan not to try
     to deal with the whole excel related files. The specs for which images go where are non-
@@ -87,7 +89,7 @@ def doctorTheTrade(newdf, daDate, ts,  fname):
     in chart2 and chart3
     '''
     for i in range(0, 8):
-        key = 'Time' + str(i+1)
+        key = 'Time' + str(i + 1)
         if newdf[key].any():
             val = newdf[key].unique()[0]
             datestring = daDate.strftime('%Y-%m-%d ')
@@ -109,8 +111,8 @@ def doctorTheTrade(newdf, daDate, ts,  fname):
             pass
     outdir, n = os.path.split(fname)
     for key in ts:
-        tto = ts[key]
-        thechart = None
+        # tto = ts[key]
+        # thechart = None
         if not os.path.exists(outdir):
             break
         filelist = os.listdir(outdir)
@@ -119,7 +121,7 @@ def doctorTheTrade(newdf, daDate, ts,  fname):
             tradekey = f'trade{num}_'
             if tradekey in fn.lower():
                 '''We have to bring the fromat into the the 2019s and add the keys we now use'''
-                thechart = os.path.join(outdir, fn)
+                # thechart = os.path.join(outdir, fn)
                 now = pd.Timestamp.today()
                 ts[key]['chart1'] = fn
                 ts[key]['chart1Start'] = now
@@ -135,6 +137,7 @@ def doctorTheTrade(newdf, daDate, ts,  fname):
                 ts[key]['chart3'] = 'The animated parrot complaint deptment chart'
                 break
     return newdf
+
 
 def loadTradeSummaries(loc, trades):
     '''
@@ -163,20 +166,21 @@ def loadTradeSummaries(loc, trades):
             cell = tcell(cell, anchor=(1, rowNum))
             newdf.iloc[-1][reqCol[key]] = trades[cell].value
 
-        tradekey = str(i+1) + ' ' +  newdf.iloc[0].Name
+        tradekey = str(i + 1) + ' ' + newdf.iloc[0].Name
         ts[tradekey] = newdf
         ldf.append(newdf)
     return ldf, ts
 
+
 def getTradeSummaryFormLocations(ws):
     '''
-    Find the Trade Summary Forms within the excel doc and save their location in tradeLoc 
+    Find the Trade Summary Forms within the excel doc and save their location in tradeLoc
     trades.max_row
     :params:ws: The openpyxl Worksheet object to search
     '''
     loc = list()
 
-    #Search for trade names like 'AAPL Short' in column A. Save the cell for each to loc
+    # Search for trade names like 'AAPL Short' in column A. Save the cell for each to loc
     for row in ws.iter_rows():
         val = row[0].value
         if val and len(val) > 3 and len(val) < 15:
@@ -185,11 +189,12 @@ def getTradeSummaryFormLocations(ws):
                 loc.append(r)
     return loc
 
+
 def getAvgExit(trade):
     '''We want to display jut one exit in the Trade log. It might as well be the average
     exit when we scale out. If there are more than 8 combined entries and exits--could be
     a problem
-    TODO: track down the note for more entrances/exits than 8 -- It may be complicated-- 
+    TODO: track down the note for more entrances/exits than 8 -- It may be complicated--
     entered a bug--classic procrastination
     '''
     product = 0
@@ -205,12 +210,12 @@ def getAvgExit(trade):
             positions.append(p)
             try:
                 assert(positions[-1])
-            except:
+            except AssertionError:
                 logging.error(
                     "Found empty shares in an exit-- this may be an overnight trade")
             product = product + (x * p)
 
-    return 0 if sum(positions) == 0 else product/sum(positions)
+    return 0 if sum(positions) == 0 else product / sum(positions)
 
 
 def gotAnyExits(trade):
@@ -223,6 +228,7 @@ def gotAnyExits(trade):
         if trade[ex].unique()[0]:
             return True
     return False
+
 
 def getWeekCount(theDate):
     '''
@@ -239,14 +245,15 @@ def getWeekCount(theDate):
 
         if(startMonth.weekday() == 4):
             startCounting = True
-        if startCounting == True and startMonth.weekday() == 0:
+        if startCounting is True and startMonth.weekday() == 0:
             weekCount = weekCount + 1
-        startMonth = startMonth+delt
+        startMonth = startMonth + delt
     return weekCount
+
 
 def getDevelDailyJournalList(prefix, begin):
     '''
-    
+
     :return: A list of filenames with dates[[filename, date], [filename2, date2]]...
     '''
     thelist = list()
@@ -263,12 +270,13 @@ def getDevelDailyJournalList(prefix, begin):
         current += delt
     return thelist
 
+
 def recreateFPEntries(ts):
     fpentries = dict()
     entry = list()
     for key in ts:
         entry = list()
-        for i in range(1,9):
+        for i in range(1, 9):
             price = side = dtime = None
             entrykey = 'Entry' + str(i)
             exitkey = 'Exit' + str(i)
@@ -285,11 +293,12 @@ def recreateFPEntries(ts):
 
             if ts[key][timekey].item():
                 dtime = ts[key][timekey].item()
-            if price == None and side == None and dtime == None:
+            if price is None and side is None and dtime is None:
                 break
             entry.append([price, 'deprecated', side, dtime])
         fpentries[key] = entry
     return fpentries
+
 
 def getTradeSummary(fname, daDate):
     '''
@@ -298,23 +307,24 @@ def getTradeSummary(fname, daDate):
     field, A mistake summary form, a daily summary form and a trade summary form for each trade.
     :return: (ldf, ts, fpentries) ldf is a list of DataFrames, each containg the transactions for
             a trade. ts is a Dictionary containng the Trade summary information, including user
-            input for things like target and stop loss and names of charts. fpentries, a dict 
+            input for things like target and stop loss and names of charts. fpentries, a dict
             with the entries for each trade. ts and fpentries share the same keys.
-    ''' 
+    '''
     wb = load_workbook(fname)
     ws = wb.active
     tradeLoc = getTradeSummaryFormLocations(ws)
     ldf, ts = loadTradeSummaries(tradeLoc, ws)
     fpentries = recreateFPEntries(ts)
     for tdf in ldf:
-        tdf = doctorTheTrade(tdf, daDate, ts, fname) 
+        tdf = doctorTheTrade(tdf, daDate, ts, fname)
     return ldf, ts, fpentries
+
 
 def doctorThetable(df, daDate):
     '''Add a Date field if its missing'''
 
     if 'Date' not in df.columns:
-        d = daDate
+        # d = daDate
         for i, row in df.iterrows():
             if not row.Time:
                 break
@@ -329,10 +339,11 @@ def doctorThetable(df, daDate):
 
     return df
 
+
 def getTradeTable(fname, daDate):
     wb = load_workbook(fname)
     ws = wb.active
-    
+
     data = list()
     columns = list()
     start = False
@@ -352,7 +363,7 @@ def getTradeTable(fname, daDate):
                 if val:
                     notes = val
                     gotsomething = True
-            elif val and gotitforsure == False and val != 'Tindex':
+            elif val and gotitforsure is False and val != 'Tindex':
                 notes = val
                 gotitforsure = True
 
@@ -360,7 +371,7 @@ def getTradeTable(fname, daDate):
         if val and val == 'Tindex':
             start = True
             for cval in row:
-                if cval.value == None:
+                if cval.value is None:
                     collen = len(columns)
                     break
                 columns.append(cval.value)
@@ -377,12 +388,13 @@ def getTradeTable(fname, daDate):
                 start = False
         elif tot1:
             for i in range(0, collen):
-                    darow.append(row[i].value)
+                darow.append(row[i].value)
             data.append(darow)
             break
     dframe = pd.DataFrame(data=data, columns=columns)
     dframe = doctorThetable(dframe, daDate)
     return dframe, notes
+
 
 def registerTradesOLD(tsList, wb):
     for fname, theDate in tsList:
@@ -392,7 +404,7 @@ def registerTradesOLD(tsList, wb):
         tradeLocation = getTradeSummaryFormLocations(trades)
 
         ldf, ts = loadTradeSummaries(tradeLocation, trades)
-        
+
         drc = DisReqCol(theDate)
 
         tlog = wb["Trade Log"]
@@ -401,8 +413,8 @@ def registerTradesOLD(tsList, wb):
         ix = -2
         cols = drc.tfcolumns
         # Here is a list of the keys to use cols.keys() of the trade log DataFrame
-        #['date', 'time', 'side', 'symb', 'entry1', 'acctbal', 'shares',
-        #'stoploss', 'targ', 'avgexit', 'pl', 'notes'])
+        # ['date', 'time', 'side', 'symb', 'entry1', 'acctbal', 'shares',
+        # 'stoploss', 'targ', 'avgexit', 'pl', 'notes'])
         # Not bothering with the abstraction (drc.name) because this is entirely ours.
 
         srf = SumReqFields()
@@ -410,7 +422,7 @@ def registerTradesOLD(tsList, wb):
         for row in tlog.iter_rows():
             anchor = (1, row[0].row)
 
-            if startSearch == True:
+            if startSearch is True:
                 if not row[0].value:
                     startSearch = False
                     ix = 0
@@ -422,32 +434,32 @@ def registerTradesOLD(tsList, wb):
                 if not gotAnyExits(tdf):
                     continue
 
-                #date
+                # date
                 cell = tcell(cols['date'][0], anchor=anchor)
                 tlog[cell] = theDate
 
-                #time
+                # time
                 cell = tcell(cols['time'][0], anchor=anchor)
                 tim = tdf[srf.start].unique()[0]
                 tlog[cell] = tim
 
-                #side
+                # side
                 name = tdf[srf.name].unique()[0]
                 if name:
                     cell = tcell(cols['side'][0], anchor=anchor)
                     tlog[cell] = name.split()[1]
 
-                #symb
+                # symb
                 cell = tcell(cols['symb'][0], anchor=anchor)
                 tlog[cell] = name.split()[0]
 
-                #entry1
+                # entry1
                 cell = tcell(cols['entry1'][0], anchor=anchor)
                 tlog[cell] = tdf[srf.entry1].unique()[0]
 
-                #Account Balance (setting an excel formula)
+                # Account Balance (setting an excel formula)
                 cell = tcell(cols['acctbal'][0], anchor=anchor)
-                formula = "=$M$3+SUM($N$7:$N{})".format(row[0].row-1)
+                formula = "=$M$3+SUM($N$7:$N{})".format(row[0].row - 1)
                 tlog[cell] = formula
 
                 # "shares"
@@ -456,21 +468,21 @@ def registerTradesOLD(tsList, wb):
                 if len(shares) > 0:
                     try:
                         ishares = int(shares)
-                    except:
+                    except ValueError:
                         ishares = 0
                 tlog[cell] = ishares
 
-                #stoploss
+                # stoploss
                 cell = tcell(cols['stoploss'][0], anchor=anchor)
                 sl = tdf[srf.stoploss].unique()[0]
                 tlog[cell] = sl
 
-                #target
+                # target
                 cell = tcell(cols['targ'][0], anchor=anchor)
                 target = tdf[srf.targ].unique()[0]
                 tlog[cell] = target
 
-                #avgExit
+                # avgExit
                 cell = tcell(cols['avgexit'][0], anchor=anchor)
                 tlog[cell] = getAvgExit(tdf)
 
@@ -484,7 +496,6 @@ def registerTradesOLD(tsList, wb):
                 strat = tdf[srf.strat].unique()[0]
                 tlog[cell] = strat
 
-
                 # notes (from the mistake note field)
                 cell = tcell(cols['notes'][0], anchor=anchor)
                 note = tdf[srf.mstknote].unique()[0]
@@ -493,6 +504,7 @@ def registerTradesOLD(tsList, wb):
                 ix = ix + 1
                 if ix == len(ldf):
                     break
+
 
 def registerTrades(wb, theDate):
 
@@ -507,8 +519,7 @@ def registerTrades(wb, theDate):
 
     ts, entries = ibdb.getTradeSummaries(theDate)
     # self.ts = setTradeSummaryHeaders(ts)
-    
-        
+
     drc = DisReqCol(theDate)
 
     tlog = wb["Trade Log"]
@@ -518,8 +529,8 @@ def registerTrades(wb, theDate):
     ix = -2
     cols = drc.tfcolumns
     # Here is a list of the keys to use cols.keys() of the trade log DataFrame
-    #['date', 'time', 'side', 'symb', 'entry1', 'acctbal', 'shares',
-    #'stoploss', 'targ', 'avgexit', 'pl', 'notes'])
+    # ['date', 'time', 'side', 'symb', 'entry1', 'acctbal', 'shares',
+    # 'stoploss', 'targ', 'avgexit', 'pl', 'notes'])
     # Not bothering with the abstraction (drc.name) because this is entirely ours.
 
     srf = SumReqFields()
@@ -527,10 +538,10 @@ def registerTrades(wb, theDate):
     ids = list()
 
     for row in tlog.iter_rows():
-        #Unconventional loop stuff 
+        # Unconventional loop stuff
         anchor = (1, row[0].row)
         keys = list(ts.keys())
-        if startSearch == True:
+        if startSearch is True:
             idcol = cols['id'][0][0] - 1
             if row[idcol].value:
                 ids.append(row[idcol].value)
@@ -540,47 +551,46 @@ def registerTrades(wb, theDate):
 
         if row[0].value == 'Date':
             startSearch = True
-        
 
         if ix >= 0 and ix < len(keys):
-            
+
             while True and ix < len(keys):
                 key = keys[ix]
                 tdf = ts[key]
                 if not gotAnyExits(tdf) or tdf['id'].unique()[0] in ids or (
-                    tdf['Account'].unique()[0] != account):
+                        tdf['Account'].unique()[0] != account):
                     if tdf['Account'].unique()[0] not in ['SIM', 'Live']:
                         raise ValueError('Programmer exception in search of weird data')
                     # Continue the inner loop -- keep row from the outer loop loop
                     ix += 1
                     continue
 
-                #date
+                # date
                 cell = tcell(cols['date'][0], anchor=anchor)
                 tlog[cell] = theDate
 
-                #time
+                # time
                 cell = tcell(cols['time'][0], anchor=anchor)
                 tim = tdf[srf.start].unique()[0]
                 tlog[cell] = tim
 
-                #side
+                # side
                 name = tdf[srf.name].unique()[0]
                 if name:
                     cell = tcell(cols['side'][0], anchor=anchor)
                     tlog[cell] = name.split()[1]
 
-                #symb
+                # symb
                 cell = tcell(cols['symb'][0], anchor=anchor)
                 tlog[cell] = name.split()[0]
 
-                #entry1
+                # entry1
                 cell = tcell(cols['entry1'][0], anchor=anchor)
                 tlog[cell] = tdf[srf.entry1].unique()[0]
 
-                #Account Balance (setting an excel formula)
+                # Account Balance (setting an excel formula)
                 cell = tcell(cols['acctbal'][0], anchor=anchor)
-                formula = "=$M$3+SUM($N$7:$N{})".format(row[0].row-1)
+                formula = "=$M$3+SUM($N$7:$N{})".format(row[0].row - 1)
                 tlog[cell] = formula
 
                 # "shares"
@@ -589,25 +599,25 @@ def registerTrades(wb, theDate):
                 if len(shares) > 0:
                     try:
                         ishares = int(shares)
-                    except:
+                    except ValueError:
                         ishares = 0
                 tlog[cell] = ishares
 
-                #stoploss
+                # stoploss
                 cell = tcell(cols['stoploss'][0], anchor=anchor)
                 sl = tdf[srf.stoploss].unique()[0]
                 if isinstance(sl, bytes):
                     sl = None
                 tlog[cell] = sl
 
-                #target
+                # target
                 cell = tcell(cols['targ'][0], anchor=anchor)
                 target = tdf[srf.targ].unique()[0]
                 if isinstance(target, bytes):
                     target = None
                 tlog[cell] = target
 
-                #avgExit
+                # avgExit
                 cell = tcell(cols['avgexit'][0], anchor=anchor)
                 tlog[cell] = getAvgExit(tdf)
 
@@ -625,7 +635,6 @@ def registerTrades(wb, theDate):
                 strat = tdf[srf.strat].unique()[0]
                 tlog[cell] = strat
 
-
                 # notes (from the mistake note field)
                 cell = tcell(cols['notes'][0], anchor=anchor)
                 note = tdf[srf.mstknote].unique()[0]
@@ -639,13 +648,11 @@ def registerTrades(wb, theDate):
                 # break the inner loop
                 break
 
-
             ix += 1
             if ix >= len(keys):
                 # done with outer loop
                 break
     return None
-
 
 
 def local():
@@ -655,6 +662,7 @@ def local():
         print('try again')
     else:
         ldf, ts, fpentries = getTradeSummary(fn, daDate)
+
 
 def notmain():
 
@@ -666,9 +674,8 @@ def notmain():
         print("Does not exist", disPath)
         sys.exit(0)
 
-
     begin = pd.Timestamp(2018, 11, 5)
-    prefix = "C:/trader/journal/"
+    # prefix = "C:/trader/journal/"
     # flist = getDevelDailyJournalList(prefix, begin)
     current = begin
     now = pd.Timestamp.today()
@@ -679,8 +686,6 @@ def notmain():
         current += delt
     wb.save(disPath)
     print('done!')
-
-
 
 
 if __name__ == '__main__':

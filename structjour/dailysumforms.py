@@ -51,7 +51,7 @@ class MistakeSummary:
         }
 
         # Create the data structure to create a styled shape for the Daily Summary Form
-        # 'key':[rng, style, value] 
+        # 'key':[rng, style, value]
         dailySummaryFields = {
             'title': [[(1, 1), (12, 2)], 'titleStyle', "Daily PnL Summary"],
             'headlivetot': [[(1, 3), (2, 3)], 'normStyle', "Live Total"],
@@ -104,7 +104,7 @@ class MistakeSummary:
         srf = SumReqFields()
         for i in range(numTrades):
 
-            tp = "tpl" + str(i+1)
+            tp = "tpl" + str(i + 1)
             formulas[tp] = ['={0}', srf.tfcolumns[srf.pl][0][0]]
             p = "pl" + str(i + 1)
             formulas[p] = ['={0}', srf.tfcolumns[srf.mstkval][0][0]]
@@ -114,7 +114,6 @@ class MistakeSummary:
         self.formulas = formulas
         self.mistakeFields = mistakeFields
         self.dailySummaryFields = dailySummaryFields
-
 
     def mstkSumStyle(self, ws, tf, anchor=(1, 1)):
         '''
@@ -165,7 +164,6 @@ class MistakeSummary:
         totcell2 = tcell(totcell2, anchor=a)
         f = '=SUM({0})'.format(rng)
         ws[totcell2] = f
-
 
     def dailySumStyle(self, ws, tf, anchor=(1, 1)):
         '''

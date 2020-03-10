@@ -24,23 +24,23 @@ cur = conn.cursor()
 cur.execute('DROP TABLE IF EXISTS Inspire')
 cur.execute('DROP TABLE IF EXISTS Name')
 cur.execute('''
-CREATE TABLE Inspire(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, 
-    lname  TEXT, 
-    subject TEXT, 
-    name TEXT, 
-    who TEXT, 
+CREATE TABLE Inspire(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    lname  TEXT,
+    subject TEXT,
+    name TEXT,
+    who TEXT,
     quote TEXT UNIQUE)''')
 
 
 i = Inspire()
-whos=list()
-count=0
+whos = list()
+count = 0
 for i, row in i.df.iterrows():
-    lname    = row['name']
+    lname = row['name']
     subject = row['on']
-    quote   = row['quote']
+    quote = row['quote']
     name, who = row['who'].split(", ")
-    print ("{},  {},  {}, {}".format(lname, subject, name, who))
+    print("{},  {},  {}, {}".format(lname, subject, name, who))
     cur.execute('''INSERT INTO Inspire (id, lname, subject, name, who, quote)
                 VALUES(?,?, ?, ?, ?, ?)''',
                 (count, lname, subject, name, who, quote))

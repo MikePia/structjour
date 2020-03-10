@@ -83,7 +83,7 @@ class runController:
         self.sc.ui.dateEdit.dateChanged.connect(self.theDateChanged)
         # self.ui.loadBtn.pressed.connect(self.loadit)
         self.loadedDate = None
-    
+
     def theDateChanged(self, val):
         self.sc.dateInSync = False
         self.sc.theDateChanged(val)

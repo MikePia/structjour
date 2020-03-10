@@ -28,7 +28,7 @@ from openpyxl.styles import (PatternFill, Border, Side,
 
 # from structjour.thetradeobject import SumReqFields
 # pylint: disable = C0103, W1401
-#global variable
+# global variable
 # srf = SumReqFields()
 
 
@@ -65,10 +65,8 @@ def style_range(ws, cell_range, border=Border(), fill=None, font=None, alignment
         cell.border = cell.border + bottom
 
     for row in rows:
-        l = row[0]
-        r = row[-1]
-        l.border = l.border + left
-        r.border = r.border + right
+        row[0].border = row[0].border + left
+        row[-1].border = row[-1].border + right
         if fill:
             for cell in row:
                 cell.fill = fill
@@ -117,7 +115,7 @@ class TradeFormat(object):
 
         # This code is subject to change on a whim. Primary importance is easy to find styles and
         # consistent layout
-        #######################################         titleStyle       ######################
+        # ######################################         titleStyle       ######################
         titleStyle = NamedStyle(name="titleStyle")
         titleStyle.font = Font(color="FFFFFF", size=16)
         titleStyle.alignment = Alignment(
@@ -130,7 +128,7 @@ class TradeFormat(object):
                                    bottom=Side(style='double'))
         self.addNamedStyle(titleStyle, 'titleStyle', wb)
 
-        #######################################         titleLeft       #######################
+        # ######################################         titleLeft       #######################
         titleLeft = NamedStyle(name="titleLeft")
         titleLeft.font = Font(color="FFFFFF", size=16)
         titleLeft.alignment = Alignment(
@@ -142,7 +140,7 @@ class TradeFormat(object):
                                   bottom=Side(style='double'))
         self.addNamedStyle(titleLeft, 'titleLeft', wb)
 
-        #######################################     titleNumberRight     ######################
+        # ######################################     titleNumberRight     ######################
         titleNumberRight = NamedStyle(name="titleNumberRight")
         titleNumberRight.font = Font(color="FFFFFF", size=16)
         titleNumberRight.alignment = Alignment(
@@ -152,10 +150,10 @@ class TradeFormat(object):
         titleNumberRight.border = Border(right=Side(style='double'),
                                          top=Side(style='double'),
                                          bottom=Side(style='double'))
-        titleNumberRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        titleNumberRight.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
         self.addNamedStyle(titleNumberRight, 'titleNumberRight', wb)
 
-        #######################################     finalNoteStyle     ########################
+        # ######################################     finalNoteStyle     ########################
         finalNoteStyle = NamedStyle(name="finalNoteStyle")
         finalNoteStyle.font = Font(color="FFFFFF", size=8)
         finalNoteStyle.alignment = Alignment(
@@ -169,7 +167,7 @@ class TradeFormat(object):
 
         self.addNamedStyle(finalNoteStyle, 'finalNoteStyle', wb)
 
-        #######################################     titleRight     ############################
+        # ######################################     titleRight     ############################
         titleRight = NamedStyle(name="titleRight")
         titleRight.font = Font(color="FFFFFF", size=16)
         titleRight.alignment = Alignment(
@@ -183,7 +181,7 @@ class TradeFormat(object):
 
         self.addNamedStyle(titleRight, 'titleRight', wb)
 
-        #######################################     normStyle     #############################
+        # ######################################     normStyle     #############################
         normStyle = NamedStyle(name="normStyle")
         normStyle.font = Font(color="FFFFFF", size=11)
         normStyle.alignment = Alignment(
@@ -194,11 +192,11 @@ class TradeFormat(object):
                                   right=Side(style='double'),
                                   top=Side(style='double'),
                                   bottom=Side(style='double'))
-        normStyle.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normStyle.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normStyle, 'normStyle', wb)
 
-        #######################################     normalNumber     ##########################
+        # ######################################     normalNumber     ##########################
         normalNumber = NamedStyle(name="normalNumber")
         normalNumber.font = Font(color="FFFFFF", size=11)
         normalNumber.alignment = Alignment(
@@ -209,11 +207,11 @@ class TradeFormat(object):
                                      right=Side(style='double'),
                                      top=Side(style='double'),
                                      bottom=Side(style='double'))
-        normalNumber.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumber.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumber, 'normalNumber', wb)
 
-        #######################################     normalFraction     ########################
+        # ######################################     normalFraction     ########################
         normalFraction = NamedStyle(name="normalFraction")
         normalFraction.font = Font(color="FFFFFF", size=11)
         normalFraction.alignment = Alignment(
@@ -228,7 +226,7 @@ class TradeFormat(object):
 
         self.addNamedStyle(normalFraction, 'normalFraction', wb)
 
-        #######################################     linkStyle    ##############################
+        # ######################################     linkStyle    ##############################
         linkStyle = NamedStyle(name="linkStyle")
         linkStyle.font = Font(color="FFFFFF", size=16)
         linkStyle.alignment = Alignment(
@@ -241,7 +239,7 @@ class TradeFormat(object):
                                   bottom=Side(style='double'))
         self.addNamedStyle(linkStyle, 'linkStyle', wb)
 
-        #######################################     normalNumberTopLeft     ###################
+        # ######################################     normalNumberTopLeft     ###################
         normalNumberTopLeft = NamedStyle(name="normalNumberTopLeft")
         normalNumberTopLeft.font = Font(color="FFFFFF", size=11)
         normalNumberTopLeft.alignment = Alignment(
@@ -252,11 +250,11 @@ class TradeFormat(object):
                                             right=Side(style='thin'),
                                             top=Side(style='double'),
                                             bottom=Side(style='thin'))
-        normalNumberTopLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumberTopLeft.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumberTopLeft, 'normalNumberTopLeft', wb)
 
-        #######################################     normalNumberTop     #######################
+        # ######################################     normalNumberTop     #######################
         normalNumberTop = NamedStyle(name="normalNumberTop")
         normalNumberTop.font = Font(color="FFFFFF", size=11)
         normalNumberTop.alignment = Alignment(
@@ -267,11 +265,11 @@ class TradeFormat(object):
                                         right=Side(style='thin'),
                                         top=Side(style='double'),
                                         bottom=Side(style='thin'))
-        normalNumberTop.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumberTop.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumberTop, 'normalNumberTop', wb)
 
-        #######################################     normalNumberTopRight     ##################
+        # ######################################     normalNumberTopRight     ##################
         normalNumberTopRight = NamedStyle(name="normalNumberTopRight")
         normalNumberTopRight.font = Font(color="FFFFFF", size=11)
         normalNumberTopRight.alignment = Alignment(
@@ -282,11 +280,11 @@ class TradeFormat(object):
                                              right=Side(style='double'),
                                              top=Side(style='double'),
                                              bottom=Side(style='thin'))
-        normalNumberTopRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumberTopRight.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumberTopRight, 'normalNumberTopRight', wb)
 
-        #######################################     normalNumberLeft     ######################
+        # ######################################     normalNumberLeft     ######################
         normalNumberLeft = NamedStyle(name="normalNumberLeft")
         normalNumberLeft.font = Font(color="FFFFFF", size=11)
         normalNumberLeft.alignment = Alignment(
@@ -297,11 +295,11 @@ class TradeFormat(object):
                                          right=Side(style='thin'),
                                          top=Side(style='thin'),
                                          bottom=Side(style='thin'))
-        normalNumberLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumberLeft.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumberLeft, 'normalNumberLeft', wb)
 
-        #######################################     normalNumberRight     #####################
+        # ######################################     normalNumberRight     #####################
         normalNumberRight = NamedStyle(name="normalNumberRight")
         normalNumberRight.font = Font(color="FFFFFF", size=11)
         normalNumberRight.alignment = Alignment(
@@ -312,11 +310,11 @@ class TradeFormat(object):
                                           right=Side(style='double'),
                                           top=Side(style='thin'),
                                           bottom=Side(style='thin'))
-        normalNumberRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumberRight.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumberRight, 'normalNumberRight', wb)
 
-        #######################################     normalNumberInside     ####################
+        # ######################################     normalNumberInside     ####################
         normalNumberInside = NamedStyle(name="normalNumberInside")
         normalNumberInside.font = Font(color="FFFFFF", size=11)
         normalNumberInside.alignment = Alignment(
@@ -327,11 +325,11 @@ class TradeFormat(object):
                                            right=Side(style='thin'),
                                            top=Side(style='thin'),
                                            bottom=Side(style='thin'))
-        normalNumberInside.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalNumberInside.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalNumberInside, 'normalNumberInside', wb)
 
-        #######################################     timeSubLeft     #########################
+        # ######################################     timeSubLeft     #########################
         timeSubLeft = NamedStyle(name="timeSubLeft")
         timeSubLeft.font = Font(color="FABF8F", size=11)
         timeSubLeft.alignment = Alignment(
@@ -339,30 +337,30 @@ class TradeFormat(object):
         timeSubLeft.fill = PatternFill(
             start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
         timeSubLeft.border = Border(left=Side(style='double'),
-                                      right=Side(style='thin'),
-                                      top=Side(style='thin'),
-                                      bottom=Side(style='thin'))
+                                    right=Side(style='thin'),
+                                    top=Side(style='thin'),
+                                    bottom=Side(style='thin'))
 
         timeSubLeft.number_format = 'h:mm:ss'
 
         self.addNamedStyle(timeSubLeft, 'timeSubLeft', wb)
 
-        #######################################     timeSub     #############################
+        # ######################################     timeSub     #############################
         timeSub = NamedStyle(name="timeSub")
         timeSub.font = Font(color="FABF8F", size=11)
         timeSub.alignment = Alignment(horizontal="left", vertical="bottom")
         timeSub.fill = PatternFill(
             start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
         timeSub.border = Border(left=Side(style='thin'),
-                                  right=Side(style='thin'),
-                                  top=Side(style='thin'),
-                                  bottom=Side(style='thin'))
+                                right=Side(style='thin'),
+                                top=Side(style='thin'),
+                                bottom=Side(style='thin'))
 
         timeSub.number_format = 'h:mm:ss'
 
         self.addNamedStyle(timeSub, 'timeSub', wb)
 
-    #######################################     timeSubRight     ########################
+    # ######################################     timeSubRight     ########################
         timeSubRight = NamedStyle(name="timeSubRight")
         timeSubRight.font = Font(color="FABF8F", size=11)
         timeSubRight.alignment = Alignment(
@@ -370,15 +368,14 @@ class TradeFormat(object):
         timeSubRight.fill = PatternFill(
             start_color='A6A6A6', end_color='A6A6A6', fill_type='solid')
         timeSubRight.border = Border(left=Side(style='thin'),
-                                       right=Side(style='double'),
-                                       top=Side(style='thin'),
-                                       bottom=Side(style='thin'))
+                                     right=Side(style='double'),
+                                     top=Side(style='thin'),
+                                     bottom=Side(style='thin'))
         # normalSubLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
 
         self.addNamedStyle(timeSubRight, 'timeSubRight', wb)
 
-
-        #######################################     normalSubLeft     #########################
+        # ######################################     normalSubLeft     #########################
         normalSubLeft = NamedStyle(name="normalSubLeft")
         normalSubLeft.font = Font(color="FABF8F", size=11)
         normalSubLeft.alignment = Alignment(
@@ -392,7 +389,7 @@ class TradeFormat(object):
 
         self.addNamedStyle(normalSubLeft, 'normalSubLeft', wb)
 
-        #######################################     normalSub     #############################
+        # ######################################     normalSub     #############################
         normalSub = NamedStyle(name="normalSub")
         normalSub.font = Font(color="FABF8F", size=11)
         normalSub.alignment = Alignment(horizontal="left", vertical="bottom")
@@ -405,7 +402,7 @@ class TradeFormat(object):
 
         self.addNamedStyle(normalSub, 'normalSub', wb)
 
-        #######################################     normalSubRight     ########################
+        # ######################################     normalSubRight     ########################
         normalSubRight = NamedStyle(name="normalSubRight")
         normalSubRight.font = Font(color="FABF8F", size=11)
         normalSubRight.alignment = Alignment(
@@ -420,7 +417,7 @@ class TradeFormat(object):
 
         self.addNamedStyle(normalSubRight, 'normalSubRight', wb)
 
-        #######################################     normalSubNumberBottomLeft     #############
+        # ######################################     normalSubNumberBottomLeft     #############
         normalSubNumberBottomLeft = NamedStyle(
             name="normalSubNumberBottomLeft")
         normalSubNumberBottomLeft.font = Font(color="FABF8F", size=11)
@@ -432,12 +429,12 @@ class TradeFormat(object):
                                                   right=Side(style='thin'),
                                                   top=Side(style='thin'),
                                                   bottom=Side(style='double'))
-        normalSubNumberBottomLeft.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalSubNumberBottomLeft.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalSubNumberBottomLeft,
                            'normalSubNumberBottomLeft', wb)
 
-        #######################################     normalSubNumberBottom     #################
+        # ######################################     normalSubNumberBottom     #################
         normalSubNumberBottom = NamedStyle(name="normalSubNumberBottom")
         normalSubNumberBottom.font = Font(color="FABF8F", size=11)
         normalSubNumberBottom.alignment = Alignment(
@@ -448,11 +445,11 @@ class TradeFormat(object):
                                               right=Side(style='thin'),
                                               top=Side(style='thin'),
                                               bottom=Side(style='double'))
-        normalSubNumberBottom.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalSubNumberBottom.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalSubNumberBottom, 'normalSubNumberBottom', wb)
 
-        #######################################     normalSubNumberBottomRight     ############
+        # ######################################     normalSubNumberBottomRight     ############
         normalSubNumberBottomRight = NamedStyle(
             name="normalSubNumberBottomRight")
         normalSubNumberBottomRight.font = Font(color="FABF8F", size=11)
@@ -464,12 +461,12 @@ class TradeFormat(object):
                                                    right=Side(style='double'),
                                                    top=Side(style='thin'),
                                                    bottom=Side(style='double'))
-        normalSubNumberBottomRight.number_format = '"$"#,##0.00_);[Red]\("$"#,##0.00\)'
+        normalSubNumberBottomRight.number_format = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)'
 
         self.addNamedStyle(normalSubNumberBottomRight,
                            'normalSubNumberBottomRight', wb)
 
-        #######################################     explain     ###############################
+        # ######################################     explain     ###############################
         explain = NamedStyle(name="explain")
         explain.font = Font(color="000000", size=10)
         explain.alignment = Alignment(
@@ -482,7 +479,7 @@ class TradeFormat(object):
                                 bottom=Side(style='double'))
         self.addNamedStyle(explain, 'explain', wb)
 
-        #######################################     noteStyle     #############################
+        # ######################################     noteStyle     #############################
         noteStyle = NamedStyle(name="noteStyle")
         noteStyle.font = Font(color="E26B0A", size=10)
         noteStyle.alignment = Alignment(

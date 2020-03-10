@@ -53,7 +53,7 @@ class DupControl(QDialog):
         # Format of actionTaken:
         # [[[done, action],[done, action)]], ...]
         # Keep track of action taken on [[[dups], [deleteMe]], ...]
-        self.actionTaken = list() 
+        self.actionTaken = list()
 
         self.ui.deleteTxBtn.setEnabled(False)
         self.ui.deleteTradeBtn.setEnabled(False)
@@ -244,7 +244,7 @@ class DupControl(QDialog):
         self.ui.showDuplicate.setHtml(msg)
         # self.ui.deleteTxBtn.setEnabled(True)
 
-        
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     # fn = 'C:/trader/journal/_201904_April/_0403_Wednesday/trades.csv'

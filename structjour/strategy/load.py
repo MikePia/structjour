@@ -39,17 +39,10 @@ cur.execute('''
         short_name	text,
         preferred	INTEGER DEFAULT 1);''')
 
-
-
-
-
-
-
-
 cur.execute('''
 CREATE TABLE source (
-	id integer PRIMARY KEY,
-	datasource text
+    id integer PRIMARY KEY,
+    datasource text
 );''')
 
 cur.execute('''
@@ -65,17 +58,17 @@ CREATE TABLE description (
 cur.execute('''
 CREATE TABLE images (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-	name    TEXT UNIQUE,
-	widget	INTEGER CHECK(widget="chart1" OR widget="chart2"),
-	strategy_id	INTEGER,
-	FOREIGN KEY(strategy_id) REFERENCES strategy(id)
+    name    TEXT UNIQUE,
+    widget	INTEGER CHECK(widget="chart1" OR widget="chart2"),
+    strategy_id	INTEGER,
+    FOREIGN KEY(strategy_id) REFERENCES strategy(id)
 );''')
 
 cur.execute('''
 CREATE TABLE links (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	link text,
-	strategy_id integer,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    link text,
+    strategy_id integer,
     FOREIGN  KEY (strategy_id) REFERENCES strategy(id)
 );''')
 conn.commit()
@@ -91,18 +84,18 @@ entries = ['default', 'user', 'contrib']
 for i in range(len(entries)):
     cur.execute('''INSERT INTO source (id, datasource)
                 VALUES(?, ?)''',
-                (i+1, entries[i]))
+                (i + 1, entries[i]))
 
 tso = TheStrategyObject()
 for strat, count in zip(tso.s1, range(len(tso.s1))):
     count = count + 1
     if len(strat) > 1:
         cur.execute('''INSERT INTO strategy(id, name, short_name, preferred)
-				VALUES(?, ?, ?, ?)''',
+            VALUES(?, ?, ?, ?)''',
                     (count, strat[0], strat[1], 1))
     else:
         cur.execute('''INSERT INTO strategy(id, name, preferred)
-				VALUES(?, ?, ?)''',
+            VALUES(?, ?, ?)''',
                     (count, strat[0], 1))
 
 cur.execute('SELECT id FROM source WHERE datasource = ?', ('default',))
@@ -114,7 +107,7 @@ for key, count in zip(tso.strats.keys(), range(len(tso.strats.keys()))):
     cur.execute('SELECT id FROM strategy WHERE name = ?', (key,))
     strategy_id = cur.fetchone()[0]
     cur.execute('''INSERT INTO description(id, description, source_id, strategy_id)
-					VALUES(?, ?, ?, ?)''',
+        VALUES(?, ?, ?, ?)''',
                 (count, tso.strats[key][1], source_id, strategy_id))
 conn.commit()
 

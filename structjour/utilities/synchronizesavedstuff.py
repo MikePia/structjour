@@ -23,8 +23,6 @@ justincase
 @author: Mike Petersen
 '''
 
-
-
 import math
 import os
 import pickle
@@ -32,7 +30,7 @@ import re
 import pandas as pd
 from PyQt5.QtCore import QSettings
 
-# pylint: disable = C0103, C0303, C0301, W0612, W0201
+
 class WeGot:
     '''Manage the saved objects we got'''
     # Short Circuit Values
@@ -105,7 +103,6 @@ class WeGot:
         sglob = self.settings.value('ibInfile')
         rgx = re.sub('{\\*}', '.*', sglob)
         rgx = rgx + '$'
-
 
         fs = list()
         for f in os.listdir(d[1]):
@@ -199,14 +196,11 @@ class WeGot:
             return []
         return keymap
 
-
         # print(dastrade['P / L'].unique()[0], '<-----*----->', ibtrade['P / L'].unique()[0])
         # print(dastrade['Duration'].unique()[0], '<-----*----->', ibtrade['Duration'].unique()[0])
         # print(dastrade['Time1'].unique()[0], '<-----*----->', ibtrade['Time1'].unique()[0])
         # print(dastrade['Time2'].unique()[0], '<-----*----->', ibtrade['Time2'].unique()[0])
         # print()
-
-
 
     def loadDictionaries(self, dassaved, ibsaved, forceload=False):
         '''Upload the ts dictionary from DAS and IB'''
@@ -233,7 +227,6 @@ class WeGot:
 
         with open(ibsaved, 'wb') as f:
             pickle.dump((self.ib_ts, self.ib_entries, self.ib_df), f)
-
 
     def syncField(self, t1, t2, key):
         '''Update a field of user data in one dict from the other'''
@@ -264,16 +257,15 @@ class WeGot:
 
             if os.path.exists(c1) and not os.path.exists(c2):
                 t2[c] = t1[c]
-                t2[c+'Start'] = t1[c+'Start']
-                t2[c+'End'] = t1[c+'End']
-                t2[c+'Interval'] = t1[c+'Interval']
+                t2[c + 'Start'] = t1[c + 'Start']
+                t2[c + 'End'] = t1[c + 'End']
+                t2[c + 'Interval'] = t1[c + 'Interval']
 
             elif os.path.exists(c2) and not os.path.exists(c1):
                 t1[c] = t2[c]
-                t1[c+'Start'] = t2[c+'Start']
-                t1[c+'End'] = t2[c+'End']
-                t1[c+'Interval'] = t2[c+'Interval']
-
+                t1[c + 'Start'] = t2[c + 'Start']
+                t1[c + 'End'] = t2[c + 'End']
+                t1[c + 'Interval'] = t2[c + 'Interval']
 
     def compareDictionaries(self):
         '''
@@ -292,6 +284,7 @@ class WeGot:
                 print(dastrade[key].unique()[0], ibtrade[key].unique()[0])
             self.syncCharts(dastrade, ibtrade)
         return WeGot.OK, None, None, None
+
 
 def reportDASExcelFiles(begin):
     '''
@@ -323,6 +316,7 @@ def reportDASExcelFiles(begin):
         flist.append(files)
     print('COMPLETED')
     return flist
+
 
 def reportIBExcelFiles(begin):
     '''
@@ -359,6 +353,7 @@ def reportIBExcelFiles(begin):
     print('COMPLETED')
     # return flist
     return missinglist
+
 
 def reportTwinSavedFiles(begin):
     '''
@@ -445,23 +440,23 @@ def getCSVStatements(dirname):
         if not len(s) == 3:
             continue
 
-
         s, d1, d2 = s
         d2, ext = os.path.splitext(d2)
-        pat = 'U[\d]{7,7}'
+        pat = 'U[\\d]{7,7}'
         r = re.findall(pat, fn)
         if not r:
             continue
 
         try:
-            beg = pd.Timestamp(d1)
-            end = pd.Timestamp(d2)
+            beg = pd.Timestamp(d1)    # noqa: F841
+            end = pd.Timestamp(d2)    # noqa: F841
         except ValueError:
             print('try another')
             continue
 
         files.append(fn)
     return
+
 
 def somethingelse():
     '''run some local stuff'''
@@ -494,12 +489,7 @@ def notmain():
         b = result[1] + delt
 
     print()
-    # for l in ll:
-    #     if l:
-            # print(l)
-    # print(reportIBExcelFiles(b))
-    # w = WeGot(b)
-    # print(w.getIbInput())
+
 
 if __name__ == '__main__':
     # b = pd.Timestamp('2018-10-01')

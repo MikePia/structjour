@@ -27,10 +27,7 @@ Created on Oct 18, 2018
 '''
 import os
 import logging
-import math
 import pandas as pd
-import numpy as np
-import datetime as dt
 
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -40,12 +37,10 @@ from openpyxl.styles import Font, colors
 from structjour.inspiration.inspire import Inspire
 from structjour.dfutil import DataFrameUtil
 from structjour.colz.finreqcol import FinReqCol
-from structjour.xlimage import XLImage
 from structjour.tradestyle import c as tcell
 from structjour.tradestyle import style_range
 from structjour.thetradeobject import SumReqFields
 
-# pylint: disable=C0103, C0201, W0703
 
 class LayoutSheet:
     '''
@@ -71,8 +66,6 @@ class LayoutSheet:
         self.spacing = spacing
         self.DSFAnchor = None
 
-
-    
     def imageData(self, df, ldf, ft="png"):
         '''
         Gather the image names and determine the locations in the Excel doc to place them. Excel
@@ -97,7 +90,7 @@ class LayoutSheet:
         newdf = DataFrameUtil.createDf(df, self.topMargin)
 
         df = newdf.append(df, ignore_index=True)
- 
+
         imageLocation = list()
         count = 0
         for tdf in ldf:
@@ -151,7 +144,7 @@ class LayoutSheet:
         # Add all cell values from the df to the ws object
         for r in dataframe_to_rows(nt, index=False, header=False):
             r = self.cleanData(r)
-            
+
             ws.append(r)
 
         # Place column names at the top table -- (under the notes and inspire quote)
@@ -164,7 +157,7 @@ class LayoutSheet:
         Style the table, and the top bit. Here we style the table and the things above it. The
         table data is already there. Above the table are two merged groups. At the top is the
         inspire quote. Next is an introductory notes section. There is currently no external
-        control to set the sizes of these two things. Its hard coded here here. 
+        control to set the sizes of these two things. Its hard coded here here.
         :params ws: The openpyxl Worksheet to use.
         :params widthDF: The width of the dataFrame holding the trades.
         :params tf: The TradeFormat object
@@ -175,7 +168,7 @@ class LayoutSheet:
         # Hard coded sizes here
         quoteRange = [(1, 1), (13, 5)]
         noteRange = [(1, 6), (13, 24)]
-    
+
         tblRng = "{0}:{1}".format(tcell((1, self.topMargin)), tcell(
             (widthDF, self.topMargin + self.inputlen)))
         tab = Table(displayName="Table1", ref=tblRng)
@@ -196,8 +189,6 @@ class LayoutSheet:
         tf.mergeStuff(ws, noteRange[0], noteRange[1])
         ws["A6"].style = tf.styles["explain"]
         style_range(ws, "A6:M24", border=tf.styles["explain"].border)
-
-    
 
     def populateMistakeForm(self, tradeSummaries, mistake, ws, imageLocation):
         '''
@@ -222,13 +213,13 @@ class LayoutSheet:
 
         # Populate the name fields as hyperlinks to tradeSummaries title cell and back.
         for i, (iloc, tsum) in enumerate(zip(imageLocation, tradeSummaries)):
-            key = "name" + str(i+1)
+            key = "name" + str(i + 1)
             cell = mistake.mistakeFields[key][0][0]
             cell = tcell(cell, anchor=mistake.anchor)
             targetcell = (1, iloc[0])
             targetcell = tcell(targetcell)
             cellval = "{0} {1} {2}".format(
-                i+1, tsum.Name.unique()[0], tsum.Account.unique()[0])
+                i + 1, tsum.Name.unique()[0], tsum.Account.unique()[0])
             link = "#{}!{}".format(ws.title, targetcell)
 
             ws[cell].hyperlink = (link)
@@ -239,15 +230,13 @@ class LayoutSheet:
             ws[targetcell].hyperlink = (link)
             ws[targetcell].font = Font(
                 color=colors.WHITE, size=16, underline="double")
-                        
-
 
         # Populate the pl (loss) fields and the mistake fields. These are all simple formulas
         # like =B31
         tokens = ["tpl", "pl", "mistake"]
         for token in tokens:
             for i in range(len(tradeSummaries)):
-                key = token + str(i+1)
+                key = token + str(i + 1)
                 if isinstance(mistake.mistakeFields[key][0], list):
                     cell = mistake.mistakeFields[key][0][0]
                 else:
@@ -279,7 +268,7 @@ class LayoutSheet:
         simLosses = list()
         maxTrade = (0, "notrade")
         minTrade = (0, "notrade")
-        #Didnot save the Trade number in TheTrade.  These should be the same order...
+        # Didnot save the Trade number in TheTrade.  These should be the same order...
         count = 0
 
         for TheTrade in TheTradeList:
@@ -374,7 +363,7 @@ class LayoutSheet:
         '''
         Save wb as an excel file. If Permission Denied error is thrown, try renaming it.
         '''
-        #Write the file
+        # Write the file
         jf.mkOutdir()
         saveName = jf.outpathfile
         count = 1
@@ -389,7 +378,7 @@ class LayoutSheet:
                 (nm, ext) = os.path.splitext(jf.outpathfile)
                 saveName = "{0}({1}){2}".format(nm, count, ext)
                 logging.error("Will try to save as {0}".format(saveName))
-                count = count+1
+                count = count + 1
                 if count == 6:
                     logging.error("Giving up. PermissionError")
                     raise (PermissionError(

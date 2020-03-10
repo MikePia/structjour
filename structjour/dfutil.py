@@ -50,7 +50,7 @@ class DataFrameUtil(object):
             raise ValueError(err)
         if set(requiredFields) <= (set(actualFields)):
             return True
-        
+
         else:
             err = '\n\nYour DataFrame is missing some required fields ... Including:\n     '
             err += str((set(requiredFields) - set(actualFields)))
@@ -84,7 +84,7 @@ class DataFrameUtil(object):
 
     @classmethod
     def addRows(cls, dframe, numRow, fill=''):
-        ''' 
+        '''
         Adds numRow rows to the end of the DataFrame object dframe'
         :params dframe: A DataFrame to increase in size.
         :params numRow: he number of empty rows to create.

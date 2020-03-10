@@ -31,8 +31,8 @@ from structjour.dfutil import DataFrameUtil
 
 from structjour.statements.findfiles import findFilesSinceMonth
 # from structjour.statements.dasstatement import DasStatement
-from structjour.statements.findfiles import getDirectory, checkDateDir
-# from structjour.statements.ibstatement import IbStatement, readit
+from structjour.statements.findfiles import checkDateDir
+from structjour.statements.ibstatement import readit
 from structjour.definetrades import ReqCol
 
 
@@ -46,11 +46,11 @@ def getStatementType(infile):
     '''
     file, ext = os.path.splitext(infile)
     if not os.path.exists(infile) or (
-        ext.lower() != '.csv' and not ext.lower().startswith('.htm')):
+            ext.lower() != '.csv' and not ext.lower().startswith('.htm')):
         return None, None
     if ext == '.csv':
         df = pd.read_csv(infile, names=[x for x in range(0, 100)])
-        if df.iloc[0][0] == 'BOF'  or df.iloc[0][0] == 'HEADER' or (
+        if df.iloc[0][0] == 'BOF' or df.iloc[0][0] == 'HEADER' or (
                 df.iloc[0][0] == 'ClientAccountID') or (
                 df.iloc[0][0] == 'Statement'):
             return df, "IB_CSV"
@@ -60,7 +60,7 @@ def getStatementType(infile):
             requiredFields.remove('Date')
 
             # A small hack to allow tradesByTickets to pass as a DAS export
-            if not 'PnL' in df.columns:
+            if 'PnL' not in df.columns:
                 requiredFields.remove('PnL')
                 requiredFields.append('P / L')
             try:
@@ -78,12 +78,6 @@ def getStatementType(infile):
             return tbldivs, 'IB_HTML'
     return None, None
 
-    
-
-
-
-
-
 
 def notmain():
     d = '20190601'
@@ -93,15 +87,8 @@ def notmain():
         print(f, inputtype)
         if inputtype == 'DAS':
             if x is None:
-                print ('     We got mismatching dates here')
-    
+                print('     We got mismatching dates here')
 
 
 if __name__ == '__main__':
     notmain()
-
-
-
-
-    
-

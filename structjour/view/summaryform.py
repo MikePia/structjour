@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -515,6 +515,11 @@ class Ui_MainWindow(object):
         self.sumNote.setFont(font)
         self.sumNote.setObjectName("sumNote")
         self.gridLayout_2.addWidget(self.sumNote, 11, 0, 1, 3)
+        self.realRR = QtWidgets.QLabel(self.centralwidget)
+        self.realRR.setStyleSheet("border: 1px solid black")
+        self.realRR.setText("")
+        self.realRR.setObjectName("realRR")
+        self.gridLayout_2.addWidget(self.realRR, 8, 2, 1, 1)
         self.horizontalLayout_2.addLayout(self.gridLayout_2)
         self.gridLayout_3 = QtWidgets.QGridLayout()
         self.gridLayout_3.setObjectName("gridLayout_3")

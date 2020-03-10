@@ -21,8 +21,6 @@ Created on Oct 16, 2018
 '''
 from random import randint
 import pandas as pd
-# pylint: disable = C0301, C0330, C0103
-
 
 
 class Inspire:

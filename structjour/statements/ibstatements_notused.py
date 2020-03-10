@@ -33,7 +33,6 @@ from bs4 import BeautifulSoup
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
-from structjour.statements.findfiles import getDirectory, findFilesSinceMonth
 from structjour.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -504,4 +503,3 @@ class IbStatement_deprecated:
             return {'Trades': df}, {'Trades': 'Trades'}
 
         return {'Trades': df}, {'Trades': 'Trades'}
-

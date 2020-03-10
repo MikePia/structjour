@@ -20,9 +20,9 @@ placement is lack of balance info-- overnight trades without a positions table. 
 single table statements that have only the trades table. For custom Activity statements, its a
 setup choice at the IB website.
 
-In most cases, its is possible to figure out the balance when the appropriate trade is loaded. 
+In most cases, its is possible to figure out the balance when the appropriate trade is loaded.
 The code to do that is there and its awful, but it seems to work (All the APL/BAPL methods here
-and in StatementDB). 
+and in StatementDB).
 
 I am Reducing the support of ib statement types to include only Activity csv types.
 That includes standard statements and flex statements. The code for html relies on BS4 but it
@@ -44,11 +44,11 @@ import urllib.request
 
 import numpy as np
 import pandas as pd
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
-from structjour.statements.findfiles import getDirectory, findFilesSinceMonth, getBaseDir
+from structjour.statements.findfiles import getDirectory, findFilesSinceMonth
 from structjour.statements.ibstatementdb import StatementDB
 
 # pylint: disable = C0103
@@ -184,8 +184,6 @@ class IbStatement:
             # msg = 'Only htm or csv files are recognized'
             msg = 'Only csv files are currently supported'
             return dict(), msg
-
-    
 
     def openIBStatementCSV(self, infile):
         '''
@@ -534,7 +532,6 @@ class IbStatement:
                 return pd.DataFrame()
         return newdf
 
-    
     def combineOrdersByTime(self, t):
         '''
         There are a few seperate orders for equities that share the same order time. These cannot
@@ -857,7 +854,7 @@ class IbStatement:
     def getColsByTabid(self, tabid):
         '''
         html statments and all trade type statements are no longer supported.
-        But leaving the column information here. 
+        But leaving the column information here.
         Using the tableids from the Flex queries and other Statements, we are interetsed in these
         tables only and in the columns we define here only.
         The column headers are a subset as found in the input files. returns different

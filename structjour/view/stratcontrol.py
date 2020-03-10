@@ -23,16 +23,15 @@ Created on Apr 1, 2019
 import logging
 import os
 import sys
-from PyQt5 import QtWebEngineWidgets
+# from PyQt5 import QtWebEngineWidgets
 from PyQt5.QtWidgets import QApplication, QMenu, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import QSettings, QUrl
 
 from structjour.xlimage import XLImage
-from structjour.view.strategybrowser import Ui_Form 
+from structjour.view.strategybrowser import Ui_Form
 from structjour.strategy.strategies import Strategy
 
-# pylint: disable = C0103
 
 class StratControl(QDialog):
     '''
@@ -46,7 +45,6 @@ class StratControl(QDialog):
         self.justloaded = False
 
         self.setWindowIcon(QIcon('structjour/images/ZSLogo.png'))
-
 
         defimage = "structjour/images/ZeroSubstanceCreation_220.png"
         if not os.path.exists(defimage):
@@ -70,7 +68,6 @@ class StratControl(QDialog):
         self.ui.linkList.currentTextChanged.connect(self.loadPage)
         self.strat = Strategy()
         self.loadStrategies()
-        
 
     def loadPage(self, val):
         logging.debug(f'val {val}')
@@ -82,7 +79,6 @@ class StratControl(QDialog):
         self.ui.linkList.removeItem(index)
         key = self.ui.strategyCb.currentText()
         self.strat.removeLink(key, url)
-
 
     def addLinkToList(self):
         link = self.ui.addLink.text()
@@ -123,7 +119,7 @@ class StratControl(QDialog):
         # pi2 = cmenu.addAction("fractal 2")
         # pi3 = cmenu.addAction("starry night 3")
         pi4 = cmenu.addAction("Paste from clipboard")
-        pi5 = cmenu.addAction("Browse for picture")
+        # pi5 = cmenu.addAction("Browse for picture")
 
         # This is the line in question and None arg is the crux
         action = cmenu.exec_(self.mapTo(None, event.globalPos()))
@@ -154,7 +150,6 @@ class StratControl(QDialog):
                 else:
                     self.strat.setImage2(key, imageName)
 
-
     def pasteToLabel(self, widg, name):
         '''
         Rather than paste, we call a method that saves the clipboard to a file, then we open it with QPixmap
@@ -170,8 +165,8 @@ class StratControl(QDialog):
 
         pixmap = QPixmap(pname)
         widg.setPixmap(pixmap)
-        return pname   
-    
+        return pname
+
     def saveNotes(self, event):
         desc = self.ui.strategyNotes.toPlainText()
         key = self.ui.strategyCb.currentText()
@@ -181,7 +176,7 @@ class StratControl(QDialog):
     def setPreferred(self):
         val = self.ui.preferred.isChecked()
         key = self.ui.strategyCb.currentText()
-        val = 1 if val == True else 0
+        val = 1 if val is True else 0
 
         strat = self.strat.getStrategy(key)
         if strat and strat[1] != val:
@@ -235,12 +230,11 @@ class StratControl(QDialog):
         for l in daLinks:
             self.ui.linkList.addItem(l)
 
-
     def loadStrategies(self):
         '''Load the strategy combo box from the db'''
         if not self.settings.value('structjourDb'):
             return
-        
+
         strats = self.strat.getStrategies()
         self.ui.strategyCb.clear()
         for row in strats:
@@ -250,11 +244,10 @@ class StratControl(QDialog):
             # else:
             #     self.ui.notPreferred.setChecked(True)
 
-
     def addStrategy(self):
         addthis = self.ui.strategyAdd.text()
         if addthis:
-            self.strat.addStrategy(addthis) 
+            self.strat.addStrategy(addthis)
             self.loadStrategies()
             ix = self.ui.strategyCb.findText(addthis)
             self.ui.strategyCb.setCurrentIndex(ix)
@@ -266,8 +259,6 @@ class StratControl(QDialog):
         if removethis:
             self.strat.removeStrategy(removethis)
             self.loadStrategies()
-
-
 
 
 if __name__ == '__main__':

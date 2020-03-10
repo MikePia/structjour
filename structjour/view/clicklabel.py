@@ -24,9 +24,8 @@ Created on April 8, 2019
 
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import  QContextMenuEvent
+from PyQt5.QtGui import QContextMenuEvent
 
-# pylint: disable = C0103
 
 class ClickLabel(QLabel):
     '''Add a context menu to a QLabel'''

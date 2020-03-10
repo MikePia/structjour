@@ -54,7 +54,6 @@ class DbDoctor:
         else:
             self.account = settings.value('account')
 
-
     def doDups(self, autoDelete=False):
         '''
         Search for duplicate trades and determine which records from ib_trades and trade_sum
@@ -126,7 +125,6 @@ class DbDoctor:
             deleteMe.append([deleteTrade, deleteTSum])
         return deleteMe, c_dups
 
-
     def deleteTradeById(self, tid):
         '''
         Leaving off the commit till Im nearly done programming it
@@ -135,7 +133,7 @@ class DbDoctor:
         cur = conn.cursor()
         cursor = cur.execute('''DELETE from ib_trades WHERE id = ?''', (tid, ))
         conn.commit()
-        return cursor.rowcount 
+        return cursor.rowcount
 
     def deleteTradeSumById(self, tid):
         '''
@@ -145,7 +143,7 @@ class DbDoctor:
         cur = conn.cursor()
         cursor = cur.execute('''DELETE from trade_sum WHERE id = ?''', (tid, ))
         conn.commit()
-        return cursor.rowcount 
+        return cursor.rowcount
 
     def getChartsForTSID(self, tid):
         '''
@@ -225,7 +223,7 @@ class DbDoctor:
         cursor = cur.execute('''
             select id from ib_trades
                 where trade_sum_id is NULL
-                and Account = ? 
+                and Account = ?
                 and datetime > ?
                 order by datetime''', (account, theDate))
         cursor = cursor.fetchall()
@@ -246,8 +244,8 @@ class DbDoctor:
 
     def getDuplicateTrades(self, account):
         '''
-        Find duplicate trades in which one was created by a DAS export  the other 
-        by an IB Statement. Price, Qty and day are the same. In most the Balance 
+        Find duplicate trades in which one was created by a DAS export  the other
+        by an IB Statement. Price, Qty and day are the same. In most the Balance
         is the same. In all verified dups, the time differs by 1 second.
         This is not an exact science. Make a utility  to alert the user and let
         them verify
@@ -260,7 +258,7 @@ class DbDoctor:
         cursor = cur.execute('''
             SELECT t.id, t2.id,
                     t.Balance, t2.Balance,
-                    t.datetime, t2.datetime, 
+                    t.datetime, t2.datetime,
                     t.DAS, t.IB, t2.DAS, t2.IB,
                     t.trade_sum_id, t2.trade_sum_id
                 FROM ib_trades AS t
@@ -268,7 +266,7 @@ class DbDoctor:
                 WHERE t.Symb = t2.symb
                 AND t.Qty = t2.Qty
                 AND t.Price = t2.Price
-            
+
                 AND t.datetime < t2.datetime
                 AND t.Account = ?
                 AND t.Account = t2.Account
