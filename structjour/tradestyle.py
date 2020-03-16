@@ -222,7 +222,7 @@ class TradeFormat(object):
                                        right=Side(style='double'),
                                        top=Side(style='double'),
                                        bottom=Side(style='double'))
-        normalFraction.number_format = '# ??/??'
+        normalFraction.number_format = '# ??/16'
 
         self.addNamedStyle(normalFraction, 'normalFraction', wb)
 

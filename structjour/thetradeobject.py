@@ -258,7 +258,8 @@ class SumReqFields:
             self.sldiff: [(3, 14), 'normStyle'],
             self.rrhead: [(1, 15), 'normStyle'],
             self.rr: [(2, 15), 'normalFraction'],
-            "ex1": [(3, 15), 'normStyle'],
+            self.realrr: [(3, 15), 'normalFraction'],
+            # "ex1": [(3, 15), 'normStyle'],
             self.maxhead: [(1, 16), 'normStyle'],
             self.maxloss: [(2, 16), 'normStyle'],
             "ex2": [(3, 16), 'normStyle'],
@@ -347,6 +348,14 @@ class SumReqFields:
                                     self.tfcolumns[self.sldiff][0],
                                     self.tfcolumns[self.targdiff][0]
                                     ]
+
+        # ABS({stopDiff} * LEFT( {shares}, SEARCH(" ", {shares} ))) / {PL}
+        self.tfformulas[self.realrr] = ['''=ABS({0} * LEFT({1}, SEARCH(" ", {2}))) / {3}''',
+                                        self.tfcolumns[self.sldiff][0],
+                                        self.tfcolumns[self.shares][0][0],
+                                        self.tfcolumns[self.shares][0][0],
+                                        self.tfcolumns[self.pl][0][0]
+                                        ]
         self.tfformulas[self.maxloss] = ['=(LEFT({0},SEARCH(" ",{1},1)))*{2}',
                                          self.tfcolumns[self.shares][0][0],
                                          self.tfcolumns[self.shares][0][0],

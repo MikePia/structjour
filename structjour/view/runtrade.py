@@ -42,7 +42,7 @@ from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.stock.utilities import qtime2pd
 from structjour.journalfiles import JournalFiles
-# pylint: disable = C0103, C0301
+from structjour.migrations.check_migration import checkMigration
 
 
 def getDate(msg):
@@ -83,6 +83,7 @@ class runController:
         self.sc.ui.dateEdit.dateChanged.connect(self.theDateChanged)
         # self.ui.loadBtn.pressed.connect(self.loadit)
         self.loadedDate = None
+        self.statement = None
 
     def theDateChanged(self, val):
         self.sc.dateInSync = False
@@ -152,11 +153,11 @@ class runController:
         '''
         Get the trades from daDate in the DB and process the trades
         '''
-        statement = StatementDB()
+        self.statement = StatementDB()
 
         daDate = qtime2pd(daDate)
 
-        df = statement.getStatement(daDate)
+        df = self.statement.getStatement(daDate)
         if df.empty:
             return False
 
@@ -165,7 +166,7 @@ class runController:
         lf = LayoutForms(self.sc, jf, dframe)
         lf.pickleitnow()
         lf.runTtoSummaries(ldf)
-        statement.addTradeSummaries(lf.ts, ldf)
+        self.statement.addTradeSummaries(lf.ts, ldf)
         return True
 
     def gotTrades(self):
@@ -174,14 +175,19 @@ class runController:
         trades in the db. We can tell because the first token is an
         int showing how many trades are held.
         '''
-        text = self.sc.ui.infileEdit.text()
-        if len(text):
-            try:
-                num = int(text.split(' ')[0])
-                if num > 0:
-                    return True
-            except Exception:
-                pass
+        if self.sc.ui.useDatabase.isChecked():
+            text = self.sc.ui.infileEdit.text()
+            if len(text):
+                try:
+                    num = int(text.split(' ')[0])
+                    if num > 0:
+                        return True
+                except Exception:
+                    pass
+        if self.statement is not None:
+            count, countt = self.statement.getNumTicketsForDay(qtime2pd(self.sc.ui.dateEdit.date()))
+            if count > 0 or countt > 0:
+                return True
         return False
 
     def runnit(self, loaditrun=False):
@@ -246,8 +252,8 @@ class runController:
 
                 if gotToday:
                     if self.gotTrades():
-                        self.sc.ui.dbDefault.setChecked()
-                    return
+                        self.sc.ui.useDatabase.setChecked(True)
+                        self.sc.dbDefault(True)
                 else:
                     msg = f'<h3>No trades found on date {self.theDate.date()}</h3><ul> '
                     msg += f'<div><strong>{jf.inpathfile}</strong></div>'
@@ -280,7 +286,8 @@ class runController:
             ds.getTrades()
             self.runDBInput(self.theDate, jf)
             if self.gotTrades():
-                self.sc.ui.dbDefault.setChecked(True)
+                self.sc.ui.useDatabase.setChecked(True)
+                self.sc.dbDefault(True)
             return
         else:
             msg = '<h3>Unrecognized input:</h3><ul> '
@@ -326,6 +333,8 @@ def main():
     settings = QSettings('zero_substance', 'structjour')
     setuplog(settings)
     autoGenCreateDirs(settings)
+    checkMigration()
+
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
     os.chdir(os.path.realpath('../../'))

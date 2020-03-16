@@ -310,7 +310,7 @@ class SumControl(QMainWindow):
         d = pd.Timestamp(d)
 
         savename = f'''.{savename}{d.strftime('%A_%m%d')}.zst'''
-        outpathfile = os.path.join(outdir, savename)
+        outpathfile = os.path.normpath(os.path.join(outdir, savename))
         return outpathfile
 
     def loadImageFromFile(self, widg, name):
@@ -935,6 +935,7 @@ class SumControl(QMainWindow):
             self.ui.goBtn.setText('Read File')
             lineName = self.ui.infileEdit.text()
             if os.path.exists(lineName):
+                lineName = os.path.normpath(lineName)
                 self.settings.setValue('dasInfil', lineName)
                 infile = lineName
             else:
@@ -967,7 +968,7 @@ class SumControl(QMainWindow):
             self.ui.goBtn.setText('Load DB Data')
             # dbDate = daDate.strftime('%Y%m%d')
             statementDb = StatementDB()
-            count, t_count = statementDb.getNumTicketsforDay(daDate)
+            count, t_count = statementDb.getNumTicketsForDay(daDate)
             if t_count:
                 s = f"{count} DB tickets in {t_count} trades for {daDate.strftime('%A, %B %d, %Y')}"
             else:
@@ -995,7 +996,7 @@ class SumControl(QMainWindow):
             self.ui.infileEdit.setStyleSheet('color: black;')
             return
 
-        inpathfile = os.path.join(indir, infile) if infile else None
+        inpathfile = os.path.normpath(os.path.join(indir, infile)) if infile else None
         # dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
         # ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
 
@@ -1088,16 +1089,16 @@ class SumControl(QMainWindow):
             fdiff = 0.0
             fval = 0.0
         self.ui.targDiff.setText(diff)
-        rr = self.rrCalc(fdiff, self.ui.stopDiff.text())
+        rr, realrr = self.rrCalc(fdiff, self.ui.stopDiff.text())
 
         # Store the values in the trade object
         if self.lf:
             key = self.ui.tradeList.currentText()
-            self.lf.setTargVals(key, fval, fdiff, rr)
+            self.lf.setTargVals(key, fval, fdiff, rr, realrr)
 
     def stopLoss(self, val):
         '''
-        Set the stopDiff to the difference between the stoploss and the actual PL, then
+        Set the stopDiff to the difference between the stoploss and the first entry, then
         call rrCalc
         '''
         if not self.lf:
@@ -1106,22 +1107,22 @@ class SumControl(QMainWindow):
         self.markDataChanged()
         diff = 0
         try:
-            fval = float(val)
-            fpl = float(self.ui.entry1.text())
-            fdiff = fval - fpl
+            fstop = float(val)
+            fentry1 = float(self.ui.entry1.text())
+            fdiff = fstop - fentry1
             diff = '{:.02f}'.format(fdiff)
         except ValueError:
             diff = '0'
             fdiff = 0.0
-            fval = 0.0
+            fstop = 0.0
         self.ui.stopDiff.setText(diff)
-        rr = self.rrCalc(self.ui.targDiff.text(), fdiff)
+        rr, realrr = self.rrCalc(self.ui.targDiff.text(), fdiff)
         mxloss = self.setMaxLoss()
 
         if self.lf:
             key = self.ui.tradeList.currentText()
             (lost, note, clean) = self.lf.setStopVals(
-                key, fval, fdiff, rr, mxloss)
+                key, fstop, fdiff, rr, mxloss)
             if lost or clean:
                 # Note these widgets are only set if the user has not edited either widget. This is
                 # the only place they are 'auto set'
@@ -1132,27 +1133,44 @@ class SumControl(QMainWindow):
 
     def rrCalc(self, targDiff=None, slDiff=None):
         '''
-        Figure and set the Risk:Reward label
+        Figure and set the Risk:Reward label for rr and realrr
         '''
         targDiff = self.ui.targDiff.text() if not targDiff else targDiff
+        pl = self.ui.pl.text()
         slDiff = self.ui.stopDiff.text() if not slDiff else slDiff
+        shares = self.ui.pos.text()
+        shares = shares.split(' ')[0]
 
         try:
             ftarg = float(targDiff)
             fstop = float(slDiff)
-            if fstop == 0 or ftarg == 0:
+            fpl = float(pl)
+            fshares = float(shares)
+            if fstop == 0 or fpl == 0:
                 self.ui.rr.setText('')
-                return ''
+                self.ui.realRR.setText('')
+                return '', ''
+            elif ftarg == 0:
+                self.ui.rr.setText('')
         except ValueError:
             self.ui.rr.setText('')
-            return ''
+            self.ui.realRR.setText('')
+            return '', ''
 
-        dval = abs(ftarg / fstop)
+        dval = 0 if ftarg == 0 else abs(fstop / ftarg)
+        # darealval = abs()
+        # ABS({stopDiff} * {shares}) / {PL}
+        realrr = abs(fstop * fshares) / fpl
+        # print(f'(stop *  shares) / pl : ({fstop} / {fshares}) / {fpl} = {realrr}')
 
         f = Fraction(dval).limit_denominator(max_denominator=10)
         srr = f'{f.numerator} : {f.denominator}'
         self.ui.rr.setText(srr)
-        return srr
+
+        f = Fraction(realrr).limit_denominator(max_denominator=10)
+        srealrr = f'{f.numerator} : {f.denominator}'
+        self.ui.realRR.setText(srealrr)
+        return srr, srealrr
 
     def setMaxLoss(self):
         '''
@@ -1221,7 +1239,7 @@ class SumControl(QMainWindow):
                 Year=Year, month=month, MONTH=MONTH, day=day, DAY=DAY)
         except KeyError:
             return None
-        inpath = os.path.join(journal, schemeFmt)
+        inpath = os.path.normpath(os.path.join(journal, schemeFmt))
         if self.settings.value('outdirPolicy') == 'default':
             self.settings.setValue('outdir', os.path.join(inpath, 'out/'))
         return inpath

@@ -275,14 +275,8 @@ class DailyControl(QDialogWClose):
             if pl is None:
                 pl = 0.0
             # A bug-ish inspired baby-sitter
-            elif isinstance(pl, str):
-                if pl == '':
-                    pl = 0
-                else:
-                    try:
-                        pl = float(pl)
-                    except NameError:
-                        raise ValueError('Malformed float for variable pl in createDailySummary')
+            elif isinstance(pl, str) or isinstance(pl, bytes):
+                pl = 0
             if float(pl) > maxTrade[0]:
                 maxTrade = (pl, "Trade{0}, {1}, {2}".format(
                     count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))

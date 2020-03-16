@@ -204,11 +204,11 @@ class Test_LayoutForms(unittest.TestCase):
         # key, targ, diff, rr
         targ = 33.33
         diff = .43
-        rr = '3 / 1'
+        rr = '3 : 1'
         lf = self.lfs[0]
         for i, key in enumerate(lf.ts):
 
-            lf.setTargVals(key, targ, diff, rr)
+            lf.setTargVals(key, targ, diff, rr, 999.99)   # API added arg, Arbitrary 999.99 just to not break this test
             self.assertEqual(targ, lf.ts[key]['Target'].unique()[0])
             self.assertEqual(diff, lf.ts[key]['TargDiff'].unique()[0])
             self.assertEqual(rr, lf.ts[key]['RR'].unique()[0])

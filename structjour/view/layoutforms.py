@@ -79,6 +79,7 @@ class LayoutForms:
         wd[rc.stoploss] = sc.ui.stop
         wd[rc.sldiff] = sc.ui.stopDiff
         wd[rc.rr] = sc.ui.rr
+        wd[rc.realrr] = sc.ui.realRR
         wd[rc.maxloss] = sc.ui.maxLoss
         wd[rc.mstkval] = sc.ui.lost
         wd[rc.mstknote] = sc.ui.sumNote
@@ -146,7 +147,7 @@ class LayoutForms:
         {outdir}/.{infile}.zst
         '''
         name = f'.trades{self.jf.theDate.strftime(self.jf.dayformat)}.zst'
-        fname = os.path.join(self.jf.outdir, name)
+        fname = os.path.normpath(os.path.join(self.jf.outdir, name))
         return fname
 
     def pickleitnow(self):
@@ -169,6 +170,7 @@ class LayoutForms:
             return
         ibdb = StatementDB()
         self.ts = ibdb.updateTradeSummaries(self.ts)
+        self.sc.ui.useDatabase.setChecked(True)
 
         # This is legacy stuff. It will run IFF we are lacking a loaded trade table and we
         # have one already pickled.
@@ -413,13 +415,14 @@ class LayoutForms:
                 daVal = daVal.strftime(self.timeFormat)
             widg.setText(daVal)
 
-    def setTargVals(self, key, targ, diff, rr):
+    def setTargVals(self, key, targ, diff, rr, realrr):
         '''Store the values affected by a change in the target value'''
 
         rc = self.rc
         tto = self.ts[key]
         tto[rc.targ] = targ
         tto[rc.targdiff] = diff
+        tto[rc.realrr] = realrr
         if rr:
             tto[rc.rr] = rr
 
@@ -444,6 +447,8 @@ class LayoutForms:
         clean = tto['clean'].unique()[0]
         name = tto[rc.name].unique()[0]
         pl = tto[rc.pl].unique()[0]
+        if isinstance(pl, bytes):
+            pl = 0
         if maxloss and clean:
             if 'long' in name.lower() and diff >= 0:
                 return lost, note, clean
