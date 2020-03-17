@@ -22,7 +22,7 @@ Created on June 1, 2019
 
 @author: Mike Petersen
 '''
-import sqlite3
+# import sqlite3
 import sys
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
@@ -49,7 +49,7 @@ from structjour.stock.utilities import clearTables
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
-from structjour.rtg import RTG
+from structjour.utilities.rtg import RTG
 
 # from PyQt5.QtWidgets import QApplication
 

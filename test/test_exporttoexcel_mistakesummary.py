@@ -38,7 +38,7 @@ from structjour.definetrades import DefineTrades
 from structjour.journalfiles import JournalFiles
 from structjour.layoutsheet import LayoutSheet
 
-from structjour.rtg import RTG
+from structjour.utilities.rtg import RTG
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType

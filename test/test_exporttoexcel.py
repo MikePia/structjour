@@ -39,7 +39,7 @@ from structjour.dailysumforms import MistakeSummary
 from structjour.definetrades import DefineTrades
 from structjour.journalfiles import JournalFiles
 
-from structjour.rtg import RTG
+from structjour.utilities.rtg import RTG
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType

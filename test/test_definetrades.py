@@ -42,7 +42,7 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
 from structjour.stock.utilities import clearTables
 
-from structjour.rtg import RTG
+from structjour.utilities.rtg import RTG
 
 from PyQt5.QtCore import QSettings
 
