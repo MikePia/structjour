@@ -1254,6 +1254,8 @@ class Ui_MainWindow(object):
         self.actionExport_TradeLog.setObjectName("actionExport_TradeLog")
         self.actionCreate_Directories = QtWidgets.QAction(MainWindow)
         self.actionCreate_Directories.setObjectName("actionCreate_Directories")
+        self.actionBackup = QtWidgets.QAction(MainWindow)
+        self.actionBackup.setObjectName("actionBackup")
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
         self.menuFile.addAction(self.actionStock_API)
@@ -1261,6 +1263,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionStrategy_Browser)
         self.menuFile.addAction(self.actionDB_Doctor)
         self.menuFile.addAction(self.actionExport_TradeLog)
+        self.menuFile.addAction(self.actionBackup)
         self.menuFile.addAction(self.actionCreate_Directories)
         self.menubar.addAction(self.menuFile.menuAction())
 
@@ -1340,5 +1343,6 @@ class Ui_MainWindow(object):
         self.actionExport_to_Disciplined_TradeLog.setText(_translate("MainWindow", "Export to TradeLog"))
         self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
         self.actionCreate_Directories.setText(_translate("MainWindow", "Create Directories"))
+        self.actionBackup.setText(_translate("MainWindow", "Backup"))
 from structjour.view.clickbrowser import ClickBrowser
 from structjour.view.clicklabel import ClickLabel

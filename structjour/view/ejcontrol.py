@@ -53,6 +53,7 @@ class EJControl(QDialog):
             j = self.ui.journalEdit.text()
             if os.path.exists(j):
                 self.settings.setValue('journal', j)
+                self.settings.sync()
                 logging.info('Successfully set the journal directory')
                 return
         logging.info('Failed to set the journal directory')
@@ -71,4 +72,4 @@ class EJControl(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = EJControl()
-    # sys.exit(app.exec_())
+    sys.exit(app.exec_())

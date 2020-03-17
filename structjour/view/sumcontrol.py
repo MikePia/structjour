@@ -54,6 +54,7 @@ from structjour.stock.apichooser import APIChooser
 from structjour.stock.utilities import getMAKeys, qtime2pd, pd2qtime
 from structjour.view.duplicatecontrol import DupControl
 
+from structjour.view.backupcontrol import BackupControl
 from structjour.view.disciplinedcontrol import DisciplineControl
 from structjour.xlimage import XLImage
 
@@ -178,6 +179,7 @@ class SumControl(QMainWindow):
         self.ui.actionDB_Doctor.triggered.connect(self.dbDoctor)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
         self.ui.actionExport_TradeLog.triggered.connect(self.disciplineTradeLog)
+        self.ui.actionBackup.triggered.connect(self.backup)
         self.ui.actionCreate_Directories.triggered.connect(self.createDirDlg)
 
         # Set the file related widgets
@@ -1304,6 +1306,10 @@ class SumControl(QMainWindow):
 
     def chartSetDlg(self):
         self.chartDlg = ChartControl(self.chartSet)
+
+    def backup(self):
+        self.w = BackupControl(self.settings)
+
 
     def disciplineTradeLog(self):
         self.w = DisciplineControl()

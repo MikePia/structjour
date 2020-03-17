@@ -2197,6 +2197,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionStrategy_Browser"/>
     <addaction name="actionDB_Doctor"/>
     <addaction name="actionExport_TradeLog"/>
+    <addaction name="actionBackup"/>
     <addaction name="actionCreate_Directories"/>
    </widget>
    <addaction name="menuFile"/>
@@ -2248,6 +2249,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionCreate_Directories">
    <property name="text">
     <string>Create Directories</string>
+   </property>
+  </action>
+  <action name="actionBackup">
+   <property name="text">
+    <string>Backup</string>
    </property>
   </action>
  </widget>
