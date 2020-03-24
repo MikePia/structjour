@@ -31,7 +31,7 @@ def autoGenCreateDirs(settings, testDate=None):
     just return quietly.
     :params testDate: Override the date. Intended for testing only
     '''
-    if not settings.value('directories_autogen', True, bool) or not settings.value('journal'):
+    if settings.value('tradeDb') is None or not settings.value('directories_autogen', True, bool) or not settings.value('journal'):
         return None, None
     theDate = pd.Timestamp.now()
     if testDate:

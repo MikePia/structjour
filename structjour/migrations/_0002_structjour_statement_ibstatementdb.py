@@ -48,6 +48,8 @@ class Migrate(StatementDB):
 
     @classmethod
     def checkDbStatus(cls):
+        if cls.settings.value('tradeDb') is None:
+            return
         if not os.path.exists(cls.settings.value('tradeDb')):
             msg = f"Database connection is not setup correctly: {cls.settings.value('tradeDb')}"
             # logging.error(msg)
@@ -59,6 +61,8 @@ class Migrate(StatementDB):
 
     @classmethod
     def connect(cls):
+        if cls.settings.value('tradeDb') is None:
+            return
         cls.ibdb = StatementDB(db=cls.settings.value('tradeDb'))
         cls.conn = sqlite3.connect(cls.ibdb.db)
         cls.cur = cls.conn.cursor()
@@ -70,6 +74,8 @@ class Migrate(StatementDB):
 
     @classmethod
     def addField(cls, model_name=None, name=None, field=None, dependencies=None):
+        if cls.cur is None:
+            return
         for dep in dependencies:
             cursor = cls.cur.execute(f'''SELECT name FROM sqlite_master WHERE type='table' AND name = ?''', (dep, ))
             cursor = cursor.fetchone()

@@ -27,9 +27,10 @@ import logging
 import structjour.migrations._0002_structjour_statement_ibstatementdb as migrate0002
 
 
-def checkMigration():
+def checkMigration(settings):
     if migrate0002.Migrate.isUpdated() is True:
         logging.info('Database is up to date')
     else:
-        logging('Failed to updated the database')
-        raise ValueError('Failed to update the database')
+        logging.error('Failed to updated the database')
+        if settings.value('tradeDb') is not None:
+            raise ValueError('Failed to update the database')

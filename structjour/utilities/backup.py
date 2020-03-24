@@ -114,13 +114,13 @@ class Backup:
 
     def backupDatabase(self, theDir=None):
         '''
-        Helper method for restore.
+        Helper method for backup.
         '''
         self.bdir = self.bdir if theDir is None else theDir
         if not os.path.exists(self.bdir):
             raise ValueError(f'Backup directory {self.bdir} does not exist')
 
-        dbtrade2 = os.path.split(self.dbtrade)[1] 
+        dbtrade2 = os.path.split(self.dbtrade)[1]
         dbstructjour2 = os.path.split(self.dbstructjour)[1]
         dbtrade2 = os.path.normpath(os.path.join(self.bdir, dbtrade2))
         dbstructjour2 = os.path.normpath(os.path.join(self.bdir, dbstructjour2))
@@ -221,6 +221,15 @@ class Backup:
                     maxdir = thedir
 
         return os.path.join(self.rootdir, maxdir) if maxdir is not None else ''
+
+    def _clearJournalDir(self):
+        '''For Testing ONLY. TODO implement a seperate backup/restore for this one string'''
+        # jdir = self.settings('journal')
+        self.settings.remove('journal')
+
+    def _restoreJournalDir(self):
+        '''For Testing'''
+        pass
 
 
 if __name__ == '__main__':

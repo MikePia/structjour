@@ -333,7 +333,7 @@ def main():
     settings = QSettings('zero_substance', 'structjour')
     setuplog(settings)
     autoGenCreateDirs(settings)
-    checkMigration()
+    checkMigration(settings)
 
     ddiirr = os.path.dirname(__file__)
     os.chdir(os.path.realpath(ddiirr))
