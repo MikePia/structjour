@@ -36,8 +36,9 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.version import version
 
 
+# This runs from import before any code is run and causes
 # python to make its own handlers and log to nowhere in particular and it messes with logging.basicConfig
-# For now logging is removed. This is transitional code.
+# For now logging is removed from this module. This is transitional code.
 class Migrate(StatementDB):
 
     settings = QSettings('zero_substance', 'structjour')
@@ -54,7 +55,8 @@ class Migrate(StatementDB):
             msg = f"Database connection is not setup correctly: {cls.settings.value('tradeDb')}"
             # logging.error(msg)
             print(msg)
-            raise ValueError(msg)
+            cls.settings.remove('tradeDb')
+            # raise ValueError(msg)
         else:
             print(f"Ready to update the database: {cls.settings.value('tradeDb')}")
             # logging.info(f"Ready to update the database: {cls.settings.value('tradeDb')}")
