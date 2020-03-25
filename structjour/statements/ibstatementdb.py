@@ -195,35 +195,10 @@ class StatementDB:
         cur.execute('''DROP TABLE IF EXISTS date_start;''')
         conn.commit()
 
-    def findTradeSummariesByDay(self, date):
-        '''
-        1/30/20 -- Is only being used in tests. getStatemnt() replaces it
-        Get a trade summary record by date and time
-
-        :params date: A Date string or Timestamp for the date to find.
-        :start: A Time string or Timestamp for the time to find
-        '''
-        sf = self.sf
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        date = pd.Timestamp(date)
-        date = date.strftime("%Y%m%d")
-
-        cursor = cur.execute(f'''
-                             SELECT * FROM trade_sum
-                                 WHERE {sf.date} = ?''',
-                             (date, ))
-        x = cursor.fetchall()
-        if x:
-            return x
-
-        return False
-
     def makeTradeSumDict(self, ts):
         '''
         Using the db order of trade_summaries create a dict
-        :ts: a trade_sum record as retrieved by 'SELECT *'
+        :ts: a trade_sum record as retrieved by getTradeSumBy... methods
         '''
         sf = self.sf
         ts = list(ts)
@@ -231,8 +206,8 @@ class StatementDB:
         t = dict()
         (t['id'], t[sf.name], t[sf.strat], t[sf.link1], t[sf.acct], t[sf.pl], t[sf.start],
             t[sf.date], t[sf.dur], t[sf.shares], t[sf.mktval], t[sf.targ], t[sf.targdiff],
-            t[sf.stoploss], t[sf.sldiff], t[sf.rr], t[sf.realrr], t[sf.maxloss], t[sf.mstkval], t[sf.mstknote],
-            t[sf.explain], t[sf.notes], t['clean']) = ts
+            t[sf.stoploss], t[sf.sldiff], t[sf.rr], t[sf.realrr], t[sf.maxloss], t[sf.mstkval],
+            t[sf.mstknote], t[sf.explain], t[sf.notes], t['clean']) = ts
         return t
 
     def findTradeSummary(self, date, start):
@@ -446,7 +421,6 @@ class StatementDB:
             trade[sf.id] = tradesum[0]
 
             # Removed the update for name, acct, pl, start, date, dur, shares. These should not change.
-            # 
             cur.execute(f''' UPDATE trade_sum SET
                 {sf.strat} = ?,
                 {sf.link1} = ?,
@@ -500,100 +474,6 @@ class StatementDB:
 
         conn.commit()
         return newts
-
-    # def updateTradeSummariesOrig(self, ts):
-    #     '''
-    #     This is called as part of saving trade summaries to db
-    #     Update the table trad_sum and its relations for the trades in ts.
-    #     :ts: A dict of dict. The keys for the outer dict are found in the list widget.
-    #     The inner dicts are the trade object with keys and db fields common to the
-    #     SumReqFields.columns
-    #     :params ts: dict<str, dict<k,v> Where the string is trade name like '1 IBM Long' a
-    #     found in the combo box of the Summary form
-    #     '''
-    #     conn = sqlite3.connect(self.db)
-    #     cur = conn.cursor()
-    #     sf = self.sf
-    #     rc = self.rc
-    #     # tcols = sf.tcols
-    #     newts = dict()
-    #     for dkey in ts:
-    #         trade = ts[dkey]
-    #         trade = self.doctorTheTrade(trade)
-    #         daDay = self.formatDate(trade[sf.date].unique()[0])
-    #         tradesum = self.findTradeSummary(trade[sf.date].unique()[0], trade[sf.start].unique()[0])
-    #         newts[dkey] = trade
-    #         if not tradesum:
-    #             continue
-    #         trade[sf.id] = tradesum[0]
-
-    #         cur.execute(f''' UPDATE trade_sum SET
-    #             {sf.name} = ?,
-    #             {sf.strat} = ?,
-    #             {sf.link1} = ?,
-    #             {sf.acct} = ?,
-    #             {sf.pl} = ?,
-    #             {sf.start} = ?,
-    #             {sf.date} = ?,
-    #             {sf.dur} = ?,
-    #             {sf.shares} = ?,
-    #             {sf.mktval} = ?,
-    #             {sf.targ} = ?,
-    #             {sf.targdiff} = ?,
-    #             {sf.stoploss} = ?,
-    #             {sf.sldiff} = ?,
-    #             {sf.rr} = ?,
-    #             {sf.realrr} = ?,
-    #             {sf.maxloss} = ?,
-    #             {sf.mstkval} = ?,
-    #             {sf.mstknote} = ?,
-    #             {sf.explain} = ?,
-    #             {sf.notes} = ?,
-    #             {sf.clean} = ?
-    #             WHERE  id = ?''', (
-    #                     trade[sf.name].unique()[0],
-    #                     trade[sf.strat].unique()[0],
-    #                     trade[sf.link1].unique()[0],
-    #                     trade[sf.acct].unique()[0],
-    #                     trade[sf.pl].unique()[0],
-    #                     trade[sf.start].unique()[0],
-    #                     daDay,
-    #                     trade[sf.dur].unique()[0],
-    #                     trade[sf.shares].unique()[0],
-    #                     trade[sf.mktval].unique()[0],
-    #                     trade[sf.targ].unique()[0],
-    #                     trade[sf.targdiff].unique()[0],
-    #                     trade[sf.stoploss].unique()[0],
-    #                     trade[sf.sldiff].unique()[0],
-    #                     trade[sf.rr].unique()[0],
-    #                     trade[sf.realrr].unique()[0],
-    #                     trade[sf.maxloss].unique()[0],
-    #                     trade[sf.mstkval].unique()[0],
-    #                     trade[sf.mstknote].unique()[0],
-    #                     trade[sf.explain].unique()[0],
-    #                     trade[sf.notes].unique()[0],
-    #                     trade[sf.clean].unique()[0],
-    #                     tradesum[0]))
-    #         self.updateCharts(cur, trade)
-
-    #         # Check the related table ib_trades
-    #         id = int(trade[sf.id].unique()[0])
-    #         tradesDB = cur.execute(f'''
-    #             SELECT id, datetime, {rc.ticker}, {rc.acct}, trade_sum_id from ib_trades
-    #                 WHERE trade_sum_id = ?''', (id, ))
-    #         if tradesDB:
-    #             tradesDB = tradesDB.fetchall()
-    #             for tradeDB in tradesDB:
-    #                 tradeDF = pd.DataFrame(data=tradesDB, columns=['id', 'datetime', 'Symb', 'Acct', 'ts_id'])
-    #                 assert len(tradeDF['Symb'].unique()) == 1
-    #                 assert len(tradeDF['Acct'].unique()) == 1
-    #                 assert len(tradeDF['ts_id'].unique()) == 1
-    #                 assert tradeDF['ts_id'].unique()[0] == trade[sf.id].unique()[0]
-    #         else:
-    #             raise ValueError('Found an instance that requires updating ib_trade.trade_sum_id.')
-
-    #     conn.commit()
-    #     return newts
 
     def addTradeSummaries(self, tsDict, ldf):
         '''Create DB entries in trade_sum and its relations they do not already exist'''
@@ -1370,6 +1250,24 @@ class StatementDB:
             return False
         return True
 
+    def getTradeSumByDate(self, daDate):
+        conn = sqlite3.connect(self.db)
+        cur = conn.cursor()
+        sf = self.sf
+
+        daDate = self.formatDate(daDate)
+        tsums = cur.execute(f'''
+            SELECT id,
+                   {sf.name}, {sf.strat}, {sf.link1}, {sf.acct}, {sf.pl}, {sf.start},
+                   {sf.date}, {sf.dur}, {sf.shares}, {sf.mktval}, {sf.targ}, {sf.targdiff},
+                   {sf.stoploss}, {sf.sldiff}, {sf.rr}, {sf.realrr}, {sf.maxloss}, {sf.mstkval},
+                   {sf.mstknote}, {sf.explain}, {sf.notes}, clean
+            FROM trade_sum Where date = ?''', (daDate, ))
+        tsums = tsums.fetchall()
+        if not tsums:
+            return None
+        return tsums
+
     def getTradeSummaries(self, daDate):
         '''
         Trade summaries are multiple transactios from ib_trades that represent a single
@@ -1383,10 +1281,7 @@ class StatementDB:
         sf = self.sf
 
         daDate = self.formatDate(daDate)
-        tsums = cur.execute('''
-            SELECT * FROM trade_sum WHERE date = ?
-                ORDER BY Start''', (daDate,))
-        tsums = tsums.fetchall()
+        tsums = self.getTradeSumByDate(daDate)
         if not tsums:
             return dict(), None
 
@@ -1698,13 +1593,13 @@ def notmain():
 
 def local():
     '''Run some local code for devel'''
-    d = pd.Timestamp('2018-03-23')
+    # d = pd.Timestamp('2018-01-07')
+    d = '20181107'
     # e = pd.Timestamp('2018-12-31')
-    print(d.strftime("%B, %A %d %Y"))
+    # print(d.strftime("%B, %A %d %Y"))
     db = StatementDB()
-    x, y = db.getNumTicketsForDay(d)
-    print(x, "tickets")
-    print(y, "trades")
+    x = db.getTradeSumByDate(d)
+    print(x)
 
 
 def main():

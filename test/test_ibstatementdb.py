@@ -87,7 +87,6 @@ class Test_StatementDB(unittest.TestCase):
         tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
 
         ibdb.addTradeSummaries(ts, ldf)
-        # summaries = ibdb.findTradeSummariesByDay(theDate)
 
         # The test database trades_sum should now only the trades from theDate, one
         # entry per trade
@@ -119,7 +118,7 @@ class Test_StatementDB(unittest.TestCase):
                 dframe, ldf = tu.processDBTrades(df)
                 tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
                 ibdb.addTradeSummaries(ts, ldf)
-                summaries = ibdb.findTradeSummariesByDay(day)
+                summaries = ibdb.getTradeSumByDate(day)
                 for summary in summaries:
                     summary = ibdb.makeTradeSumDict(summary)
                     entryTrades = ibdb.getEntryTrades(summary['id'])
