@@ -77,7 +77,7 @@ class TestAPIChooser(unittest.TestCase):
                 #     len(df), df.index[0], df.index[-1], symbol))
                 # print()
             else:
-                print('Skipped {api} at {start} to {end} because...')
+                print(f'Skipped {api} at {start} to {end} because...')
                 for rule in result[1]:
                     print(rule)
 
@@ -138,7 +138,8 @@ class TestAPIChooser(unittest.TestCase):
             meta, df, ma = chooser.get_intraday(symbol, start, end, minutes)
             if df.empty:
                 logging.info(meta)
-            self.assertTrue(not df.empty, f"Failed to retrieve data from {token}. Have you exhausted the quota today?")
+            msg = f"Failed to retrieve data from {token}. This could be normal operation or not. Its an http call."
+            self.assertTrue(not df.empty, msg)
 
 
 def notmain():

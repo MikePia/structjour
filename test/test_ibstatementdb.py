@@ -322,15 +322,15 @@ def main():
 def notmain():
     t = Test_StatementDB()
     # t.test_findTradeSummary()
-    t.test_getUncoveredDays()
+    # t.test_getUncoveredDays()
     # t.test_getStatementDays()
     # t.test_insertTrade()
     # t.test_addTradeSummaries()
     # t.test_findTrade()
-    # t.test_ibstatement()
+    t.test_ibstatement()
     # t.test_insertPositions()
 
 
 if __name__ == '__main__':
-    notmain()
-    # main()
+    # notmain()
+    main()

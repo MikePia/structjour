@@ -36,7 +36,7 @@ class TestIbStatement(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestIbStatement, self).__init__(*args, **kwargs)
         self.fred = 'Fred'
-        self.db = 'test/test.sqlite'
+        self.db = 'test/testdb.sqlite'
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
 
         # The date of file1
