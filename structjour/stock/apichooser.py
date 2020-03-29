@@ -21,7 +21,9 @@ Choose which API intraday call to get chart data based on rules
 @creation_date: 3/3/20
 '''
 import datetime as dt
+import logging
 import pandas as pd
+import requests
 from structjour.stock.utilities import ManageKeys, checkForIbapi, getLimitReached
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
@@ -192,7 +194,14 @@ class APIChooser:
         api, vr, suggested = self.apiChooserList(start, end)
         for token in suggested:
             self.api = token
-            meta, df, ma = self.apiChooser()(symbol, start, end, minutes)
+            try:
+                meta, df, ma = self.apiChooser()(symbol, start, end, minutes)
+            except requests.exceptions.ConnectionError as ex:
+                message = "Please check your internet connection\n" + str(ex)
+
+                meta = {'code': 666, 'message': message}
+                logging.error(message)
+                return meta, pd.DataFrame, None
             if not df.empty:
                 return meta, df, ma
         msg = f'Failed to retrieve data from APIS: {self.preferences}'

@@ -484,6 +484,7 @@ class SumControl(QMainWindow):
         errorCode = apiset.value('errorCode')
         errorMessage = apiset.value('errorMessage')
         if errorMessage:
+            self.chartErrorMessage = errorMessage
             # mbox = QMessageBox()
             msg = errorCode + '\n' + errorMessage
             # mbox.setText(msg)
@@ -1309,7 +1310,6 @@ class SumControl(QMainWindow):
 
     def backup(self):
         self.w = BackupControl(self.settings)
-
 
     def disciplineTradeLog(self):
         self.w = DisciplineControl()
