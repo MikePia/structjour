@@ -459,6 +459,8 @@ class FileSetCtrl(QDialog):
             return ''
 
         d = self.settings.value('theDate')
+        if d is None:
+            return ''
         if isinstance(d, (QDate, QDateTime)):
             d = qtime2pd(d)
         Year = d.year

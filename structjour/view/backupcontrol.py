@@ -57,7 +57,6 @@ class BackupControl(QDialog):
         self.ui.backup.pressed.connect(self.backup)
         self.ui.restore.pressed.connect(self.restore)
         self.ui.init_settings.pressed.connect(self.initSettings)
-        
 
         if not os.path.exists(self.rootdir):
             self.ui.avail_backups.addItem('(No available backups)')
