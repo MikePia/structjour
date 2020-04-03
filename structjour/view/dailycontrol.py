@@ -34,7 +34,7 @@ from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBox
 
 from structjour.thetradeobject import SumReqFields
-from structjour.view.dailyform import Ui_Form as DailyForm
+from structjour.view.forms.dailyform import Ui_Form as DailyForm
 from structjour.view.dfmodel import PandasModel
 from structjour.view.ejcontrol import EJControl
 
