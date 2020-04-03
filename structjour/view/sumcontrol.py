@@ -42,6 +42,7 @@ from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
 from structjour.view.ejcontrol import EJControl
 from structjour.view.filesetcontrol import FileSetCtrl
+from structjour.view.calendarcontrol import CalendarControl
 from structjour.view.getdatecontrol import GetDate
 from structjour.view.exportexcel import ExportToExcel
 from structjour.view.dailycontrol import DailyControl
@@ -144,6 +145,7 @@ class SumControl(QMainWindow):
         self.ui.useDatabase.clicked.connect(self.dbDefault)
 
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
+        self.ui.calendarBtn.clicked.connect(self.calendarWidgetBtn)
         self.ui.lost.textEdited.connect(self.setMstkVal)
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
         self.ui.explain.textChanged.connect(self.setExplain)
@@ -784,6 +786,16 @@ class SumControl(QMainWindow):
         '''Add the layoutForms object to self'''
         self.lf = lf
 
+    def calendarWidgetBtn(self):
+        dadate_a = pd2qtime(self.settings.value('theDate'), qdate=True)
+        CalendarControl(self.settings, parent=self)
+        dadate_b = self.settings.value('theDate')
+        if dadate_a != dadate_b:
+            self.ui.dateEdit.setDate(dadate_b)
+            print(dadate_a, dadate_b)
+
+
+
     def loadTrade(self, key):
         '''
         CallBack for tradeList -- the combo box. Callback sends currentText-- which is our key
@@ -977,13 +989,12 @@ class SumControl(QMainWindow):
             else:
                 s = f"{count} DB tickets for {daDate.strftime('%A, %B %d, %Y')}"
             self.ui.infileEdit.setText(s)
+            statusstring = "With database checked, changing the date will load any trades in the database. Use the calendar to go to a specific date"
             if t_count:
                 self.ui.infileEdit.setStyleSheet('color: blue;')
-                statusstring = "Ready to load trades (press load or change the date)"
             elif count:
                 self.ui.infileEdit.setStyleSheet('color: green;')
                 self.ui.goBtn.setStyleSheet('color: green;')
-                statusstring = "Ready to process transactions (press go or change the date)"
             else:
                 self.ui.infileEdit.setStyleSheet('color: red;')
                 # self.ui.loadBtn.setStyleSheet('color: black;')
