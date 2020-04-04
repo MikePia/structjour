@@ -27,7 +27,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIntValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QApplication
 
-from structjour.view.stockapi import Ui_Dialog as SapiDlg
+from structjour.view.forms.stockapi import Ui_Dialog as SapiDlg
 from structjour.stock.utilities import ManageKeys, checkForIbapi
 
 

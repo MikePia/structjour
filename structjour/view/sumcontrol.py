@@ -48,7 +48,7 @@ from structjour.view.exportexcel import ExportToExcel
 from structjour.view.dailycontrol import DailyControl
 from structjour.view.sapicontrol import StockApi
 from structjour.view.stratcontrol import StratControl
-from structjour.view.summaryform import Ui_MainWindow
+from structjour.view.forms.summaryform import Ui_MainWindow
 from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
 from structjour.stock.apichooser import APIChooser
@@ -793,8 +793,6 @@ class SumControl(QMainWindow):
         if dadate_a != dadate_b:
             self.ui.dateEdit.setDate(dadate_b)
             print(dadate_a, dadate_b)
-
-
 
     def loadTrade(self, key):
         '''

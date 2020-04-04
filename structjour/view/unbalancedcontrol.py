@@ -29,7 +29,7 @@ import pandas as pd
 from PyQt5.QtWidgets import QApplication, QDialog
 from PyQt5.QtGui import QIntValidator
 
-from structjour.view.unbalanced import Ui_Dialog
+from structjour.view.forms.unbalanced import Ui_Dialog
 from structjour.view.dfmodel import PandasModel
 from structjour.view.styledhtml import StyledHTML
 

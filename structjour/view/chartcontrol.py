@@ -29,7 +29,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QDoubleValidator, QIcon
 from PyQt5.QtWidgets import QDialog, QApplication, QLineEdit, QCheckBox, QSpinBox, QComboBox
 
-from structjour.view.chartform import Ui_Form as ChartDlg
+from structjour.view.forms.chartform import Ui_Form as ChartDlg
 
 
 class ChartControl(QDialog):

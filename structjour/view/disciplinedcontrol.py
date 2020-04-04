@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
-Controller for duplicatetrade.ui
+Controller for disciplined form
 
 Created on September 2, 2019
 
@@ -34,7 +34,7 @@ from PyQt5.QtCore import QSettings
 
 from structjour.discipline.disciplined import registerTrades
 from structjour.stock.utilities import qtime2pd, pd2qtime
-from structjour.view.disciplinedform import Ui_Dialog as DisciplineDialog
+from structjour.view.forms.disciplinedform import Ui_Dialog as DisciplineDialog
 
 
 class DisciplineControl(QDialog):

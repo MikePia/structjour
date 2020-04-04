@@ -27,7 +27,7 @@ from datetime import datetime as dt
 import sys
 
 from structjour.utilities.backup import Backup
-from structjour.view.backupform import Ui_Dialog as BuDlg
+from structjour.view.forms.backupform import Ui_Dialog as BuDlg
 from structjour.view.ejcontrol import EJControl
 
 from PyQt5.QtCore import QSettings

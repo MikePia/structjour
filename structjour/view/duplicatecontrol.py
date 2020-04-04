@@ -28,7 +28,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog
 
-from structjour.view.duplicatetrade import Ui_Dialog as DupDialog
+from structjour.view.forms.duplicatetrade import Ui_Dialog as DupDialog
 from structjour.statements.dbdoctor import DbDoctor
 # pylint: disable = C0103
 

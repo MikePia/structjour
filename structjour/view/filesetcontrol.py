@@ -29,7 +29,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMessageBox, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings, QDate, QDateTime
 
-from structjour.view.filesettings import Ui_Dialog as FileSettingsDlg
+from structjour.view.forms.filesettings import Ui_Dialog as FileSettingsDlg
 
 from structjour.stock.utilities import qtime2pd
 

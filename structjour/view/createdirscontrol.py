@@ -24,7 +24,7 @@ Created on February 8, 2020
 
 import sys
 import pandas as pd
-from structjour.view.createdirs import Ui_Dialog as CreateDirsDialog
+from structjour.view.forms.createdirs import Ui_Dialog as CreateDirsDialog
 from structjour.time import createDirsStructjour
 
 from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox

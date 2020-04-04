@@ -25,7 +25,7 @@ Created on February 25, 2020
 import sys
 
 from structjour.stock.utilities import qtime2pd
-from structjour.view.getdate import Ui_Dialog as GetDateDialog
+from structjour.view.forms.getdate import Ui_Dialog as GetDateDialog
 
 from PyQt5.QtWidgets import QApplication, QDialog
 from PyQt5.QtGui import QIcon

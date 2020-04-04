@@ -28,7 +28,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog, QFileDialog
 from PyQt5.QtCore import QSettings
 
-from structjour.view.enterjournal import Ui_Dialog as EjDlg
+from structjour.view.forms.enterjournal import Ui_Dialog as EjDlg
 
 # pylint: disable = C0301, C0103
 

@@ -29,7 +29,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import QSettings, QUrl
 
 from structjour.xlimage import XLImage
-from structjour.view.strategybrowser import Ui_Form
+from structjour.view.forms.strategybrowser import Ui_Form
 from structjour.strategy.strategies import Strategy
 
 
