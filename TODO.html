@@ -1,0 +1,192 @@
+<!DOCTYPE html<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style type="text/css">
+        p,
+        li {
+            white-space: pre-wrap;
+        }
+        div {
+            border-top: 0px;
+            border-bottom: 0px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }
+
+        h3 {
+            margin-top: 6px;
+            margin-bottom: 12px;
+            margin-left: 0px;
+            margin-right: 0px;
+            text-indent: 0px;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7.8pt;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        .large {
+            font-size: large;
+            font-weight: 600;
+        }
+
+        .blue {
+            font-size: large;
+            font-weight: 600;
+            color: #0000ff;
+        }
+
+        .red {
+            font-weight: 600;
+            color: #aa0000;
+        }
+
+        .green {
+            font-weight: 600;
+            color: #00ff00;
+        }
+
+        .explain {
+            margin-top: 12px;
+            margin-bottom: 12px;
+            margin-left: 0px;
+            margin-right: 0px;
+            text-indent: 10px;
+        }
+
+        ul {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
+        }
+
+        li {
+            font-size: 8pt;
+            margin-top: 5px;
+            margin-bottom: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
+            text-indent: 0px;
+        }
+
+        .li2 {
+            margin-top: 0px;
+        }
+
+        .li3 {
+            margin-top: 0px;
+            margin-bottom: 12px;
+        }
+        p.indent{
+            text-indent: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>TODO</h1>
+    <h3>Version 0.93-Alpha.001</h3>
+    <ol>
+        <li> <span class="red">Provide a details view </span>for each trade showing the transactions as found in Daily Summary but just for the one trade.</li>
+        <li> <span class="red">Change Daily Summary </span>to include bar charts to show summaries for the day.</li>
+        <li> <span class="red">     Add tags combobox </span>to summaryForm backed by db--simlar to how strategies are done.</li>
+        <li> <span class="red">     Move dailyNotes </span>from the dailyForm to summaryForm.</li>
+        <li> <span class="red">     Re do dailyForm layout </span>to use splitters.</li>
+        <li> <span class="red">Implement a caching </span>of chart data. Save csv in out/.cache directory for each day. Unfortunately will need seperate entries for different APIS.</li>
+        <li> <span class="red">Annotate the charts </span>to show the data source.</li>
+        <li> <span class="red">Create a statistics hub </span>widget to replace the disciplined excel thing.</li>
+        <li> <span class="red">Finnhub chart data </span>sometimes is weird with all green candles. Seems to happen only on the 1 minute charts. Its like the OHLC vals got sorted. Figure out what is going on</li>
+        <li> <span class="red">The db entries on my system</span> for TargDiff, SlDiff, RR, MaxLoss, and MstkVal are inconsistent. Some of them are excel formulas and some are numbers. They should all be numbers or empty. Excel formulas should only exist up to the point they are used. The most recent date is march 3, 2019 so it probably does not affect any PyPi distributions, but it should auto correct as statments are saved. ... And it does already but... I think it lost explain and notes.
+            select DISTINCT Date, RR, TargDiff, SLDiff, MaxLoss, MstkVal from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date
+            select DISTINCT Date from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date.</li>
+            <li> <span class="red">Database field order has become</span> inconsistent in trade_sum revealing SELECT * order errors. Start a tradesum model class to fix it</li>
+            <li> <span class="red">Update all of IbStatementDB</span> to use the model class.</li>
+        <li><span class="red">Give a set static </span>time option for one of the charts. (Intended for an all-day 15~30 min chandle chart.</li>
+        <li> <span class="red">When opening Ib Statement </span>, if using the journal directory, write a DAS style positions.csv to the default location. Add the date to the name, a date column and a column to indicate the source. Note there can only be one positions.csv per statement. Even for a yearly statement</li>
+        <li> <span class="red">Abstract the journal path </span> from the table chart.path. (Exclude arbitrary path. .... have to update the db. This is a data migration not a model migration. Its temporary for a couple pre-releases then gets removed from migration)</li>        
+        <li> <span class="red">Add an account filter. </span>Prereq is the explain entry above. Could allow deleting all trades from an account. (Presumably SIM). Could involve only importing from accounts marked in setting. Could involve only viewing trades from a given account.</li>
+        <li> <span class="red">Maybe  </span>in the entries, make buys green and sells red. Same with PL.</li>
+        <li> <span class="red">Change  </span>the font for explain and notes.</li>
+        <li> <span class="red">Add  </span>some font control for explain and notes.-- probably in context menu.</li>
+        <li> <span class="red">Create </span>an initialization wizard that leads the user through the initial setup.</li>
+        <li> <span class="red">Moving average </span>'delayed start' for all apis. (partially done?)</li>
+        <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit.</li>
+    </ol>
+    <h3>Version 0.92-Alpha.001</h3>
+    <ol>
+        <li> <span class="green">Add backup</span>-restore-initialize utility.</li>
+        <li> <span class="green">Chart date widget bug. </span>In ChartMage, the widgets are attempting to upgrade but its in a non-gui thread. Move it out to chartMagic1, 2, and 3.</li>
+        <li> <span class="green">API Chooser </span>should choose a working api. When AV trade failed rules, it did not pick up the next choice. (Can't get it to fail)</li>        
+        <li><span class="green">Create a setting </span>for each api with a datetime value to indicate quota has been reached until a given time. Note that for av, just implement the 5 per minute throttle as you really have to work at it to reach 500 with the throttle. They don't consistently reset the 1 minute time limit. Try 2 minutes. The api will roll on to the next one and this whould minimize the interference. Implement for av, bc, fh and wtd </li>
+        <li><span class="green">Add rules to the </span>api chooser to check for quota</li>
+        <li><span class="green">Put the apiChooser </span>call in a while loop dependent on apiList having a value. Created a method in APIChooser to do it.</li>
+        <li> <span class="green">Remove a button. </span>Keep only one save/load button. Will involve automatically changing radio button from DAS or IB to DB after reading a file. Should be able to eliminate a runnitDB method. There are two of them in RunController</li>
+        <li> <span class="green">Automatically load trade </span>data when the date widget or trade widget is changed and trades are in the db. Prereq: Remove a button</li>
+        <li> <span class="green">Automatically save trade </span>data when the date widget or trade widget is changed and trades are marked changed.</li>
+        <li> <span class="green">Add real RR</span> that figures the actual Reward/StopLoss. Some problems. It involves updating the database, and the layout form. The necessary changes have tentacles throughout the app.</li>
+        <li> <span class="green">Prelim. Create DB Migration procedure  </span> The db update should occur before running the program. Will place updates in migrations folder with numbered files. New files for more updates will increment the number and have a descriptive name as to the module where the db table creation is. The updates need to be tied to app version numbers. That also needs to be implemented. For such a small change, this has many steps and they affect future development. It will be minimally django like in preparation for the app to be much more django like. Start thinking about how to move all db stuff into django model classes. Finally with all the changes made in the past week, there are bound to be issues. So I should start a fork in order to keep bug fixes current on the pre migrations code.</li>
+        <li> <span class="green">Allow user to browse </span>a file in any location. Currently it checks for journal dir. This will require a QMessage info dialog to ask user for the date.</li>
+        <li> <span class="green">Make the out directory </span>automatic.</li>
+        <li> <span class="green">Make the naming scheme </span>automatic.</li>
+        <li> <span class="green">Fix the RTG </span>to generate more realistic trades for thorough testing. Add a positions.csv generator to accompany it. Let it save them with a test name.</li>
+        <li> <span class="green">When opening DAS </span>statement, only use the default 'positions.csv' if retrieving it under the journal directory.</li>
+        <li> <span class="green">In Trade Summary </span>table, the balance is represented as dollar amounts.(Error does not happen)</li>
+        <li> <span class="green">Give default </span>logfile location. Set it automatically if not set</li>
+        <li> <span class="green">Give default</span>Db location. Set them automatically if not set.</li>
+        <li> <span class="green">Auto generate</span>the created directories, remove the choice for scheme and place manual creation separate menu item</li>
+        <li> <span class="green">Implement  </span>the inspire quotes at least minimally.</li>
+        <li> <span class="green">Identify </span>and test all members of lLayoutForm that can be tested automatically</li>
+        <li> <span class="green">List </span>the othere members and make a list of ways to test them manually.</li>
+
+        <li> <span class="green">Connect</span> the Stock API for IB port stuff and the keys</li>
+        <li> <span class="green">Implement </span>Some kind of logic to load both IB real and Paper ports but set the chosen one active.</li>
+
+        <li> <span class="green">Move</span> the Key data from pickle to Database</li>
+        <li> <span class="green">Fix </span>the IB code to use settings for port and id</li>
+        <li> <span class="green">Place </span> stock keys in the database from the stockapi dlg</li>
+        <li> <span class="green">Test </span> settings by deleting them a buch of times. Find all errors from file settings
+
+        <li> <span class="green">Test </span> settings by deleting them a buch of times. Find all errors from unbalanced settings.
+        </li>
+        <li> <span class="green">Test </span> settings by deleting them a buch of times. Find all errors from stockAPI</li>
+        <li> <span class="green">Test </span> settings by deleting them a buch of times. Find all errors from strategy browser</li>
+        <li> <span class="green">Try </span>to find any possibility of after hours data for barchart and alphavantage</li>
+        <li> <span class="green">When </span>you are sure (not available probablly), provide infor to user-- maybe tool tips in StockAPI dialog</li>
+        <li> <span class="green">Create </span>a nice default chart look</li>
+        <li> <span class="green">Show </span>moving averages</li>
+        <li> <span class="green">User control </span>over which moving averages and line colors</li>
+        <li> <span class="green">Add MAs </span>and vwap to charts</li>
+        <li> <span class="green">Get rid </span>of the data ticks on axis 1</li>
+        <li> <span class="green">Find a way </span>to set ticks at multipals of the interval and at even numbers by 5s and the like</li>
+        <li> <span class="green">Set </span>the chart ticks dependent on the interval size</li>
+        <li> <span class="green">Find a way </span>to set the volume like 1.2M or 350K </li>
+        <li> <span class="green">Fix </span>the chart entries which seem to be broken</li>
+        <li> <span class="green">Create </span>a chart user control page</li>
+        <li> <span class="green">Create </span>the chart dialog to give the some amout of control over charts.</li>
+        <li> <span class="green">Create </span>a utility for the StockAPI dialog that runs it standalone.</li>
+        <li> <span class="green">Pop up  </span>the stockapi dialog if chart is attempted and no stock api is chosen. Closed. Pop up a query instead.</li>
+        <li> <span class="green">Implement  </span>preferred and not from the strategy browser to the strategy dropdown box..</li>
+        <li> <span class="green">Implement  </span>a trades table as done in escel version</li>
+        <li> <span class="green">Implement  </span>a daily summary as done in excel version</li>
+        <li> <span class="green">Implement  </span>a mistake form as </li>
+
+        </li>
+    </ol>
+
+
+    <h3>Not going to implement (probably)</h3>
+    <ul>
+        <li> <span class="red">Make chart creation </span>an automatic setting. This might be a bad idea.... </li>
+        <li> <span class="red">Automatically place</span>Disciplined.xlsx in journal directory</li>
+        <li> <span class="red">The explain db entry </span>is in the wrong db.</li>
+
+    </ul>
+</body>
+
+</html>

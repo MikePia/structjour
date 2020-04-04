@@ -21,7 +21,6 @@ doodles
 *.db
 *.txt
 .coverage
-TODO*
 *.zst
 *egg-info*
 *.pickle
