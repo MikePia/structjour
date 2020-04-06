@@ -73,6 +73,8 @@ class SumControl(QMainWindow):
     :Settings-keys: ['theDate', 'setToday', scheme', 'journal', 'dasInfile', 'dasInfile2',
                      'ibInfile', ibInfileName', outdir, 'interval', inputType]
     '''
+    image_w_default = 660
+    image_h_default = 480
 
     def __init__(self, level=logging.DEBUG):
         '''
@@ -326,7 +328,7 @@ class SumControl(QMainWindow):
             name = self.defaultImage
 
         pixmap = QPixmap(name)
-        pixmap = pixmap.scaled(widg.width(), widg.height(), Qt.IgnoreAspectRatio)
+        pixmap = pixmap.scaled(self.image_w_default, self.image_h_default, Qt.IgnoreAspectRatio)
         widg.setPixmap(pixmap)
 
     def chartIntervalChanged(self, val, ckey):
@@ -472,7 +474,7 @@ class SumControl(QMainWindow):
         pname = fp.graph_candlestick(ticker, chooser, begin, end, interval, save=pname)
         if pname:
             pixmap = QPixmap(pname)
-            pixmap = pixmap.scaled(widg.width(), widg.height(), Qt.IgnoreAspectRatio)
+            pixmap = pixmap.scaled(self.image_w_default, self.image_h_default, Qt.IgnoreAspectRatio)
             widg.setPixmap(pixmap)
             data = [pname, begin, end, interval]
             self.lf.setChartData(key, data, c)
@@ -672,7 +674,7 @@ class SumControl(QMainWindow):
 
             if path[0]:
                 pixmap = QPixmap(path[0])
-                pixmap = pixmap.scaled(x.width(), x.height(), Qt.IgnoreAspectRatio)
+                pixmap = pixmap.scaled(self.image_w_default, self.image_h_default, Qt.IgnoreAspectRatio)
                 x.setPixmap(pixmap)
                 d = self.settings.value('theDate')
 
