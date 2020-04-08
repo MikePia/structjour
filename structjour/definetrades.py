@@ -331,6 +331,9 @@ class DefineTrades(object):
             if tdf.at[x0, rc.bal] != 0:
                 firstrow = True
                 for i, row in tdf.iterrows():
+                    # Cant fix anythintg if the balance is not set
+                    if row[rc.bal] is None:
+                        break
                     if firstrow:
                         side = True if row[rc.bal] > 0 else False
                         firstrow = False
