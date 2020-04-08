@@ -133,50 +133,51 @@ class TestDailyCtrl(TestCase):
         # just in case the testdb was written to settings
         self.apiset.setValue('dbsqlite', self.realdb)
 
-    def test_commitNote(self):
-        '''
-        Test the commitNote method with no note arg -- retrieves note from note widget.
-        Test not creation and note update.
-        '''
-        # daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(self.theDate, db=self.testdb)
-        dc.runDialog(self.df, tradeSum=self.ts)
-        dc.dropTable()
-        dc.createTable()
-        note = '''Twas all hallow's  eve and all throug the grove
-                  jabberwock trounced his thro boro-dove'''
-        dc.ui.dailyNotes.setText(note)
-        dc.commitNote()
-        xnote = dc.getNote()
-        self.assertEqual(note, xnote)
+    # Could use these in Test_DailyNote when it exists
+    # def test_commitNote(self):
+    #     '''
+    #     Test the commitNote method with no note arg -- retrieves note from note widget.
+    #     Test not creation and note update.
+    #     '''
+    #     # daDate = pd.Timestamp('2021-06-06')
+    #     dc = DailyControl(self.theDate, db=self.testdb)
+    #     dc.runDialog(self.df, tradeSum=self.ts)
+    #     dc.dropTable()
+    #     dc.createTable()
+    #     note = '''Twas all hallow's  eve and all throug the grove
+    #               jabberwock trounced his thro boro-dove'''
+    #     dc.ui.dailyNotes.setText(note)
+    #     dc.commitNote()
+    #     xnote = dc.getNote()
+    #     self.assertEqual(note, xnote)
 
-        updatenote = '''Twas all hallow's  eve and all throug the grove
-                        jabberwock trounced his thro boro-dove.
-                        The Jack-lanterns sat on porch all alight,
-                        the hopes of the ghouls was thick in the night.'''
-        dc.ui.dailyNotes.setText(updatenote)
-        dc.commitNote()
-        xnote = dc.getNote()
-        self.assertEqual(updatenote, xnote)
+    #     updatenote = '''Twas all hallow's  eve and all throug the grove
+    #                     jabberwock trounced his thro boro-dove.
+    #                     The Jack-lanterns sat on porch all alight,
+    #                     the hopes of the ghouls was thick in the night.'''
+    #     dc.ui.dailyNotes.setText(updatenote)
+    #     dc.commitNote()
+    #     xnote = dc.getNote()
+    #     self.assertEqual(updatenote, xnote)
 
-    def test_populateNotes(self):
-        '''
-        Tests the populateNotes method. It gets not from the db and sets the note widget text.
-        '''
-        daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate, db=self.testdb)
-        dc.runDialog(self.df, tradeSum=self.ts)
-        dc.dropTable()
-        dc.createTable()
-        dc.populateNotes()
-        note = '''Twas all hallow's  eve and all throug the grove
-                  jabberwock trounced his thro boro-dove'''
-        dc.setNote(note)
-        widgnote = dc.ui.dailyNotes.toPlainText()
-        self.assertTrue(not widgnote)
-        dc.populateNotes()
-        widgnote = dc.ui.dailyNotes.toPlainText()
-        self.assertEqual(widgnote, note)
+    # def test_populateNotes(self):
+    #     '''
+    #     Tests the populateNotes method. It gets not from the db and sets the note widget text.
+    #     '''
+    #     daDate = pd.Timestamp('2021-06-06')
+    #     dc = DailyControl(daDate, db=self.testdb)
+    #     dc.runDialog(self.df, tradeSum=self.ts)
+    #     dc.dropTable()
+    #     dc.createTable()
+    #     dc.populateNotes()
+    #     note = '''Twas all hallow's  eve and all throug the grove
+    #               jabberwock trounced his thro boro-dove'''
+    #     dc.setNote(note)
+    #     widgnote = dc.ui.dailyNotes.toPlainText()
+    #     self.assertTrue(not widgnote)
+    #     dc.populateNotes()
+    #     widgnote = dc.ui.dailyNotes.toPlainText()
+    #     self.assertEqual(widgnote, note)
 
     def test_populateStuff(self):
         '''Test the headers for populateS (modelS), populateM (modelM) and the pandas modelT after runDialog'''

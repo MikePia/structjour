@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\dailyform_elastic.ui'
+# Form implementation generated from reading ui file '.\dailyform.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -22,21 +22,6 @@ class Ui_Form(object):
         self.splitter = QtWidgets.QSplitter(Form)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
         self.splitter.setObjectName("splitter")
-        self.dailyNotes = MyTextEdit(self.splitter)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dailyNotes.sizePolicy().hasHeightForWidth())
-        self.dailyNotes.setSizePolicy(sizePolicy)
-        self.dailyNotes.setMinimumSize(QtCore.QSize(0, 150))
-        self.dailyNotes.setMaximumSize(QtCore.QSize(16777215, 150))
-        font = QtGui.QFont()
-        font.setFamily("Arial Narrow")
-        font.setPointSize(11)
-        self.dailyNotes.setFont(font)
-        self.dailyNotes.setAutoFillBackground(False)
-        self.dailyNotes.setStyleSheet("background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(221, 232, 118, 255), stop:1 rgba(255, 255, 255, 255));")
-        self.dailyNotes.setObjectName("dailyNotes")
         self.mstkForm = QtWidgets.QTableView(self.splitter)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -73,16 +58,16 @@ class Ui_Form(object):
         self.dailyStatTab.horizontalHeader().setVisible(False)
         self.dailyStatTab.horizontalHeader().setStretchLastSection(True)
         self.dailyStatTab.verticalHeader().setVisible(False)
-        self.widget = QtWidgets.QWidget(self.splitter)
-        self.widget.setObjectName("widget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(self.splitter)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
-        self.label_3 = QtWidgets.QLabel(self.widget)
+        self.label_3 = QtWidgets.QLabel(self.layoutWidget)
         font = QtGui.QFont()
         font.setFamily("Arial Rounded MT Bold")
         font.setPointSize(24)
@@ -92,7 +77,7 @@ class Ui_Form(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.tradeTable = QtWidgets.QTableView(self.widget)
+        self.tradeTable = QtWidgets.QTableView(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -109,12 +94,5 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.dailyNotes.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Arial Narrow\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
-        self.dailyNotes.setPlaceholderText(_translate("Form", "Notes for daily summary"))
         self.mstkForm.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:12pt; color:#0000ff;\">The mistake/pertinent feature note is populated from the erroror/summarized field in the trade summaries. The lost plays is populated from the Amt Lost field.</span></p></body></html>"))
         self.label_3.setText(_translate("Form", "Trade Table"))
-from structjour.view.mytextedit import MyTextEdit

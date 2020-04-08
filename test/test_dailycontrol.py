@@ -73,66 +73,67 @@ class TestDailyCtrl(TestCase):
     def tearDown(self):
         pass
 
-    def test_drop_createTable(self):
-        '''Test the creation and drop of the daily notes table'''
-        dc = DailyControl(pd.Timestamp.now(), self.testdb)
+    # Use these  Nothing left here
+    # def test_drop_createTable(self):
+    #     '''Test the creation and drop of the daily notes table'''
+    #     dc = DailyControl(pd.Timestamp.now(), self.testdb)
 
-        con = sqlite3.connect(self.testdb)
-        mycur = con.cursor()
+    #     con = sqlite3.connect(self.testdb)
+    #     mycur = con.cursor()
 
-        dc.dropTable()
-        mycur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
-        available_tables = [x[0] for x in mycur.fetchall()]
-        self.assertNotIn("daily_notes", available_tables)
+    #     dc.dropTable()
+    #     mycur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+    #     available_tables = [x[0] for x in mycur.fetchall()]
+    #     self.assertNotIn("daily_notes", available_tables)
 
-        dc.createTable()
-        mycur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
-        available_tables = [x[0] for x in mycur.fetchall()]
-        self.assertIn("daily_notes", available_tables)
+    #     dc.createTable()
+    #     mycur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+    #     available_tables = [x[0] for x in mycur.fetchall()]
+    #     self.assertIn("daily_notes", available_tables)
 
-        dc.dropTable()
-        mycur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
-        available_tables = [x[0] for x in mycur.fetchall()]
-        self.assertNotIn("daily_notes", available_tables)
+    #     dc.dropTable()
+    #     mycur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+    #     available_tables = [x[0] for x in mycur.fetchall()]
+    #     self.assertNotIn("daily_notes", available_tables)
 
-    def test_commitNote(self):
-        '''
-        Tests commitNote with an argument for note for creating new note
-        '''
-        daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate, db=self.testdb)
-        # dc.runDialog(self.df, tradeSum=self.ts)
-        dc.dropTable()
-        dc.createTable()
-        note = '''Twas all hallow's  eve and all throug the grove
-                  jabberwock trounced his thro boro-dove'''
-        # dc.ui.dailyNotes.setText(note)
-        dc.commitNote(note=note)
-        xnote = dc.getNote()
-        self.assertEqual(note, xnote)
+    # def test_commitNote(self):
+    #     '''
+    #     Tests commitNote with an argument for note for creating new note
+    #     '''
+    #     daDate = pd.Timestamp('2021-06-06')
+    #     dc = DailyControl(daDate, db=self.testdb)
+    #     # dc.runDialog(self.df, tradeSum=self.ts)
+    #     dc.dropTable()
+    #     dc.createTable()
+    #     note = '''Twas all hallow's  eve and all throug the grove
+    #               jabberwock trounced his thro boro-dove'''
+    #     # dc.ui.dailyNotes.setText(note)
+    #     dc.commitNote(note=note)
+    #     xnote = dc.getNote()
+    #     self.assertEqual(note, xnote)
 
-    def test_commitNote_update(self):
-        '''
-        Tests commitNote with an argument for note for creating new note
-        '''
-        daDate = pd.Timestamp('2021-06-06')
-        dc = DailyControl(daDate, db=self.testdb)
-        # dc.runDialog(self.df, tradeSum=self.ts)
-        dc.dropTable()
-        dc.createTable()
-        note = '''Twas all hallow's  eve and all throug the grove
-                  jabberwock trounced his thro boro-dove'''
-        dc.commitNote(note=note)
-        note = '''Forget all that'''
-        dc.commitNote(note=note)
-        xnote = dc.getNote()
-        self.assertEqual(note, xnote)
+    # def test_commitNote_update(self):
+    #     '''
+    #     Tests commitNote with an argument for note for creating new note
+    #     '''
+    #     daDate = pd.Timestamp('2021-06-06')
+    #     dc = DailyControl(daDate, db=self.testdb)
+    #     # dc.runDialog(self.df, tradeSum=self.ts)
+    #     dc.dropTable()
+    #     dc.createTable()
+    #     note = '''Twas all hallow's  eve and all throug the grove
+    #               jabberwock trounced his thro boro-dove'''
+    #     dc.commitNote(note=note)
+    #     note = '''Forget all that'''
+    #     dc.commitNote(note=note)
+    #     xnote = dc.getNote()
+    #     self.assertEqual(note, xnote)
 
-    def test_getnote(self):
-        pass  # test is covered in commitNote tests
+    # def test_getnote(self):
+    #     pass  # test is covered in commitNote tests
 
-    def test_populateNotes(self):
-        pass
+    # def test_populateNotes(self):
+    #     pass
 
     def test_populateStuff(self):
         pass
@@ -147,11 +148,6 @@ def main():
 
 def notmain():
     t = TestDailyCtrl()
-    # t.test_DailyControl()
-    # t.test_drop_createTable()
-    # t.test_commitNote()
-    t.test_commitNote_update()
-    # t.setUp()
 
 
 if __name__ == '__main__':

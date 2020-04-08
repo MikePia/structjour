@@ -99,27 +99,6 @@ class DailyControl(QDialogWClose):
                 self.db = os.path.join(j, 'structjour.sqlite')
                 settings.setValue('tradeDb', self.db)
 
-    def createTable(self):
-        '''create db table'''
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        cur.execute('''
-            CREATE TABLE if not exists "daily_notes" (
-                "date"	INTEGER,
-                "note"	TEXT,
-                PRIMARY KEY("date"))''')
-        conn.commit()
-
-    def dropTable(self):
-        '''Drop db table daily_notes'''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        cur.execute('''DROP TABLE IF EXISTS daily_notes''')
-        conn.commit()
-
     def commitNote(self, note=None):
         '''
         Save or update the db file for the notes field. If no note is given. will retrieve the text
@@ -227,12 +206,6 @@ class DailyControl(QDialogWClose):
         self.ui.dailyStatTab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.populateS()
         self.setWindowTitle('Daily Summary ... text edited')
-
-        self.ui.dailyNotes.clicked.connect(self.saveNotes)
-        self.ui.dailyNotes.textChanged.connect(self.dNotesChanged)
-
-        self.createTable()
-        self.populateNotes()
 
         self.setWindowTitle('Daily Summary')
 
