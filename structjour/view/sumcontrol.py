@@ -49,6 +49,7 @@ from structjour.view.dailycontrol import DailyControl
 from structjour.view.sapicontrol import StockApi
 from structjour.view.stratcontrol import StratControl
 from structjour.view.forms.summaryform import Ui_MainWindow
+from structjour.statements.dailynotes import DailyNotes
 from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
 from structjour.stock.apichooser import APIChooser
@@ -109,6 +110,7 @@ class SumControl(QMainWindow):
         self.baseWindowTitle = 'Structjour -- Daily trade review'
         self.lf = None
         self.ui = ui
+        self.dailyNote = None
 
         self.settings.setValue('runType', 'QT')
         now = None
@@ -146,6 +148,8 @@ class SumControl(QMainWindow):
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.useDatabase.clicked.connect(self.dbDefault)
 
+        # self.ui.dailyNote.clicked.connect(self.saveNotes)
+        self.ui.dailyNote.textChanged.connect(self.dNotesChanged)
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.calendarBtn.clicked.connect(self.calendarWidgetBtn)
         self.ui.lost.textEdited.connect(self.setMstkVal)
@@ -206,6 +210,7 @@ class SumControl(QMainWindow):
     # =================================================================
 
     def markDataChanged(self):
+        # In the course of loading a trade, this will be called. The title is unmarked at the end of loading the trades.
         t = self.windowTitle()
         if not t[-1] == '*':
             t += '***'
@@ -297,6 +302,13 @@ class SumControl(QMainWindow):
         self.lf.saveTheTradeObject(outpathfile)
         self.ui.infileEdit.setStyleSheet('color: blue;')
         t = self.windowTitle()
+        key = self.ui.tradeList.currentText()
+        if not oldDate:
+            oldDate = pd.Timestamp(self.lf.ts[key]['Date'].unique()[0])
+        else:
+            oldDate = qtime2pd(oldDate)
+        dailyNoteModel = DailyNotes()
+        dailyNoteModel.commitNote(note=self.ui.dailyNote.toPlainText(), daDate=oldDate)
         if t[-1] == '*':
             t = t[:-3]
             self.setWindowTitle(t)
@@ -753,7 +765,10 @@ class SumControl(QMainWindow):
             if not note:
                 self.lf.setClean(key, True)
                 self.stopLoss(self.ui.stop.text())
-            val = 0.0
+                # HACK ALERT: It is possible stopLoss->setStopVals has caused setMstkVal to be called in an
+                # insidious callback recursion. Short circuiting here allows that update to stand.
+                return
+            # val = 0.0
         else:
             self.lf.setClean(key, False)
         if val in ('-', ''):
@@ -919,6 +934,9 @@ class SumControl(QMainWindow):
         if t[-1] == '*':
             self.saveTradeObject(self.oldDate)
 
+    def dNotesChanged(self):
+        self.markDataChanged()
+
     def theDateChanged(self, val):
 
         self.doWeSave()
@@ -944,6 +962,7 @@ class SumControl(QMainWindow):
         if isinstance(daDate, (QDate, QDateTime)):
             daDate = qtime2pd(daDate)
         self.settings.setValue('theDate', daDate)
+
         indir = self.getDirectory()
         inputType = self.settings.value('inputType')
         if inputType == 'DAS':
@@ -1023,6 +1042,7 @@ class SumControl(QMainWindow):
 
         if not infile:
             return
+
         self.setColorsAndLabels(inpathfile)
 
     def setColorsAndLabels(self, infile):

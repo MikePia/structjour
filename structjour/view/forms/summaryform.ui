@@ -306,7 +306,7 @@ p, li { white-space: pre-wrap; }
             </widget>
            </item>
            <item>
-            <widget class="MyTextEdit" name="textEdit">
+            <widget class="MyTextEdit" name="dailyNote">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>

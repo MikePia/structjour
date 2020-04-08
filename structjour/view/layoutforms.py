@@ -35,6 +35,7 @@ from structjour.definetrades import DefineTrades
 from structjour.stock.utilities import qtime2pd
 
 from structjour.statements.ibstatementdb import StatementDB
+from structjour.statements.dailynotes import DailyNotes
 from structjour.thetradeobject import SumReqFields, runSummaries, setTradeSummaryHeaders
 
 
@@ -172,28 +173,6 @@ class LayoutForms:
         self.ts = ibdb.updateTradeSummaries(self.ts)
         self.sc.ui.useDatabase.setChecked(True)
 
-        # This is legacy stuff. It will run IFF we are lacking a loaded trade table and we
-        # have one already pickled.
-        df = None
-        dfname = self.getStoredTradeName()
-        if dfname and os.path.exists(dfname):
-            with open(dfname, "rb") as f:
-                df = pickle.load(f)
-        if df is not None and self.df is None:
-            # Will soon delete these pickled items from the project
-            logging.error(f'Using a pickled trade table object in saveTheTradeObject: {dfname}')
-            self.df = df
-        if self.df is None:
-            logging.warning('Failed to locate the trades information. Pickle FAILED')
-            return
-        # if df is not None and self.df is not None:
-        #     if not pd.DataFrame.equals(df, self.df):
-        #         raise ValueError("blah blah blah")
-        # It happens when -- after loading an older version of the file-- click save with a new
-        # current version.
-
-        with open(name, "wb") as f:
-            pickle.dump((self.ts, self.entries, self.df), f)
 
     def loadTradesFromDB(self, theDate=None):
         '''
@@ -223,6 +202,14 @@ class LayoutForms:
         for key in self.ts:
             self.sc.ui.tradeList.addItem(key)
             tradeSummaries.append(self.ts[key])
+
+        # Load dailyote
+        dailyNoteModel = DailyNotes(theDate)
+        note = dailyNoteModel.getNote()
+        self.dailyNoteModel = dailyNoteModel
+        if not note:
+            note = ""
+        self.sc.ui.dailyNote.setText(note)
 
         inf = self.sc.ui.infileEdit.text()
         windowTitle = f"{self.sc.baseWindowTitle}: {inf}: User Data Loaded"
@@ -460,6 +447,8 @@ class LayoutForms:
                 tto[rc.mstkval] = lost
                 note = 'Loss exceeds max loss!'
                 tto[rc.mstknote] = note
+                ibdb = StatementDB()
+                ibdb.updateMstkVals(tto['id'].unique()[0], lost, note)
         return (lost, note, clean)
 
     def setClean(self, key, b):

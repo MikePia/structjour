@@ -628,6 +628,19 @@ class StatementDB:
 
         return False
 
+    def updateMstkVals(self, ts_id, val, note, conn=None):
+        if not ts_id:
+            return
+        if not conn:
+            conn = sqlite3.connect(self.db)
+
+        cur = conn.cursor()
+        ts_id = int(ts_id)
+        sf = self.sf
+        cur.execute(f'''UPDATE trade_sum SET {sf.mstkval} = ?, {sf.mstknote} = ?
+                WHERE id = ?''', (val, note, ts_id))
+        conn.commit()
+
     def isDateCovered(self, cur, account, d):
         '''
         Test if date d is covered in the given account

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\summaryform_withnotes4.ui'
+# Form implementation generated from reading ui file '.\summaryform.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -152,21 +152,21 @@ class Ui_MainWindow(object):
         self.link.setOpenExternalLinks(True)
         self.link.setObjectName("link")
         self.controlframe_layout.addWidget(self.link)
-        self.textEdit = MyTextEdit(self.control_frame)
+        self.dailyNote = MyTextEdit(self.control_frame)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.textEdit.sizePolicy().hasHeightForWidth())
-        self.textEdit.setSizePolicy(sizePolicy)
-        self.textEdit.setMinimumSize(QtCore.QSize(0, 119))
-        self.textEdit.setMaximumSize(QtCore.QSize(16777215, 119))
+        sizePolicy.setHeightForWidth(self.dailyNote.sizePolicy().hasHeightForWidth())
+        self.dailyNote.setSizePolicy(sizePolicy)
+        self.dailyNote.setMinimumSize(QtCore.QSize(0, 119))
+        self.dailyNote.setMaximumSize(QtCore.QSize(16777215, 119))
         font = QtGui.QFont()
         font.setFamily("Arial Narrow")
         font.setPointSize(11)
-        self.textEdit.setFont(font)
-        self.textEdit.setStyleSheet("background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(221, 232, 118, 255), stop:1 rgba(255, 255, 255, 255));")
-        self.textEdit.setObjectName("textEdit")
-        self.controlframe_layout.addWidget(self.textEdit)
+        self.dailyNote.setFont(font)
+        self.dailyNote.setStyleSheet("background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(221, 232, 118, 255), stop:1 rgba(255, 255, 255, 255));")
+        self.dailyNote.setObjectName("dailyNote")
+        self.controlframe_layout.addWidget(self.dailyNote)
         self.gridLayout.addLayout(self.controlframe_layout, 0, 0, 1, 1)
         self.toplevel_layout.addWidget(self.control_frame)
         self.line = QtWidgets.QFrame(self.centralwidget)
@@ -1375,7 +1375,7 @@ class Ui_MainWindow(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Consolas,Courier New,monospace\'; font-size:7pt; color:#22aa44;\">To do exceptionally well you have to push your limits and that, if you push your limits, you will crash, and it will hurt a lot. You will think that you have failed--but that won\'t be true unless you give up. </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Consolas,Courier New,monospace\'; font-size:7pt; color:#22aa44;\">    Ray Dalio, founder Bridgewater assoc</span></p></body></html>"))
         self.link.setText(_translate("MainWindow", "Tags will go here"))
-        self.textEdit.setPlaceholderText(_translate("MainWindow", "Notes for the day"))
+        self.dailyNote.setPlaceholderText(_translate("MainWindow", "Notes for the day"))
         self.title.setText(_translate("MainWindow", "Stock Name"))
         self.plHead.setText(_translate("MainWindow", "P / L"))
         self.startHead.setText(_translate("MainWindow", "Start"))

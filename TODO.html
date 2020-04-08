@@ -93,20 +93,21 @@
     <h1>TODO</h1>
     <h3>Version 0.93-Alpha.001</h3>
     <ol>
+        <li> <span class="red">Test DefineTrades.fixtsid </span> I dont't think its doing what its supposed to do.</li>
+        <li> <span class="red">Figure out how to </span>deal with chart data with missing candle-price data from a halt or just low volume. The way after hours is handled is related. Currently entries use the number of candles to find the index. Moving averages... no idea... probably use a time index to remain consistent...Different APIs--some have after hours....What else?</li>
+        <li> <span class="red">When user browses </span>for and inserts a chart, copy it to the appropriate journal directory.</li>
         <li> <span class="red">Provide a details view </span>for each trade showing the transactions as found in Daily Summary but just for the one trade.</li>
         <li> <span class="red">Change Daily Summary </span>to include bar charts to show summaries for the day.</li>
         <li> <span class="red">     Add tags combobox </span>to summaryForm backed by db--simlar to how strategies are done.</li>
         <li> <span class="red">     Move dailyNotes </span>from the dailyForm to summaryForm.</li>
         <li> <span class="red">     Re do dailyForm layout </span>to use splitters.</li>
         <li> <span class="red">Implement a caching </span>of chart data. Save csv in out/.cache directory for each day. Unfortunately will need seperate entries for different APIS.</li>
-        <li> <span class="red">Annotate the charts </span>to show the data source.</li>
+        <li> <span class="red">     Annotate the charts </span>to show the data source.</li>
         <li> <span class="red">Create a statistics hub </span>widget to replace the disciplined excel thing.</li>
         <li> <span class="red">Finnhub chart data </span>sometimes is weird with all green candles. Seems to happen only on the 1 minute charts. Its like the OHLC vals got sorted. Figure out what is going on</li>
         <li> <span class="red">The db entries on my system</span> for TargDiff, SlDiff, RR, MaxLoss, and MstkVal are inconsistent. Some of them are excel formulas and some are numbers. They should all be numbers or empty. Excel formulas should only exist up to the point they are used. The most recent date is march 3, 2019 so it probably does not affect any PyPi distributions, but it should auto correct as statments are saved. ... And it does already but... I think it lost explain and notes.
             select DISTINCT Date, RR, TargDiff, SLDiff, MaxLoss, MstkVal from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date
             select DISTINCT Date from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date.</li>
-            <li> <span class="red">Database field order has become</span> inconsistent in trade_sum revealing SELECT * order errors. Start a tradesum model class to fix it</li>
-            <li> <span class="red">Update all of IbStatementDB</span> to use the model class.</li>
         <li><span class="red">Give a set static </span>time option for one of the charts. (Intended for an all-day 15~30 min chandle chart.</li>
         <li> <span class="red">When opening Ib Statement </span>, if using the journal directory, write a DAS style positions.csv to the default location. Add the date to the name, a date column and a column to indicate the source. Note there can only be one positions.csv per statement. Even for a yearly statement</li>
         <li> <span class="red">Abstract the journal path </span> from the table chart.path. (Exclude arbitrary path. .... have to update the db. This is a data migration not a model migration. Its temporary for a couple pre-releases then gets removed from migration)</li>        
@@ -116,9 +117,17 @@
         <li> <span class="red">Add  </span>some font control for explain and notes.-- probably in context menu.</li>
         <li> <span class="red">Create </span>an initialization wizard that leads the user through the initial setup.</li>
         <li> <span class="red">Moving average </span>'delayed start' for all apis. (partially done?)</li>
-        <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit.</li>
+        <li> <span class="green">Change the layout </span>so that the right widgets expand the right amount.<code>4/6/20</code></li> 
+        <li> <span class="green">     The charts should </span>resize, not keeping perspective, with the widget. <code>4/6/20</code></li>
+        <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit.  <code>4/3/20</code></li>
+        <li> <span class="green">Move the form files </span>in structjour.view to structjour.view.forms. <code>4/3/20</code></li>
     </ol>
+    <h4>Not going to implement (probably)</h4>
+    <ul>
+        <li> <span class="red">Database field order has become</span> inconsistent in trade_sum revealing SELECT * order errors. Start a tradesum model class to fix it. (fixed the order errors)</li> 
+    </ul>
     <h3>Version 0.92-Alpha.001</h3>
+    <h4>Checked in April 2, 2020</h4>
     <ol>
         <li> <span class="green">Add backup</span>-restore-initialize utility.</li>
         <li> <span class="green">Chart date widget bug. </span>In ChartMage, the widgets are attempting to upgrade but its in a non-gui thread. Move it out to chartMagic1, 2, and 3.</li>
