@@ -39,8 +39,6 @@ class MyListWidget(QListWidget):
         self.clicked.emit(self, event)
         QListWidget.contextMenuEvent(self, event)
 
-
-        
         # menu = QMenu()
         # menu.addAction('Add Tag')
         # menu.addAction('Remove Tag')

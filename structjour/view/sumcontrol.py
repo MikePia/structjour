@@ -378,7 +378,6 @@ class SumControl(QMainWindow):
         elif action == editTags:
             print("going to edit the tags.")
 
-
     def chartIntervalChanged(self, val, ckey):
         '''Implementation for signals from interval widgets'''
         key = self.ui.tradeList.currentText()
