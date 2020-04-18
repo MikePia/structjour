@@ -93,14 +93,18 @@
     <h1>TODO</h1>
     <h3>Version 0.93-Alpha.001</h3>
     <ol>
+        <li> <span class="red">Find the bug</span> 1/10/19 AMD Short does not display PnL.</li>
+        <li> <span class="red">Change all database</span> access to sqlalchemy.</li>
+        <li> <span class="red">     trade_sum.MktVal</span> has mixed values binary or Numeric and a not NULL constraint. Cannot easily remove the constraint because the table is referred to in Foreign Keys. So set all b'strings' to 0 (Which is thier 'b' value anyway)</li>
+        <li> <span class="red">     Create a migration</span> Consider alembic for migration but it will be best to wait until sqlalchemy transition is complete. The second Beta realease should scrap all previous (one-off) migrations </li>
         <li> <span class="red">Test DefineTrades.fixtsid </span> I dont't think its doing what its supposed to do.</li>
         <li> <span class="red">Figure out how to </span>deal with chart data with missing candle-price data from a halt or just low volume. The way after hours is handled is related. Currently entries use the number of candles to find the index. Moving averages... no idea... probably use a time index to remain consistent...Different APIs--some have after hours....What else?</li>
         <li> <span class="red">When user browses </span>for and inserts a chart, copy it to the appropriate journal directory.</li>
         <li> <span class="red">Provide a details view </span>for each trade showing the transactions as found in Daily Summary but just for the one trade.</li>
         <li> <span class="red">Change Daily Summary </span>to include bar charts to show summaries for the day.</li>
         <li> <span class="red">     Add tags combobox </span>to summaryForm backed by db--simlar to how strategies are done.</li>
-        <li> <span class="red">     Move dailyNotes </span>from the dailyForm to summaryForm.</li>
-        <li> <span class="red">     Re do dailyForm layout </span>to use splitters.</li>
+        <li> <span class="green">     Move dailyNotes </span>from the dailyForm to summaryForm. <code>4/7/20</code></li>
+        <li> <span class="green">     Re do dailyForm layout </span>to use splitters.<code>4/5/20</code></li>
         <li> <span class="red">Implement a caching </span>of chart data. Save csv in out/.cache directory for each day. Unfortunately will need seperate entries for different APIS.</li>
         <li> <span class="red">     Annotate the charts </span>to show the data source.</li>
         <li> <span class="red">Create a statistics hub </span>widget to replace the disciplined excel thing.</li>

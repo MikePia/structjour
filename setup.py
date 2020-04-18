@@ -13,7 +13,7 @@ thePackages = setuptools.find_packages(exclude=['test'])
 
 setuptools.setup(
     name='structjour',
-    version='0.9.92-Alpha.001',
+    version='0.9.92-Alpha.002',
     author='Mike Petersen',
     author_email='pentsok@zerosubstance.org',
     description='A structured daily journal for day traders.',
