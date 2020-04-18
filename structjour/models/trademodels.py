@@ -1,5 +1,4 @@
-from sqlalchemy import (Table, Numeric, Integer, Text, Column, String,
-                        Boolean, ForeignKey)
+from sqlalchemy import (Table, Numeric, Integer, Text, Column, String, Boolean)
 from structjour.models.meta import Base
 
 
@@ -36,13 +35,13 @@ class Tags(Base):
     __tablename__ = 'tags'
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    active = Column(Boolean, defaut=True)
+    active = Column(Boolean)
 
 
-class TsumsTabs(Base):
-    id = Column(Integer, primary_key=True)
-    tags_id = Column(Integer, ForeignKey('tags.id'))
-    trade_sum_id = Column(Integer, ForeignKey('trade_sum.id'))
+# class TsumsTabs(Base):
+#     id = Column(Integer, primary_key=True)
+#     tags_id = Column(Integer, ForeignKey('tags.id'))
+#     trade_sum_id = Column(Integer, ForeignKey('trade_sum.id'))
 
 
 class TradeSum(Base):

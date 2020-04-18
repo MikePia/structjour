@@ -26,46 +26,85 @@ In transition to sqlalchemy models. A one-off migration that will introduce sqla
 Upon transition to sqlalchemy and second Beta release, one-off migrations will be removed.
 
 HACK ALERT. I can't figure this out and I am 99% sure its possible. See the ipynb notebooks
-I want to use an ORM class object. The query requires a cast or it
+I want to use an ORM class object. The query to find BLOBs requires a cast to Numeric or it
 blows up when you look at it.
 The method that works is using a Table query and engine.connect--
 and not any version of the Base table class (and not the TradeSums.__table__ which
 still which requires session.query and not engine.connect).
 
 Similarly, reflection works if you reflect a Table and not if you reflect a class
-using sqlalchemy.ext.automap import automap_base version of Base
+using automap_base version of Base
 sogotp time. If I figure it out update later ...
 '''
+import datetime as dt
 import math
 
 from structjour.models.trademodels import getTradeSumTable
-from sqlalchemy import create_engine, cast, select, Numeric
+from sqlalchemy import cast, select, Numeric
+
+from structjour.models.meta import MigrateBase, MigrateModel
+from structjour.version import version
+
+# from PyQt5.QtCore import QSettings
 
 
 class Migrate():
+    '''
+    A data migration to change trade_sum.MktVal entries from BLOB type to 0.
+    This pre-release migration will be removed at Beta 2. It is necessary to play
+    nice with sqlalchemy and to be compatible with other (future) databases.
+    Its also the first use of sa in structjour
+    '''
     __tablename__ = "trade_sum"
+    updated = False
+    settings = MigrateBase.settings
 
-    def __init__(self, db_string, metadata):
-        '''
-        :params db_string: The sqlalchemy connection string. e.g. 'sqlite:///some.db'
-        :params metada: sqlalchemy MetaData
-        '''
-        self.db = db_string
+    trade_sum = getTradeSumTable(MigrateBase.metadata)
+    # db = "sqlite:///" + settings.value('tradeDb')
 
-        self.trade_sum = getTradeSumTable(metadata)
-
-    def doUpdate(self):
-        s = select(([cast(self.trade_sum.c.MktVal, Numeric), self.trade_sum.c.id]))
-        engine = create_engine(self.db)
-        conn = engine.connect()
+    @classmethod
+    def doUpdate(cls):
+        q = MigrateBase.session.query(MigrateModel).filter_by(m_id="0003").first()
+        if q is not None:
+            cls.updated = True
+            return
+        s = select(([cast(cls.trade_sum.c.MktVal, Numeric), cls.trade_sum.c.id]))
+        # engine = create_engine(cls.db)
+        conn = MigrateBase.engine.connect()
         result = conn.execute(s)
         row = result.fetchone()
+        maxid = 0
         while row is not None:
+            if row.id > maxid:
+                maxid = row.id
             if math.isclose(row[0], 0, abs_tol=1e-5):
-                print(row)
-                stmt = self.trade_sum.update().values(MktVal=0).where(self.trade_sum.c.id == row.id)
+                stmt = cls.trade_sum.update().values(MktVal=0).where(cls.trade_sum.c.id == row.id)
                 conn.execute(stmt)
             row = result.fetchone()
+
+        theDate = dt.datetime.now()
+        theDate = theDate.strftime("%Y%m%d")
+        _0003migration = MigrateModel(m_id="0003", date=theDate, data_key="tsum_id", data_val=maxid)
+        MigrateBase.session.add(_0003migration)
+        MigrateBase.session.commit()
+        cls.updated = True
+
+    @classmethod
+    def isUpdated(cls):
+        return cls.updated
+
+
+class Migration:
+    min_version = '0.9.92a002'
+    version = version
+    dependencies = [getTradeSumTable(MigrateBase.metadata), ]
+
+    # Better, more central location to call createAll? Have to accomodate migrations that use Sessions
+    # and migrations that use engine.connect
+    operations = [MigrateBase.connect(new_session=True),
+                  MigrateBase.createAll(),
+                  MigrateBase.checkVersion(min_version, version),
+                  Migrate.doUpdate()]
 
 
 def dostuff():
@@ -82,4 +121,5 @@ def dostuff():
 
 
 if __name__ == '__main__':
-    dostuff()
+    # dostuff()
+    print('This thing will run by importing it')
