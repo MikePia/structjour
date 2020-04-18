@@ -69,7 +69,7 @@ class LayoutForms:
         wd[rc.name] = sc.ui.title
         wd[rc.acct] = sc.ui.account
         wd[rc.strat] = sc.ui.strategy
-        wd[rc.link1] = sc.ui.link
+        # wd[rc.link1] = sc.ui.link
         wd[rc.pl] = sc.ui.pl
         wd[rc.start] = sc.ui.start
         wd[rc.dur] = sc.ui.dur
@@ -172,7 +172,6 @@ class LayoutForms:
         ibdb = StatementDB()
         self.ts = ibdb.updateTradeSummaries(self.ts)
         self.sc.ui.useDatabase.setChecked(True)
-
 
     def loadTradesFromDB(self, theDate=None):
         '''

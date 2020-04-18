@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1916</width>
-    <height>1608</height>
+    <width>2261</width>
+    <height>1634</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -45,9 +45,9 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QGridLayout" name="gridLayout">
+        <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="0">
-          <layout class="QHBoxLayout" name="controlframe_layout" stretch="0,0,0,0,0,0">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
@@ -281,28 +281,96 @@ p, li { white-space: pre-wrap; }
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="link">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
+            <widget class="QFrame" name="frame">
              <property name="maximumSize">
               <size>
-               <width>120</width>
-               <height>119</height>
+               <width>180</width>
+               <height>16777215</height>
               </size>
              </property>
-             <property name="styleSheet">
-              <string notr="true">border: 1px solid black</string>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
              </property>
-             <property name="text">
-              <string>Tags will go here</string>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
              </property>
-             <property name="openExternalLinks">
-              <bool>true</bool>
-             </property>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_8">
+                <item>
+                 <widget class="QLabel" name="dailyPnL">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>119</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Arial Black</family>
+                    <pointsize>11</pointsize>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">border: 1px solid black</string>
+                  </property>
+                  <property name="text">
+                   <string>302.55</string>
+                  </property>
+                  <property name="openExternalLinks">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="MyListWidget" name="listWidget">
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::MultiSelection</enum>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>one</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>two</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>three</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>four</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>five</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>six</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
            </item>
            <item>
@@ -2445,7 +2513,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1916</width>
+     <width>2261</width>
      <height>26</height>
     </rect>
    </property>
@@ -2535,6 +2603,11 @@ p, li { white-space: pre-wrap; }
    <class>ClickBrowser</class>
    <extends>QTextBrowser</extends>
    <header location="global">structjour.view.clickbrowser.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MyListWidget</class>
+   <extends>QListWidget</extends>
+   <header location="global">structjour.view.mylistwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

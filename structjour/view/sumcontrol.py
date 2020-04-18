@@ -154,6 +154,10 @@ class SumControl(QMainWindow):
         self.ui.calendarBtn.clicked.connect(self.calendarWidgetBtn)
         self.ui.lost.textEdited.connect(self.setMstkVal)
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
+
+        self.ui.listWidget.clicked.connect(self.editTags)
+        self.ui.listWidget.itemPressed.connect(self.selectTag)
+
         self.ui.explain.textChanged.connect(self.setExplain)
         self.ui.notes.textChanged.connect(self.setNotes)
         self.ui.chart1.clicked.connect(self.loadImage1)
@@ -342,6 +346,38 @@ class SumControl(QMainWindow):
         pixmap = QPixmap(name)
         pixmap = pixmap.scaled(self.image_w_default, self.image_h_default, Qt.IgnoreAspectRatio)
         widg.setPixmap(pixmap)
+
+    def selectTag(self, x):
+        print([xx.text() for xx in self.ui.listWidget.selectedItems()])
+        print()
+
+        print
+
+    def editTags(self, x, event):
+        menu = QMenu()
+        addTag = menu.addAction('Add Tag')
+        removeTag = menu.addAction('Remove Tag')
+        editTags = menu.addAction('Edit Tag List')
+
+        action = menu.exec_(self.mapTo(None, event.globalPos()))
+        # print(action)
+        if action == addTag:
+            print('Going to add tags')
+        elif action == removeTag:
+            # Check that x has any items
+            if len(x.selectedItems()) == 1:
+                print(f'Going to remove {x.selectedItems()[0].text()}')
+            elif len(x.selectedItems()) > 1:
+                ll = [xx.text() for xx in x.selectedItems()]
+                print(f'Going to ask wich to remove from {ll}')
+            elif len(x.selectedItems()) == 0:
+                print('Going to pop up a dialog for user to enter the tag to remove')
+            # For each case, after updating the DB, reinit the the list box from the db
+            # No need to markDataChanged for the trade because its a seperate table, already committed.
+
+        elif action == editTags:
+            print("going to edit the tags.")
+
 
     def chartIntervalChanged(self, val, ckey):
         '''Implementation for signals from interval widgets'''
