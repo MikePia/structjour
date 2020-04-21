@@ -24,23 +24,10 @@ Change trade_sum.MktVal BLOB to 0.0
 
 In transition to sqlalchemy models. A one-off migration that will introduce sqlalchemy to structjour.
 Upon transition to sqlalchemy and second Beta release, one-off migrations will be removed.
-
-HACK ALERT. I can't figure this out and I am 99% sure its possible. See the ipynb notebooks
-I want to use an ORM class object. The query to find BLOBs requires a cast to Numeric or it
-blows up when you look at it.
-The method that works is using a Table query and engine.connect--
-and not any version of the Base table class (and not the TradeSums.__table__ which
-still which requires session.query and not engine.connect).
-
-Similarly, reflection works if you reflect a Table and not if you reflect a class
-using automap_base version of Base
-sogotp time. If I figure it out update later ...
 '''
 import datetime as dt
-import math
 
-from structjour.models.trademodels import getTradeSumTable
-from sqlalchemy import cast, select, Numeric
+from structjour.models.trademodels import TradeSum
 
 from structjour.models.meta import MigrateBase, MigrateModel
 from structjour.version import version
@@ -58,8 +45,6 @@ class Migrate():
     __tablename__ = "trade_sum"
     updated = False
     settings = MigrateBase.settings
-
-    trade_sum = getTradeSumTable(MigrateBase.metadata)
     # db = "sqlite:///" + settings.value('tradeDb')
 
     @classmethod
@@ -68,19 +53,14 @@ class Migrate():
         if q is not None:
             cls.updated = True
             return
-        s = select(([cast(cls.trade_sum.c.MktVal, Numeric), cls.trade_sum.c.id]))
-        # engine = create_engine(cls.db)
-        conn = MigrateBase.engine.connect()
-        result = conn.execute(s)
-        row = result.fetchone()
+
+        q = MigrateBase.session.query(TradeSum).all()
         maxid = 0
-        while row is not None:
-            if row.id > maxid:
-                maxid = row.id
-            if math.isclose(row[0], 0, abs_tol=1e-5):
-                stmt = cls.trade_sum.update().values(MktVal=0).where(cls.trade_sum.c.id == row.id)
-                conn.execute(stmt)
-            row = result.fetchone()
+        for qq in q:
+            maxid = max(qq.id, maxid)
+            if isinstance(qq.mktval, (bytes, str)):
+                qq.mktval = 0
+        MigrateBase.session.commit()
 
         theDate = dt.datetime.now()
         theDate = theDate.strftime("%Y%m%d")
@@ -97,7 +77,7 @@ class Migrate():
 class Migration:
     min_version = '0.9.92a002'
     version = version
-    dependencies = [getTradeSumTable(MigrateBase.metadata), ]
+    dependencies = [TradeSum, ]
 
     # Better, more central location to call createAll? Have to accomodate migrations that use Sessions
     # and migrations that use engine.connect

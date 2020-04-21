@@ -92,11 +92,17 @@
 <body>
     <h1>TODO</h1>
     <h3>Version 0.93-Alpha.001</h3>
+    <div><h3> A forming plan </h3>
+        sqlalchemy implementation is disruptive but I plan to complete it. I plan to benefit from multiple db options, but its not a free benefit. 
+        The sqlite Numeric columns can be problems. In trade_sum, plan to remove columns that are the results of other columns. But wait till all 
+        the tables are sqlalchemy declarative models. That should include rr, realrr, sldiff, targdiff, mktval, maxloss. 
+    </div>
     <ol>
-        <li> <span class="red">Find the bug</span> 1/10/19 AMD Short does not display PnL.</li>
+        <li> <span class="red">Fix the read </span> to retain user data in the database when it exists.</li>
+        <li> <span class="red">Find the bug</span> 1/10/19 AMD Short does not display PnL.  AAPL Long 11/15/2018 at 15:10:51 id=841</li>
         <li> <span class="red">Change all database</span> access to sqlalchemy.</li>
-        <li> <span class="red">     trade_sum.MktVal</span> has mixed values binary or Numeric and a not NULL constraint. Cannot easily remove the constraint because the table is referred to in Foreign Keys. So set all b'strings' to 0 (Which is thier 'b' value anyway)</li>
-        <li> <span class="red">     Create a migration</span> Consider alembic for migration but it will be best to wait until sqlalchemy transition is complete. The second Beta realease should scrap all previous (one-off) migrations </li>
+        <li> <span class="green">     trade_sum.MktVal</span> has mixed values binary or Numeric and a not NULL constraint. Cannot easily remove the constraint because the table is referred to in Foreign Keys. So set all b'strings' to 0 (Which is thier 'b' value anyway)<code>4/18/20</code></li>
+        <li> <span class="green">     Create a migration for trade_sum.MktVal</span> Consider alembic for migration but it will be best to wait until sqlalchemy transition is complete. The second Beta realease should scrap all previous (one-off) migrations. Reject Alembic. Going with Rollyourown. <code>4/18/20</code></li>
         <li> <span class="red">Test DefineTrades.fixtsid </span> I dont't think its doing what its supposed to do.</li>
         <li> <span class="red">Figure out how to </span>deal with chart data with missing candle-price data from a halt or just low volume. The way after hours is handled is related. Currently entries use the number of candles to find the index. Moving averages... no idea... probably use a time index to remain consistent...Different APIs--some have after hours....What else?</li>
         <li> <span class="red">When user browses </span>for and inserts a chart, copy it to the appropriate journal directory.</li>
@@ -109,6 +115,7 @@
         <li> <span class="red">     Annotate the charts </span>to show the data source.</li>
         <li> <span class="red">Create a statistics hub </span>widget to replace the disciplined excel thing.</li>
         <li> <span class="red">Finnhub chart data </span>sometimes is weird with all green candles. Seems to happen only on the 1 minute charts. Its like the OHLC vals got sorted. Figure out what is going on</li>
+
         <li> <span class="red">The db entries on my system</span> for TargDiff, SlDiff, RR, MaxLoss, and MstkVal are inconsistent. Some of them are excel formulas and some are numbers. They should all be numbers or empty. Excel formulas should only exist up to the point they are used. The most recent date is march 3, 2019 so it probably does not affect any PyPi distributions, but it should auto correct as statments are saved. ... And it does already but... I think it lost explain and notes.
             select DISTINCT Date, RR, TargDiff, SLDiff, MaxLoss, MstkVal from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date
             select DISTINCT Date from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date.</li>
@@ -125,6 +132,7 @@
         <li> <span class="green">     The charts should </span>resize, not keeping perspective, with the widget. <code>4/6/20</code></li>
         <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit.  <code>4/3/20</code></li>
         <li> <span class="green">Move the form files </span>in structjour.view to structjour.view.forms. <code>4/3/20</code></li>
+        <li> <span class="red">Fix realRR to </span> display a percentage of R when the pnl is a loss.<code>4/20/20</code></li>
     </ol>
     <h4>Not going to implement (probably)</h4>
     <ul>

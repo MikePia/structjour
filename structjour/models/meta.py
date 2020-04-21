@@ -1,6 +1,5 @@
 # import logging
 
-import os
 from PyQt5.QtCore import QSettings
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import MetaData, create_engine, Column, Integer, String, Sequence
@@ -21,7 +20,7 @@ class MigrateModel(Base):
     date = Column(String(6), nullable=False)
     data_key = Column(String)
     data_val = Column(Integer)
-    
+
     def __repr__(self):
         return f"<MigrateModel({self.m_id})>"
 
@@ -40,24 +39,31 @@ class MigrateBase:
     conn = None
     cur = None
 
-    @classmethod
-    def checkDbStatus(cls):
-        if cls.settings.value('tradeDb') is None:
-            return
-        if not os.path.exists(cls.settings.value('tradeDb')):
-            msg = f"Database connection is not setup correctly: {cls.settings.value('tradeDb')}"
-            # logging.error(msg)
-            print(msg)
-            cls.settings.remove('tradeDb')
-            # raise ValueError(msg)
-        else:
-            print(f"Ready to update the database: {cls.settings.value('tradeDb')}")
-            # logging.info(f"Ready to update the database: {cls.settings.value('tradeDb')}")
+    # @classmethod
+    # def checkDbStatus(cls):
+    #     if cls.settings.value('tradeDb') is None:
+    #         return
+    #     if not os.path.exists(cls.settings.value('tradeDb')):
+    #         msg = f"Database connection is not setup correctly: {cls.settings.value('tradeDb')}"
+    #         # logging.error(msg)
+    #         print(msg)
+    #         cls.settings.remove('tradeDb')
+    #         # raise ValueError(msg)
+    #     else:
+    #         print(f"Ready to update the database: {cls.settings.value('tradeDb')}")
+    #         # logging.info(f"Ready to update the database: {cls.settings.value('tradeDb')}")
 
     @classmethod
-    def connect(cls, new_session=False, con_str="sqlite:///"):
-        if cls.db is None:
-            cls.db = con_str + cls.settings.value('tradeDb')
+    def connect(cls, new_session=False, con_str=None):
+        if con_str is None:
+            if cls.settings.value('tradeDb') is None:
+                cls.engine = None
+                cls.session = None
+                return
+            else:
+                cls.db = "sqlite:///" + cls.settings.value('tradeDb')
+        else:
+            cls.db = con_str
 
         if cls.engine is None:
             cls.engine = create_engine(cls.db)

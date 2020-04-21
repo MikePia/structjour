@@ -1229,7 +1229,10 @@ class SumControl(QMainWindow):
         dval = 0 if ftarg == 0 else abs(fstop / ftarg)
         # darealval = abs()
         # ABS({stopDiff} * {shares}) / {PL}
+
         realrr = abs(fstop * fshares) / fpl
+        if realrr < 0:
+            realrr = abs(fpl / (fstop * fshares)) * -1
         # print(f'(stop *  shares) / pl : ({fstop} / {fshares}) / {fpl} = {realrr}')
 
         f = Fraction(dval).limit_denominator(max_denominator=10)
