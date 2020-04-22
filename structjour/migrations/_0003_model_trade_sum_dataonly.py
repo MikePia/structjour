@@ -29,7 +29,7 @@ import datetime as dt
 
 from structjour.models.trademodels import TradeSum
 
-from structjour.models.meta import MigrateBase, MigrateModel
+from structjour.models.meta import ModelBase, MigrateModel
 from structjour.version import version
 
 # from PyQt5.QtCore import QSettings
@@ -44,29 +44,29 @@ class Migrate():
     '''
     __tablename__ = "trade_sum"
     updated = False
-    settings = MigrateBase.settings
+    settings = ModelBase.settings
     # db = "sqlite:///" + settings.value('tradeDb')
 
     @classmethod
     def doUpdate(cls):
-        q = MigrateBase.session.query(MigrateModel).filter_by(m_id="0003").first()
+        q = ModelBase.session.query(MigrateModel).filter_by(m_id="0003").first()
         if q is not None:
             cls.updated = True
             return
 
-        q = MigrateBase.session.query(TradeSum).all()
+        q = ModelBase.session.query(TradeSum).all()
         maxid = 0
         for qq in q:
             maxid = max(qq.id, maxid)
             if isinstance(qq.mktval, (bytes, str)):
                 qq.mktval = 0
-        MigrateBase.session.commit()
+        ModelBase.session.commit()
 
         theDate = dt.datetime.now()
         theDate = theDate.strftime("%Y%m%d")
         _0003migration = MigrateModel(m_id="0003", date=theDate, data_key="tsum_id", data_val=maxid)
-        MigrateBase.session.add(_0003migration)
-        MigrateBase.session.commit()
+        ModelBase.session.add(_0003migration)
+        ModelBase.session.commit()
         cls.updated = True
 
     @classmethod
@@ -81,9 +81,9 @@ class Migration:
 
     # Better, more central location to call createAll? Have to accomodate migrations that use Sessions
     # and migrations that use engine.connect
-    operations = [MigrateBase.connect(new_session=True),
-                  MigrateBase.createAll(),
-                  MigrateBase.checkVersion(min_version, version),
+    operations = [ModelBase.connect(new_session=True),
+                  ModelBase.createAll(),
+                  ModelBase.checkVersion(min_version, version),
                   Migrate.doUpdate()]
 
 

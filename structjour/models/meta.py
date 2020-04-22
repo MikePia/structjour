@@ -25,7 +25,7 @@ class MigrateModel(Base):
         return f"<MigrateModel({self.m_id})>"
 
 
-class MigrateBase:
+class ModelBase:
     '''
     Contains common methods for migration and static variables used by sqlalchemy stuff
     '''
@@ -79,7 +79,7 @@ class MigrateBase:
     @classmethod
     def createAll(cls):
         if cls.engine is None:
-            raise ValueError('MigrateBase.connect() must be called prior to createAll()')
+            raise ValueError('ModelBase.connect() must be called prior to createAll()')
         Base.metadata.create_all(cls.engine)
 
 
