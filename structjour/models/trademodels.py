@@ -29,15 +29,17 @@ class Tags(Base):
         ModelBase.connect(new_session=True)
         return ModelBase.session.query(Tags).all()
 
-
     @classmethod
-    def addTag(cls, session, tag):
+    def addTag(cls, tag_name):
         '''
         Use only this method to add tags in order to format them uniformly
         :params session:
         :params tag: A Tags object
         '''
-        tag.name = ' '.join([x.capitalize() for x in tag.name.split()])
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        tag_name = ' '.join([x.capitalize() for x in tag_name.split()])
+        tag = Tags(name=tag_name, active=1)
         try:
             session.add(tag)
             session.commit()
@@ -62,7 +64,6 @@ class Tags(Base):
         q.active = active
         ModelBase.session.commit()
     #     ModelBase.session.close()
-
 
 
 class TradeSum(Base):
@@ -96,16 +97,18 @@ class TradeSum(Base):
                         back_populates='trade_sums')
 
     @classmethod
-    def append_tag(cls, trade_sum_id, tagname=None, tag_id=None):
-        if (tagname is None and tag_id is None):
+    def append_tag(cls, trade_sum_id, tag_name=None, tag_id=None):
+        if (tag_name is None and tag_id is None):
             return
         ModelBase.connect(new_session=True)
         sess = ModelBase.session
         try:
+            assert isinstance(trade_sum_id, int)
             if tag_id:
+                assert isinstance(tag_id, int)
                 tag = sess.query(Tags).filter_by(id=tag_id).one()
             else:
-                tag = sess.query(Tags).filter_by(name=tagname).one()
+                tag = sess.query(Tags).filter_by(name=tag_name).one()
 
             trade = sess.query(TradeSum).filter_by(id=trade_sum_id).one()
 
@@ -115,23 +118,66 @@ class TradeSum(Base):
         except Exception as ex:
             msg = f'Failed to connect tag. Exception: {type(ex)}'
             logging.error(msg)
+            logging.error(ex)
             sess.rollback()
         sess.close()
 
     @classmethod
-    def remove_tag(cls, tag_id):
+    def release_tag(cls, trade_sum_id, tag_name=None, tag_id=None):
+        if (tag_name is None and tag_id is None):
+            return
         ModelBase.connect(new_session=True)
         sess = ModelBase.session
-        t = ModelBase.session.query(Tags).filter_by(id=tag_id).one()
-        sess.delete(t)
-        sess.commit()
+        try:
+            assert isinstance(trade_sum_id, int)
+            if tag_id:
+                tag = sess.query(Tags).filter_by(id=tag_id).one()
+            else:
+                tag = sess.query(Tags).filter_by(name=tag_name).one()
+
+            trade = sess.query(TradeSum).filter_by(id=trade_sum_id).one()
+            for atag in trade.tags:
+                if atag is tag:
+                    trade.tags.remove(tag)
+                    sess.commit()
+                    break
+        except Exception as ex:
+            print(type(ex))
+        sess.close()
+
+    @classmethod
+    def remove_tag(cls, tag_id=None, tag_name=None):
+        '''
+        Remove the associataion between the given tag and TradeSums
+        :params tag_id: int. Either tag_id or tag_name must have a value or method does nothing
+        :params tag_name: str
+        '''
+        if (tag_name is None and tag_id is None):
+            return
+        try:
+            ModelBase.connect(new_session=True)
+            sess = ModelBase.session
+            if tag_id:
+                t = ModelBase.session.query(Tags).filter_by(id=tag_id).one()
+            else:
+                t = ModelBase.session.query(Tags).filter_by(name=tag_name).one()
+
+            sess.delete(t)
+            sess.commit()
+        except Exception as ex:
+            msg = f'Failed to disconnect tag. Exception: {type(ex)}'
+            logging.error(msg)
+            sess.rollback()
         sess.close()
 
     @classmethod
     def getTags(cls, tsum_id):
+        '''
+        :params tsum_id: int. numpy types may fail(e.g. numpy.int64 fails in filter_by)
+        '''
         ModelBase.connect(new_session=True)
 
-        q = ModelBase.session.query(TradeSum).filter_by(id=tsum_id).one()
+        q = ModelBase.session.query(TradeSum).filter_by(id=tsum_id).first()
         return q.tags
 
 
@@ -170,24 +216,27 @@ def appendTags():
         TradeSum.append_tag(trade_sum_id=trade.id, tag_id=tags[(i + 7) % 11].id)
 
 
+def releaseTags():
+    TradeSum.release_tag(1199, tag_id=10)
+
+
 def addTags():
     '''local proof of concept stuff'''
-    ModelBase.connect(new_session=True)
     tags = [
-            Tags(name='Well rested', active=1),
-            Tags(name='anxious', active=1),
-            Tags(name='Cloudy', active=1),
-            Tags(name='FOMO', active=1),
-            Tags(name='greed', active=1),
-            Tags(name='Hot key error', active=1),
-            Tags(name='tired', active=1),
-            Tags(name='confident', active=1),
-            Tags(name='not confident', active=1),
-            Tags(name='hesitant', active=1),
-            Tags(name='over confident', active=1)]
+            'Well rested',
+            'anxious',
+            'Cloudy',
+            'FOMO',
+            'greed',
+            'Hot key error',
+            'tired',
+            'confident',
+            'not confident',
+            'hesitant',
+            'over confident']
 
     for t in tags:
-        Tags.addTag(ModelBase.session, t)
+        Tags.addTag(t)
 
 
 def getTagsFromTradeSum():
@@ -205,13 +254,16 @@ def getTags():
 
 
 def dostuff():
-    # TradeSum.append_tag(1241, tagname="Well Rested")
-    # addTags()
-    # appendTags()
+    # ModelBase.connect()
+    # ModelBase.createAll()
+
+    addTags()
+    appendTags()
+    # releaseTags()
     # setActive()
     # getTagsFromTradeSum()
     # getTags()
-    removeTag()
+    # removeTag()
 
 
 if __name__ == '__main__':
