@@ -329,7 +329,7 @@ p, li { white-space: pre-wrap; }
                  </widget>
                 </item>
                 <item>
-                 <widget class="MyListWidget" name="listWidget">
+                 <widget class="MyListWidget" name="tagListWidget">
                   <property name="alternatingRowColors">
                    <bool>true</bool>
                   </property>
