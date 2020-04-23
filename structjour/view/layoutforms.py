@@ -272,6 +272,7 @@ class LayoutForms:
 
         strat = tto['Strategy'].unique()[0]
         self.sc.loadStrategies(strat)
+        self.sc.populateTags(int(tto['id'].unique()))
 
         self.sc.setChartWidgets()
         iname1 = self.sc.ui.chart1Name.text()

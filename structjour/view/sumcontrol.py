@@ -37,18 +37,21 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon
 import pandas as pd
 
 from structjour.inspiration.inspire import Inspire
+from structjour.models.trademodels import Tags, TradeSum
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
 from structjour.view.ejcontrol import EJControl
 from structjour.view.filesetcontrol import FileSetCtrl
 from structjour.view.calendarcontrol import CalendarControl
+from structjour.view.etcontrol import ETControl
 from structjour.view.getdatecontrol import GetDate
 from structjour.view.exportexcel import ExportToExcel
 from structjour.view.dailycontrol import DailyControl
 from structjour.view.sapicontrol import StockApi
 from structjour.view.stratcontrol import StratControl
 from structjour.view.forms.summaryform import Ui_MainWindow
+from structjour.view.tagsedit import EditTagsDlg
 from structjour.statements.dailynotes import DailyNotes
 from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
@@ -112,6 +115,8 @@ class SumControl(QMainWindow):
         self.ui = ui
         self.dailyNote = None
 
+        self.populateTags()
+
         self.settings.setValue('runType', 'QT')
         now = None
         self.fui = None
@@ -155,8 +160,8 @@ class SumControl(QMainWindow):
         self.ui.lost.textEdited.connect(self.setMstkVal)
         self.ui.sumNote.textChanged.connect(self.setMstkNote)
 
-        self.ui.listWidget.clicked.connect(self.editTags)
-        self.ui.listWidget.itemPressed.connect(self.selectTag)
+        self.ui.tagListWidget.clicked.connect(self.editTags)
+        self.ui.tagListWidget.itemPressed.connect(self.selectTag)
 
         self.ui.explain.textChanged.connect(self.setExplain)
         self.ui.notes.textChanged.connect(self.setNotes)
@@ -348,35 +353,63 @@ class SumControl(QMainWindow):
         widg.setPixmap(pixmap)
 
     def selectTag(self, x):
-        print([xx.text() for xx in self.ui.listWidget.selectedItems()])
-        print()
+        '''
+        Either add a relationship between TradeSum and Tag or remove one
+        :params x: QListItem. The item to add or remove depending on if it was selected or deselected
+        '''
+        if self.lf is None:
+            return
+        key = self.ui.tradeList.currentText()
+        tsum_id = int(self.lf.ts[key]['id'].unique()[0])
+        items = self.ui.tagListWidget.selectedItems()
+        if x in items:
+            TradeSum.append_tag(tsum_id, tag_name=x.text())
+        else:
+            TradeSum.release_tag(tsum_id, tag_name=x.text())
+        self.ui.tagListWidget.setToolTip(str([x.text() for x in items]))
+        self.ui.tagListWidget.setToolTipDuration(20 * 1000)
+        self.populateTags()
 
-        print
+    def populateTags(self, tsum_id=None):
+        tags = [x.name for x in Tags.getTags() if x.active is True]
+        self.ui.tagListWidget.clear()
+        self.ui.tagListWidget.addItems(tags)
+
+        if self.lf is not None and tsum_id is not None:
+            selected = TradeSum.getTags(tsum_id)
+            for sel in selected:
+                item = self.ui.tagListWidget.findItems(sel.name, Qt.MatchExactly)
+                if item:
+                    item[0].setSelected(True)
+                # self.ui.tagListWidget.setSelected()
+            self.ui.tagListWidget.setToolTip(str([x.name for x in selected]))
+            self.ui.tagListWidget.setToolTipDuration(20 * 1000)
 
     def editTags(self, x, event):
         menu = QMenu()
         addTag = menu.addAction('Add Tag')
-        removeTag = menu.addAction('Remove Tag')
+        # removeTag = menu.addAction('Remove Tag')
         editTags = menu.addAction('Edit Tag List')
 
         action = menu.exec_(self.mapTo(None, event.globalPos()))
         # print(action)
         if action == addTag:
-            print('Going to add tags')
-        elif action == removeTag:
-            # Check that x has any items
-            if len(x.selectedItems()) == 1:
-                print(f'Going to remove {x.selectedItems()[0].text()}')
-            elif len(x.selectedItems()) > 1:
-                ll = [xx.text() for xx in x.selectedItems()]
-                print(f'Going to ask wich to remove from {ll}')
-            elif len(x.selectedItems()) == 0:
-                print('Going to pop up a dialog for user to enter the tag to remove')
-            # For each case, after updating the DB, reinit the the list box from the db
-            # No need to markDataChanged for the trade because its a seperate table, already committed.
+            ETControl()
+            tsum_id = None
+            if self.lf:
+                key = self.ui.tradeList.currentText()
+                tsum_id = (self.lf.ts[key]['id'].unique()[0])
+            self.populateTags(tsum_id=tsum_id)
 
         elif action == editTags:
-            print("going to edit the tags.")
+            self.ex = EditTagsDlg(parent=self)
+            # print()
+            self.ex.exec()
+            tsum_id = None
+            if self.lf:
+                key = self.ui.tradeList.currentText()
+                tsum_id = (self.lf.ts[key]['id'].unique()[0])
+            self.populateTags(tsum_id=tsum_id)
 
     def chartIntervalChanged(self, val, ckey):
         '''Implementation for signals from interval widgets'''
