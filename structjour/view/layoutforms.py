@@ -272,7 +272,12 @@ class LayoutForms:
 
         strat = tto['Strategy'].unique()[0]
         self.sc.loadStrategies(strat)
-        self.sc.populateTags(int(tto['id'].unique()))
+
+        # Some trades lack the id key -- trades that have no user data saved -- The id will be added to tto when data has been saved
+        iid = None
+        if 'id' in tto:
+            iid = int(tto['id'].unique()[0])
+        self.sc.populateTags(tsum_id=iid)
 
         self.sc.setChartWidgets()
         iname1 = self.sc.ui.chart1Name.text()
