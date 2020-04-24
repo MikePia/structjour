@@ -143,10 +143,11 @@ class runController:
 
         if not lf.loadTradesFromDB(daDate):
             msg = f'No user data has been saved for {daDate.strftime("%A %B %d")}. Loading trade data.'
-            msgbx = QMessageBox()
-            msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
-            msgbx.setText(msg)
-            msgbx.exec()
+            logging.info(msg)
+            # msgbx = QMessageBox()
+            # msgbx.setIconPixmap(QPixmap("structjour/images/ZSLogo.png"))
+            # msgbx.setText(msg)
+            # msgbx.exec()
             self.runnit(True)
 
     def runDBInput(self, daDate, jf):

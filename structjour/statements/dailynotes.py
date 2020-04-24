@@ -94,7 +94,7 @@ class DailyNotes:
 
         conn = sqlite3.connect(self.db)
         cur = conn.cursor()
-        if exist:
+        if exist is not None:
             cur.execute('''UPDATE daily_notes
                 SET note = ?
                 WHERE date = ?''', (note, d))
@@ -160,7 +160,7 @@ class DailyNotes:
 def notmain():
     d = pd.Timestamp("20200205")
     dn = DailyNotes(daDate=d)
-    
+
     x = dn.getNote()
     print(x)
 
