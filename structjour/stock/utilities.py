@@ -24,8 +24,8 @@ Local utility functions shared by some stock modules and test code.
 
 from collections import OrderedDict
 import datetime as dt
+from dateutil.tz import gettz
 import logging
-import pytz
 import math
 import os
 import random
@@ -119,25 +119,26 @@ def pd2qtime(pdt, qdate=False):
     return QDate(pdt.year, pdt.month, pdt.day)
 
 
-def getNewyorkTZ(d):
+def getTzAware(datime, tzstring, isStart=True):
     '''
-    Returns the difference between GMT and EST for a given date
-    :d: pandas Timestamp or datetime
-    :return: int hours diff from GMT
+    Probaly place in utilities. Will returne a tz aware datetime object. If datime is None, will coerce
+    a start or end date that is either 9:15 or 16:15 depending on isStart parameter
     '''
-    if isinstance(d, int):
-        d = pd.Timestamp(d * 10**9)
-    if isinstance(d, pd.Timestamp):
-        d = dt.datetime(d.year, d.month, d.day, d.hour, d.minute)
-    tz = pytz.timezone('US/Eastern').localize(d).strftime('%z')
-    # tz = pytz.timezone('Europe/London').localize(d).strftime('%z')
-    # tz = pytz.timezone('Indian/Christmas').localize(d).strftime('%z')
-    assert tz[0] in ['+', '-']
-    if tz[0] == '-':
-        hours = int(tz[1:]) // -100
+    eastern = gettz(tzstring)
+    if not datime:
+        s = dt.datetime.now()
+        hour = 9 if isStart else 16
+        datime = dt.datetime(s.year, s.month, s.day, hour, 15, tzinfo=eastern)
+
     else:
-        hours = int(tz[1:]) // 100
-    return hours
+        if isinstance(datime, str):
+            datime = pd.Timestamp(datime, tzinfo=eastern).to_pydatetime()
+        elif isinstance(datime, (dt.datetime, pd.Timestamp)):
+            if datime.tzinfo is None:
+                datime = pd.Timestamp(datime, tzinfo=eastern).to_pydatetime()
+            else:
+                datime = pd.Timestamp(datime).tz_convert("US/Eastern")
+    return datime
 
 
 def getMAKeys():
@@ -172,11 +173,12 @@ def vwap(df, bd=None):
     I retrieved the algo from an SO post. Thankyou for that
 
     '''
+    tz = df.index[0].tzinfo
     if not bd:
         # If no day is given, use the end day in df
         bd = df.index[-1]
-        bd = pd.Timestamp(bd.year, bd.month, bd.day)
-    begin = pd.Timestamp(bd.year, bd.month, bd.day, 9, 30, 0)
+        bd = pd.Timestamp(year=bd.year, month=bd.month, day=bd.day, tz=tz)
+    begin = pd.Timestamp(year=bd.year, month=bd.month, day=bd.day, hour=9, minute=30, second=0, tz=tz)
 
     dfv = df.copy(deep=True)
     if begin > df.index[0]:

@@ -15,18 +15,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
-TODO Checkout finnhub from pypi.
+TODO: Checkout finnhub from pypi.
+TODO: excludeAfterHours removed 4/29/20. All requests will include afterHours data. fix later. 
 This has a generous free with 60 per second throttle. And it goes back 20 years.
 @author: Mike Petersen
 @creation_date:2018-12-11
 (or so)
 '''
+from dateutil.tz import gettz
+import datetime as dt
 import logging
 import pandas as pd
 import numpy as np
 import requests
 
-from structjour.stock.utilities import ManageKeys, movingAverage, getNewyorkTZ, excludeAfterHours, setLimitReached, getLimitReached
+from structjour.stock.utilities import ManageKeys, movingAverage, setLimitReached, getLimitReached, getTzAware
 
 
 example = 'https://finnhub.io/api/v1/stock/candle?symbol=AAPL&resolution=1&count=200&token=bm9spbnrh5rb24oaaehg'
@@ -67,82 +70,59 @@ def getLimits():
 
 
 def pd2unix(t):
-    t = pd.Timestamp(t)
-    epoc = pd.Timestamp('1970-01-01')
+    '''
+    :params t: a tz aware datetime object
+    :exception: Will raise an assertion error if t is not datetime or has no tzinfo assoatiated.
+    '''
+    assert isinstance(t, dt.datetime)
+    # assert t.tzinfo is not None
+
+    epoc = dt.datetime(1970, 1, 1, tzinfo=t.tzinfo)
     return (t - epoc).total_seconds()
 
 
-def unix2pd(t):
+def unix2pd(t, tzstring="US/Eastern"):
     assert isinstance(t, (int, np.integer))
-    return pd.Timestamp(t * 10**9)
+    eastern = gettz(tzstring)
+    return dt.datetime.fromtimestamp(t, eastern)
 
 
 def getStartForRequest(start, end, interval):
     '''
-    Method does three things,
+    Method does two things,
         1) gets a start request prior to start (for MA calcs)
-        2) Adjusts for user time (NY) to  Grenwich conversion
         3) converts to unix timestamp
-    :start: Timestamp-- users requested start
-    :end: Timestamp-- users requested end
+    :start: Tz Aweare datetime object
     :interval: int-- Users requested candle interval
+    :return: A uniz epoch that will request enough data to calculate a 200 MA for the given interval
     '''
+
     delt = pd.Timedelta(minutes=interval * 2000)
-    deltzone = pd.Timedelta(hours=-getNewyorkTZ(end))
-    rstart = start - delt + deltzone
-    rend = end + deltzone
+
+    rstart = start - delt
     rstart = int(pd2unix(rstart))
-    rend = int(pd2unix(rend))
+    rend = int(pd2unix(end))
     return rstart, rend
-    pass
 
 
-def getParams(symbol, start, end, interval):
+# def getParams(symbol, start, end, resolution):
+def fh_intraday(base, symbol, start, end, resolution, showUrl=False):
     '''
-    Set the paramaters to send to finnhub. The start will be set back to enable a moving average
-    of 200 The interval will be set to one that finnhub accepts. An interval of 1 can be resampled
-    to any number 1-60.
+    Set the paramaters and send to finnhub. (The requesed start time should allow for moving average calculations.)
 
     :symbol: The ticker to get
-    :start: Timestamp. The user requested start time
-    :end: Timestamp. The user requested end time
-    :interval: Timestamp. The user requested candle interval
+    :start: Unixtime. The requested start time for finnhub data.
+    :end: Unixtime. The requested end time for finnhbub data.
+    :interval: The candle interval. Must be one of [1, 5, 15, 30, 60, 'D', 'W', 'M']
     '''
-    rstart, rend = getStartForRequest(start, end, interval)
-    interval = ni(interval)
+
     params = {}
     params['symbol'] = symbol
-    params['from'] = rstart
-    params['to'] = rend
-    params['resolution'] = interval
+    params['from'] = start
+    params['to'] = end
+    params['resolution'] = resolution
     params['token'] = getApiKey()
-    return params
-
-
-def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
-    '''
-    Common interface for apiChooser. Timezone is determined by the trade day. If this were used
-    for multiday trades spanning DST, the times will be inaccurate before the time change. The
-    chooser is desinged for single day trades.
-    '''
-    if getLimitReached('fh'):
-        msg = 'Finnhub limit was reached'
-        logging.info(msg)
-        return {'code': 666, 'message': msg}, pd.DataFrame(), None
-
-    logging.info('======= Called Finnhub -- no practical limit, 60/minute =======')
-    base = 'https://finnhub.io/api/v1/stock/candle?'
-    if not start or not end:
-        s = pd.Timestamp.today()
-        start = pd.Timestamp(s.year, s.month, s.day, 9, 15)
-        end = pd.Timestamp(s.year, s.month, s.day, 16, 15)
-    else:
-        start = pd.Timestamp(start)
-        end = pd.Timestamp(end)
-
-    if not isinstance(minutes, int):
-        minutes = 60
-    params = getParams(symbol, start, end, minutes)
+    
     response = requests.get(base, params=params)
     if showUrl:
         logging.info(response.url)
@@ -152,36 +132,43 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         meta['message'] = response.content
         if response.status_code == 429:
             # 60 calls per minute. Could possibly get called if automatic chart download is
-            # put into the program. Set a time in two minutes
+            # put into the program. Allow a retry in two minutes. getLimitReached is the gatekeeper method.
             d = pd.Timestamp.now()
             dd = pd.Timestamp(d.year, d.month, d.day, d.hour, d.minute + 2, d.second)
             setLimitReached('fh', dd)
         meta = {'code': response.status_code, 'message': response.content}
         logging.error(meta)
-        return meta, pd.DataFrame, None
+        return meta, {}
     j = response.json()
     meta['message'] = j['s']
     if 'o' not in j.keys():
         meta['code'] = 666
         logging.error('Error-- no data')
-        return meta, pd.DataFrame(), None
-    assert set(['o', 'h', 'l', 'c', 't', 'v', 's']).issubset(set(j.keys()))
+    return meta, j
 
-    d = {'open': j['o'], 'high': j['h'], 'low': j['l'],
-         'close': j['c'], 'timestamp': j['t'], 'volume': j['v']}
-    if len(d['open']) == 0:
-        meta['code'] = 666
-        logging.error('Error-- no data')
-        return meta, pd.DataFrame(), None
+
+def getdf(j):
+    '''
+    Create a df from the json. convert the unixtime to a timezone aware datetime set to New York time
+    and set it as index in the df.
+    :params j: The json object from request. j['t'] is the unix time array
+    '''
+    j['time'] = []
+    for v in j['t']:
+        j['time'].append(dt.datetime.fromtimestamp(v, gettz("utc")))
+
+    d = {'timestamp': j['time'], 'open': j['o'], 'high': j['h'], 'low': j['l'],
+         'close': j['c'], 'volume': j['v']}
 
     df = pd.DataFrame(data=d)
-    tradeday = unix2pd(int(df.iloc[-1]['timestamp']))
-    tzdelt = getNewyorkTZ(tradeday) * 60 * 60
-    df.index = pd.to_datetime(df['timestamp'] + tzdelt, unit='s')
+    df.set_index('timestamp', inplace=True)
 
     df = df[['open', 'high', 'low', 'close', 'volume']]
+    return df
 
-    if minutes != params['resolution']:
+
+def resample(df, minutes, resolution):
+    if minutes != resolution:
         srate = f'{minutes}T'
         df_ohlc = df[['open']].resample(srate).first()
         df_ohlc['high'] = df[['high']].resample(srate).max()
@@ -189,18 +176,12 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         df_ohlc['close'] = df[['close']].resample(srate).last()
         df_ohlc['volume'] = df[['volume']].resample(srate).sum()
         df = df_ohlc.copy()
+    return df
 
-    # API retrieves *all* times. Prune out all NaN (from after hours)
-    df = df[df['open'] > 0]
-    if excludeAfterHours():
-        d = df.index[-1]
-        o = pd.Timestamp(d.year, d.month, d.day, 9, 30)
-        c = pd.Timestamp(d.year, d.month, d.day, 16, 00)
-        if df.index[0] < o:
-            df = df[df.index >= o]
-            df = df[df.index <= c]
 
-    maDict = movingAverage(df.close, df, start)
+def trimit(df, maDict, start, end, meta):
+    start = pd.Timestamp(start).tz_localize(df.index[0].tzinfo)
+    end = pd.Timestamp(end).tz_localize(df.index[0].tzinfo)
     if start > df.index[0]:
         df = df[df.index >= start]
         for ma in maDict:
@@ -208,10 +189,9 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         if len(df) == 0:
             msg = f"You have sliced off all the data with the end date {start}"
             logging.warning(msg)
-            metaj = {}
-            metaj['code'] = 666
-            metaj['message'] = msg
-            return metaj, pd.DataFrame(), maDict
+            meta['code'] = 666
+            meta['message'] = msg
+            return meta, pd.DataFrame(), maDict
 
     if end < df.index[-1]:
         df = df[df.index <= end]
@@ -220,10 +200,10 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
         if len(df) < 1:
             msg = f"Tou have sliced off all the data with the end date {end}"
             logging.warning(msg)
-            metaj = {}
-            metaj['code'] = 666
-            metaj['message'] = msg
-            return metaj, pd.DataFrame(), maDict
+            meta = {}
+            meta['code'] = 666
+            meta['message'] = msg
+            return meta, pd.DataFrame(), maDict
     # If we don't have a full ma, delete -- Later:, implement a 'delayed start' ma in graphstuff
     deleteMe = []
     for key in maDict.keys():
@@ -231,32 +211,78 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
             deleteMe.append(key)
     for k in deleteMe:
         del maDict[k]
+    return meta, df, maDict
+
+
+def getDaTime(datime, isStart=True):
+    '''
+    Probaly place in utilities. Will returne a tz aware datetime object. If datime is None, will coerce
+    a start or end date that is either 9:15 or 16:15 depending on isStart parameter
+    '''
+
+    if not datime:
+        s = dt.datetime.now()
+        hour = 9 if isStart else 16
+        datime = dt.datetime(s.year, s.month, s.day, hour, 15)
+    else:
+        datime = pd.Timestamp(datime).to_pydatetime()
+    return datime
+
+
+def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
+    '''
+    Common interface for apiChooser.
+    :params start: Time string or naive pandas timestamp or naive datetime object.
+    :params end: Time string or naive pandas timestamp or naive datetime object.
+    '''
+    if getLimitReached('fh'):
+        msg = 'Finnhub limit was reached'
+        logging.info(msg)
+        return {'code': 666, 'message': msg}, pd.DataFrame(), None
+
+    logging.info('======= Called Finnhub -- no practical limit, 60/minute =======')
+    base = 'https://finnhub.io/api/v1/stock/candle?'
+
+    start = getDaTime(start, isStart=True)
+    end = getDaTime(end, isStart=False)
+
+    if not isinstance(minutes, int):
+        minutes = 60
+    resolution = ni(minutes)
+    rstart, rend = getStartForRequest(start, end, minutes)
+
+    meta, j = fh_intraday(base, symbol, rstart, rend, resolution)
+    if meta['code'] != 200:
+        return meta, pd.DataFrame(), None
+
+    assert set(['o', 'h', 'l', 'c', 't', 'v', 's']).issubset(set(j.keys()))
+    if len(j['o']) == 0:
+        meta['code'] = 666
+        logging.error('Error-- no data')
+        return meta, pd.DataFrame(), None
+
+    df = getdf(j)
+    df = resample(df, minutes, resolution)
+    # remove candles that lack data
+    df = df[df['open'] > 0]
+
+    maDict = movingAverage(df.close, df, start)
+    meta, df, maDict = trimit(df, maDict, start, end, meta)
 
     return meta, df, maDict
 
 
 def notmain():
-    symbol = 'ROKU'
+    symbol = 'TSLA'
     minutes = 2
-    start = '2019-10-10 03:15'
-    end = '2019-10-10 18:02'
-    for i in range(260):
-        meta, df, maD = getFh_intraday(symbol, start, end, minutes)
-        if not df.empty and i % 7 == 0:
-            print('Call number ', i)
-            print(df.tail(1))
-            print()
-            # print(meta)
-            # print(df.head(2))
-            # print(df.tail(2))
-        else:
-            if not i % 25:
-                print(i)
-                print(meta['message'])
-        # time.sleep(1)
-        # print('next', i)
-        # print()
-        # print()
+    start = '2019-10-10 09:15'
+    end = '2019-10-10 12:00'
+    # for i in range(260):
+    meta, df, maD = getFh_intraday(symbol, start, end, minutes, showUrl=True)
+    if not df.empty:
+        print(df.tail())
+    else:
+        print(meta['message'])
 
 
 if __name__ == '__main__':

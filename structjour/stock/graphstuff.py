@@ -302,16 +302,19 @@ class FinPlot:
         markersize = self.chartSet.value('markersize', 90)
         edgec = self.chartSet.value('markeredgecolor', '#000000')
         alpha = float(self.chartSet.value('markeralpha', 0.5))
+        tz = df_ohlc.index[0].tzinfo
         for entry in self.entries:
+
             e = entry[3]
             if isinstance(e, str):
-                # If this is a string, it was probably created by an older version of the
-                # program and is a time string HH:MM:SS. If not, I need it to show me
-                # TODO remove asserts after a few months 2/7/19
-                assert len(e) == 8
-                assert len(e.split(':')) == 3
-                e = pd.Timestamp(start.strftime('%Y-%m-%d ') + e)
-
+                e = pd.Timestamp(start.strftime('%Y-%m-%d ') + e, tzinfo=tz)
+            else:
+                # Currently only finnhub usess tz aware dates
+                if e.tzinfo:
+                    e = e.tz_convert(tz)
+                else:
+                    e = e.tz_localize(tz)
+            # TODO: indexing the candle does not work if there is missing data e.g. a halt
             candleIndex = int((e - df_ohlc.index[0]).total_seconds() / 60 // minutes)
             if candleIndex < 0 or candleIndex > (len(df_ohlc) - 1):
                 continue
