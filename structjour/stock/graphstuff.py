@@ -309,7 +309,7 @@ class FinPlot:
             if isinstance(e, str):
                 e = pd.Timestamp(start.strftime('%Y-%m-%d ') + e, tzinfo=tz)
             else:
-                # Currently only finnhub usess tz aware dates
+                # Currently only finnhub usess tz aware dates, and that is only after retrieving the data
                 if e.tzinfo:
                     e = e.tz_convert(tz)
                 else:
@@ -353,6 +353,16 @@ class FinPlot:
 
         ax1.annotate(f'{symbol} {minutes} minute', (df_ohlc.date[idx], df_ohlc.low.max()),
                      xytext=(0.4, 0.85), textcoords='axes fraction', alpha=0.35, size=16)
+
+        ax2.annotate(f'Data is from {chooser.api}',
+            xy=(0.99, 0), xytext=(0, 10),
+            xycoords=('axes fraction', 'figure fraction'),
+            textcoords='offset points',
+            size=7, ha='right', va='bottom')
+
+        # ax2.annotate(f'Data is from {chooser.api}', (df_ohlc.date[idx], df_ohlc.low.max()),
+        #              xytext=(0.9, -0.03), textcoords='axes fraction', alpha=0.7, size=8)
+
         # #### END TICKS-and ANNOTATIONS #####
         # ###### ma, ema and vwap #######
         # MA1 = 9
