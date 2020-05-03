@@ -23,7 +23,6 @@ Created on April 8, 2019
 '''
 import logging
 import os
-import sqlite3.test.transactions
 import sys
 from collections import OrderedDict
 
@@ -31,14 +30,14 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBox
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBox, QWidget, QHBoxLayout, QLabel, QSizePolicy
 
+from structjour.models.trademodels import TradeSum
 from structjour.thetradeobject import SumReqFields
+from structjour.view.charts.dailyprofit_barchart import Canvas
 from structjour.view.forms.dailyform import Ui_Form as DailyForm
 from structjour.view.dfmodel import PandasModel
 from structjour.view.ejcontrol import EJControl
-
-# pylint: disable = C0103, W0201
 
 
 def fc(val):
@@ -66,7 +65,7 @@ class QDialogWClose(QDialog):
                 self.commitNote()
 
 
-class DailyControl(QDialogWClose):
+class DailyControl(QDialog):
     '''
     Controller for the daily summary form. The form includes a user notes saved in db, 2 daily
     summary forms and processed input file showing the days transactions. The daily summaryies
@@ -99,90 +98,6 @@ class DailyControl(QDialogWClose):
                 self.db = os.path.join(j, 'structjour.sqlite')
                 settings.setValue('tradeDb', self.db)
 
-    def commitNote(self, note=None):
-        '''
-        Save or update the db file for the notes field. If no note is given. will retrieve the text
-         from the qt dailyNotes widget. Use setNote for a vanilla db commit
-        '''
-        if not self.date:
-            logging.info('Cannot save without a date')
-            return
-        d = self.date.strftime('%Y%m%d')
-        d = int(d)
-        if not note:
-            note = self.ui.dailyNotes.toPlainText()
-
-        exist = self.getNote()
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        if exist:
-            cur.execute('''UPDATE daily_notes
-                SET note = ?
-                WHERE date = ?''', (note, d))
-
-        else:
-            cur.execute('''INSERT INTO daily_notes (date, note)
-                        VALUES(?,?)''', (d, note))
-        conn.commit()
-
-    def setNote(self, note):
-        '''
-        Commit or update the dailyNotes db table with self.date and note
-        '''
-        if not self.date:
-            logging.info('Cannot save without a date')
-            return
-        d = self.date.strftime('%Y%m%d')
-        d = int(d)
-
-        exist = self.getNote()
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        if exist:
-            cur.execute('''UPDATE daily_notes
-                SET note = ?
-                WHERE date = ?''', (note, d))
-
-        else:
-            cur.execute('''INSERT INTO daily_notes (date, note)
-                        VALUES(?,?)''', (d, note))
-        conn.commit()
-
-    def getNote(self):
-        '''
-        Retrieve the notes field for the db entry for the date associated with this object. The
-        date can be given as an argument or retrieved from the df argument for runDialog.
-        '''
-        if not self.date:
-            logging.info('Cannot retrieve a note without a date')
-            return
-        d = self.date.strftime('%Y%m%d')
-        d = int(d)
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        cur.execute('''SELECT * from daily_notes where date = ?''', (d,))
-        cursor = cur.fetchone()
-        if cursor:
-            return cursor[1]
-        return cursor
-
-    def populateNotes(self):
-        '''
-        Get a saved note for this object
-        '''
-        note = self.getNote()
-        if not note:
-            note = ''
-        self.ui.dailyNotes.setText(note)
-
-    def dNotesChanged(self):
-        ''' daily notes field changed. Set the edited flag. '''
-        self.setWindowTitle('Daily Summary ... text edited')
-
     def runDialog(self, df, tradeSum=None):
         '''
         Top level script for this form. Populate the widgets.
@@ -201,19 +116,8 @@ class DailyControl(QDialogWClose):
         self.ui.mstkForm.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.populateM()
 
-        self.modelS = QStandardItemModel(self)
-        self.ui.dailyStatTab.setModel(self.modelS)
-        self.ui.dailyStatTab.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.populateS()
         self.setWindowTitle('Daily Summary ... text edited')
-
-        self.setWindowTitle('Daily Summary')
-
-    def saveNotes(self, event):
-        '''
-        Connected method from a context menu for the dailyNotes widget.
-        '''
-        self.commitNote()
 
         self.setWindowTitle('Daily Summary')
 
@@ -222,136 +126,23 @@ class DailyControl(QDialogWClose):
         :ts: TradeSummary dictionary. If called without running runDialog, this must be provided
              If this is called from within the dialog, leave it blank.
         '''
-        if ts:
-            self.ts = ts
-        srf = SumReqFields()
-        liveWins = list()
-        liveLosses = list()
-        simWins = list()
-        simLosses = list()
-        maxTrade = (0, "notrade")
-        minTrade = (0, "notrade")
-        # Didnot save the Trade number in TheTrade.  These should be the same order...
-        count = 0
-
-        if not self.ts:
-            logging.info('Trade data not found')
-            return
-
-        # Gather all the data
-        for key in self.ts:
-            TheTrade = self.ts[key]
-            pl = TheTrade[srf.pl].unique()[0]
-            live = True if TheTrade[srf.acct].unique()[0] == "Live" else False
-            count = count + 1
-
-            if pl is None:
-                pl = 0.0
-            # A bug-ish inspired baby-sitter
-            elif isinstance(pl, str) or isinstance(pl, bytes):
-                pl = 0
-            if float(pl) > maxTrade[0]:
-                maxTrade = (pl, "Trade{0}, {1}, {2}".format(
-                    count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
-            if pl < minTrade[0]:
-                minTrade = (pl, "Trade{0}, {1}, {2}".format(
-                    count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
-
-            if live:
-                if pl > 0:
-                    liveWins.append(pl)
-                else:
-                    liveLosses.append(pl)
-            else:
-                if pl > 0:
-                    simWins.append(pl)
-                else:
-                    simLosses.append(pl)
-
-        dailySumData = OrderedDict()
-
-        # row1
-        dailySumData['livetot'] = fc(sum([sum(liveWins), sum(liveLosses)]))
-
-        numt = len(liveWins) + len(liveLosses)
-        if numt == 0:
-            dailySumData['livetotnote'] = "0 Trades"
-        else:
-            note = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}"
-            note = note.format(numt, "" if numt == 1 else "s", len(liveWins),
-                               "" if len(liveWins) == 1 else "s", len(
-                                   liveLosses),
-                               "" if len(liveLosses) == 1 else "s")
-            dailySumData['livetotnote'] = note
-
-        # row2
-        dailySumData['simtot'] = fc(sum([sum(simWins), sum(simLosses)]))
-
-        # 9 trades,  3 Winners, 6 Losers
-        numt = len(simWins) + len(simLosses)
-        if numt == 0:
-            dailySumData['simtotnote'] = "0 Trades"
-        else:  # 4 trades, 1 Winner, 3 Losers
-            note = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}"
-            note = note.format(numt, "" if numt == 1 else "s",
-                               len(simWins), "" if len(simWins) == 1 else "s",
-                               len(simLosses), "" if len(simLosses) == 1 else "s")
-            dailySumData['simtotnote'] = note
-
-        # row3
-        dailySumData['highest'] = fc(maxTrade[0])
-        dailySumData['highestnote'] = maxTrade[1]
-
-        # row 4
-        dailySumData['lowest'] = fc(minTrade[0])
-        dailySumData['lowestnote'] = minTrade[1]
-
-        # row 5
-        if (len(liveWins) + len(simWins)) == 0:
-            dailySumData['avgwin'] = '$0.00'
-        else:
-            dailySumData['avgwin'] = fc(sum(
-                [sum(liveWins), sum(simWins)]) / (len(liveWins) + len(simWins)))
-        dailySumData['avgwinnote'] = "X {} =  {}".format(
-            len(liveWins) + len(simWins), fc(sum([sum(liveWins), sum(simWins)])))
-
-        # row 6
-        if len(liveLosses) + len(simLosses) == 0:
-            dailySumData['avgloss'] = '$0.00'
-        else:
-            dailySumData['avgloss'] = fc(sum([sum(liveLosses), sum(
-                simLosses)]) / (len(liveLosses) + len(simLosses)))
-        dailySumData['avglossnote'] = "X {} =  (${:.2f})".format(
-            len(liveLosses) + len(simLosses), abs(sum([sum(liveLosses), sum(simLosses)])))
-        return dailySumData
-
+        if not self.date:
+            return {}, {}
+        return TradeSum.getNamesAndProfits(self.date.strftime(self.date.strftime("%Y%m%d")))
+        
     def populateS(self):
         '''
-        Create and populate the daily summary form as a tableView
         '''
-        cell = QStandardItem('Daily P / L Summary')
-        cell.setTextAlignment(Qt.AlignCenter)
-        cell.setFont(QFont('Arial Rounded MT Bold', pointSize=24))
-        row = [cell]
-        self.modelS.appendRow(row)
-
-        dailySumData = self.gatherDSumData()
-        if not dailySumData:
-            return
-
-        ro1 = [QStandardItem('Live Total'), QStandardItem(str(dailySumData['livetot'])), QStandardItem(dailySumData['livetotnote'])]
-        ro2 = [QStandardItem('Sim Total'), QStandardItem(str(dailySumData['simtot'])), QStandardItem(dailySumData['simtotnote'])]
-        ro3 = [QStandardItem('Highest Profit'), QStandardItem(str(dailySumData['highest'])), QStandardItem(dailySumData['highestnote'])]
-        ro4 = [QStandardItem('Largest Loss'), QStandardItem(str(dailySumData['lowest'])), QStandardItem(dailySumData['lowestnote'])]
-        ro5 = [QStandardItem('Average Win'), QStandardItem(str(dailySumData['avgwin'])), QStandardItem(dailySumData['avgwinnote'])]
-        ro6 = [QStandardItem('Average Loss'), QStandardItem(str(dailySumData['avgloss'])), QStandardItem(dailySumData['avglossnote'])]
-
-        for row in [ro1, ro2, ro3, ro4, ro5, ro6]:
-            self.modelS.appendRow(row)
-
-        self.ui.dailyStatTab.setSpan(0, 0, 1, 3)
-        self.ui.dailyStatTab.setRowHeight(0, 50)
-        self.ui.dailyStatTab.resizeColumnToContents(1)
+        names, profits = self.gatherDSumData()
+        contentWidget = QWidget()
+        self.ui.scrollArea.setWidget(contentWidget)
+        hbox = QHBoxLayout(contentWidget)
+        for account in names:
+            if len(names[account]) == 0:
+                continue
+            canvas = Canvas(self.date.strftime("%Y%m%d"), account)
+            canvas.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+            hbox.addWidget(canvas)
 
     def populateM(self):
         '''
@@ -416,7 +207,7 @@ if __name__ == '__main__':
         sys.exit(app.exec_())
     dff = pd.read_csv(fn)
 
-    d1 = pd.Timestamp(2030, 6, 6)
+    d1 = pd.Timestamp(2020, 2, 7)
 
     w = DailyControl(daDate=d1)
     w.runDialog(dff)

@@ -98,6 +98,7 @@
         the tables are sqlalchemy declarative models. That should include rr, realrr, sldiff, targdiff, mktval, maxloss. 
     </div>
     <ol>
+        <li> <span class="green">Time or time zone  </span> issues in the finnhub REST API. <code>4/30/20</code></li>
         <li> <span class="red">Add a daily pnl </span> label to the front page.</li>
         <li> <span class="red">Fix the read </span> to retain user data in the database when it exists.</li>
         <li> <span class="red">Find the bug</span> 1/10/19 AMD Short does not display PnL.  AAPL Long 11/15/2018 at 15:10:51 id=841</li>
@@ -113,9 +114,10 @@
         <li> <span class="green">     Move dailyNotes </span>from the dailyForm to summaryForm. <code>4/7/20</code></li>
         <li> <span class="green">     Re do dailyForm layout </span>to use splitters.<code>4/5/20</code></li>
         <li> <span class="red">Implement a caching </span>of chart data. Save csv in out/.cache directory for each day. Unfortunately will need seperate entries for different APIS.</li>
-        <li> <span class="red">     Annotate the charts </span>to show the data source.</li>
+        <li> <span class="green">     Annotate the charts </span>to show the data source.  <code>4/30/20</code></li>
         <li> <span class="red">Create a statistics hub </span>widget to replace the disciplined excel thing.</li>
         <li> <span class="red">Finnhub chart data </span>sometimes is weird with all green candles. Seems to happen only on the 1 minute charts. Its like the OHLC vals got sorted. Figure out what is going on</li>
+        
 
         <li> <span class="red">The db entries on my system</span> for TargDiff, SlDiff, RR, MaxLoss, and MstkVal are inconsistent. Some of them are excel formulas and some are numbers. They should all be numbers or empty. Excel formulas should only exist up to the point they are used. The most recent date is march 3, 2019 so it probably does not affect any PyPi distributions, but it should auto correct as statments are saved. ... And it does already but... I think it lost explain and notes.
             select DISTINCT Date, RR, TargDiff, SLDiff, MaxLoss, MstkVal from trade_sum where RR LIKE "=%" OR TargDiff LIKE "=%" OR SLDiff LIKE "=%" OR MaxLoss LIKE "=%" OR MstkVal LIKE "=%" ORDER By Date

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import logging
 from sqlalchemy import (Table, Integer, Text, Column, String, Boolean, Float, ForeignKey)
 from sqlalchemy.orm import relationship
@@ -180,6 +181,23 @@ class TradeSum(Base):
         q = ModelBase.session.query(TradeSum).filter_by(id=tsum_id).first()
         return q.tags
 
+    @classmethod
+    def getNamesAndProfits(cls, daDate):
+        '''
+        :params daDate: A date string in the form yyyymmdd as it is held in the db
+        :return: an OrderedDict with keys for the account alias names as held in TradeSum (Currently Live and SIM).
+            The values are lists of pnl for the trades on the given date
+        '''
+        ModelBase.connect(new_session=True)
+        names = OrderedDict()
+        pnls = OrderedDict()
+        for acct in list(ModelBase.session.query(TradeSum.account).distinct().all()):
+            q = ModelBase.session.query(TradeSum).filter_by(date=daDate).filter_by(account=acct[0]).order_by(TradeSum.start).all()
+            names[acct[0]] = [t.name for t in q]
+            pnls[acct[0]] = [t.pnl for t in q]
+
+        return names, pnls
+
 
 def removeTag():
     '''local proof of concept'''
@@ -266,5 +284,12 @@ def dostuff():
     # removeTag()
 
 
+def notmain():
+    names, profits = TradeSum.getNamesAndProfits('20200204')
+    print(names)
+    print(profits)
+
+
 if __name__ == '__main__':
-    dostuff()
+    # dostuff()
+    notmain()

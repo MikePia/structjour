@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\dailyform.ui'
+# Form implementation generated from reading ui file 'dailyform2.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -13,9 +13,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1736, 1377)
+        Form.resize(1770, 969)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(".\\../images/ZSLogo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../images/ZSLogo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         Form.setWindowIcon(icon)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
@@ -40,24 +40,13 @@ class Ui_Form(object):
         self.mstkForm.horizontalHeader().setVisible(False)
         self.mstkForm.horizontalHeader().setStretchLastSection(True)
         self.mstkForm.verticalHeader().setVisible(False)
-        self.dailyStatTab = QtWidgets.QTableView(self.splitter)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dailyStatTab.sizePolicy().hasHeightForWidth())
-        self.dailyStatTab.setSizePolicy(sizePolicy)
-        self.dailyStatTab.setMinimumSize(QtCore.QSize(0, 275))
-        self.dailyStatTab.setMaximumSize(QtCore.QSize(16777215, 275))
-        font = QtGui.QFont()
-        font.setFamily("Arial Narrow")
-        font.setPointSize(10)
-        self.dailyStatTab.setFont(font)
-        self.dailyStatTab.setStyleSheet("background-color: rgba(148, 148, 148, 248);\n"
-"color: rgb(255, 255, 255);")
-        self.dailyStatTab.setObjectName("dailyStatTab")
-        self.dailyStatTab.horizontalHeader().setVisible(False)
-        self.dailyStatTab.horizontalHeader().setStretchLastSection(True)
-        self.dailyStatTab.verticalHeader().setVisible(False)
+        self.scrollArea = QtWidgets.QScrollArea(self.splitter)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 1746, 369))
+        self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_4)
         self.layoutWidget = QtWidgets.QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
