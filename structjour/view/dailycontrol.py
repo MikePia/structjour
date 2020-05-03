@@ -21,7 +21,9 @@ Created on April 8, 2019
 
 @author: Mike Petersen
 '''
+from itertools import accumulate
 import logging
+import operator
 import os
 import sys
 from collections import OrderedDict
@@ -238,6 +240,29 @@ class DailyControl(QDialog):
             return {}, {}
         return TradeSum.getNamesAndProfits(self.date.strftime(self.date.strftime("%Y%m%d")))
 
+    def getIntradayPnl(self, daDate=None):
+        '''
+        Get all transactions and times from a single day and organize accumulated intraday pnl and
+        trade time into a dict of DataFrames, keyed by account, as required for a specific
+        matplotlib chart
+        '''
+        if daDate is None:
+            daDate = self.date
+        trades = Trade.getIntradayTrades(daDate)
+        dfs = {}
+        for account in trades:
+            # pnls = [[x.pnl, pd.Timestamp(x.datetime).to_pydatetime()] for x in trades[account] if isinstance(x.pnl, (int, float)) and x.pnl != 0]
+            pnl = [x.pnl for x in trades[account] if isinstance(x.pnl, (int, float)) and x.pnl != 0]
+            accum_pnl = list(accumulate(pnl, operator.add))
+            dates = [pd.Timestamp(x.datetime).to_pydatetime() for x in trades[account] if isinstance(x.pnl, (int, float)) and x.pnl != 0]
+            df = pd.DataFrame(columns=['date', 'pnl'])
+            df['date'] = dates
+            df['pnl'] = accum_pnl
+            dfs[account] = df
+        return dfs
+
+        # qq = ModelBase.
+
     def populateS(self):
         '''
         '''
@@ -250,15 +275,17 @@ class DailyControl(QDialog):
                 continue
             canvas = CanvasDP(self.date.strftime("%Y%m%d"), account)
             canvas.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+            canvas.setMinimumSize(300, 300)
             hbox.addWidget(canvas)
 
-        for account in names:
-            if len(names[account]) == 0:
+        dfs = self.getIntradayPnl()
+        for account in dfs:
+            if len(dfs[account]) == 0:
                 continue
-            canvas = CanvasAP(self.date.strftime("%Y%m%d"), account)
+            canvas = CanvasAP(dfs[account], account)
             canvas.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+            canvas.setMinimumSize(300, 300)
             hbox.addWidget(canvas)
-
 
     def populateM(self):
         '''

@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import logging
-from sqlalchemy import (Table, Integer, Text, Column, String, Boolean, Float, ForeignKey)
+import pandas as pd
+from sqlalchemy import (Table, Integer, Text, Column, String, Boolean, Float, ForeignKey, CheckConstraint)
 from sqlalchemy.orm import relationship
 from structjour.models.meta import Base, ModelBase
 # from .meta import Base, ModelBase
@@ -199,6 +200,54 @@ class TradeSum(Base):
         return names, pnls
 
 
+class Trade(Base):
+    __tablename__ = "ib_trades"
+    id = Column(Integer, primary_key=True)
+    symb = Column(String(10), nullable=False)
+    datetime = Column(String(15), nullable=False)
+    qty = Column(Integer, CheckConstraint('qty != 0'), nullable=False)
+    balance = Column(Integer)
+    price = Column(Float, nullable=False)
+    average = Column(Float)
+    pnl = Column(Float)
+    commission = Column(Float)
+    oc = Column(String(5))
+    das = Column(String(12))
+    ib = Column(String(12))
+    account = Column(String(56), nullable=False)
+    trade_sum_id = Column(Integer, ForeignKey('trade_sum.id'))
+
+    tradesum = relationship('TradeSum', back_populates='ib_trades')
+
+    def __repr__(self):
+        return f"<Trade(Symb={self.symb}: Qty={self.qty}: Date={self.datetime})>"
+
+    @classmethod
+    def getIntradayTrades(cls, daDate):
+        '''
+        Retrive all the transactions from a single day
+        :params daDate: A time string, datetime or pd.Timestamp
+        :return: All the ib_trades transactions in a dict with the account(s) as key(s).
+        The keys are the actual account numbers
+        '''
+        ModelBase.connect(new_session=True)
+
+        daDate1 = pd.Timestamp(daDate).to_pydatetime()
+        daDate2 = daDate1 + pd.Timedelta(days=1)
+        # sdaDate = daDate.strftime("%Y%m%d")
+        pnls = {}
+        for account in list(ModelBase.session.query(Trade.account).distinct().all()):
+            q = ModelBase.session.query(Trade).filter_by(account=account[0]).filter(
+                Trade.datetime > daDate1.strftime("%Y%m%d")).filter(
+                Trade.datetime < daDate2.strftime("%Y%m%d")).order_by(Trade.datetime).all()
+            if q:
+                pnls[account[0]] = q
+        return pnls
+
+
+TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
+
+
 def removeTag():
     '''local proof of concept'''
 
@@ -271,17 +320,25 @@ def getTags():
         print(tag.name)
 
 
+def getIntraStuff():
+    pnldict = Trade.getIntradayTrades('20200407')
+    print(pnldict)
+    print()
+
+
 def dostuff():
     # ModelBase.connect()
     # ModelBase.createAll()
 
-    addTags()
-    appendTags()
+    # addTags()
+    # appendTags()
     # releaseTags()
     # setActive()
     # getTagsFromTradeSum()
     # getTags()
     # removeTag()
+
+    getIntraStuff()
 
 
 def notmain():
@@ -291,5 +348,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    # dostuff()
-    notmain()
+    dostuff()
+    # notmain()
