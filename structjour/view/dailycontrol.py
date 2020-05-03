@@ -30,11 +30,12 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings, Qt
 from PyQt5.QtGui import QFont, QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBox, QWidget, QHBoxLayout, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBox, QWidget, QHBoxLayout, QSizePolicy
 
-from structjour.models.trademodels import TradeSum
+from structjour.models.trademodels import TradeSum, Trade
 from structjour.thetradeobject import SumReqFields
-from structjour.view.charts.dailyprofit_barchart import Canvas
+from structjour.view.charts.dailyprofit_barchart import Canvas as CanvasDP
+from structjour.view.charts.intraday_profit_accum import Canvas as CanvasAP
 from structjour.view.forms.dailyform import Ui_Form as DailyForm
 from structjour.view.dfmodel import PandasModel
 from structjour.view.ejcontrol import EJControl
@@ -126,23 +127,138 @@ class DailyControl(QDialog):
         :ts: TradeSummary dictionary. If called without running runDialog, this must be provided
              If this is called from within the dialog, leave it blank.
         '''
+        if ts:
+            self.ts = ts
+        srf = SumReqFields()
+        liveWins = list()
+        liveLosses = list()
+        simWins = list()
+        simLosses = list()
+        maxTrade = (0, "notrade")
+        minTrade = (0, "notrade")
+        # Didnot save the Trade number in TheTrade.  These should be the same order...
+        count = 0
+
+        if not self.ts:
+            logging.info('Trade data not found')
+            return
+
+        # Gather all the data
+        for key in self.ts:
+            TheTrade = self.ts[key]
+            pl = TheTrade[srf.pl].unique()[0]
+            live = True if TheTrade[srf.acct].unique()[0] == "Live" else False
+            count = count + 1
+
+            if pl is None:
+                pl = 0.0
+            # A bug-ish inspired baby-sitter
+            elif isinstance(pl, str) or isinstance(pl, bytes):
+                pl = 0
+            if float(pl) > maxTrade[0]:
+                maxTrade = (pl, "Trade{0}, {1}, {2}".format(
+                    count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
+            if pl < minTrade[0]:
+                minTrade = (pl, "Trade{0}, {1}, {2}".format(
+                    count, TheTrade[srf.acct].unique()[0], TheTrade[srf.name].unique()[0]))
+
+            if live:
+                if pl > 0:
+                    liveWins.append(pl)
+                else:
+                    liveLosses.append(pl)
+            else:
+                if pl > 0:
+                    simWins.append(pl)
+                else:
+                    simLosses.append(pl)
+
+        dailySumData = OrderedDict()
+
+        # row1
+        dailySumData['livetot'] = fc(sum([sum(liveWins), sum(liveLosses)]))
+
+        numt = len(liveWins) + len(liveLosses)
+        if numt == 0:
+            dailySumData['livetotnote'] = "0 Trades"
+        else:
+            note = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}"
+            note = note.format(numt, "" if numt == 1 else "s", len(liveWins),
+                               "" if len(liveWins) == 1 else "s", len(
+                                   liveLosses),
+                               "" if len(liveLosses) == 1 else "s")
+            dailySumData['livetotnote'] = note
+
+        # row2
+        dailySumData['simtot'] = fc(sum([sum(simWins), sum(simLosses)]))
+
+        # 9 trades,  3 Winners, 6 Losers
+        numt = len(simWins) + len(simLosses)
+        if numt == 0:
+            dailySumData['simtotnote'] = "0 Trades"
+        else:  # 4 trades, 1 Winner, 3 Losers
+            note = "{0} Trade{1}, {2} Winner{3}, {4}, Loser{5}"
+            note = note.format(numt, "" if numt == 1 else "s",
+                               len(simWins), "" if len(simWins) == 1 else "s",
+                               len(simLosses), "" if len(simLosses) == 1 else "s")
+            dailySumData['simtotnote'] = note
+
+        # row3
+        dailySumData['highest'] = fc(maxTrade[0])
+        dailySumData['highestnote'] = maxTrade[1]
+
+        # row 4
+        dailySumData['lowest'] = fc(minTrade[0])
+        dailySumData['lowestnote'] = minTrade[1]
+
+        # row 5
+        if (len(liveWins) + len(simWins)) == 0:
+            dailySumData['avgwin'] = '$0.00'
+        else:
+            dailySumData['avgwin'] = fc(sum(
+                [sum(liveWins), sum(simWins)]) / (len(liveWins) + len(simWins)))
+        dailySumData['avgwinnote'] = "X {} =  {}".format(
+            len(liveWins) + len(simWins), fc(sum([sum(liveWins), sum(simWins)])))
+
+        # row 6
+        if len(liveLosses) + len(simLosses) == 0:
+            dailySumData['avgloss'] = '$0.00'
+        else:
+            dailySumData['avgloss'] = fc(sum([sum(liveLosses), sum(
+                simLosses)]) / (len(liveLosses) + len(simLosses)))
+        dailySumData['avglossnote'] = "X {} =  (${:.2f})".format(
+            len(liveLosses) + len(simLosses), abs(sum([sum(liveLosses), sum(simLosses)])))
+        return dailySumData
+
+    def getNamesNProfits(self, ts=None):
+        '''
+        Get Names and profits for use in daily profit chart
+        '''
         if not self.date:
             return {}, {}
         return TradeSum.getNamesAndProfits(self.date.strftime(self.date.strftime("%Y%m%d")))
-        
+
     def populateS(self):
         '''
         '''
-        names, profits = self.gatherDSumData()
+        names, profits = self.getNamesNProfits()
         contentWidget = QWidget()
         self.ui.scrollArea.setWidget(contentWidget)
         hbox = QHBoxLayout(contentWidget)
         for account in names:
             if len(names[account]) == 0:
                 continue
-            canvas = Canvas(self.date.strftime("%Y%m%d"), account)
+            canvas = CanvasDP(self.date.strftime("%Y%m%d"), account)
             canvas.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
             hbox.addWidget(canvas)
+
+        for account in names:
+            if len(names[account]) == 0:
+                continue
+            canvas = CanvasAP(self.date.strftime("%Y%m%d"), account)
+            canvas.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+            hbox.addWidget(canvas)
+
 
     def populateM(self):
         '''
