@@ -18,7 +18,7 @@
 Re- doing das Statemnet stuff to save the trades in the db and generally imporve it.
 
 @author: Mike Petersen
-@creation_data: 07/8/19
+@creation_date: 07/8/19
 '''
 
 

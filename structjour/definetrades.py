@@ -249,7 +249,7 @@ class DefineTrades(object):
         and will break when new brokers are added.  Uxxxxxxxx is live, TRxxxxxx is sim. When new
         brokers are added do something else.
         :prerequisites: 2 blank rows added at the bottom of the df
-        :raise AssertionError: If blank lines are not in df. 
+        :raise AssertionError: If blank lines are not in df.
         '''
         rc = self._frc
         df.reset_index(drop=True, inplace=True)
