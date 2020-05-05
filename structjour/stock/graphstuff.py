@@ -354,7 +354,7 @@ class FinPlot:
         ax1.annotate(f'{symbol} {minutes} minute', (df_ohlc.date[idx], df_ohlc.low.max()),
                      xytext=(0.4, 0.85), textcoords='axes fraction', alpha=0.35, size=16)
 
-        # annotate the data source. 
+        # annotate the data source.
         ax2.annotate(f'Data is from {chooser.api}',
             xy=(0.99, 0), xytext=(0, 10),
             xycoords=('axes fraction', 'figure fraction'),

@@ -13,6 +13,7 @@
             border-bottom: 0px;
             padding-top: 0px;
             padding-bottom: 0px;
+            margin-top:2em;
         }
 
         h3 {
@@ -92,13 +93,51 @@
 <body>
     <h1>TODO</h1>
     <h3>Version 0.93-Alpha.001</h3>
+</div>
     <div><h3> A forming plan </h3>
         sqlalchemy implementation is disruptive but I plan to complete it. I plan to benefit from multiple db options, but its not a free benefit. 
         The sqlite Numeric columns can be problems. In trade_sum, plan to remove columns that are the results of other columns. But wait till all 
         the tables are sqlalchemy declarative models. That should include rr, realrr, sldiff, targdiff, mktval, maxloss. 
     </div>
-    <ol>
-        <li> <span class="green">Time or time zone  </span> issues in the finnhub REST API. <code>4/30/20</code></li>
+    <div>
+        Among the benefits will be a more modular approach to statements enabling a sane and maintainable approach to including broker statements.
+    </div>
+    <div><h4>Consider these-- functionality from various commercial apps </h4>
+        Prelim is to keep focus on how structjour is unique and to stick to its vision of an application to help
+        day-traders review trading strategy. Its the 'now' focus that is the central focus and strength. Also structjour will 
+        remain an open source desktop application for a specific audience, which will increase when the focus turns to supporting
+        broker statements. (Not ready to begin that work. Need a kind of framework for including statements. This will begin after the
+        sqlalchemy models are implemented and used in everything)
+    </div>
+    
+    <div>A monthly review mechanism. Don't know how this looks yet.</div>
+    <div>A list of all trades limited by dates -- basically all the information currently exported to the front page of
+        disciplined trader displayed as a table. Add to that, green and red visuals, a column of green and red bars, size = pnl. Think about how to include
+        r data. 
+    </div>
+    <div>
+        <h3>The long planned statistics and long term view-- </h3>
+        <div>Planning this has been a road block for me as I don't have a clear vision on it. But my murky vision of it includes many types of charts with
+            controls to vary the time frame and to filter based on strategy, tags, time of day, day of week. Also equity over days, months and years needs
+            to be visually presented.  This leaves a mind-boggling number of possible interface approaches.
+        </div>
+        <div>
+            The progress could gain momentum if there were a prior interface and visual plan to roughly follow that includes the types of charts and
+            the nature of the controls and filters. Like the development of OpenOffice as based on Word and all. This would give the statistics project some
+            needed momentum. 
+        </div>
+        
+        <div>Statistics on numbers, wins, losses, total pnl based on strategy. Include pie chart showing number of used strategies and their win ratio/average amount</div>
+        <div>Some multi-day view of trade notes and daily notes
+        </div>
+        <div>Profit calendar is a calendar and navigation tool in which green days are green. Clicking on a day opens the day
+            on the front page
+        </div>
+    </div>
+        <ol>
+        <li> <span class="red">Create a migration </span> to move the stratgegy table and its current data into the same database as trade_sums</li>
+        <li> <span class="red">Rewrite graphstuff</span> to use Qt embedded approach where all the graph stuff is imlmented in a seperate FigureCanvas class and all the data stuff remains in the FinPlot class but depends more on DB access and less on the TradeSum object </li>
+        
         <li> <span class="red">Add a daily pnl </span> label to the front page.</li>
         <li> <span class="red">Fix the read </span> to retain user data in the database when it exists.</li>
         <li> <span class="red">Find the bug</span> 1/10/19 AMD Short does not display PnL.  AAPL Long 11/15/2018 at 15:10:51 id=841</li>
@@ -109,10 +148,7 @@
         <li> <span class="red">Figure out how to </span>deal with chart data with missing candle-price data from a halt or just low volume. The way after hours is handled is related. Currently entries use the number of candles to find the index. Moving averages... no idea... probably use a time index to remain consistent...Different APIs--some have after hours....What else?</li>
         <li> <span class="red">When user browses </span>for and inserts a chart, copy it to the appropriate journal directory.</li>
         <li> <span class="red">Provide a details view </span>for each trade showing the transactions as found in Daily Summary but just for the one trade.</li>
-        <li> <span class="red">Change Daily Summary </span>to include bar charts to show summaries for the day.</li>
-        <li> <span class="green">     Add tags combobox </span>to summaryForm backed by db--simlar to how strategies are done but using sqlalchemy declarative models (first in the program) <code>4/23/20</code></li>
-        <li> <span class="green">     Move dailyNotes </span>from the dailyForm to summaryForm. <code>4/7/20</code></li>
-        <li> <span class="green">     Re do dailyForm layout </span>to use splitters.<code>4/5/20</code></li>
+        
         <li> <span class="red">Implement a caching </span>of chart data. Save csv in out/.cache directory for each day. Unfortunately will need seperate entries for different APIS.</li>
         <li> <span class="green">     Annotate the charts </span>to show the data source.  <code>4/30/20</code></li>
         <li> <span class="red">Create a statistics hub </span>widget to replace the disciplined excel thing.</li>
@@ -136,6 +172,12 @@
         <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit.  <code>4/3/20</code></li>
         <li> <span class="green">Move the form files </span>in structjour.view to structjour.view.forms. <code>4/3/20</code></li>
         <li> <span class="green ">Fix realRR to </span> display a percentage of R when the pnl is a loss.<code>4/20/20</code></li>
+        <li> <span class="green">Time or time zone  </span> issues in the finnhub REST API. <code>4/30/20</code></li>
+        <li> <span class="green">Change Daily Summary </span>to include bar charts to show summaries for the day. 
+            <span class = "green">Implemented two charts, will repeat for each account. Good enough for this TODO list  <code>5/1/20</code></span></li>
+        <li> <span class="green">     Add tags combobox </span>to summaryForm backed by db--simlar to how strategies are done but using sqlalchemy declarative models (first in the program) <code>4/23/20</code></li>
+        <li> <span class="green">     Move dailyNotes </span>from the dailyForm to summaryForm. <code>4/7/20</code></li>
+        <li> <span class="green">     Re do dailyForm layout </span>to use splitters.<code>4/5/20</code></li>
     </ol>
     <h4>Not going to implement (probably)</h4>
     <ul>
