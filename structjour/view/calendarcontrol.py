@@ -3,17 +3,25 @@ import sys
 from structjour.view.forms.calendarform import Ui_Dialog as CalDlg
 from structjour.stock.utilities import pd2qtime
 
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QPoint
 from PyQt5.QtWidgets import QApplication, QDialog
 
 
-class CalendarControl(QDialog):
-    def __init__(self, settings, parent=None):
+class DialogWClose(QDialog):
+    def closeEvent(self, event):
+        print('close it')
+        if self.passme is not None:
+            self.passme.append(self.ui.calendarWidget.selectedDate())
+        print()
+
+
+class CalendarControl(DialogWClose):
+    def __init__(self, settings, parent=None, btn_widg=None, passme=None):
         super().__init__(parent=parent)
         self.settings = settings
-        x_pos = parent.geometry().left() + parent.ui.calendarBtn.geometry().left()
-        y_pos = parent.geometry().top() + parent.ui.calendarBtn.geometry().top()
-        self.move(x_pos, y_pos)
+        self.passme = passme
+        if btn_widg:
+            self.move(btn_widg.mapToGlobal(btn_widg.rect().bottomRight()))
         self.ui = CalDlg()
         self.ui.setupUi(self)
 
@@ -24,7 +32,8 @@ class CalendarControl(QDialog):
         self.exec()
 
     def clickedDate(self, theDate):
-        self.settings.setValue('theDate', theDate)
+        if self.passme is None:
+            self.settings.setValue('theDate', theDate)
         print(theDate)
         self.close()
 
