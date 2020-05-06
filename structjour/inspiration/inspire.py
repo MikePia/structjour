@@ -260,7 +260,7 @@ class Inspire:
             '''Until one is commited, there is hesitancy, the chance to draw back, ineffectiveness...whatever you can do, or dream you can do, begin it. Boldness has genius, power and magic in it!'''
         ])
         quotes.append(["Nagel", "On Courage", "Jack Nagel, property developer",
-            '''One sure guarantee of a mediocre life is a lif lived in fear.'''
+            '''One sure guarantee of a mediocre life is a life lived in fear.'''
         ])
         quotes.append(["Nelson", "On blessings", "Willie Nelson, Musician",
             '''When I started counting my blessings, my whole life turned around.'''
