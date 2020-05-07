@@ -25,7 +25,8 @@ sqlalchemy models for trade tables
 from collections import OrderedDict
 import logging
 import pandas as pd
-from sqlalchemy import (Table, Integer, Text, Column, String, Boolean, Float, ForeignKey, CheckConstraint)
+from sqlalchemy import (Table, Integer, Text, Column, String, Boolean, Float, ForeignKey,
+                        CheckConstraint, func, desc)
 from sqlalchemy.orm import relationship
 from structjour.models.meta import Base, ModelBase
 # from .meta import Base, ModelBase
@@ -223,6 +224,20 @@ class TradeSum(Base):
 
         return names, pnls
 
+    @classmethod
+    def getDistinctStrats(cls):
+        '''
+        Get a list of the strategies that are in use and the number of trades that use them.
+        :return: A python list of tuples (name, count). The name could be ''. Unlike the sql verion
+        it does not match the count for NULL or None.
+        '''
+        ModelBase.connect(new_session=True)
+        qq = ModelBase.session.query(TradeSum.strategy, func.count(
+                                     TradeSum.strategy)).group_by(
+                                     TradeSum.strategy).order_by(
+                                     desc(func.count(TradeSum.strategy))).all()
+        return qq
+
 
 class Trade(Base):
     __tablename__ = "ib_trades"
@@ -267,6 +282,16 @@ class Trade(Base):
             if q:
                 pnls[account[0]] = q
         return pnls
+
+    @classmethod
+    def getAccounts(cls):
+        '''
+        Retrieve a list of all accounts that have trades
+        '''
+        ModelBase.connect(new_session=True)
+        q = ModelBase.session.query(Trade.account).distinct().all()
+        print()
+        return [x[0] for x in q]
 
 
 TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
@@ -352,6 +377,13 @@ def getIntraStuff():
     print()
 
 
+def getStrategyStuff():
+    q = TradeSum.getDistinctStrats()
+    for i, qq in enumerate(q):
+        print(i + 1, qq)
+    print()
+
+
 def dostuff():
     # ModelBase.connect()
     # ModelBase.createAll()
@@ -364,7 +396,8 @@ def dostuff():
     # getTags()
     # removeTag()
 
-    getIntraStuff()
+    # getIntraStuff()
+    getStrategyStuff()
 
 
 def notmain():

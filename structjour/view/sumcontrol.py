@@ -873,7 +873,7 @@ class SumControl(QMainWindow):
 
     def calendarWidgetBtn(self):
         dadate_a = pd2qtime(self.settings.value('theDate'), qdate=True)
-        CalendarControl(self.settings, parent=self)
+        CalendarControl(self.settings, parent=self, btn_widg=self.ui.calendarBtn)
         dadate_b = self.settings.value('theDate')
         if dadate_a != dadate_b:
             self.ui.dateEdit.setDate(dadate_b)
