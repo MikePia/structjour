@@ -384,6 +384,7 @@ class SumControl(QMainWindow):
                 # self.ui.tagListWidget.setSelected()
             self.ui.tagListWidget.setToolTip(str([x.name for x in selected]))
             self.ui.tagListWidget.setToolTipDuration(20 * 1000)
+            self.ui.tagListWidget.setFocus(True)
 
     def editTags(self, x, event):
         menu = QMenu()
@@ -873,7 +874,7 @@ class SumControl(QMainWindow):
 
     def calendarWidgetBtn(self):
         dadate_a = pd2qtime(self.settings.value('theDate'), qdate=True)
-        CalendarControl(self.settings, parent=self, btn_widg=self.ui.calendarBtn)
+        CalendarControl(self.settings, parent=self, btn_widg=self.ui.calendarBtn, initialDate=dadate_a)
         dadate_b = self.settings.value('theDate')
         if dadate_a != dadate_b:
             self.ui.dateEdit.setDate(dadate_b)
