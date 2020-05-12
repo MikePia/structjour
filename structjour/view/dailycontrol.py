@@ -36,7 +36,7 @@ from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBo
 
 from structjour.models.trademodels import TradeSum, Trade
 from structjour.thetradeobject import SumReqFields
-from structjour.view.charts.dailyprofit_barchart import Canvas as CanvasDP
+from structjour.view.charts.intradayprofit_barchart import Canvas as CanvasDP
 from structjour.view.charts.intraday_profit_accum import Canvas as CanvasAP
 from structjour.view.forms.dailyform import Ui_Form as DailyForm
 from structjour.view.dfmodel import PandasModel
@@ -56,7 +56,7 @@ def fc(val):
 
 
 class QDialogWClose(QDialog):
-    '''A message box with a close event handler'''
+    '''A dialog box with a close event handler'''
     def closeEvent(self, event):
         '''Overridden event handler'''
         t = self.windowTitle()
@@ -125,7 +125,9 @@ class DailyControl(QDialog):
         self.setWindowTitle('Daily Summary')
 
     def gatherDSumData(self, ts=None):
-        '''Put together inot a dictionary the data for populating the Daily Summary
+        '''
+        The dialog does not use this. It shows the info in charts. It is called by the export to excel stuff.  
+        Put together into a dictionary the data for populating the Daily Summary
         :ts: TradeSummary dictionary. If called without running runDialog, this must be provided
              If this is called from within the dialog, leave it blank.
         '''
