@@ -95,6 +95,10 @@ class ModelBase:
             cls.session = Session()
 
     @classmethod
+    def close(cls):
+        cls.session.close()
+
+    @classmethod
     def checkVersion(cls, mv, v):
         if v < mv:
             raise ValueError(f'Incorrect version of structjour {v}. This code requires version >= {mv}')

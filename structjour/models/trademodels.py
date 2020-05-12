@@ -205,7 +205,7 @@ class TradeSum(Base):
         ModelBase.connect(new_session=True)
 
         q = ModelBase.session.query(TradeSum).filter_by(id=tsum_id).first()
-        return q.tags
+        return q.tags if q else []
 
     @classmethod
     def getNamesAndProfits(cls, daDate):
@@ -237,6 +237,17 @@ class TradeSum(Base):
                                      TradeSum.strategy).order_by(
                                      desc(func.count(TradeSum.strategy))).all()
         return qq
+
+    @classmethod
+    def getAccounts(cls):
+        '''
+        Retrieve a list of all accounts that have trades. The entries in the table are account aliases
+        :return list<str> of accounts
+        '''
+        ModelBase.connect(new_session=True)
+        q = ModelBase.session.query(TradeSum.account).distinct().all()
+        print()
+        return [x[0] for x in q]
 
 
 class Trade(Base):
@@ -286,7 +297,7 @@ class Trade(Base):
     @classmethod
     def getAccounts(cls):
         '''
-        Retrieve a list of all accounts that have trades
+        Retrieve a list of all accounts that have trades. The entries in the table are actual account numbers
         '''
         ModelBase.connect(new_session=True)
         q = ModelBase.session.query(Trade.account).distinct().all()
@@ -384,6 +395,10 @@ def getStrategyStuff():
     print()
 
 
+def getTradeSumAccounts():
+    q = TradeSum.getAccounts()
+    print(q)
+
 def dostuff():
     # ModelBase.connect()
     # ModelBase.createAll()
@@ -397,7 +412,8 @@ def dostuff():
     # removeTag()
 
     # getIntraStuff()
-    getStrategyStuff()
+    getTradeSumAccounts()
+    # getStrategyStuff()
 
 
 def notmain():
