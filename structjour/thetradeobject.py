@@ -591,7 +591,12 @@ class TheTradeObject:
         return self.TheTrade
 
     def __setMarketValue(self):
+        '''
+        Set the market value based on shares * price.  For incomplete trades, the info may be 
+        incomplete and a NaN value produced. A value is required. Set to 0
+        '''
         mkt = self.getShares() * self.df.loc[self.ix0][frc.price]
+        mkt = mkt if isNumeric(mkt) else 0
         self.TheTrade.MktVal = mkt
         return self.TheTrade
 
