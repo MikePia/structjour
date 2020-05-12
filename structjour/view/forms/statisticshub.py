@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'statisticshub.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -197,30 +195,30 @@ class Ui_Form(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.dateRange30RB = QtWidgets.QRadioButton(self.groupBox_3)
+        self.dateRange30Cbox = QtWidgets.QCheckBox(self.groupBox_3)
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
         font.setWeight(75)
-        self.dateRange30RB.setFont(font)
-        self.dateRange30RB.setObjectName("dateRange30RB")
-        self.verticalLayout_4.addWidget(self.dateRange30RB)
-        self.dateRange60RB = QtWidgets.QRadioButton(self.groupBox_3)
+        self.dateRange30Cbox.setFont(font)
+        self.dateRange30Cbox.setObjectName("dateRange30Cbox")
+        self.verticalLayout_4.addWidget(self.dateRange30Cbox)
+        self.dateRange60Cbox = QtWidgets.QCheckBox(self.groupBox_3)
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
         font.setWeight(75)
-        self.dateRange60RB.setFont(font)
-        self.dateRange60RB.setObjectName("dateRange60RB")
-        self.verticalLayout_4.addWidget(self.dateRange60RB)
-        self.dateRange90RB = QtWidgets.QRadioButton(self.groupBox_3)
+        self.dateRange60Cbox.setFont(font)
+        self.dateRange60Cbox.setObjectName("dateRange60Cbox")
+        self.verticalLayout_4.addWidget(self.dateRange60Cbox)
+        self.dateRange90Cbox = QtWidgets.QCheckBox(self.groupBox_3)
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
         font.setWeight(75)
-        self.dateRange90RB.setFont(font)
-        self.dateRange90RB.setObjectName("dateRange90RB")
-        self.verticalLayout_4.addWidget(self.dateRange90RB)
+        self.dateRange90Cbox.setFont(font)
+        self.dateRange90Cbox.setObjectName("dateRange90Cbox")
+        self.verticalLayout_4.addWidget(self.dateRange90Cbox)
         self.horizontalLayout_6.addLayout(self.verticalLayout_4)
         self.verticalLayout_7 = QtWidgets.QVBoxLayout()
         self.verticalLayout_7.setObjectName("verticalLayout_7")
@@ -367,9 +365,9 @@ class Ui_Form(object):
         item.setText(_translate("Form", "A Strategy"))
         self.strategyListWidget.setSortingEnabled(__sortingEnabled)
         self.groupBox_3.setTitle(_translate("Form", "Select Date Range"))
-        self.dateRange30RB.setText(_translate("Form", "30 Days"))
-        self.dateRange60RB.setText(_translate("Form", "60 Days"))
-        self.dateRange90RB.setText(_translate("Form", "90 Days"))
+        self.dateRange30Cbox.setText(_translate("Form", "30 Days"))
+        self.dateRange60Cbox.setText(_translate("Form", "60 Days"))
+        self.dateRange90Cbox.setText(_translate("Form", "90 Days"))
         self.selectStartBtn.setText(_translate("Form", "..."))
         self.selectStartDate.setToolTip(_translate("Form", "<html><head/><body><p><span style=\" font-size:10pt;\">When databse is checked, changing the date will load trades that are in the database. Use the calendar widget by clicking the button to the right to skip to a specific date.</span></p></body></html>"))
         self.label_4.setText(_translate("Form", "Start Date"))
@@ -378,3 +376,4 @@ class Ui_Form(object):
         self.label_5.setText(_translate("Form", "End Date"))
         self.label_6.setText(_translate("Form", "Select Account"))
         self.selectAccount.setItemText(0, _translate("Form", "All Accounts"))
+

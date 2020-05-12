@@ -349,7 +349,7 @@ padding-right:10px;</string>
                     <item>
                      <layout class="QVBoxLayout" name="verticalLayout_4">
                       <item>
-                       <widget class="QRadioButton" name="dateRange30RB">
+                       <widget class="QCheckBox" name="dateRange30Cbox">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -363,7 +363,7 @@ padding-right:10px;</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QRadioButton" name="dateRange60RB">
+                       <widget class="QCheckBox" name="dateRange60Cbox">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>
@@ -377,7 +377,7 @@ padding-right:10px;</string>
                        </widget>
                       </item>
                       <item>
-                       <widget class="QRadioButton" name="dateRange90RB">
+                       <widget class="QCheckBox" name="dateRange90Cbox">
                         <property name="font">
                          <font>
                           <pointsize>12</pointsize>

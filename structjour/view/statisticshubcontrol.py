@@ -24,15 +24,16 @@ Created on Apr 4, 2020
 import sys
 import pandas as pd
 
-from structjour.models.trademodels import Tags, TradeSum, Trade
+from structjour.models.trademodels import Tags, TradeSum
+from structjour.stock.utilities import pd2qtime
 from structjour.view.calendarcontrol import CalendarControl
-from structjour.view.charts.dailyprofit_barchart import Canvas as CanvasDP
+from structjour.view.charts.intradayprofit_barchart import Canvas as CanvasDP
 from structjour.view.flowlayout import FlowLayout
 
 from structjour.view.forms.statisticshub import Ui_Form as StatHub
 from PyQt5.QtCore import QSettings, QDate, Qt
-from PyQt5.QtWidgets import (QApplication, QDialog, QLabel, QSpinBox, QHBoxLayout, QGridLayout,
-                             QVBoxLayout, QScrollArea, QComboBox, QWidget, QSizePolicy)
+from PyQt5.QtWidgets import (QApplication, QDialog, QLabel, QSpinBox, QHBoxLayout,
+                             QComboBox, QSizePolicy)
 from PyQt5.QtGui import QFont
 
 
@@ -47,6 +48,8 @@ class StatitisticsHubControl(QDialog):
 
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
 
+        self.cud = {}
+
         self.ui.symbolEdit.editingFinished.connect(self.selectSymbols)
         self.ui.sideCB.currentTextChanged.connect(self.selectSide)
         self.ui.tagsListWidget.itemPressed.connect(self.selectTag)
@@ -54,9 +57,9 @@ class StatitisticsHubControl(QDialog):
         self.ui.tradesByTimeRB.clicked.connect(self.tradesByTimeClicked)
         self.ui.strategyListWidget.itemPressed.connect(self.selectStrategy)
 
-        self.ui.dateRange30RB.pressed.connect(self.set30Days)
-        self.ui.dateRange60RB.pressed.connect(self.set60Days)
-        self.ui.dateRange90RB.pressed.connect(self.set90Days)
+        self.ui.dateRange30Cbox.clicked.connect(self.set30Days)
+        self.ui.dateRange60Cbox.clicked.connect(self.set60Days)
+        self.ui.dateRange90Cbox.clicked.connect(self.set90Days)
         self.ui.selectStartBtn.pressed.connect(self.setStartTime)
         self.ui.selectEndBtn.pressed.connect(self.setEndTime)
         self.ui.selectStartDate.editingFinished.connect(self.setStartEndTimes)
@@ -72,81 +75,198 @@ class StatitisticsHubControl(QDialog):
 
         self.ui.selectStartBtn.setFocusPolicy(Qt.NoFocus)
         self.ui.selectEndBtn.setFocusPolicy(Qt.NoFocus)
+        self.initializeCud()
         self.show()
 
-    # #### Callbacks #####
+    def initializeCud(self):
+        '''
+        Set cud (chart_user_dict) settings from the current state of all the widgets
+        '''
+        self.selectSymbols()
+        self.selectSide()
+        self.selectTag()
+        self.setStartEndInactive()
+        self.setTimeOrNumTrades()
 
-    def set30Days(self):
-        self.setXDays(1)
+    def getSymbolsAsList(self):
+        t = self.ui.symbolEdit.text()
+        t = t.replace(" ", "").strip().upper().split(',')
+        return t
 
-    def set60Days(self):
-        self.setXDays(2)
+    # #### Callbacks and methods to collect user input data and set self.cud #####
 
-    def set90Days(self):
-        self.setXDays(3)
+    # Regarding the noodly self handling of exclusivity of the checkboxes. The options need to be
+    # 1 checked or none checked. The radio button is the right widget except the autoexclusivity
+    # wont allow turning off all buttons. The suggested fix (turning off and on autoexclusivity)
+    # doesn't work. This works and is still easily understandable.
 
-    def setXDays(self, months):
+    def set30Days(self, val):
+        print('===== In set30Days===== ')
+        months = 0
+        if val:
+            self.ui.dateRange60Cbox.setChecked(False)
+            self.ui.dateRange90Cbox.setChecked(False)
+            months = 1
+
+        elif self.ui.dateRange60Cbox.isChecked():
+            months = 2
+        elif self.ui.dateRange90Cbox.isChecked():
+            months = 3
+        self.setXMonths(months)
+
+    def set60Days(self, val):
+        print('===== In set60Days===== ')
+        months = 0
+        if val:
+            self.ui.dateRange30Cbox.setChecked(False)
+            self.ui.dateRange90Cbox.setChecked(False)
+            months = 2
+
+        elif self.ui.dateRange30Cbox.isChecked():
+            months = 1
+        elif self.ui.dateRange90Cbox.isChecked():
+            months = 3
+        self.setXMonths(months)
+
+    def set90Days(self, val):
+        print('===== In set90Days===== ')
+        months = 0
+        if val:
+            self.ui.dateRange30Cbox.setChecked(False)
+            self.ui.dateRange60Cbox.setChecked(False)
+            months = 3
+
+        elif self.ui.dateRange30Cbox.isChecked():
+            months = 1
+        elif self.ui.dateRange60Cbox.isChecked():
+            months = 2
+        self.setXMonths(months)
+
+    def setXMonths(self, months):
+        if months == 0:
+            self.setStartEndInactive()
+            self.cud['dates'] = (None, None)
+            return
         now = QDate.currentDate()
         before = now.addMonths(-months)
         self.ui.selectStartDate.setDate(before)
         self.ui.selectEndDate.setDate(now)
         self.setStartEndTimes()
 
+    def setDaysOff(self):
+        '''
+        Uncheck the 30 60 and 90 day checkboxes
+        '''
+        self.ui.dateRange30Cbox.setChecked(False)
+        self.ui.dateRange60Cbox.setChecked(False)
+        self.ui.dateRange90Cbox.setChecked(False)
+
+    def setStartEndInactive(self):
+        '''
+        The checkboxes (30 60, 90 days) are short cuts to fill in the start and end dates. Un checking
+        all three will also trigger this method. For start end, we achieve inactivity by setting the
+        start date to the future. Date widgets will be set initailly inactive. The start and end will
+        become active only if the user checks a box or changes the dates.
+        '''
+        d = pd.Timestamp.now() + pd.Timedelta(days=1)
+        d = pd2qtime(d, qdate=True)
+        self.ui.selectStartDate.setDate(d)
+        self.ui.selectEndDate.setDate(d)
+        self.cud['dates'] = (None, None)
+
     def setStartTime(self):
         settings = QSettings('zero_substance', 'structjour')
         saveit = []
-        CalendarControl(settings, parent=self, btn_widg=self.ui.selectStartBtn, passme=saveit)
+        initialdate = self.ui.selectStartDate.date()
+        CalendarControl(settings, parent=self, btn_widg=self.ui.selectStartBtn, passme=saveit, initialDate=initialdate)
         self.ui.selectStartDate.setDate(saveit[0])
         self.setStartEndTimes()
+        self.setDaysOff()
 
     def setEndTime(self):
         settings = QSettings('zero_substance', 'structjour')
         saveit = []
-        CalendarControl(settings, parent=self, btn_widg=self.ui.selectStartBtn, passme=saveit)
+        initialdate = self.ui.selectEndDate.date()
+        CalendarControl(settings, parent=self, btn_widg=self.ui.selectStartBtn, passme=saveit, initialDate=initialdate)
         self.ui.selectEndDate.setDate(saveit[0])
         self.setStartEndTimes()
+        self.setDaysOff()
 
     def setStartEndTimes(self):
         start = self.ui.selectStartDate.date()
         end = self.ui.selectEndDate.date()
         if start > end:
-            print('start is greater than end')
+            self.setStartEndInactive()
+            self.cud['dates'] = (None, None)
+            print('Set cud.dates to:', self.cud['dates'])
         else:
-            print('filter charts by date start:', start, "end:", end)
+            self.cud['dates'] = (start, end)
+            print('Setting cud.dates to:', (start, end))
 
     def selectStrategy(self):
         selected = [x.text() for x in self.ui.strategyListWidget.selectedItems()]
+        self.cud['strategies'] = selected
 
-        print('Update the charts for the strategies:', selected)
+        print('Set cud.strategies:', selected)
+
+    def setTimeOrNumTrades(self):
+        if self.ui.tradesBySetsRB.isChecked():
+            self.groupByNumTrades(self)
+        elif self.ui.tradesByTimeRB.isChecked():
+            self.groupByTime()
+        else:
+            self.ui.tradesBySetsRB.setChecked(True)
+            self.tradesBySetClicked(True)
+            # Settingf a default value for the numtrades spin box
+            self.dynamicWidget.setValue(20)
+            self.groupByNumTrades()
+            print()
 
     def groupByTime(self, val):
-        print(val)
+        vals = {'Group by Day': 'day', 'Group By Week': 'week', 'Group By Month': 'month', 'Group By Year': 'year'}
+        assert val in vals
+        self.cud['inTimeGroups'] = vals[val]
+        self.cud['inNumSets'] = -1
+        print('Set cud.inTimeGroups: ', self.cud['inTimeGroups'])
 
     def groupByNumTrades(self):
-        print('Group trades in sets of ', self.dynamicWidget.value())
+        self.cud['inNumSets'] = self.dynamicWidget.value()
+        self.cud['InTimeGroups'] = None
+        print('set cud.inNumSet ', self.cud['inNumSets'])
         print()
 
     def selectSymbols(self):
-        t = self.ui.symbolEdit.text()
-        t = t.replace(" ", "").strip().upper().split(',')
-        print("Update the data to filter only these symbols:", t)
+        '''
+        Set cud to reflect the latest edits to the Symbol edit
+        '''
+        self.cud['symbols'] = self.getSymbolsAsList()
+        print("Set cud.symbolsr:", self.cud['symbols'])
 
-    def selectSide(self, val):
-        print('update chart for sides:', val)
+    def selectSide(self):
+        '''
+        Set cud to reflect the last selection in the Side combo box
+        '''
+        self.cud['side'] = self.ui.sideCB.currentText()
+        print('Set cud.side:', self.cud['side'])
 
-    def selectTag(self, val):
+    def selectTag(self):
+        '''
+        Set cud to reflect the latest tag selection
+        '''
         # justclicked = val.text()
         selected = [x.text() for x in self.ui.tagsListWidget.selectedItems()]
-        print('update the charts for selected tags', selected)
+        self.cud['tags'] = selected
+        print('set cud.tags', self.cud['tags'])
 
     def setAccount(self):
         account = self.ui.selectAccount.currentText()
-        if account == 'All Accounts':
-            print('remove account filter')
-        elif account:
-            print('filter account to ', account)
+        if account is None or account == 'All Accounts' or account == '':
+            self.cud['accounts'] = None
+        else:
+            self.cud['accounts'] = account
+        print('Set cud.account ', self.cud['accounts'])
 
-    # ##### Dynamic groups by widget #####
+    # ##### Load dynamic widgets for inNumTrades or inTimeGroups #####
     def tradesBySetClicked(self, val):
         if self.tradeLayout is not None:
             for i in reversed(range(self.tradeLayout.count())):
@@ -217,11 +337,13 @@ class StatitisticsHubControl(QDialog):
                 self.ui.strategyListWidget.addItem(f'{strat[0]} ({strat[1]})')
 
     def populateAccounts(self):
-        accounts = Trade.getAccounts()
+        accounts = TradeSum.getAccounts()
         self.ui.selectAccount.clear()
         self.ui.selectAccount.addItem('All Accounts')
         for account in accounts:
             self.ui.selectAccount.addItem(account)
+        if 'Live' in accounts:
+            self.ui.selectAccount.setCurrentText('Live')
 
     def getNamesNProfits(self, date):
         '''
@@ -230,16 +352,10 @@ class StatitisticsHubControl(QDialog):
         return TradeSum.getNamesAndProfits(date.strftime("%Y%m%d"))
 
     def populateCharts(self):
-        # for i in range(50):
-        # self.topgrid = QGridLayout(self.ui.scrollArea)
-        # self.topgrid.addWidget(self.ui.scrollArea)
-        # # content_widget = QWidget()
         flow = FlowLayout(self.ui.content_widget)
-        # self.ui.content_widget.setLayout(flow)
-        # flow.addWidget(self.ui.scrollArea)
         self.ui.scrollArea.setWidget(self.ui.content_widget)
         self.ui.content_widget.setStyleSheet('background-color: #yellow;')
-        
+
         date = pd.Timestamp('20200102')
         delt = pd.Timedelta(days=1)
         # flowlayout = FlowLayout(chartArea)
