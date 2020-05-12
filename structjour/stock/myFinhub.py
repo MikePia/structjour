@@ -71,20 +71,29 @@ def getLimits():
 
 def pd2unix(t):
     '''
-    :params t: a tz aware datetime object
+    :params t: a naive datetime object
     :exception: Will raise an assertion error if t is not datetime or has no tzinfo assoatiated.
     '''
-    assert isinstance(t, dt.datetime)
+    assert isinstance(t, pd.Timestamp)
+    eastern = gettz("US/Eastern")
     # assert t.tzinfo is not None
+    offset = eastern.utcoffset(t).total_seconds()
 
-    epoc = dt.datetime(1970, 1, 1, tzinfo=t.tzinfo)
-    return (t - epoc).total_seconds()
+    epoc = dt.datetime(1970, 1, 1)
+    return (t - epoc).total_seconds() - offset
 
 
 def unix2pd(t, tzstring="US/Eastern"):
+    '''
+    Convert back from Finnhubs unix time to a naive time that reflects US/Eastern timezone. 
+    :params t: int: Finnhubs unix time
+    '''
     assert isinstance(t, (int, np.integer))
     eastern = gettz(tzstring)
-    return dt.datetime.fromtimestamp(t, eastern)
+    chk_tz = pd.to_datetime(t, unit='s')
+    actual_time = chk_tz + pd.Timedelta(seconds=eastern.utcoffset(chk_tz).total_seconds())
+
+    return actual_time
 
 
 def getStartForRequest(start, end, interval):
@@ -92,10 +101,12 @@ def getStartForRequest(start, end, interval):
     Method does two things,
         1) gets a start request prior to start (for MA calcs)
         3) converts to unix timestamp
-    :start: Tz Aweare datetime object
+    :start: A Naive pd.Timestamp
     :interval: int-- Users requested candle interval
     :return: A uniz epoch that will request enough data to calculate a 200 MA for the given interval
     '''
+    assert isinstance(start, pd.Timestamp)
+    assert isinstance(end, pd.Timestamp)
 
     delt = pd.Timedelta(minutes=interval * 2000)
 
@@ -155,7 +166,7 @@ def getdf(j):
     '''
     j['time'] = []
     for v in j['t']:
-        j['time'].append(dt.datetime.fromtimestamp(v, gettz("utc")))
+        j['time'].append(unix2pd(v))
 
     d = {'timestamp': j['time'], 'open': j['o'], 'high': j['h'], 'low': j['l'],
          'close': j['c'], 'volume': j['v']}
@@ -221,11 +232,11 @@ def getDaTime(datime, isStart=True):
     '''
 
     if not datime:
-        s = dt.datetime.now()
+        s = pd.Timestamp.now()
         hour = 9 if isStart else 16
-        datime = dt.datetime(s.year, s.month, s.day, hour, 15)
+        datime = pd.Timestamp(s.year, s.month, s.day, hour, 15)
     else:
-        datime = pd.Timestamp(datime).to_pydatetime()
+        datime = pd.Timestamp(datime)
     return datime
 
 
@@ -273,11 +284,13 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
 
 
 def notmain():
-    symbol = 'TSLA'
-    minutes = 2
-    start = '2019-10-10 09:15'
-    end = '2019-10-10 12:00'
+    symbol = 'SQ'
+    minutes = 15
+    # start = '2019-10-10 09:15'
+    # end = '2019-10-10 12:00'
     # for i in range(260):
+    start = '2020-05-07 09:00'
+    end = '2020-05-07 10:30'
     meta, df, maD = getFh_intraday(symbol, start, end, minutes, showUrl=True)
     if not df.empty:
         print(df.tail())
