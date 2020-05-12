@@ -71,7 +71,10 @@ class APIChooser:
         '''
         start = pd.Timestamp(start)
         end = pd.Timestamp(end)
-        n = pd.Timestamp.now()
+
+        # Need a naive time showing NewYorkTime right now
+        ne = pd.Timestamp.now("US/Eastern")
+        n = pd.Timestamp(ne.year, ne.month, ne.day, ne.hour, ne.minute, ne.second)
 
         violatedRules = []
         suggestedApis = self.getPreferences()
