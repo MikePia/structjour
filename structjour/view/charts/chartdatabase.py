@@ -28,9 +28,18 @@ class ChartDataBase:
                       accounts: str can be 'All Accounts' or an account alias (an entry in TradeSums.account)
 
     '''
-    def __init__(self, cud):
+    def __init__(self, cud, maxbars=99):
         self.cud = cud
         self.query = None
+
+        # Initialze the chart with the max num of candles
+        self.names = pd.date_range(start='1/1/2020', end='7/15/2021')
+        self.maxbars = maxbars
+        self.names = self.names[:self.maxbars]
+        self.data = [-(x - (self.maxbars // 2)) for x in list(range(self.maxbars))]
+        self.title = 'Initialaze chart'
+        self.chartInitialized = False
+        self.getFormatGraphArray()
 
     def runFilters(self):
         if self.query is None:
@@ -272,6 +281,9 @@ class MultiTradeProfit_BarchartData(BarchartData):
         self.limit = limit
 
     def getChartUserData(self):
+        if self.chartInitialized is False:
+            self.chartInitialized = True
+            return
         ModelBase.connect(new_session=True)
         self.query = ModelBase.session.query(TradeSum).order_by(TradeSum.date.asc(), TradeSum.start.asc())
         self.runFilters()
