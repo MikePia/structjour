@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
 TODO: Checkout finnhub from pypi.
-TODO: excludeAfterHours removed 4/29/20. All requests will include afterHours data. fix later. 
+TODO: excludeAfterHours removed 4/29/20. All requests will include afterHours data. fix later.
 This has a generous free with 60 per second throttle. And it goes back 20 years.
 @author: Mike Petersen
 @creation_date:2018-12-11
@@ -29,7 +29,7 @@ import pandas as pd
 import numpy as np
 import requests
 
-from structjour.stock.utilities import ManageKeys, movingAverage, setLimitReached, getLimitReached, getTzAware
+from structjour.stock.utilities import ManageKeys, movingAverage, setLimitReached, getLimitReached
 
 
 example = 'https://finnhub.io/api/v1/stock/candle?symbol=AAPL&resolution=1&count=200&token=bm9spbnrh5rb24oaaehg'
@@ -85,7 +85,7 @@ def pd2unix(t):
 
 def unix2pd(t, tzstring="US/Eastern"):
     '''
-    Convert back from Finnhubs unix time to a naive time that reflects US/Eastern timezone. 
+    Convert back from Finnhubs unix time to a naive time that reflects US/Eastern timezone.
     :params t: int: Finnhubs unix time
     '''
     assert isinstance(t, (int, np.integer))

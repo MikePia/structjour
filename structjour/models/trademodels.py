@@ -399,6 +399,7 @@ def getTradeSumAccounts():
     q = TradeSum.getAccounts()
     print(q)
 
+
 def dostuff():
     # ModelBase.connect()
     # ModelBase.createAll()
