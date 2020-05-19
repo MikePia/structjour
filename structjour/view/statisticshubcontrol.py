@@ -27,6 +27,8 @@ import pandas as pd
 from structjour.models.trademodels import Tags, TradeSum
 from structjour.stock.utilities import pd2qtime
 from structjour.view.calendarcontrol import CalendarControl
+from structjour.view.charts.chartdatabase import MultiTradeProfit_BarchartData
+from structjour.view.charts.generic_barchart import BarChart
 from structjour.view.charts.intradayprofit_barchart import Canvas as CanvasDP
 from structjour.view.flowlayout import FlowLayout
 
@@ -49,6 +51,7 @@ class StatitisticsHubControl(QDialog):
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
 
         self.cud = {}
+        self.initializing = True
 
         self.ui.symbolEdit.editingFinished.connect(self.selectSymbols)
         self.ui.sideCB.currentTextChanged.connect(self.selectSide)
@@ -71,11 +74,12 @@ class StatitisticsHubControl(QDialog):
         self.populateTags()
         self.populateStrategies()
         self.populateAccounts()
+        self.initializeCud()
         self.populateCharts()
 
         self.ui.selectStartBtn.setFocusPolicy(Qt.NoFocus)
         self.ui.selectEndBtn.setFocusPolicy(Qt.NoFocus)
-        self.initializeCud()
+        self.initializing = False
         self.show()
 
     def initializeCud(self):
@@ -87,10 +91,12 @@ class StatitisticsHubControl(QDialog):
         self.selectTag()
         self.setStartEndInactive()
         self.setTimeOrNumTrades()
+        self.cud['titleBit'] = None
 
     def getSymbolsAsList(self):
         t = self.ui.symbolEdit.text()
         t = t.replace(" ", "").strip().upper().split(',')
+        t = [x for x in t if x]
         return t
 
     # #### Callbacks and methods to collect user input data and set self.cud #####
@@ -193,6 +199,13 @@ class StatitisticsHubControl(QDialog):
         self.setDaysOff()
 
     def setStartEndTimes(self):
+        '''
+        Retrieve the dates from the widgets and place them in the self.cud dict.
+        If they are not ordered (start > end), set the dict to None and inactivate
+        the dates.
+        Note that self.cud['date'] will be a tuple of QDates (start, end)
+
+        '''
         start = self.ui.selectStartDate.date()
         end = self.ui.selectEndDate.date()
         if start > end:
@@ -202,6 +215,9 @@ class StatitisticsHubControl(QDialog):
         else:
             self.cud['dates'] = (start, end)
             print('Setting cud.dates to:', (start, end))
+            if not self.initializing:
+                for chart in self.charts:
+                    chart.plot()
 
     def selectStrategy(self):
         selected = [x.text() for x in self.ui.strategyListWidget.selectedItems()]
@@ -223,17 +239,33 @@ class StatitisticsHubControl(QDialog):
             print()
 
     def groupByTime(self, val):
-        vals = {'Group by Day': 'day', 'Group By Week': 'week', 'Group By Month': 'month', 'Group By Year': 'year'}
+
+        # When using this data, the chartDataBase class will use actual months instead of 30, 60 90 ...
+        vals = {'Group by Day': 1,
+                'Group By Week': 7,
+                'Group By Month': 30,
+                'Group by 2 Months': 60,
+                'Group by 3 Months': 90,
+                'Group by 4 Months': 120,
+                'Group by 6 Months': 180,
+                'Group By Year': 360}
+
         assert val in vals
         self.cud['inTimeGroups'] = vals[val]
         self.cud['inNumSets'] = -1
+        self.cud['titleBit'] = val
         print('Set cud.inTimeGroups: ', self.cud['inTimeGroups'])
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
 
     def groupByNumTrades(self):
         self.cud['inNumSets'] = self.dynamicWidget.value()
-        self.cud['InTimeGroups'] = None
+        self.cud['inTimeGroups'] = None
         print('set cud.inNumSet ', self.cud['inNumSets'])
-        print()
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
 
     def selectSymbols(self):
         '''
@@ -241,6 +273,9 @@ class StatitisticsHubControl(QDialog):
         '''
         self.cud['symbols'] = self.getSymbolsAsList()
         print("Set cud.symbolsr:", self.cud['symbols'])
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
 
     def selectSide(self):
         '''
@@ -264,9 +299,13 @@ class StatitisticsHubControl(QDialog):
             self.cud['accounts'] = None
         else:
             self.cud['accounts'] = account
-        print('Set cud.account ', self.cud['accounts'])
 
-    # ##### Load dynamic widgets for inNumTrades or inTimeGroups #####
+        print('Set cud.account ', self.cud['accounts'])
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
+
+    # ##### Load a dynamic widget for inNumTrades or inTimeGroups #####
     def tradesBySetClicked(self, val):
         if self.tradeLayout is not None:
             for i in reversed(range(self.tradeLayout.count())):
@@ -302,7 +341,8 @@ class StatitisticsHubControl(QDialog):
         label.setMaximumHeight(35)
         cbox = QComboBox()
         cbox.setStyleSheet('background-color: #eeeeaa')
-        for t in ['Group by Day', 'Group By Week', 'Group By Month', 'Group By Year']:
+        for t in ['Group by Day', 'Group By Week', 'Group By Month', 'Group by 2 Months',
+                  'Group by 3 Months', 'Group by 4 Months', 'Group by 6 Months', 'Group By Year']:
             cbox.addItem(t)
         cbox.setFont(QFont('Arial Rounded MT Bold', pointSize=12))
         cbox.currentTextChanged.connect(self.groupByTime)
@@ -342,8 +382,8 @@ class StatitisticsHubControl(QDialog):
         self.ui.selectAccount.addItem('All Accounts')
         for account in accounts:
             self.ui.selectAccount.addItem(account)
-        if 'Live' in accounts:
-            self.ui.selectAccount.setCurrentText('Live')
+        if 'SIM' in accounts:
+            self.ui.selectAccount.setCurrentText('SIM')
 
     def getNamesNProfits(self, date):
         '''
@@ -352,6 +392,23 @@ class StatitisticsHubControl(QDialog):
         return TradeSum.getNamesAndProfits(date.strftime("%Y%m%d"))
 
     def populateCharts(self):
+        flow = FlowLayout(self.ui.content_widget)
+        self.ui.scrollArea.setWidget(self.ui.content_widget)
+        self.ui.content_widget.setStyleSheet('background-color: #yellow;')
+
+        # date = pd.Timestamp('20200102')
+        # delt = pd.Timedelta(days=1)
+        # flowlayout = FlowLayout(chartArea)
+        chartData = MultiTradeProfit_BarchartData(self.cud, limit=30)
+        bc = BarChart(chartData, parent=self)
+        bc.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+        bc.setMinimumSize(300, 300)
+        self.charts = []
+        # count = 0
+        self.charts.append(bc)
+        flow.addWidget(self.charts[0])
+
+    def populateChartsOLD(self):
         flow = FlowLayout(self.ui.content_widget)
         self.ui.scrollArea.setWidget(self.ui.content_widget)
         self.ui.content_widget.setStyleSheet('background-color: #yellow;')

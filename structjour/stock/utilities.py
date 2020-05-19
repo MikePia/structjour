@@ -24,7 +24,6 @@ Local utility functions shared by some stock modules and test code.
 
 from collections import OrderedDict
 import datetime as dt
-from dateutil.tz import gettz
 import logging
 import math
 import os
@@ -117,28 +116,6 @@ def pd2qtime(pdt, qdate=False):
         return QDate(pdt)
     pdt = pd.Timestamp(pdt)
     return QDate(pdt.year, pdt.month, pdt.day)
-
-
-def getTzAware(datime, tzstring, isStart=True):
-    '''
-    Probaly place in utilities. Will returne a tz aware datetime object. If datime is None, will coerce
-    a start or end date that is either 9:15 or 16:15 depending on isStart parameter
-    '''
-    eastern = gettz(tzstring)
-    if not datime:
-        s = dt.datetime.now()
-        hour = 9 if isStart else 16
-        datime = dt.datetime(s.year, s.month, s.day, hour, 15, tzinfo=eastern)
-
-    else:
-        if isinstance(datime, str):
-            datime = pd.Timestamp(datime, tzinfo=eastern).to_pydatetime()
-        elif isinstance(datime, (dt.datetime, pd.Timestamp)):
-            if datime.tzinfo is None:
-                datime = pd.Timestamp(datime, tzinfo=eastern).to_pydatetime()
-            else:
-                datime = pd.Timestamp(datime).tz_convert("US/Eastern")
-    return datime
 
 
 def getMAKeys():

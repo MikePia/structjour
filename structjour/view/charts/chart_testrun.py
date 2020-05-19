@@ -17,16 +17,16 @@ class chartTestRun(QMainWindow):
         # date = pd.Timestamp('20200102')
         # TradeSum uses the account alias (currently Live or SIM)
 
-        cud = {'InTimeGroups': None,
-               'accounts': 'Live',
-               'dates': (QDate(2020, 2, 11), QDate(2020, 5, 11)),
+        cud = {'inTimeGroups': None,
+               'accounts': None,
+               'dates': (QDate(2020, 7, 11), QDate(2020, 7, 11)),
                'inNumSets': 21,
                'side': 'Both',
-               'strategies': ['VWAP MA trend (129)', 'VWAP Reversal (88)'],
-               'symbols': ['AAPL', 'ROKU'],
-               'tags': ['Hesitant', 'Cloudy']}
+               'strategies': [],
+               'symbols': [],
+               'tags': []}
 
-        chartData = MultiTradeProfit_BarchartData(cud)
+        chartData = MultiTradeProfit_BarchartData(cud, limit=30)
         bc = BarChart(chartData, parent=self)
         bc.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
         bc.setMinimumSize(300, 300)

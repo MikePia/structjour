@@ -21,6 +21,7 @@ Created on Feb 10, 2020
 '''
 import os
 import pandas as pd
+from pandas.tseries.offsets import MonthEnd
 from structjour.time import createDirsStructjour
 
 
@@ -52,3 +53,27 @@ def autoGenCreateDirs(settings, testDate=None):
         createDirsStructjour(nextMonth)
     settings.setValue('lastDirCreated', nextMonth.strftime('%Y%m01'))
     return theDir1, theDir2
+
+
+def advanceMonth(d, numMonths=1):
+    '''
+    Take a date and advance a number of months up to 12. The returned date's day is the same as the argument's unless
+    it is >= 28 when it returns the last day of the month
+    :params d: A time string, pd Timstamp or datetime
+    :params numMoths: the number of months to advance
+    :return: A pd Timestamp advanced by numMonths.
+    :raise ValueError: if numMonths is not with 1~12
+    '''
+    if numMonths > 112 and numMonths > 0:
+        raise ValueError(f'Invalid argument for numMonths: {numMonths}')
+    d = pd.Timestamp(d)
+
+    month = (d.month + numMonths) % 12
+    if month == 0: month = 12
+    year = d.year if month > numMonths else d.year + 1
+    day = d.day
+
+    if day >= 28:
+        return pd.Timestamp(year, month, 1) + MonthEnd(1)
+    else:
+        return pd.Timestamp(year, month, day)
