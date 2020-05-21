@@ -220,8 +220,6 @@ class ChartDataBase:
         pnls = [sum([x.pnl for x in bytime[i]]) for i in range(len(bytime))]
         openingdates = [pd.Timestamp(f'{x[0].date}') for x in bytime]
 
-        # endingdates.append(pd.Timestamp(f'{trades[i].date} {trades[i].start}'))
-        
         return pnls, openingdates
 
 
@@ -229,7 +227,7 @@ class BarchartData(ChartDataBase):
     '''
     Inheritors of this class must:
         1) define the class variables data, names, date
-        2) define getChartUserData and save the result to self.query: 
+        2) define getChartUserData and save the result to self.query:
         TODO: Define the obligations of this method here
     '''
 

@@ -29,8 +29,6 @@ from structjour.stock.utilities import pd2qtime
 from structjour.view.calendarcontrol import CalendarControl
 from structjour.view.charts.chartdatabase import MultiTradeProfit_BarchartData
 from structjour.view.charts.generic_barchart import BarChart
-from structjour.view.charts.intradayprofit_barchart import Canvas as CanvasDP
-from structjour.view.flowlayout import FlowLayout
 
 from structjour.view.forms.statisticshub import Ui_Form as StatHub
 from PyQt5.QtCore import QSettings, QDate, Qt
@@ -52,6 +50,9 @@ class StatitisticsHubControl(QDialog):
 
         self.cud = {}
         self.initializing = True
+        self.charts = []
+        self.chartDatas = []
+        self.resizeToggle = 0
 
         self.ui.symbolEdit.editingFinished.connect(self.selectSymbols)
         self.ui.sideCB.currentTextChanged.connect(self.selectSide)
@@ -80,6 +81,8 @@ class StatitisticsHubControl(QDialog):
         self.ui.selectStartBtn.setFocusPolicy(Qt.NoFocus)
         self.ui.selectEndBtn.setFocusPolicy(Qt.NoFocus)
         self.initializing = False
+        for chart in self.charts:
+            chart.plot()
         self.show()
 
     def initializeCud(self):
@@ -392,45 +395,20 @@ class StatitisticsHubControl(QDialog):
         return TradeSum.getNamesAndProfits(date.strftime("%Y%m%d"))
 
     def populateCharts(self):
-        flow = FlowLayout(self.ui.content_widget)
+        hbox = QHBoxLayout(self.ui.content_widget)
         self.ui.scrollArea.setWidget(self.ui.content_widget)
         self.ui.content_widget.setStyleSheet('background-color: #yellow;')
 
-        # date = pd.Timestamp('20200102')
-        # delt = pd.Timedelta(days=1)
-        # flowlayout = FlowLayout(chartArea)
-        chartData = MultiTradeProfit_BarchartData(self.cud, limit=30)
-        bc = BarChart(chartData, parent=self)
-        bc.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
-        bc.setMinimumSize(300, 300)
-        self.charts = []
-        # count = 0
-        self.charts.append(bc)
-        flow.addWidget(self.charts[0])
+        self.charts.append(BarChart(MultiTradeProfit_BarchartData(self.cud, limit=30), parent=self))
+        self.charts[0].setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+        self.charts[0].setMinimumSize(300, 300)
 
-    def populateChartsOLD(self):
-        flow = FlowLayout(self.ui.content_widget)
-        self.ui.scrollArea.setWidget(self.ui.content_widget)
-        self.ui.content_widget.setStyleSheet('background-color: #yellow;')
+        self.charts.append(BarChart(MultiTradeProfit_BarchartData(self.cud, limit=30), parent=self))
+        self.charts[1].setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+        self.charts[1].setMinimumSize(300, 300)
 
-        date = pd.Timestamp('20200102')
-        delt = pd.Timedelta(days=1)
-        # flowlayout = FlowLayout(chartArea)
-
-        self.charts = []
-        count = 0
-        for i in range(50):
-            names, profits = self.getNamesNProfits(date)
-            for account in names:
-                if len(names[account]) == 0:
-                    continue
-                canvas = CanvasDP(date.strftime("%Y%m%d"), account)
-                canvas.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
-                canvas.setMinimumSize(300, 300)
-                self.charts.append(canvas)
-                flow.addWidget(self.charts[count])
-                count += 1
-            date = date + delt
+        hbox.addWidget(self.charts[0])
+        hbox.addWidget(self.charts[1])
 
 
 if __name__ == '__main__':
