@@ -231,12 +231,17 @@ class TradeSum(Base):
         :return: A python list of tuples (name, count). The name could be ''. Unlike the sql verion
         it does not match the count for NULL or None.
         '''
+        return TradeSum.getDistinctStratsQuery().all()
+
+    @classmethod
+    def getDistinctStratsQuery(cls):
         ModelBase.connect(new_session=True)
         qq = ModelBase.session.query(TradeSum.strategy, func.count(
                                      TradeSum.strategy)).group_by(
                                      TradeSum.strategy).order_by(
-                                     desc(func.count(TradeSum.strategy))).all()
+                                     desc(func.count(TradeSum.strategy)))
         return qq
+
 
     @classmethod
     def getAccounts(cls):
@@ -248,6 +253,8 @@ class TradeSum(Base):
         q = ModelBase.session.query(TradeSum.account).distinct().all()
         print()
         return [x[0] for x in q]
+
+    
 
 
 class Trade(Base):
@@ -413,8 +420,8 @@ def dostuff():
     # removeTag()
 
     # getIntraStuff()
-    getTradeSumAccounts()
-    # getStrategyStuff()
+    # getTradeSumAccounts()
+    getStrategyStuff()
 
 
 def notmain():
