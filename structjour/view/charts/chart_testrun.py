@@ -3,9 +3,11 @@ import sys
 # import pandas as pd
 # from structjour.view.charts.intradayprofit_barchart import Canvas as CanvasDP
 
-from structjour.view.charts.generic_barchart import BarChart
+# from structjour.view.charts.generic_barchart import BarChart
+from structjour.view.charts.generic_piechart_legend import Piechart
 # from structjour.view.charts.chartdatabase import IntradayProfit_BarchartData as BarchartData
-from structjour.view.charts.chartdatabase import MultiTradeProfit_BarchartData
+# from structjour.view.charts.chartdatabase import MultiTradeProfit_BarchartData
+from structjour.view.charts.chartdatabase import StrategyPercentages_PiechartData
 from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy
 from PyQt5.QtCore import QDate
 
@@ -26,11 +28,13 @@ class chartTestRun(QMainWindow):
                'symbols': [],
                'tags': []}
 
-        chartData = MultiTradeProfit_BarchartData(cud, limit=30)
-        bc = BarChart(chartData, parent=self)
-        bc.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
-        bc.setMinimumSize(300, 300)
-        self.setCentralWidget(bc)
+        chartData = StrategyPercentages_PiechartData(cud)
+        pc = Piechart(chartData)
+
+        pc.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
+        pc.setMinimumSize(300, 300)
+        self.setCentralWidget(pc)
+        pc.plot()
 
         self.show()
 
