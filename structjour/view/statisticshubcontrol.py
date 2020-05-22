@@ -227,6 +227,9 @@ class StatitisticsHubControl(QDialog):
         self.cud['strategies'] = selected
 
         print('Set cud.strategies:', selected)
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
 
     def setTimeOrNumTrades(self):
         if self.ui.tradesBySetsRB.isChecked():
@@ -239,7 +242,6 @@ class StatitisticsHubControl(QDialog):
             # Settingf a default value for the numtrades spin box
             self.dynamicWidget.setValue(20)
             self.groupByNumTrades()
-            print()
 
     def groupByTime(self, val):
 
@@ -286,6 +288,9 @@ class StatitisticsHubControl(QDialog):
         '''
         self.cud['side'] = self.ui.sideCB.currentText()
         print('Set cud.side:', self.cud['side'])
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
 
     def selectTag(self):
         '''
@@ -295,6 +300,9 @@ class StatitisticsHubControl(QDialog):
         selected = [x.text() for x in self.ui.tagsListWidget.selectedItems()]
         self.cud['tags'] = selected
         print('set cud.tags', self.cud['tags'])
+        if not self.initializing:
+            for chart in self.charts:
+                chart.plot()
 
     def setAccount(self):
         account = self.ui.selectAccount.currentText()
