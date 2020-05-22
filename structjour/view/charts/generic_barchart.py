@@ -49,9 +49,9 @@ class BarChart(ChartBase):
     def plot(self):
         self.chartData.getChartUserData()
 
-        xdates = [x.strftime("%b %d, %y") for x in self.chartData.names]
+        xdates = [x.strftime("%b %d, %y") for x in self.chartData.labels]
 
-        assert len(self.chartData.names) == len(self.chartData.neg)
+        assert len(self.chartData.labels) == len(self.chartData.neg)
         # x = range(len(self.chartData.neg))
         # d = pd.Timestamp(self.chartData.date)
 
@@ -67,10 +67,15 @@ class BarChart(ChartBase):
 
         self.axes.xaxis.set_major_locator(ticker.MaxNLocator(nbins='auto'))
         self.axes.xaxis.set_minor_locator(ticker.MaxNLocator(nbins='auto'))
-        # self.axes.set_xticklabels(self.chartData.names)
+        # self.axes.set_xticklabels(self.chartData.labels)
         for label in self.axes.get_xticklabels():
             label.set_rotation(-45)
             label.set_fontsize(8)
+
+        fmt = '${x:,.0f}'
+        tick = ticker.StrMethodFormatter(fmt)
+        self.axes.yaxis.set_major_formatter(tick)
+        self.axes.yaxis.grid()
         self.figure.subplots_adjust(bottom=.175)
 
         self.axes.set_title(self.chartData.title)
