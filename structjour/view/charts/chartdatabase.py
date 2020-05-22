@@ -1,3 +1,4 @@
+# from collections import OrderedDict
 import pandas as pd
 from structjour.models.trademodels import TradeSum
 from structjour.models.meta import ModelBase
@@ -32,18 +33,23 @@ class ChartDataBase:
         self.cud = cud
         self.query = None
 
-        # Initialze the chart with the max num of candles
-        self.names = pd.date_range(start='1/1/2020', end='7/15/2021')
+        # Initialze the chart with the max set of data
+        self.labels = pd.date_range(start='1/1/2020', end='7/15/2021')
         self.maxbars = maxbars
-        self.names = self.names[:self.maxbars]
+        self.labels = self.labels[:self.maxbars]
         self.data = [-(x - (self.maxbars // 2)) for x in list(range(self.maxbars))]
         self.title = 'Initialaze chart'
         self.chartInitialized = False
-        self.getFormatGraphArray()
 
     def runFilters(self):
+        '''
+        Run sqlalchemy filters on self.query. The filters that run are determined by contents of
+        the dict self.cud. The reusult is that self.query has the filters installed ready to
+        execute
+        '''
         if self.query is None:
             return
+
         self.filter_by_accounts()
         self.filter_by_dates()
         self.filter_by_side()
@@ -51,59 +57,110 @@ class ChartDataBase:
         self.filter_by_symbols()
         self.filter_by_tags()
 
+    def runFiltersOnQuery(self, query):
+        '''
+        Run sqlalchemy filters on query. The filters that run are determined by contents of the dict self.cud
+        :return: The same query with the filters installed, ready to execute.
+        '''
+        if query is None:
+            return
+
+        query = self.filter_by_accounts(query=query)
+        query = self.filter_by_dates(query=query)
+        query = self.filter_by_side(query=query)
+        query = self.filter_by_strategies(query=query)
+        query = self.filter_by_symbols(query=query)
+        query = self.filter_by_tags(query=query)
+        return query
+
     def getChartUserData(self):
         raise ValueError('This method, ChartDataBase.getChartUserData, needs to be overridden by an inherited class')
 
-    def filter_by_symbols(self):
+    def filter_by_symbols(self, query=None):
+        if query is None and self.query is None:
+            return
         key = 'symbols'
-        if key in self.cud and self.cud[key] and self.query is not None:
+        if key in self.cud and self.cud[key]:
             likes = [TradeSum.name.like(x + "%") for x in self.cud[key]]
-            self.query = self.query.filter(or_(*likes))
-        else:
-            print('self.cud is missing key', key)
+            if query is None:
+                self.query = self.query.filter(or_(*likes))
+                return self.query
+            else:
+                query = query.filter(or_(*likes))
+                return query
+        return query if query else self.query
 
-    def filter_by_side(self):
+    def filter_by_side(self, query=None):
+        if query is None and self.query is None:
+            return
         key = 'side'
-        if key in self.cud and self.query is not None and self.cud[key] != "Both":
-            self.query = self.filter(TradeSum.name.like(f"%{self.cud['side']}%"))
-        else:
-            print('self.cud is missing key', key)
+        if key in self.cud and self.cud[key] != "Both":
+            if query is None:
+                self.query = self.query.filter(TradeSum.name.like(f"%{self.cud['side']}%"))
+                return self.query
+            else:
+                query = query.filter(TradeSum.name.like(f"%{self.cud['side']}%"))
+                return query
+        return query if query else self.query
 
-    def filter_by_tags(self):
+    def filter_by_tags(self, query=None):
+        if query is None and self.query is None:
+            return
         key = 'tags'
-        if key in self.cud and self.cud[key] and self.query is not None:
+        if key in self.cud and self.cud[key]:
             anytags = [TradeSum.tags.any(name=x) for x in self.cud[key]]
-            self.query = self.query.filter(or_(*anytags))
-        else:
-            print('self.cud is missing key', key)
+            if query is None:
+                self.query = self.query.filter(or_(*anytags))
+                return self.query
+            else:
+                query = query.filter(or_(*anytags))
+                return query
+        return query if query else self.query
 
-    def filter_by_strategies(self):
+    def filter_by_strategies(self, query=None):
+        if query is None and self.query is None:
+            return
         # strategies
         key = 'strategies'
-        if key in self.cud and self.cud[key] and self.query is not None:
-            self.query = self.query.filter(TradeSum.strategy.in_(self.cud[key]))
-        else:
-            print('self.cud is missing key', key)
+        if key in self.cud and self.cud[key]:
+            if query is None:
+                self.query = self.query.filter(TradeSum.strategy.in_(self.cud[key]))
+                return self.query
+            else:
+                query = query.filter(TradeSum.strategy.in_(self.cud[key]))
+                return query
+        return query if query else self.query
 
-    def filter_by_dates(self):
+    def filter_by_dates(self, query=None):
+        if query is None and self.query is None:
+            return
         key = 'dates'
-        if key in self.cud and self.query is not None and self.cud['dates'][0] and self.cud['dates'][1]:
+        if key in self.cud and self.cud['dates'][0] and self.cud['dates'][1]:
             start, end = qtime2pd(self.cud[key][0]), qtime2pd(self.cud[key][1])
             now = pd.Timestamp.now().date()
             if now >= start:
-                self.query = self.query.filter(and_(TradeSum.date >= start.strftime("%Y%m%d"), TradeSum.date < end.strftime("%Y%m%d")))
-        else:
-            print('self.cud is missing key', key)
+                if query is None:
+                    self.query = self.query.filter(and_(TradeSum.date >= start.strftime("%Y%m%d"), TradeSum.date < end.strftime("%Y%m%d")))
+                    return self.query
+                else:
+                    query = query.filter(and_(TradeSum.date >= start.strftime("%Y%m%d"), TradeSum.date < end.strftime("%Y%m%d")))
+                    return query
+        return query if query else self.query
 
-    def filter_by_accounts(self):
+    def filter_by_accounts(self, query=None):
         '''Adds a filter to a query on the TradeSum table'''
+        if query is None and self.query is None:
+            return
         # accounts
         key = 'accounts'
-        if key in self.cud and not str(self.cud[key]) in ['None', '', 'All Accounts'] and self.query is not None:
-            self.query = self.query.filter_by(account=self.cud[key])
-            print(self.cud[key])
-        else:
-            print('self.cud or no query is missing key', key)
+        if key in self.cud and not str(self.cud[key]) in ['None', '', 'All Accounts']:
+            if query is None:
+                self.query = self.query.filter_by(account=self.cud[key])
+                return self.query
+            else:
+                query = query.filter_by(account=self.cud[key])
+                return query
+        return query if query else self.query
 
     # Here group into sets of n.
     def getProfitInNumGroups(self, trades, num):
@@ -139,7 +196,7 @@ class ChartDataBase:
             trades = self.query.all()
             pnls, dates = self.getProfitInNumGroups(trades, self.cud[key])
             self.data = pnls
-            self.names = dates
+            self.labels = dates
 
             print(self.cud[key])
         else:
@@ -223,10 +280,50 @@ class ChartDataBase:
         return pnls, openingdates
 
 
+class PiechartLegendData(ChartDataBase):
+    '''
+    Get the data for a pie chart with a legend. The labels on the pie chart could be filtered
+    to only show down to a threshold. The legend will have all the data.
+
+    Inheritors of this class must:
+        1) Define self.data, self.labels. self.legendData, self.legendLabels. They should all
+        be the same length but chart Data will include entries with value ''
+        2) Define getChartUserData() and set self.query. labelQuery should be a list of tuples [(label, data), ...]
+    '''
+    # data = None
+    # labels = None
+    legendData = None
+    legendLabels = None
+
+    def getChartUserData(self):
+        '''Abstract method without ABC'''
+        raise ValueError("This method, BarChartData.getChartUserData, needs to be instantiated by an inherited class")
+
+
+class StrategyPercentages_PiechartData(PiechartLegendData):
+    '''
+
+    '''
+    def getChartUserData(self):
+        self.query = TradeSum.getDistinctStratsQuery()
+        self.runFilters()
+        strats = self.query.all()
+        total = sum([x[1] for x in strats if x[0] != ''])
+        # threshhold is a percentage of the total. 1% in this case
+        threshold = total * .03
+
+        self.labels = [x[0] if x[1] > threshold else '' for x in strats if x[0] not in ('', None)]
+        self.legendLabels = [x[0] for x in strats if x[0] not in ('', None)]
+        self.data = [x[1] for x in strats if x[0] not in ('', None)]
+        self.legendData = ['{:0.2f}%'.format(x * 100 / sum(self.data)) for x in self.data]
+        self.title = "Strategies used (excluding no strategy)"
+        len(self.labels), len(self.data), len(self.legendLabels), len(self.legendData)
+
+
 class BarchartData(ChartDataBase):
     '''
     Inheritors of this class must:
-        1) define the class variables data, names, date
+        1) define the variables data, names, date
         2) define getChartUserData and save the result to self.query:
         TODO: Define the obligations of this method here
     '''
@@ -236,6 +333,13 @@ class BarchartData(ChartDataBase):
     date = None
     neg = None
     pos = None
+
+    def __init__(self, cud):
+        '''
+        Arguments will summarize the user selections
+        '''
+        super().__init__(cud)
+        self.getFormatGraphArray()
 
     def getFormatGraphArray(self):
         '''
@@ -259,8 +363,8 @@ class IntradayProfit_BarchartData(BarchartData):
         self.account = account
 
     def getChartUserData(self):
-        self.names, self.data = TradeSum.getNamesAndProfits(self.date.strftime("%Y%m%d"))
-        self.names = self.names[self.account]
+        self.labels, self.data = TradeSum.getNamesAndProfits(self.date.strftime("%Y%m%d"))
+        self.labels = self.labels[self.account]
         self.data = self.data[self.account]
         self.getFormatGraphArray()
         self.title = f'Profits in {self.account} account on {self.date.strftime("%B %d, %Y")}'
@@ -296,11 +400,20 @@ class MultiTradeProfit_BarchartData(BarchartData):
             pnls, dates = self.groupByTime(self.query.all(), self.cud['inTimeGroups'])
             self.title = f'Trades: {self.cud["titleBit"]} in {accounts} accounts'
 
-        # self.names = [pd.Timestamp(x.date) for x in self.query]
-        self.names = dates
+        # self.labels = [pd.Timestamp(x.date) for x in self.query]
+        self.labels = dates
 
         # Not yet clear the best place to handle this. Its probably not here
         # if grouptrades > 1:
         self.data = pnls
         # self.data = [x.pnl for x in self.query]
         self.getFormatGraphArray()
+
+
+def doStuff():
+    cdb = StrategyPercentages_PiechartData({})
+    cdb.getChartUserData()
+
+
+if __name__ == '__main__':
+    doStuff()
