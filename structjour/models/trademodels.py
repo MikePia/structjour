@@ -211,8 +211,9 @@ class TradeSum(Base):
     def getNamesAndProfits(cls, daDate):
         '''
         :params daDate: A date string in the form yyyymmdd as it is held in the db
-        :return: an OrderedDict with keys for the account alias names as held in TradeSum (Currently Live and SIM).
-            The values are lists of pnl for the trades on the given date
+        :return: Two OrderedDict with keys for the account alias names as held in TradeSum (Currently Live and SIM).
+            names is a list of the names of trades made on daDate
+            pnls is a list of the profits from those trades.
         '''
         ModelBase.connect(new_session=True)
         names = OrderedDict()
@@ -242,7 +243,6 @@ class TradeSum(Base):
                                      desc(func.count(TradeSum.strategy)))
         return qq
 
-
     @classmethod
     def getAccounts(cls):
         '''
@@ -253,8 +253,6 @@ class TradeSum(Base):
         q = ModelBase.session.query(TradeSum.account).distinct().all()
         print()
         return [x[0] for x in q]
-
-    
 
 
 class Trade(Base):
@@ -431,5 +429,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    dostuff()
-    # notmain()
+    # dostuff()
+    notmain()

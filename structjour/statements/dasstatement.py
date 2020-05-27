@@ -674,8 +674,8 @@ class DasStatement:
 
         # TODO Note that the date is 'covered' in the DB if a statement is processed. That leaves
         # the possibility that the user exported a partial day. The trades should be added if/when
-        # a broker statement is processed. Find a way to test it -- maybe an altered DAS export
-        # with trades deleted.
+        # a statement is processed with additional trades. I believe it works but find a way to test
+        # it -- maybe an altered DAS export with trades deleted.
         account = self.settings.value('account')
         if not account:
             account = ''
