@@ -57,6 +57,7 @@ from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
 from structjour.stock.apichooser import APIChooser
 from structjour.stock.utilities import getMAKeys, qtime2pd, pd2qtime
+from structjour.utilities.util import fc
 from structjour.view.duplicatecontrol import DupControl
 
 from structjour.view.backupcontrol import BackupControl
@@ -116,6 +117,7 @@ class SumControl(QMainWindow):
         self.dailyNote = None
 
         self.populateTags()
+        self.setDailyPnL()
 
         self.settings.setValue('runType', 'QT')
         now = None
@@ -370,7 +372,32 @@ class SumControl(QMainWindow):
         self.ui.tagListWidget.setToolTipDuration(20 * 1000)
         self.populateTags()
 
+    def setDailyPnL(self, d=None):
+        '''
+        Set the Pnl widget with the daily profit. The profit can be set for one account or all accounts
+        in file settings
+        '''
+        if self.lf is None:
+            return
+        print('Getpnl in tto')
+        if d is None:
+            d = self.settings.value('theDate')
+        n, pnls = TradeSum.getNamesAndProfits(d.strftime("%Y%m%d"))
+        prefAccount = self.settings.value('accounts', 'All Accounts')
+        pnl = 0
+        if prefAccount == 'All Accounts':
+            for key in pnls:
+                if pnls[key]:
+                    pnl += sum(pnls[key])
+        elif pnls[prefAccount]:
+            pnl = sum(pnls[prefAccount])
+        self.ui.dailyPnL.setText(fc(pnl))
+
     def populateTags(self, tsum_id=None):
+        '''
+        Populate the tags widget with all tags in the db and, if tsum_id is given, select the
+        tags for the selected trade
+        '''
         tags = [x.name for x in Tags.getTags() if x.active is True]
         self.ui.tagListWidget.clear()
         self.ui.tagListWidget.addItems(tags)
@@ -1031,6 +1058,7 @@ class SumControl(QMainWindow):
         if isinstance(daDate, (QDate, QDateTime)):
             daDate = qtime2pd(daDate)
         self.settings.setValue('theDate', daDate)
+        self.setDailyPnL(daDate)
 
         indir = self.getDirectory()
         inputType = self.settings.value('inputType')
@@ -1099,15 +1127,6 @@ class SumControl(QMainWindow):
             return
 
         inpathfile = os.path.normpath(os.path.join(indir, infile)) if infile else None
-        # dasinfile = os.path.join(indir, dasinfile) if dasinfile else None
-        # ibinfile = os.path.join(indir, ibinfile) if ibinfile else None
-
-        # infile = None?
-        # if inputtype:
-        #     if inputtype == 'DAS':
-        #         infile = dasinfile
-        #     elif inputtype == 'IB_HTML':
-        #         infile = ibinfile
 
         if not infile:
             return

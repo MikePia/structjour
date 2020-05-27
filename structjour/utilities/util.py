@@ -19,7 +19,9 @@ Created on Feb 10, 2020
 
 @author: Mike Petersen
 '''
+import numpy as np
 import os
+
 import pandas as pd
 from pandas.tseries.offsets import MonthEnd
 from structjour.time import createDirsStructjour
@@ -77,3 +79,15 @@ def advanceMonth(d, numMonths=1):
         return pd.Timestamp(year, month, 1) + MonthEnd(1)
     else:
         return pd.Timestamp(year, month, day)
+
+
+def fc(val):
+    '''formatCurrency'''
+    if not isinstance(val, (float, np.floating)):
+        return str(val)
+    if val >= 0:
+        val = '${:.02f}'.format(val)
+    else:
+        val = '(${:.02f})'.format(val).replace('-', '')
+
+    return val

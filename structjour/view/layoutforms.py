@@ -278,6 +278,7 @@ class LayoutForms:
         if 'id' in tto:
             iid = int(tto['id'].unique()[0])
         self.sc.populateTags(tsum_id=iid)
+        self.sc.setDailyPnL()
 
         self.sc.setChartWidgets()
         iname1 = self.sc.ui.chart1Name.text()

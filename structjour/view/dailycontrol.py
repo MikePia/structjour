@@ -36,23 +36,12 @@ from PyQt5.QtWidgets import QAbstractItemView, QApplication, QDialog, QMessageBo
 
 from structjour.models.trademodels import TradeSum, Trade
 from structjour.thetradeobject import SumReqFields
+from structjour.utilities.util import fc
 from structjour.view.charts.intradayprofit_barchart import Canvas as CanvasDP
 from structjour.view.charts.intraday_profit_accum import Canvas as CanvasAP
 from structjour.view.forms.dailyform import Ui_Form as DailyForm
 from structjour.view.dfmodel import PandasModel
 from structjour.view.ejcontrol import EJControl
-
-
-def fc(val):
-    '''formatCurrency'''
-    if not isinstance(val, (float, np.floating)):
-        return str(val)
-    if val >= 0:
-        val = '${:.02f}'.format(val)
-    else:
-        val = '(${:.02f})'.format(val).replace('-', '')
-
-    return val
 
 
 class QDialogWClose(QDialog):
