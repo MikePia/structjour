@@ -118,6 +118,9 @@ class runController:
         # end blitz
         self.infile = self.settings.value(inkey)
         self.inpathfile = self.ui.infileEdit.text()
+        if os.path.splitext(self.inpathfile)[1].lower() == ".csv":
+            self.infile = os.path.split(self.inpathfile)[1]
+            
         self.sc.setWindowTitle(self.sc.baseWindowTitle)
 
     def loadit(self):

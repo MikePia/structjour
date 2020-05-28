@@ -48,7 +48,7 @@ def getStatementType(infile):
     if not os.path.exists(infile) or (
             ext.lower() != '.csv' and not ext.lower().startswith('.htm')):
         return None, None
-    if ext == '.csv':
+    if ext.lower() == '.csv':
         df = pd.read_csv(infile, names=[x for x in range(0, 100)])
         if df.iloc[0][0] == 'BOF' or df.iloc[0][0] == 'HEADER' or (
                 df.iloc[0][0] == 'ClientAccountID') or (
