@@ -24,6 +24,7 @@ A a filled line graph to show accumulating intraday profit
 # import pandas as pd
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.ticker as ticker
 from pandas.plotting import register_matplotlib_converters
 
 # from structjour.models.trademodels import TradeSum
@@ -58,13 +59,14 @@ class Canvas(FigureCanvas):
 
         ax = self.figure.add_subplot(111)
         ax.clear()
-        ax.plot(self.df['date'], self.df['pnl'], color='#666666', linestyle='--', label="accumulating pnl")
-        ax.fill_between(self.df['date'], self.df['pnl'], 150, where=(self.df['pnl'] > 150), color='chartreuse', alpha=0.25)
-        ax.fill_between(self.df['date'], self.df['pnl'], 150, where=(self.df['pnl'] <= 150), color='red', alpha=0.25)
+        xdates = [x.strftime("%H:%M:%S") for x in self.df['date']]
+        ax.plot(xdates, self.df['pnl'], color='#666666', linestyle='--', label="accumulating pnl")
+        ax.fill_between(xdates, self.df['pnl'], 0, where=(self.df['pnl'] > 0), color='chartreuse', alpha=0.25)
+        ax.fill_between(xdates, self.df['pnl'], 0, where=(self.df['pnl'] <= 0), color='red', alpha=0.25)
         
         ax.legend()
         
-        ax.set_xlabel('Time')
+        ax.set_xlabel('Time of day')
         ax.set_ylabel('$ USD')
         self.figure.tight_layout()
         # ax.set_xticks(x)
@@ -72,6 +74,10 @@ class Canvas(FigureCanvas):
         for label in ax.get_xticklabels():
             label.set_rotation(-45)
             label.set_fontsize(8)
-        self.figure.subplots_adjust(top=.9, bottom=.2)
+
+        fmt = '${x:,.0f}'
+        tick = ticker.StrMethodFormatter(fmt)
+        ax.yaxis.set_major_formatter(tick)
+        self.figure.subplots_adjust(top=.9, bottom=.25)
         ax.set_title(title)
         self.draw()

@@ -62,6 +62,6 @@ class Canvas(FigureCanvas):
         for label in ax.get_xticklabels():
             label.set_rotation(-45)
             label.set_fontsize(8)
-        self.figure.subplots_adjust(bottom=.175)
+        self.figure.subplots_adjust(bottom=.2)
         ax.set_title(title)
         self.draw()
