@@ -35,7 +35,8 @@ from PyQt5.QtGui import QIcon
 from structjour.colz.finreqcol import FinReqCol
 from structjour.statements.findfiles import getDirectory
 from structjour.statements.dbdoctor import DbDoctor
-from structjour.stock.utilities import isNumeric, qtime2pd
+from structjour.stock.utilities import qtime2pd
+from structjour.utilities.util import isNumeric
 from structjour.thetradeobject import SumReqFields
 
 # pylint: disable = C0103

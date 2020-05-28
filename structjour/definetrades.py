@@ -28,7 +28,7 @@ import pandas as pd
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
 from structjour.statements.ibstatementdb import StatementDB
-from structjour.stock.utilities import isNumeric
+from structjour.utilities.util import isNumeric
 
 
 class ReqCol(object):

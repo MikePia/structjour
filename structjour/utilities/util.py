@@ -19,6 +19,7 @@ Created on Feb 10, 2020
 
 @author: Mike Petersen
 '''
+import math
 import numpy as np
 import os
 
@@ -91,3 +92,19 @@ def fc(val):
         val = '(${:.02f})'.format(val).replace('-', '')
 
     return val
+
+
+def isNumeric(l):
+    '''
+    Not to be confused with str.isnumeric. Takes an arg or a list and tests if all members are
+    numeric types and not NAN.
+    '''
+    ll = list()
+    if not isinstance(l, list):
+        ll.append(l)
+    else:
+        ll = l
+    for t in ll:
+        if t is None or not isinstance(t, (int, float, np.integer)) or math.isnan(t):
+            return False
+    return True

@@ -68,22 +68,6 @@ def getLimitReached(token, settings=None):
     return False
 
 
-def isNumeric(l):
-    '''
-    Not to be confused with str.isnumeric. Takes an arg or a list and tests if all members are
-    numeric types and not NAN.
-    '''
-    ll = list()
-    if not isinstance(l, list):
-        ll.append(l)
-    else:
-        ll = l
-    for t in ll:
-        if t is None or not isinstance(t, (int, float, np.integer)) or math.isnan(t):
-            return False
-    return True
-
-
 def qtime2pd(qdt):
     '''Return a pandas Timestamp from a QDateTime'''
     if isinstance(qdt, QDateTime):

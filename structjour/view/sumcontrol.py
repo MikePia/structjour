@@ -39,6 +39,7 @@ import pandas as pd
 from structjour.inspiration.inspire import Inspire
 from structjour.models.trademodels import Tags, TradeSum
 from structjour.statements.ibstatementdb import StatementDB
+from structjour.utilities.util import isNumeric
 from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
 from structjour.view.ejcontrol import EJControl
@@ -1291,10 +1292,12 @@ class SumControl(QMainWindow):
         f = Fraction(dval).limit_denominator(max_denominator=10)
         srr = f'{f.numerator} : {f.denominator}'
         self.ui.rr.setText(srr)
-
-        f = Fraction(realrr).limit_denominator(max_denominator=10)
-        srealrr = f'{f.numerator} : {f.denominator}'
-        self.ui.realRR.setText(srealrr)
+        srealrr = ''
+        if isNumeric(realrr):
+            # realrr could be nan for an overnight trade
+            f = Fraction(realrr).limit_denominator(max_denominator=10)
+            srealrr = f'{f.numerator} : {f.denominator}'
+            self.ui.realRR.setText(srealrr)
         return srr, srealrr
 
     def setMaxLoss(self):

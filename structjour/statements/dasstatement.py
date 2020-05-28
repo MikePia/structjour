@@ -39,7 +39,7 @@ from structjour.dfutil import DataFrameUtil
 from structjour.statements import findfiles as ff
 from structjour.statements.findfiles import findFilesSinceMonth
 from structjour.statements.ibstatementdb import StatementDB
-from structjour.stock.utilities import isNumeric
+from structjour.utilities.util import isNumeric
 
 
 class DasStatement:

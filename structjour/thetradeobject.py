@@ -34,7 +34,7 @@ from PyQt5.QtCore import QSettings
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
 from structjour.stock.graphstuff import FinPlot
-from structjour.stock.utilities import isNumeric
+from structjour.utilities.util import isNumeric
 
 # pylint: disable=C0103
 
