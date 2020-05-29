@@ -1,7 +1,6 @@
 # from collections import OrderedDict
 import pandas as pd
 from structjour.models.trademodels import TradeSum
-from structjour.models.meta import ModelBase
 from structjour.stock.utilities import qtime2pd
 from structjour.utilities.util import advanceMonth
 
@@ -68,9 +67,9 @@ class ChartDataBase:
         query = self.filter_by_accounts(query=query)
         query = self.filter_by_dates(query=query)
         query = self.filter_by_side(query=query)
-        query = self.filter_by_strategies(query=query)
         query = self.filter_by_symbols(query=query)
         query = self.filter_by_tags(query=query)
+        query = self.filter_by_strategies(query=query)
         return query
 
     def getChartUserData(self):
@@ -122,13 +121,31 @@ class ChartDataBase:
             return
         # strategies
         key = 'strategies'
-        if key in self.cud and self.cud[key]:
-            if query is None:
-                self.query = self.query.filter(TradeSum.strategy.in_(self.cud[key]))
-                return self.query
-            else:
-                query = query.filter(TradeSum.strategy.in_(self.cud[key]))
-                return query
+        if key in self.cud:
+
+            if self.cud[key]:
+                strats = [x.split(' (')[0] if x.split(' (')[0] != 'No Strategy' else '' for x in self.cud[key]]
+                if query is None:
+                    self.stratquery = self.query.filter(TradeSum.strategy.in_(strats))
+                    self.query = self.stratquery
+                    return self.query
+                else:
+                    self.stratquery = query.filter(TradeSum.strategy.in_(strats))
+                    self.query = self.stratquery
+                    return self.query
+
+            # If no strategy is selected, exclude No Strategy by using the strategies2 key and
+            # leave the main query unchanged
+            elif self.cud['strategies2']:
+                key = 'strategies2'
+                strats = [x.split(' (')[0] if x.split(' (')[0] != 'No Strategy' else '' for x in self.cud[key]]
+                if query is None:
+                    self.stratquery = self.query.filter(TradeSum.strategy.in_(strats))
+                    return query
+                else:
+                    self.stratquery = query.filter(TradeSum.strategy.in_(strats))
+                    return query
+
         return query if query else self.query
 
     def filter_by_dates(self, query=None):
@@ -197,18 +214,6 @@ class ChartDataBase:
             pnls, dates = self.getProfitInNumGroups(trades, self.cud[key])
             self.data = pnls
             self.labels = dates
-
-            print(self.cud[key])
-        else:
-            print('self.cud is missing key', key)
-
-    def view_inTimeGroups(self):
-        # inTimeGroups
-        key = 'inTimeGroups'
-        if key in self.cud:
-            print(self.cud[key])
-        else:
-            print('self.cud is missing key', key)
 
     def groupByTime(self, trades, numdays=None, begindate=None, enddate=None):
         '''
@@ -300,26 +305,6 @@ class PiechartLegendData(ChartDataBase):
         raise ValueError("This method, BarChartData.getChartUserData, needs to be instantiated by an inherited class")
 
 
-class StrategyPercentages_PiechartData(PiechartLegendData):
-    '''
-
-    '''
-    def getChartUserData(self):
-        self.query = TradeSum.getDistinctStratsQuery()
-        self.runFilters()
-        strats = self.query.all()
-        total = sum([x[1] for x in strats if x[0] != ''])
-        # threshhold is a percentage of the total. 1% in this case
-        threshold = total * .03
-
-        self.labels = [x[0] if x[1] > threshold else '' for x in strats if x[0] not in ('', None)]
-        self.legendLabels = [x[0] for x in strats if x[0] not in ('', None)]
-        self.data = [x[1] for x in strats if x[0] not in ('', None)]
-        self.legendData = ['{:0.2f}%'.format(x * 100 / sum(self.data)) for x in self.data]
-        self.title = "Strategies used (excluding no strategy)"
-        len(self.labels), len(self.data), len(self.legendLabels), len(self.legendData)
-
-
 class BarchartData(ChartDataBase):
     '''
     Inheritors of this class must:
@@ -371,49 +356,3 @@ class IntradayProfit_BarchartData(BarchartData):
 
     def __repr__(self):
         return f'<IntradayProfit_BarchartData({self.date.strftime("%B %d")}, {self.account})>'
-
-
-class MultiTradeProfit_BarchartData(BarchartData):
-    def __init__(self, cud, limit=20, grouptrades=1):
-        '''
-        Arguments will summarize the user selections
-        '''
-        super().__init__(cud)
-
-        self.limit = limit
-
-    def getChartUserData(self):
-        if self.chartInitialized is False:
-            self.chartInitialized = True
-            return
-        ModelBase.connect(new_session=True)
-        self.query = ModelBase.session.query(TradeSum).order_by(TradeSum.date.asc(), TradeSum.start.asc())
-        self.runFilters()
-        # self.query = self.query.all()
-
-        # self.query = self.query.limit(self.limit)
-        accounts = self.cud['accounts'] if self.cud['accounts'] else 'All'
-        if self.cud['inNumSets'] > 0:
-            pnls, dates = self.getProfitInNumGroups(self.query.all(), self.cud['inNumSets'])
-            self.title = f'Trades in groups of {self.cud["inNumSets"]} trades in {accounts} accounts'
-        elif self.cud['inTimeGroups'] is not None:
-            pnls, dates = self.groupByTime(self.query.all(), self.cud['inTimeGroups'])
-            self.title = f'Trades: {self.cud["titleBit"]} in {accounts} accounts'
-
-        # self.labels = [pd.Timestamp(x.date) for x in self.query]
-        self.labels = dates
-
-        # Not yet clear the best place to handle this. Its probably not here
-        # if grouptrades > 1:
-        self.data = pnls
-        # self.data = [x.pnl for x in self.query]
-        self.getFormatGraphArray()
-
-
-def doStuff():
-    cdb = StrategyPercentages_PiechartData({})
-    cdb.getChartUserData()
-
-
-if __name__ == '__main__':
-    doStuff()

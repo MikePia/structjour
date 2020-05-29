@@ -49,14 +49,16 @@ class BarChart(ChartBase):
     def plot(self):
         self.chartData.getChartUserData()
 
-        xdates = [x.strftime("%b %d, %y") for x in self.chartData.labels]
+        if self.chartData.cud['inNumSets'] >= 1:
+            xdates = [x.strftime("%m/%d/%y  %H:%M") for x in self.chartData.labels]
+        else:
+            xdates = [x.strftime("%b %d, %Y") for x in self.chartData.labels]
 
         assert len(self.chartData.labels) == len(self.chartData.neg)
         # x = range(len(self.chartData.neg))
         # d = pd.Timestamp(self.chartData.date)
 
         width = min(2 + len(self.chartData.neg) * 3 / 8, 15)
-        print("Width:", width)
         self.figure.set_figwidth(width, forward=True)
         self.figure.set_figheight(5, forward=True)
         self.axes.clear()
@@ -76,7 +78,7 @@ class BarChart(ChartBase):
         tick = ticker.StrMethodFormatter(fmt)
         self.axes.yaxis.set_major_formatter(tick)
         self.axes.yaxis.grid()
-        self.figure.subplots_adjust(bottom=.175)
+        self.figure.subplots_adjust(bottom=.23)
 
         self.axes.set_title(self.chartData.title)
         self.draw()

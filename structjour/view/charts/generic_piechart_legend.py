@@ -46,11 +46,22 @@ class Piechart(ChartBase):
     def plot(self):
         self.chartData.getChartUserData()
         self.axes.clear()
-        patches, text1, text2 = self.axes.pie(self.chartData.data, labels=self.chartData.labels, autopct=autopct_generator(3), shadow=True, startangle=45)
+        patches, text1, text2 = self.axes.pie(self.chartData.data,
+                                              labels=self.chartData.labels,
+                                              autopct=autopct_generator(3),
+                                              shadow=True,
+                                              startangle=45)
 
         ncol = 1
-        if len(self.chartData.legendLabels) > 15:
-            ncol = len(self.chartData.legendLabels) // 10
-        self.axes.legend(patches, zip(self.chartData.legendLabels, self.chartData.legendData), loc='center right', bbox_to_anchor=(-0.1, 1.), fontsize=8, ncol=ncol)
+        if len(self.chartData.legendLabels) > 30:
+            ncol = len(self.chartData.legendLabels) // 30
+        self.axes.legend(patches,
+                         zip(self.chartData.legendLabels,
+                         self.chartData.legendData),
+                         loc='best',
+                         bbox_to_anchor=(-0.1, 1.),
+                         fontsize=8, ncol=ncol)
         self.axes.set_title(self.chartData.title)
+        # self.figure.subplots_adjust(top=0.764)
+        # self.figure.tight_layout()
         self.draw()

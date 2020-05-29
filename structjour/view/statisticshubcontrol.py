@@ -27,13 +27,15 @@ import pandas as pd
 from structjour.models.trademodels import Tags, TradeSum
 from structjour.stock.utilities import pd2qtime
 from structjour.view.calendarcontrol import CalendarControl
-from structjour.view.charts.chartdatabase import MultiTradeProfit_BarchartData
+from structjour.view.charts.strategypercentages_piechartdata import StrategyPercentages_PiechartData
+from structjour.view.charts.multitradeprofit_barchartdata import MultiTradeProfit_BarchartData
 from structjour.view.charts.generic_barchart import BarChart
+from structjour.view.charts.generic_piechart_legend import Piechart
 
 from structjour.view.forms.statisticshub import Ui_Form as StatHub
 from PyQt5.QtCore import QSettings, QDate, Qt
 from PyQt5.QtWidgets import (QApplication, QDialog, QLabel, QSpinBox, QHBoxLayout,
-                             QComboBox, QSizePolicy)
+                             QComboBox, QSizePolicy, QGridLayout)
 from PyQt5.QtGui import QFont
 
 
@@ -92,6 +94,7 @@ class StatitisticsHubControl(QDialog):
         self.selectSymbols()
         self.selectSide()
         self.selectTag()
+        self.selectStrategy()
         self.setStartEndInactive()
         self.setTimeOrNumTrades()
         self.cud['titleBit'] = None
@@ -110,7 +113,7 @@ class StatitisticsHubControl(QDialog):
     # doesn't work. This works and is still easily understandable.
 
     def set30Days(self, val):
-        print('===== In set30Days===== ')
+        # print('===== In set30Days===== ')
         months = 0
         if val:
             self.ui.dateRange60Cbox.setChecked(False)
@@ -124,7 +127,7 @@ class StatitisticsHubControl(QDialog):
         self.setXMonths(months)
 
     def set60Days(self, val):
-        print('===== In set60Days===== ')
+        # print('===== In set60Days===== ')
         months = 0
         if val:
             self.ui.dateRange30Cbox.setChecked(False)
@@ -138,7 +141,7 @@ class StatitisticsHubControl(QDialog):
         self.setXMonths(months)
 
     def set90Days(self, val):
-        print('===== In set90Days===== ')
+        # print('===== In set90Days===== ')
         months = 0
         if val:
             self.ui.dateRange30Cbox.setChecked(False)
@@ -214,19 +217,25 @@ class StatitisticsHubControl(QDialog):
         if start > end:
             self.setStartEndInactive()
             self.cud['dates'] = (None, None)
-            print('Set cud.dates to:', self.cud['dates'])
         else:
             self.cud['dates'] = (start, end)
-            print('Setting cud.dates to:', (start, end))
             if not self.initializing:
                 for chart in self.charts:
                     chart.plot()
 
     def selectStrategy(self):
+        self.cud['strategies2'] = []
         selected = [x.text() for x in self.ui.strategyListWidget.selectedItems()]
+        if not selected:
+            items = []
+            # If nothing is selected, provide a 2nd list that excludes No Strategy
+            for i in range(self.ui.strategyListWidget.count() - 1):
+                if not self.ui.strategyListWidget.item(i).text().startswith('No Strategy'):
+                    items.append(self.ui.strategyListWidget.item(i).text())
+            self.cud['strategies2'] = items
+
         self.cud['strategies'] = selected
 
-        print('Set cud.strategies:', selected)
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -259,7 +268,6 @@ class StatitisticsHubControl(QDialog):
         self.cud['inTimeGroups'] = vals[val]
         self.cud['inNumSets'] = -1
         self.cud['titleBit'] = val
-        print('Set cud.inTimeGroups: ', self.cud['inTimeGroups'])
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -267,7 +275,6 @@ class StatitisticsHubControl(QDialog):
     def groupByNumTrades(self):
         self.cud['inNumSets'] = self.dynamicWidget.value()
         self.cud['inTimeGroups'] = None
-        print('set cud.inNumSet ', self.cud['inNumSets'])
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -277,7 +284,6 @@ class StatitisticsHubControl(QDialog):
         Set cud to reflect the latest edits to the Symbol edit
         '''
         self.cud['symbols'] = self.getSymbolsAsList()
-        print("Set cud.symbolsr:", self.cud['symbols'])
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -287,7 +293,6 @@ class StatitisticsHubControl(QDialog):
         Set cud to reflect the last selection in the Side combo box
         '''
         self.cud['side'] = self.ui.sideCB.currentText()
-        print('Set cud.side:', self.cud['side'])
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -299,7 +304,6 @@ class StatitisticsHubControl(QDialog):
         # justclicked = val.text()
         selected = [x.text() for x in self.ui.tagsListWidget.selectedItems()]
         self.cud['tags'] = selected
-        print('set cud.tags', self.cud['tags'])
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -311,7 +315,6 @@ class StatitisticsHubControl(QDialog):
         else:
             self.cud['accounts'] = account
 
-        print('Set cud.account ', self.cud['accounts'])
         if not self.initializing:
             for chart in self.charts:
                 chart.plot()
@@ -338,11 +341,7 @@ class StatitisticsHubControl(QDialog):
         self.dynamicWidget = spin
         label.show()
 
-        grpnum = spin.value()
-        print('Update data to view trades in groups of:', grpnum)
-
     def tradesByTimeClicked(self, val):
-        print(val)
         if self.tradeLayout is not None:
             for i in reversed(range(self.tradeLayout.count())):
                 self.tradeLayout.itemAt(i).widget().setParent(None)
@@ -362,9 +361,6 @@ class StatitisticsHubControl(QDialog):
         cbox.show()
         label.show()
 
-        selectedTime = cbox.currentText()
-        print('Update charts to view trades in groups of:', selectedTime)
-
     # ##### Initialize methods #####
     def populateTags(self):
         tags = [x.name for x in Tags.getTags() if x.active is True]
@@ -383,7 +379,7 @@ class StatitisticsHubControl(QDialog):
         self.ui.strategyListWidget.clear()
         for strat in strats:
             if strat[0] == '':
-                self.ui.strategyListWidget.addItem(f'(No Strategy) ({strat[1]})')
+                self.ui.strategyListWidget.addItem(f'No Strategy ({strat[1]})')
             else:
                 self.ui.strategyListWidget.addItem(f'{strat[0]} ({strat[1]})')
 
@@ -403,20 +399,17 @@ class StatitisticsHubControl(QDialog):
         return TradeSum.getNamesAndProfits(date.strftime("%Y%m%d"))
 
     def populateCharts(self):
-        hbox = QHBoxLayout(self.ui.content_widget)
-        self.ui.scrollArea.setWidget(self.ui.content_widget)
-        self.ui.content_widget.setStyleSheet('background-color: #yellow;')
+        sp = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
+        chartgrid1 = QGridLayout(self.ui.chartstack1)
         self.charts.append(BarChart(MultiTradeProfit_BarchartData(self.cud, limit=30), parent=self))
-        self.charts[0].setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
-        self.charts[0].setMinimumSize(300, 300)
+        self.charts[0].setSizePolicy(sp)
+        chartgrid1.addWidget(self.charts[0], 0, 0)
 
-        self.charts.append(BarChart(MultiTradeProfit_BarchartData(self.cud, limit=30), parent=self))
-        self.charts[1].setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
-        self.charts[1].setMinimumSize(300, 300)
-
-        hbox.addWidget(self.charts[0])
-        hbox.addWidget(self.charts[1])
+        chartgrid2 = QGridLayout(self.ui.chartstack2)
+        self.charts.append(Piechart(StrategyPercentages_PiechartData(self.cud), parent=self))
+        self.charts[1].setSizePolicy(sp)
+        chartgrid2.addWidget(self.charts[1], 0, 0)
 
 
 if __name__ == '__main__':

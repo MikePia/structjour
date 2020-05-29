@@ -25,7 +25,7 @@ Local utility functions shared by some stock modules and test code.
 from collections import OrderedDict
 import datetime as dt
 import logging
-import math
+
 import os
 import random
 import sqlite3

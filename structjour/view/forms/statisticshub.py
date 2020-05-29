@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'statisticshub.ui'
+# Form implementation generated from reading ui file 'statisticshub2.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(2003, 1140)
+        Form.resize(1444, 1580)
         self.gridLayout_6 = QtWidgets.QGridLayout(Form)
         self.gridLayout_6.setObjectName("gridLayout_6")
         self.widget_3 = QtWidgets.QWidget(Form)
         self.widget_3.setObjectName("widget_3")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.widget_3)
         self.gridLayout_5.setObjectName("gridLayout_5")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.widget = QtWidgets.QWidget(self.widget_3)
         self.widget.setMinimumSize(QtCore.QSize(1400, 200))
         self.widget.setMaximumSize(QtCore.QSize(1500, 200))
@@ -303,32 +303,47 @@ class Ui_Form(object):
         self.gridLayout_2.addItem(spacerItem2, 0, 1, 1, 1)
         self.horizontalLayout_8.addWidget(self.groupBox_3)
         self.gridLayout_4.addLayout(self.horizontalLayout_8, 0, 0, 1, 1)
-        self.verticalLayout_3.addWidget(self.widget)
-        self.frame = QtWidgets.QFrame(self.widget_3)
+        self.gridLayout_5.addWidget(self.widget, 0, 0, 1, 1)
+        self.chartstack = QtWidgets.QWidget(self.widget_3)
+        self.chartstack.setStyleSheet("background-color: rgb(6, 51, 198);")
+        self.chartstack.setObjectName("chartstack")
+        self.gridLayout_7 = QtWidgets.QGridLayout(self.chartstack)
+        self.gridLayout_7.setObjectName("gridLayout_7")
+        self.chartstack1 = QtWidgets.QWidget(self.chartstack)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(99)
-        sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
-        self.frame.setSizePolicy(sizePolicy)
-        self.frame.setStyleSheet("background-color: rgb(0, 0, 255);")
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.gridLayout_7 = QtWidgets.QGridLayout(self.frame)
-        self.gridLayout_7.setObjectName("gridLayout_7")
-        self.scrollArea = QtWidgets.QScrollArea(self.frame)
-        self.scrollArea.setStyleSheet("background-color: rgb(147, 180, 255);")
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setObjectName("scrollArea")
-        self.content_widget = QtWidgets.QWidget()
-        self.content_widget.setGeometry(QtCore.QRect(0, 0, 1931, 861))
-        self.content_widget.setStyleSheet("background-color: rgb(208, 255, 248);")
-        self.content_widget.setObjectName("content_widget")
-        self.scrollArea.setWidget(self.content_widget)
-        self.gridLayout_7.addWidget(self.scrollArea, 0, 0, 1, 1)
-        self.verticalLayout_3.addWidget(self.frame)
-        self.gridLayout_5.addLayout(self.verticalLayout_3, 0, 0, 1, 1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.chartstack1.sizePolicy().hasHeightForWidth())
+        self.chartstack1.setSizePolicy(sizePolicy)
+        self.chartstack1.setStyleSheet("background-color: rgb(106, 255, 128);")
+        self.chartstack1.setObjectName("chartstack1")
+        self.gridLayout_7.addWidget(self.chartstack1, 0, 0, 1, 1)
+        self.chartstack2 = QtWidgets.QWidget(self.chartstack)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.chartstack2.sizePolicy().hasHeightForWidth())
+        self.chartstack2.setSizePolicy(sizePolicy)
+        self.chartstack2.setStyleSheet("background-color: rgb(106, 255, 128);")
+        self.chartstack2.setObjectName("chartstack2")
+        self.gridLayout_7.addWidget(self.chartstack2, 1, 0, 1, 1)
+        self.chartstack3 = QtWidgets.QWidget(self.chartstack)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.chartstack3.sizePolicy().hasHeightForWidth())
+        self.chartstack3.setSizePolicy(sizePolicy)
+        self.chartstack3.setStyleSheet("background-color: rgb(106, 255, 128);")
+        self.chartstack3.setObjectName("chartstack3")
+        self.gridLayout_7.addWidget(self.chartstack3, 2, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.chartstack, 1, 0, 1, 1)
         self.gridLayout_6.addWidget(self.widget_3, 0, 0, 1, 1)
+        self.widget1 = QtWidgets.QWidget(Form)
+        self.widget1.setGeometry(QtCore.QRect(0, 0, 100, 30))
+        self.widget1.setObjectName("widget1")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.widget1)
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -376,4 +391,3 @@ class Ui_Form(object):
         self.label_5.setText(_translate("Form", "End Date"))
         self.label_6.setText(_translate("Form", "Select Account"))
         self.selectAccount.setItemText(0, _translate("Form", "All Accounts"))
-

@@ -6,10 +6,11 @@ import sys
 # from structjour.view.charts.generic_barchart import BarChart
 from structjour.view.charts.generic_piechart_legend import Piechart
 # from structjour.view.charts.chartdatabase import IntradayProfit_BarchartData as BarchartData
-# from structjour.view.charts.chartdatabase import MultiTradeProfit_BarchartData
-from structjour.view.charts.chartdatabase import StrategyPercentages_PiechartData
+# from structjour.view.charts.multitradeprofit_barchartdata import MultiTradeProfit_BarchartData
+from structjour.view.charts.strategypercentages_piechartdata import StrategyPercentages_PiechartData
 from PyQt5.QtWidgets import QApplication, QMainWindow, QSizePolicy
 from PyQt5.QtCore import QDate
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavToolBar
 
 
 class chartTestRun(QMainWindow):
@@ -33,6 +34,8 @@ class chartTestRun(QMainWindow):
 
         pc.setSizePolicy((QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)))
         pc.setMinimumSize(300, 300)
+        self.addToolBar(NavToolBar(pc, self))
+
         self.setCentralWidget(pc)
         pc.plot()
 

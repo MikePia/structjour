@@ -24,7 +24,7 @@ class ChartBase(FigureCanvas):
         FigureCanvas.__init__(self, fig)
         self.setParent(parent)
 
-        # self.plot()
+        self.plot()
 
     chartData = None
 
