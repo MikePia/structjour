@@ -29,6 +29,7 @@ from structjour.stock.utilities import pd2qtime
 from structjour.view.calendarcontrol import CalendarControl
 from structjour.view.charts.strategypercentages_piechartdata import StrategyPercentages_PiechartData
 from structjour.view.charts.multitradeprofit_barchartdata import MultiTradeProfit_BarchartData
+from structjour.view.charts.strategyaverage_barchartdata import StrategyAverage_BarchartData
 from structjour.view.charts.generic_barchart import BarChart
 from structjour.view.charts.generic_piechart_legend import Piechart
 
@@ -220,8 +221,27 @@ class StatitisticsHubControl(QDialog):
         else:
             self.cud['dates'] = (start, end)
             if not self.initializing:
+                self.filterHubStrategy()
                 for chart in self.charts:
                     chart.plot()
+
+    def filterHubStrategy(self):
+        '''
+        HACK ALERT:The access to the chartData methods uses an arbitrary reference 
+        to charts[0]. 
+        Filter the strategies and numbers listed in the UI according to the current
+        state of self.cud. This will be called when the user changes dates, account
+        side, or symbol. The call should be before the very similar runfilters methods
+        and needs to be independent of them
+        '''
+        q = TradeSum.getDistinctStratsQuery()
+
+        q = self.charts[0].chartData.filter_by_dates(q)
+        q = self.charts[0].chartData.filter_by_accounts(q)
+        q = self.charts[0].chartData.filter_by_side(q)
+        q = self.charts[0].chartData.filter_by_symbols(q)
+        self.populateStrategies(strats=q.all())
+        
 
     def selectStrategy(self):
         self.cud['strategies2'] = []
@@ -285,6 +305,7 @@ class StatitisticsHubControl(QDialog):
         '''
         self.cud['symbols'] = self.getSymbolsAsList()
         if not self.initializing:
+            self.filterHubStrategy()
             for chart in self.charts:
                 chart.plot()
 
@@ -294,6 +315,7 @@ class StatitisticsHubControl(QDialog):
         '''
         self.cud['side'] = self.ui.sideCB.currentText()
         if not self.initializing:
+            self.filterHubStrategy()
             for chart in self.charts:
                 chart.plot()
 
@@ -316,6 +338,8 @@ class StatitisticsHubControl(QDialog):
             self.cud['accounts'] = account
 
         if not self.initializing:
+            self.filterHubStrategy()
+
             for chart in self.charts:
                 chart.plot()
 
@@ -367,15 +391,18 @@ class StatitisticsHubControl(QDialog):
         self.ui.tagsListWidget.clear()
         self.ui.tagsListWidget.addItems(tags)
 
-    def populateStrategies(self):
+    def populateStrategies(self, strats=None):
         '''
-        Populate the listwidget from every strategy that has been named in a trade. This will
-        include every strategy that has been named by the user in a trade (for this database
-        table).
+        Populate the listwidget from every strategy that has been named in a trade or in the 
+        argument strats. If strats is None, this will include every strategy that has been named
+        by the user in a trade (for this database table).
         Reiterate, unnecessarily, that the TradeSum.strategy is a string and has no relationship
         with the strategy tables
+        :params strats: A List  of lists [[strat, numstrats], ...]
         '''
-        strats = TradeSum.getDistinctStrats()
+        if strats is None:
+            strats = TradeSum.getDistinctStrats()
+
         self.ui.strategyListWidget.clear()
         for strat in strats:
             if strat[0] == '':
@@ -410,6 +437,11 @@ class StatitisticsHubControl(QDialog):
         self.charts.append(Piechart(StrategyPercentages_PiechartData(self.cud), parent=self))
         self.charts[1].setSizePolicy(sp)
         chartgrid2.addWidget(self.charts[1], 0, 0)
+
+        chartgrid3 = QGridLayout(self.ui.chartstack3)
+        self.charts.append(BarChart(StrategyAverage_BarchartData(self.cud), parent=self))
+        self.charts[2].setSizePolicy(sp)
+        chartgrid3.addWidget(self.charts[2], 0, 0)
 
 
 if __name__ == '__main__':

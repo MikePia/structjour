@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Statistics Hub --- Proof of Concept - a beginning</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_6">
    <item row="0" column="0">
@@ -633,7 +633,7 @@ padding-right:10px;</string>
     </widget>
    </item>
   </layout>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>0</x>

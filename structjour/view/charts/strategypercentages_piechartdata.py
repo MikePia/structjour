@@ -33,7 +33,8 @@ class StrategyPercentages_PiechartData(PiechartLegendData):
     def getChartUserData(self):
         self.query = TradeSum.getDistinctStratsQuery()
         self.runFilters()
-        strats = self.stratquery.all()
+
+        strats = self.stratquery.all() if self.stratquery else self.query.all()
         total = sum([x[1] for x in strats if x[0] != ''])
         # threshhold is a percentage of the total. 1% in this case
         threshold = total * .03
@@ -41,9 +42,12 @@ class StrategyPercentages_PiechartData(PiechartLegendData):
         self.labels = [x[0] if x[1] > threshold else '' for x in strats if x[0] is not None]
         self.legendLabels = [x[0] for x in strats if x[0] is not None]
         self.data = [x[1] for x in strats if x[0] is not None]
-        self.legendData = ['{:0.2f}%'.format(x * 100 / sum(self.data)) for x in self.data]
+        # self.legendData = ['{:0.2f}%'.format(x * 100 / sum(self.data)) for x in self.data]
+        self.legendData = [str(x) + ' trade' + ('s' if x > 1 else '') for x in self.data]
         self.title = "Strategies used"
-        if self.cud['strategies2']:
+
+        # If the strategies2 key is populated then 'no strategies' is excluded
+        if 'strategies2' in self.cud and self.cud['strategies2']:
             self.title += " (excluding no strategy)"
         len(self.labels), len(self.data), len(self.legendLabels), len(self.legendData)
 

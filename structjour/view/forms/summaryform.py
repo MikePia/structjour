@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'summaryform.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -1370,13 +1368,18 @@ class Ui_MainWindow(object):
         self.actionCreate_Directories.setObjectName("actionCreate_Directories")
         self.actionBackup = QtWidgets.QAction(MainWindow)
         self.actionBackup.setObjectName("actionBackup")
+        self.actionStatistics_Hub = QtWidgets.QAction(MainWindow)
+        self.actionStatistics_Hub.setObjectName("actionStatistics_Hub")
         self.menuFile.addAction(self.actionFileSettings)
         self.menuFile.addAction(self.actionChart_Settings)
         self.menuFile.addAction(self.actionStock_API)
         self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionStatistics_Hub)
+        self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionStrategy_Browser)
         self.menuFile.addAction(self.actionDB_Doctor)
         self.menuFile.addAction(self.actionExport_TradeLog)
+        self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionBackup)
         self.menuFile.addAction(self.actionCreate_Directories)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -1403,7 +1406,7 @@ class Ui_MainWindow(object):
         self.inspireQuote.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:6.6pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Consolas,Courier New,monospace\'; font-size:7pt; color:#22aa44;\">To do exceptionally well you have to push your limits and that, if you push your limits, you will crash, and it will hurt a lot. You will think that you have failed--but that won\'t be true unless you give up. </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Consolas,Courier New,monospace\'; font-size:7pt; color:#22aa44;\">    Ray Dalio, founder Bridgewater assoc</span></p></body></html>"))
         self.dailyPnL.setText(_translate("MainWindow", "302.55"))
@@ -1476,6 +1479,8 @@ class Ui_MainWindow(object):
         self.actionExport_TradeLog.setText(_translate("MainWindow", "Export TradeLog"))
         self.actionCreate_Directories.setText(_translate("MainWindow", "Create Directories"))
         self.actionBackup.setText(_translate("MainWindow", "Backup"))
+        self.actionStatistics_Hub.setText(_translate("MainWindow", "Statistics Hub"))
+
 from structjour.view.clickbrowser import ClickBrowser
 from structjour.view.clicklabel import ClickLabel
 from structjour.view.mylistwidget import MyListWidget

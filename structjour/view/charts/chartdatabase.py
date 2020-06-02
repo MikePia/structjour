@@ -31,6 +31,7 @@ class ChartDataBase:
     def __init__(self, cud, maxbars=99):
         self.cud = cud
         self.query = None
+        self.stratquery = None
 
         # Initialze the chart with the max set of data
         self.labels = pd.date_range(start='1/1/2020', end='7/15/2021')
@@ -52,9 +53,9 @@ class ChartDataBase:
         self.filter_by_accounts()
         self.filter_by_dates()
         self.filter_by_side()
-        self.filter_by_strategies()
         self.filter_by_symbols()
         self.filter_by_tags()
+        self.filter_by_strategies()
 
     def runFiltersOnQuery(self, query):
         '''
@@ -145,7 +146,12 @@ class ChartDataBase:
                 else:
                     self.stratquery = query.filter(TradeSum.strategy.in_(strats))
                     return query
-
+            elif query is None:
+                self.stratquery = self.query.filter(TradeSum.strategy.in_([]))
+                return query
+            else:
+                self.stratquery = self.query.filter(TradeSum.strategy.in_([]))
+                return query
         return query if query else self.query
 
     def filter_by_dates(self, query=None):
@@ -308,8 +314,9 @@ class PiechartLegendData(ChartDataBase):
 class BarchartData(ChartDataBase):
     '''
     Inheritors of this class must:
-        1) define the variables data, names, date
-        2) define getChartUserData and save the result to self.query:
+        1) define the variables data, names, and possibly date
+        2) define getChartUserData.
+        3) Use runFilters() and/or runFiltersOnQuery() to interact with user choices
         TODO: Define the obligations of this method here
     '''
 
@@ -324,6 +331,8 @@ class BarchartData(ChartDataBase):
         Arguments will summarize the user selections
         '''
         super().__init__(cud)
+        self.autolocate = True
+        self.rotation = -45
         self.getFormatGraphArray()
 
     def getFormatGraphArray(self):

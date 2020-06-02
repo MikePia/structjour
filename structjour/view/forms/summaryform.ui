@@ -274,7 +274,7 @@
               <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:7.8pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:6.6pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Consolas,Courier New,monospace'; font-size:7pt; color:#22aa44;&quot;&gt;To do exceptionally well you have to push your limits and that, if you push your limits, you will crash, and it will hurt a lot. You will think that you have failed--but that won't be true unless you give up. &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Consolas,Courier New,monospace'; font-size:7pt; color:#22aa44;&quot;&gt;	Ray Dalio, founder Bridgewater assoc&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -2525,9 +2525,12 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionChart_Settings"/>
     <addaction name="actionStock_API"/>
     <addaction name="separator"/>
+    <addaction name="actionStatistics_Hub"/>
+    <addaction name="separator"/>
     <addaction name="actionStrategy_Browser"/>
     <addaction name="actionDB_Doctor"/>
     <addaction name="actionExport_TradeLog"/>
+    <addaction name="separator"/>
     <addaction name="actionBackup"/>
     <addaction name="actionCreate_Directories"/>
    </widget>
@@ -2585,6 +2588,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionBackup">
    <property name="text">
     <string>Backup</string>
+   </property>
+  </action>
+  <action name="actionStatistics_Hub">
+   <property name="text">
+    <string>Statistics Hub</string>
    </property>
   </action>
  </widget>

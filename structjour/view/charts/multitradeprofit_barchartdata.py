@@ -53,6 +53,12 @@ class MultiTradeProfit_BarchartData(BarchartData):
             pnls, dates = self.groupByTime(self.query.all(), self.cud['inTimeGroups'])
             self.title = f'Trades: {self.cud["titleBit"]} in {accounts} accounts'
 
-        self.labels = dates
         self.data = pnls
         self.getFormatGraphArray()
+
+        if self.cud['inNumSets'] >= 1:
+            self.labels = [x.strftime("%m/%d/%y  %H:%M") for x in dates]
+        else:
+            self.labels = [x.strftime("%b %d, %Y") for x in dates]
+
+        assert len(self.labels) == len(self.neg)

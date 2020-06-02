@@ -48,13 +48,6 @@ class BarChart(ChartBase):
 
     def plot(self):
         self.chartData.getChartUserData()
-
-        if self.chartData.cud['inNumSets'] >= 1:
-            xdates = [x.strftime("%m/%d/%y  %H:%M") for x in self.chartData.labels]
-        else:
-            xdates = [x.strftime("%b %d, %Y") for x in self.chartData.labels]
-
-        assert len(self.chartData.labels) == len(self.chartData.neg)
         # x = range(len(self.chartData.neg))
         # d = pd.Timestamp(self.chartData.date)
 
@@ -63,22 +56,23 @@ class BarChart(ChartBase):
         self.figure.set_figheight(5, forward=True)
         self.axes.clear()
 
-        self.axes.bar(xdates, self.chartData.neg, width=0.9, color='crimson')
-        self.axes.bar(xdates, self.chartData.pos, width=0.9, color='limegreen')
-        self.axes.set_xticks(xdates)
+        self.axes.bar(self.chartData.labels, self.chartData.neg, width=0.9, color='crimson')
+        self.axes.bar(self.chartData.labels, self.chartData.pos, width=0.9, color='limegreen')
+        self.axes.set_xticks(self.chartData.labels)
 
-        self.axes.xaxis.set_major_locator(ticker.MaxNLocator(nbins='auto'))
-        self.axes.xaxis.set_minor_locator(ticker.MaxNLocator(nbins='auto'))
-        # self.axes.set_xticklabels(self.chartData.labels)
+        if self.chartData.autolocate and len(self.chartData.labels) > 2:
+            self.axes.xaxis.set_major_locator(ticker.MaxNLocator(nbins='auto'))
+            self.axes.xaxis.set_minor_locator(ticker.MaxNLocator(nbins='auto'))
+            self.axes.set_xticklabels(self.chartData.labels)
         for label in self.axes.get_xticklabels():
-            label.set_rotation(-45)
+            label.set_rotation(self.chartData.rotation)
             label.set_fontsize(8)
 
         fmt = '${x:,.0f}'
         tick = ticker.StrMethodFormatter(fmt)
         self.axes.yaxis.set_major_formatter(tick)
         self.axes.yaxis.grid()
-        self.figure.subplots_adjust(bottom=.23)
+        self.figure.subplots_adjust(bottom=.35, left=.18)
 
         self.axes.set_title(self.chartData.title)
         self.draw()

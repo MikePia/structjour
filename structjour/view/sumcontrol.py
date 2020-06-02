@@ -40,6 +40,7 @@ from structjour.inspiration.inspire import Inspire
 from structjour.models.trademodels import Tags, TradeSum
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.utilities.util import isNumeric
+from structjour.view.statisticshubcontrol import StatitisticsHubControl
 from structjour.view.createdirscontrol import CreateDirs
 from structjour.view.chartcontrol import ChartControl
 from structjour.view.ejcontrol import EJControl
@@ -195,6 +196,7 @@ class SumControl(QMainWindow):
 
         self.ui.actionFileSettings.triggered.connect(self.fileSetDlg)
         self.ui.actionStock_API.triggered.connect(self.stockAPIDlg)
+        self.ui.actionStatistics_Hub.triggered.connect(self.statisticsHub)
         self.ui.actionStrategy_Browser.triggered.connect(self.stratBrowseDlg)
         self.ui.actionDB_Doctor.triggered.connect(self.dbDoctor)
         self.ui.actionChart_Settings.triggered.connect(self.chartSetDlg)
@@ -389,6 +391,7 @@ class SumControl(QMainWindow):
         if prefAccount == 'All Accounts':
             for key in pnls:
                 if pnls[key]:
+                    pnls[key] = [x if isinstance(x, (int, float)) else 0 for x in pnls[key]]
                     pnl += sum(pnls[key])
         elif pnls[prefAccount]:
             pnl = sum(pnls[prefAccount])
@@ -1409,6 +1412,11 @@ class SumControl(QMainWindow):
         # app = QApplication(sys.argv)
         w = DupControl()
         w.exec()
+
+    def statisticsHub(self):
+        stathub = StatitisticsHubControl()
+        stathub.show()
+        stathub.exec()
 
     def stratBrowseDlg(self):
         '''Show the strategy dialog'''
