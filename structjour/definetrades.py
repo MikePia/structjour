@@ -21,12 +21,16 @@ Created on Sep 5, 2018
 @author: Mike Petersen
 '''
 import logging
+import math
 import sys
 # import datetime
 import pandas as pd
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.dfutil import DataFrameUtil
+from structjour.models.trademodels import TradeSum
+from structjour.models.meta import ModelBase
+
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.utilities.util import isNumeric
 
@@ -193,10 +197,36 @@ class DefineTrades(object):
         for tindex in dframe[rc.tix].unique():
             t = dframe[dframe[rc.tix] == tindex]
             ixs = t.index
-            sum = t[rc.PL].sum()
-            t.at[ixs[-1], rc.sum] = sum
+            daSum = t[rc.PL].sum()
+            t.at[ixs[-1], rc.sum] = daSum
             newtrade = newtrade.append(t)
+            self.lookForPnlError(t.at[ixs[-1], rc.date], t.at[ixs[-1], rc.start], t.at[ixs[-1], rc.sum])
         return newtrade
+
+    def lookForPnlError(self, d, s, daSum):
+        '''
+        An isolated use of SA for the first time in this module. Look for existing db trades that
+        have a bad pnl and update it from t, but only if the difference is more than 1 cent. This 
+        should apply mostly to blob entries for the pnl in the sqlite db.
+        :params d: The Date parameter from the tradeobject. A datetime string
+        :parmas s: The Start parameter from the tradeobject. A time string
+        :parmas daSum: The sum value that structjour just calculated
+
+        Programmers note: if this causes any exceptions and the answer is not fixable, wrap it with
+        try and pass.
+        '''
+        if not daSum:
+            return
+        q = TradeSum.getTradeSumQuery()
+        d = pd.Timestamp(d).strftime("%Y%m%d")
+        s = pd.Timestamp(s).strftime("%H:%M:%S")
+        q = q.filter_by(date=d).filter_by(start=s)
+        x = q.all()
+        if x:
+            if not isinstance(x[0].pnl, (int, float)) or not math.isclose(daSum, x[0].pnl, abs_tol=0.011):
+                x[0].pnl = daSum
+                ModelBase.session.commit()
+                logging.info(f'Structjour updated the pnl for {x[0].name} on {d} {s}')
 
     def addTradeDurationDB(self, dframe):
         '''

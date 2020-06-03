@@ -385,6 +385,7 @@ class SumControl(QMainWindow):
         print('Getpnl in tto')
         if d is None:
             d = self.settings.value('theDate')
+        d = qtime2pd(d)
         n, pnls = TradeSum.getNamesAndProfits(d.strftime("%Y%m%d"))
         prefAccount = self.settings.value('accounts', 'All Accounts')
         pnl = 0
