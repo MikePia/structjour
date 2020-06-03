@@ -208,6 +208,11 @@ class TradeSum(Base):
         return q.tags if q else []
 
     @classmethod
+    def getTradeSumQuery(cls, kv=None):
+        ModelBase.connect(new_session=True)
+        return ModelBase.session.query(TradeSum)
+
+    @classmethod
     def getNamesAndProfits(cls, daDate):
         '''
         :params daDate: A date string in the form yyyymmdd as it is held in the db
@@ -242,6 +247,32 @@ class TradeSum(Base):
                                      TradeSum.strategy).order_by(
                                      desc(func.count(TradeSum.strategy)))
         return qq
+
+    @classmethod
+    def getListsOfTradesForStrategies(cls, query, strats):
+        '''
+        Given a prior query on TradeSum and a list of strats, get lists of trades grouped by strat
+        :params query: A query on TradeSum
+        :params strats: A list of strategies
+        :return: List of [[strat, SA object collection of trades ], ...]
+        '''
+        alltrades = []
+        for strat in strats:
+            q = query.filter(TradeSum.strategy == strat)
+            alltrades.append([strat, q.all()])
+        return alltrades
+
+    @classmethod
+    def getDistinctStratAvgPnlQuery(cls):
+        '''
+        :return: List of [strat, query]. Each query will retrive the trades that
+        correspond to the the strategy strat and can be filtered.
+        '''
+        strats = [x[0] for x in TradeSum.getDistinctStrats() if x[0] is not None]
+        for i, strat in enumerate(strats):
+            q = ModelBase.session.query(TradeSum).filter_by(strategy=strat)
+            strats[i] = [strat, q]
+        return strats
 
     @classmethod
     def getAccounts(cls):
@@ -405,6 +436,16 @@ def getTradeSumAccounts():
     print(q)
 
 
+def exercisegetListsOfTradesForStrategies():
+    ModelBase.connect(new_session=True)
+    q = ModelBase.session.query(TradeSum).filter(TradeSum.date > "20200101").filter(TradeSum.date < "20200301")
+    trades = TradeSum.getListsOfTradesForStrategies(q, ['ORB', "VWAP MA trend", "Swing", "Momentum"])
+    print(len(trades))
+    for t in trades:
+        print(t[0], len(t[1]))
+    print()
+
+
 def dostuff():
     # ModelBase.connect()
     # ModelBase.createAll()
@@ -423,9 +464,10 @@ def dostuff():
 
 
 def notmain():
-    names, profits = TradeSum.getNamesAndProfits('20200204')
-    print(names)
-    print(profits)
+    # names, profits = TradeSum.getNamesAndProfits('20200204')
+    # print(names)
+    # print(profits)
+    exercisegetListsOfTradesForStrategies()
 
 
 if __name__ == '__main__':
