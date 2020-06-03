@@ -159,7 +159,6 @@
 
         <li> <span class="red">Change all database</span> access to sqlalchemy.</li>
         <li> <span class="red"> Update the setup build</span> and include sqlalchemy</li>
-        <li> <span class="green"> trade_sum.MktVal</span> has mixed values binary or Numeric and a NOT NULL constraint. Do a one-off data migration to clean up the data<code>4/18/20</code></li>
         <li> <span class="red">Test DefineTrades.fixtsid </span> I dont't think its doing what its supposed to do.</li>
         <li> <span class="red">Figure out how to </span>deal with chart data with missing candle-price data from a halt or just low volume. The way after hours is handled is related. Currently entries use the number of candles to find the index. Moving averages... no idea... probably use a time index to remain consistent...Different APIs--some have after hours....What else?</li>
         <li> <span class="red">When user browses </span>for and inserts a chart, copy it to the appropriate journal directory.</li>
@@ -187,10 +186,17 @@
         <li> <span class="red">Create </span>an initialization wizard that leads the user through the initial setup. </li>
         <li> <span class="red">Moving average </span>'delayed start' for all apis. (partially done?)</li>
         <li> <span class="red">Create a migration </span> change the strategy table to include description columnn --- after sa transition</li>
+    </ol>
+
+
+<h3>Version 0.92-Alpha.003</h3>
+<h4>Checked in June 3, 2020</h4>
+<ol>
         <li> <span class="green">Change the layout </span>so that the right widgets expand the right amount.<code>4/6/20</code></li>
         <li> <span class="green"> The charts should </span>resize, not keeping perspective, with the widget. <code>4/6/20</code></li>
         <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit. <code>4/3/20</code></li>
         <li> <span class="green">Move the form files </span>in structjour.view to structjour.view.forms. <code>4/3/20</code></li>
+        <li> <span class="green"> trade_sum.MktVal</span> has mixed values binary or Numeric and a NOT NULL constraint. Do a one-off data migration to clean up the data<code>4/18/20</code></li>
         <li> <span class="green ">Fix realRR to </span> display a percentage of R when the pnl is a loss.<code>4/20/20</code></li>
         <li> <span class="green">Time or time zone </span> issues in the finnhub REST API. <code>4/30/20</code></li>
         <li> <span class="green">Change Daily Summary </span>to include bar charts to show summaries for the day.
@@ -199,10 +205,13 @@
         <li> <span class="green"> Move dailyNotes </span>from the dailyForm to summaryForm. <code>4/7/20</code></li>
         <li> <span class="green"> Re do dailyForm layout </span>to use splitters.<code>4/5/20</code></li>
         <li> <span class="green"> Annotate the charts </span>to show the data source. <code>4/30/20</code></li>
-        <li> <span class="green">Focus on tags is </span> required for the selected tags to show. I think, unfortunatly, it works as expected. I 'fixed' it by setting the focus whenever populateTags is called. <code>5/7/20</code </li>
+        <li> <span class="green">Focus on tags is </span> required for the selected tags to show. I think, unfortunatly, it works as expected. 
+            <span class="Blue"> I 'fixed' it by setting the focus whenever populateTags is called. </span> <code>5/7/20</code </li>
         <li> <span class="green">Add a daily pnl </span> label to the front page.  <code>5/20/20</code></li>
-        <li> <span class="green">Create a statistics hub </span>widget to replace the disciplined excel thing. 3 charts prrof of concept <code>2/6/20</code></li>
-        <li> <span class="green">Find the bug</span> 1/10/19 AMD Short does not display PnL. AAPL Long 11/15/2018 at 15:10:51 id=841. The causing problem was blob types in pnl. The fix changes the pnl if its a blob or the amount is more than 1 cent off. <code>6/2/20</code></li>
+        <li> <span class="green">Create a statistics hub </span>widget to replace the disciplined excel thing. 
+            <span class="blue"> 3 charts proof of concept </span> <code>6/2/20</code></li>
+        <li> <span class="green">Find the bug</span> 1/10/19 AMD Short does not display PnL. AAPL Long 11/15/2018 at 15:10:51 id=841. 
+            <span class="blue">The causing problem was blob types in pnl. The fix changes the pnl if its a blob or the amount is more than 1 cent off. </span> <code>6/2/20</code></li>
     </ol>
     <h4>Not going to implement (probably)</h4>
     <ul>

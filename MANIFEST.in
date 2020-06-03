@@ -1,2 +1,4 @@
 global-include *.png
 global-include readme.md
+global-exclude test/*
+global-exclude venv/*

@@ -10,6 +10,18 @@ First concerns are install and run errors. As the sole developer I am anxious to
 Structjour currently reads DAS Trader Pro export files and Interactive Broker Statements
 Its pre Alpha. 
 
+## Structjour version 0.9.92-Alpha.003, features a proof of concept statistics hub and a couple charts in Daily Summary
+
+The statistics hub below is a proof of concept. Its accessed through the main menu file->statistics hub. As alwasy, please send suggestions and bug reports. 
+
+I am finding designing the statistics hub very challenging as there are so many possibilities. At this point, I am asking for specific design help. Send suggestions for what charts/layouts would be most useful to you, real day traders...
+I will probably implement any examples of charts that are suggested. The current plan is to place them in themed stacked pages, 3 charts per page. Each page will have the user controls for dates, symbols, accounts etc. The emphasis of Structjour is day trading, but the statistics hub should give the longer term view of successful and failing trading activities.
+
+![filesettings.png](images/statisticshub.png)
+
+The Daily Summary:
+![filesettings.png](images/dailysummary2.png)
+
 ## Installation
 Install it in the usual python way from any python enabled shell using python 3.6 or greater.
 

@@ -1,3 +1,21 @@
+### Version 0.9.92-Alpha.003, June 2, 2020
+* Change the layout so that the right widgets expand the right amount.
+* The charts resize to fill space
+* A calendar widget popup added to the front dateEdit.
+* Moved qt form files and generated python code to their own directory
+* Migration to fix mixed values, binary or Numeric for TradeSum.mktval
+* Fix realRR to display a percentage of R when the pnl is a loss.
+* Time or time zone issues in the finnhub REST API fixed.
+* Daily Summary includes a couple charts in place of the middle table.
+* Add tags combobox to summaryForm backed by db--simlar to how strategies are done but using sqlalchemy declarative models.
+* Moved dailyNotes from the dailyForm to summaryForm.
+* DailyForm layout uses splitters. Sections can be resized a bit.
+* Stock charts have an annotation showing the data source.
+* Focus on tags is required for the selected tags to show. 'Fixed' it by setting the focus whenever populateTags is called.
+* Add a daily pnl label is on the front page.
+* A proof of concept a statistics hub with user controlsa and three charts is launched from file menu
+* Bug fix- added a method to fix sqlite errors in pnl field.
+
 ### Version 0.9.92-Alpha.001
 
 * Added A Risk:Reward cell to show Actual P/L:Amount Risked
