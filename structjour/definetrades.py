@@ -206,7 +206,7 @@ class DefineTrades(object):
     def lookForPnlError(self, d, s, daSum):
         '''
         An isolated use of SA for the first time in this module. Look for existing db trades that
-        have a bad pnl and update it from t, but only if the difference is more than 1 cent. This 
+        have a bad pnl and update it, but only if the difference is more than 1 cent. This
         should apply mostly to blob entries for the pnl in the sqlite db.
         :params d: The Date parameter from the tradeobject. A datetime string
         :parmas s: The Start parameter from the tradeobject. A time string
