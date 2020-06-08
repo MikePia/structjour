@@ -170,7 +170,7 @@ def getWTD_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     if result['timezone_name'] != 'America/New_York':
         msg = f'''Time zone returned a non EST zone: {result['timezone_name']}'''
         raise ValueError(msg)
-    meta = result['symbol'] + ': ' + result['stock_exchange_short'] + ': ' + result['timezone_name']
+    meta['message'] = result['symbol'] + ': ' + result['stock_exchange_short'] + ': ' + result['timezone_name']
     df = pd.DataFrame(data=result['intraday'].values(), index=result['intraday'].keys())
 
     df.open = pd.to_numeric(df.open)
