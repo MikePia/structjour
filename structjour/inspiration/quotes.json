@@ -1,0 +1,596 @@
+{
+    "0": {
+        "name": "Adams",
+        "on": "On Purpose",
+        "who": "Patch Adams, physician",
+        "quote": "When you left the house today, you had the intention of putting clothes on and you did. You didn\u2019t try to put your pants on today. You simply put them on. The same has to hold for all of our intentions."
+    },
+    "1": {
+        "name": "Ali",
+        "on": "On Bouncing Back",
+        "who": "Muhammed Ali, boxer",
+        "quote": "Only a man who knows what it is like to be defeated can reach down to the bottom of his soul and come up with the extra ounce of power it takes to win when the match is even."
+    },
+    "2": {
+        "name": "Ash",
+        "on": "On Goals",
+        "who": "Mary Kay Ash, cosmetics entrepreneur",
+        "quote": "Don't limit yourself. Many people limit themselves to what they think they can do. You can go as far as your mind lets you. What you believe, remember, you can achieve."
+    },
+    "3": {
+        "name": "Avalokitiesvara",
+        "on": "On Emptiness",
+        "who": "Avalokitesvara, The Bodhisattva",
+        "quote": "Gate gate paragate parasamgate bodhi svaha. -- Gone, gone, gone all the way over, everyone gone to the other shore, enlightenment, svaha!"
+    },
+    "4": {
+        "name": "Bezos",
+        "on": "On Change",
+        "who": "Jeff Bezos, Amazon.com founder and CEO",
+        "quote": "What's dangerous is not to evolve."
+    },
+    "5": {
+        "name": "Bird",
+        "on": "On Effort",
+        "who": "Larry Bird, basketball player",
+        "quote": "I've got a theory that if you give 100% all of the time, somehow things work out in the end."
+    },
+    "6": {
+        "name": "Borge",
+        "on": "On Joyfulness",
+        "who": "Victor Borge, entertainer",
+        "quote": "Laughter is the closest distance between two people."
+    },
+    "7": {
+        "name": "Branson",
+        "on": "On Connecting",
+        "who": "Richard Branson, businessman",
+        "quote": "Communication is the most important skill any entrepreneur can possess."
+    },
+    "8": {
+        "name": "Brooks",
+        "on": "On Dreams",
+        "who": "Herb Brooks, hockey coach",
+        "quote": "Risk something or forever sit with your dreams."
+    },
+    "9": {
+        "name": "Brown",
+        "on": "On Goals",
+        "who": "Joel Brown, entrepreneur",
+        "quote": "The only thing that stands between you and your dream is the will to try and the belief that it is actually possible."
+    },
+    "10": {
+        "name": "Buddha",
+        "on": "On Impact",
+        "who": "Guatama Buddha, sage",
+        "quote": "To keep the body in good health is a duty ... otherwise we shall not be able to keep our mind strong and clear."
+    },
+    "11": {
+        "name": "Buffett",
+        "on": "On Associates",
+        "who": "Warren Buffett, CEO Berkshire Hathaway",
+        "quote": "It's better to hang out with people better than you. Pick out associates whose behavior is better than yours and you'll drift in that direction. You're looking for three things, generally, in a person: intelligence, energy, and integrity. And if they don't have the last one, don't even bother with the first two."
+    },
+    "12": {
+        "name": "Cage",
+        "on": "On Innovation",
+        "who": "John Cage, composer",
+        "quote": "I can't understand why people are frightened of new ideas. I'm frightened of the old ones."
+    },
+    "13": {
+        "name": "Carver",
+        "on": "On Leadership",
+        "who": "George Washington Carver, scientist",
+        "quote": "Where there is no vision, there is no hope."
+    },
+    "14": {
+        "name": "Charles",
+        "on": "On Tenacity",
+        "who": "Ray Charles, musician",
+        "quote": "Do it right or don\u2019t do it at all.."
+    },
+    "15": {
+        "name": "Collier",
+        "on": "On Positive Reinforcement",
+        "who": "Robert Collier, author",
+        "quote": "Any thought that is passed on to the subconscious often enough and convincingly enough is finally accepted."
+    },
+    "16": {
+        "name": "Cook",
+        "on": "On Impact",
+        "who": "Tim Cook, Apple CEO",
+        "quote": "You want to be the pebble in the pond that creates the ripple for change."
+    },
+    "17": {
+        "name": "Cote",
+        "on": "On Leadership",
+        "who": "David Cote, CEO Honeywell",
+        "quote": "To lead you have to address what people really want to know in a simple, transparent way. Just treating people wth respect makes a big difference."
+    },
+    "18": {
+        "name": "Crosby",
+        "on": "On collaboration",
+        "who": "David Crosby, Musician",
+        "quote": "Competitive effort winds up in war. Collaborative effort winds up in a symphony."
+    },
+    "19": {
+        "name": "Dalio",
+        "on": "On opinions",
+        "who": "Ray Dalio, founder Bridgewater assoc",
+        "quote": "the greatest tragedy of mankind \u2014 or one of them \u2014 is that people needlessly hold wrong opinions in their minds."
+    },
+    "20": {
+        "name": "Dalio",
+        "on": "On Success",
+        "who": "Ray Dalio, founder Bridgewater assoc",
+        "quote": "To do exceptionally well you have to push your limits and that, if you push your limits, you will crash, and it will hurt a lot. You will think that you have failed--but that won't be true unless you give up."
+    },
+    "21": {
+        "name": "Dalio",
+        "on": "Five Principles for life",
+        "who": "Ray Dalio, founder Bridgewater assoc. Principle one",
+        "quote": "Start with a lofty but realistic goal. A concrete and well defined objective sets the direction of your life."
+    },
+    "22": {
+        "name": "Dalio",
+        "on": "Five Principles for life",
+        "who": "Ray Dalio, founder Bridgewater assoc. Principle two",
+        "quote": "Fail well and take meticulous notes when you do."
+    },
+    "23": {
+        "name": "Dalio",
+        "on": "Five Principles for life",
+        "who": "Ray Dalio, founder Bridgewater assoc. Principle three",
+        "quote": "Value truth over ego. Admitting your not always the source of every best idea is central to success."
+    },
+    "24": {
+        "name": "Dalio",
+        "on": "Five Principles for life",
+        "who": "Ray Dalio, founder Bridgewater assoc. Principle four",
+        "quote": "Quantify whatever you can. Success isn't an accident."
+    },
+    "25": {
+        "name": "Dalio",
+        "on": "Five Principles for life",
+        "who": "Ray Dalio, founder Bridgewater assoc.         Principle five",
+        "quote": "Avoid stagnation and evolve."
+    },
+    "26": {
+        "name": "Degrasse Tyson",
+        "on": "On Knowledge",
+        "who": "Neil deGrasse Tyson, astrophysicist",
+        "quote": "There's nothing wrong with cherry-picking the good stuff."
+    },
+    "27": {
+        "name": "Diller",
+        "on": "On Net neutrality",
+        "who": "Barry Diller, American Businessman",
+        "quote": "The Internet came together as a miracle, really. Anyone with a wire can publish, we need to keep it that way."
+    },
+    "28": {
+        "name": "Douglas",
+        "on": "On Trading",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "Those traders that have confidence in their own trades, who trust themseles and do what needs to be done without hesitation, are the ones who become successful"
+    },
+    "29": {
+        "name": "Douglas",
+        "on": "Five Fules, no 1-2",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "Anything can happen. You don\u2019t need to know what is going to happen next in order to make money."
+    },
+    "30": {
+        "name": "Douglas",
+        "on": "Five Fules, no 3-5",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "There is a random distribution between wins and losses for any given set of variables that define an edge. An edge is nothing more than an indication of a higher probability of one thing happening over another. Every moment in the market is unique"
+    },
+    "31": {
+        "name": "Douglas",
+        "on": "on Probabilities",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "When you've trained you mind to think in probabilities, it means you have fully accepted all the possibilities (with no internal resistance or conflict)."
+    },
+    "32": {
+        "name": "Douglas",
+        "on": "On knowing the market",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "The degree by which you think you know, assume you know, or in any way need to know what is going to happen next, is equal to the degree to which you will fail as a trader."
+    },
+    "33": {
+        "name": "Douglas",
+        "on": "On defining risk",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "Not defining the risk before getting into a trade is by far the most common of all trading errors, and starts the whole process of trading from an inappropriate perspective."
+    },
+    "34": {
+        "name": "Douglas",
+        "on": "On Control",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "Instead of controlling our surroundings so they conform to our idea of the way thins should be, we can learn to control ourselves."
+    },
+    "35": {
+        "name": "Douglas",
+        "on": "On Attitude",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "If you have the right attitude--the right mind-set--then everything else about trading will be relatively easy, even simple, aand certainly a lot more fun."
+    },
+    "36": {
+        "name": "Douglas",
+        "on": "On Perception",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "If you perceive the endless stream of opportunities to enter and exit trades without self-criticism and regret, then you will be in the best frame of mind to act in you own best interest and learn from your experiences."
+    },
+    "37": {
+        "name": "Douglas",
+        "on": "On Blame",
+        "who": "Mark Douglas, Author Trading in the Zone",
+        "quote": "Any degree of blaming means you have not accepted the reality the the market owes you nothing, regardless of what you want or think or how much effort you put into your trading."
+    },
+    "38": {
+        "name": "Einstein",
+        "on": "On Change",
+        "who": "Albert Einstein, physisist",
+        "quote": "Wisdom is not a product of schooling but of the lifelong attempt to acquire it."
+    },
+    "39": {
+        "name": "Eisenhower",
+        "on": "On Leadership",
+        "who": "Dwight D. Eisenhower, U.S. president",
+        "quote": "You do not lead by hitting people over the head--that's assault, not leadership."
+    },
+    "40": {
+        "name": "Eisenhower",
+        "on": "On Accountability",
+        "who": "Dwight Eisenhower, 34th U.S. President",
+        "quote": "Leadership consists of nothing but taking responsibilit for everything that goes wrong and giving credit for everything that goes well."
+    },
+    "41": {
+        "name": "Ellington",
+        "on": "On Drive",
+        "who": "Duke Ellington, Influential 20th c composer",
+        "quote": "My attitude is never to be satisfied, never enough, never."
+    },
+    "42": {
+        "name": "Emerson",
+        "on": "On contemplation",
+        "who": "Ralph Waldo Emerson, poet",
+        "quote": "A man is what he thinks about all day long."
+    },
+    "43": {
+        "name": "Ford",
+        "on": "On Determination",
+        "who": "Gerald Ford, U.S. President",
+        "quote": "Never be satisfied with less than your very best effort. If you strive for the top and miss, you'll still beat the pack."
+    },
+    "44": {
+        "name": "George",
+        "on": "On Courage",
+        "who": "David Lloyd George, British statesman",
+        "quote": "Don't be afraid to take a big step when one is indicated. You can't cross a chasm in two small steps."
+    },
+    "45": {
+        "name": "Ghandi",
+        "on": "On Honesty",
+        "who": "Mahatma Ghandi, statesman,",
+        "quote": "A \"No\" uttered from the deepest conviction is better than a \"Yes\" merely uttered to please, or worse, to avoid trouble."
+    },
+    "46": {
+        "name": "Glascow",
+        "on": "On Leadership",
+        "who": "Arnold H. Glascow, humorist",
+        "quote": "A good leader takes a little more than his share of the blame, a little less than his share of the credit."
+    },
+    "47": {
+        "name": "Grossman",
+        "on": "On Risk",
+        "who": "Mindy Grossman, CEO of WW International",
+        "quote": "Not taking a risk is riskier than taking a risk."
+    },
+    "48": {
+        "name": "Holiday",
+        "on": "On Persusasion",
+        "who": "Ryan Holiday, Author",
+        "quote": "You can\u2019t reason people out of positions they didn\u2019t reason themselves into."
+    },
+    "49": {
+        "name": "Holt",
+        "on": "On Character",
+        "who": "John Holt, educator",
+        "quote": "The true test of character is not how much we know how to do , but how we behave when we don't know what to do."
+    },
+    "50": {
+        "name": "Hunter",
+        "on": "On Wisdom",
+        "who": "Torii Hunter, baseball player",
+        "quote": "Wisdom is healed pain. You don't get wisdom because you just have it. You have to heal from some pain."
+    },
+    "51": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number one",
+        "quote": "How you think is Everything: Always be positive. Think success, not failure. Beware of a negative enviornment."
+    },
+    "52": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number two",
+        "quote": "DECIDE UPON YOUR TRUE DREAMS AND GOALS: Write down your specific goals and develop a plan to reach them"
+    },
+    "53": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number three",
+        "quote": "TAKE ACTION: Goals are nothing without action. Don't be afraid to get started. Just do it."
+    },
+    "54": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number four",
+        "quote": "NEVER STOP LEARNING: Go back to school or read books. Get training and acquire skills."
+    },
+    "55": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number five",
+        "quote": "BE PERSISTENT AND WORK HARD: Success is a marathon, not a sprint. Never give up."
+    },
+    "56": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number six",
+        "quote": "LEARN TO ANALYZE DETAILS: Get all the facts, all the input. Learn from your mistakes."
+    },
+    "57": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number seven",
+        "quote": "FOCUS YOUR TIME AND MONEY: Don't let other people or things distract you."
+    },
+    "58": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number eight",
+        "quote": "DON'T BE AFRAID TO INNOVATE; BE DIFFERENT: Following the herd is a sure way to mediocrity."
+    },
+    "59": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number nine",
+        "quote": "DEAL AND COMMUNICATE WITH PEOPLE EFFECTIVELY: No person is an island. Learn to understand and motivate others."
+    },
+    "60": {
+        "name": "IBD",
+        "on": "10 Secrets to Success",
+        "who": "10 Traits of Successful People, Number ten",
+        "quote": "BE HONEST AND DEPENDABLE; TAKE RESPONSIBILITY: Otherwise, Nos. 1-9 won't matter."
+    },
+    "61": {
+        "name": "Irving",
+        "on": "On Passion",
+        "who": "John Irving, author",
+        "quote": "You\u2019ve got to get obsessed and stay obsessed."
+    },
+    "62": {
+        "name": "Jobs",
+        "on": "On Determination",
+        "who": "Steve Jobs, Apple co-founder",
+        "quote": "I'm convinced that about half of what separates the successful entrepreneurs from the nonsuccessfuls ones is pure perserverance."
+    },
+    "63": {
+        "name": "Jobs",
+        "on": "On Following Your Dreams",
+        "who": "Steve Jobs, Apple co-founder",
+        "quote": "Your time is limited, so don\u2019t waste it living someone else\u2019s life."
+    },
+    "64": {
+        "name": "Jordan",
+        "on": "On Basics",
+        "who": "Michael Jordan, basketball player",
+        "quote": "Get the fundamentals down and the level of everything you do will rise."
+    },
+    "65": {
+        "name": "Jordan",
+        "on": "On Persistence",
+        "who": "Michael Jordan, basketball player",
+        "quote": "I\u2019ve failed over and over again, and that is why I succeed. "
+    },
+    "66": {
+        "name": "Jung",
+        "on": "On Authenticity",
+        "who": "C.G.Jung, Psychiatrist",
+        "quote": "The privilege of a lifetime is to become who you truly are."
+    },
+    "67": {
+        "name": "Kasparov",
+        "on": "On Imagination",
+        "who": "Garry Kasparov, chess champion",
+        "quote": "There's on thing only humans can do, and that's dream, so let us dream"
+    },
+    "68": {
+        "name": "Kaukonen",
+        "on": "On Humility",
+        "who": "Jorma Kaukonen, rock musician",
+        "quote": "If life is designed to humble us in the face of time, there is joy in that humility. "
+    },
+    "69": {
+        "name": "Kesey",
+        "on": "On Leadership",
+        "who": "Ken Kesey, novelist",
+        "quote": "You don't lead by pointing and telling people some place to go. You lead by going to that place and making a case."
+    },
+    "70": {
+        "name": "Lassalle",
+        "on": "On Sitting",
+        "who": "Hugo Lassalle, Jesuit priest",
+        "quote": "Its a fact that when you hold your eyes very still, the flow of thought will stop."
+    },
+    "71": {
+        "name": "Lutz",
+        "on": "On risk",
+        "who": "Robert Lutz, auto executive",
+        "quote": "If you actually 'do things' rather than merely perpetuate the status quo, there is a high probablilty, bordering on certainty that you will make mistakes"
+    },
+    "72": {
+        "name": "May",
+        "on": "On Commitment",
+        "who": "Rollo May, psychologist",
+        "quote": "The relationship between commitment and doubt is by no means an antagonistic one. Commitment is healthiest when it is not without doubt but in spite of doubt."
+    },
+    "73": {
+        "name": "Meir",
+        "on": "On Conviction",
+        "who": "Golda Meir, Israili prime minister",
+        "quote": "I can honestly say that I was never affected by the question of the success of an undertaking. If I felt it was the right thing to do, I was for it regardless of the possible outcome."
+    },
+    "74": {
+        "name": "Mitchell",
+        "on": "On trading plans",
+        "who": "Cory Mitchell, Author for Vantagepointtrading",
+        "quote": "Having a plan takes much of the emotion out of trading..you know exactly what to do, how and when. We can't get rid of our emotions entirely, but the plan helps us control them so they aren't destructive"
+    },
+    "75": {
+        "name": "Morris",
+        "on": "On Passion",
+        "who": "Desmond Morris, zoologist",
+        "quote": "If our work does not feel like play, then we should ask ourselves whether we are in the right job."
+    },
+    "76": {
+        "name": "Murray",
+        "on": "On Education",
+        "who": "William Hutchison Murray, author",
+        "quote": "Until one is commited, there is hesitancy, the chance to draw back, ineffectiveness...whatever you can do, or dream you can do, begin it. Boldness has genius, power and magic in it!"
+    },
+    "77": {
+        "name": "Nagel",
+        "on": "On Courage",
+        "who": "Jack Nagel, property developer",
+        "quote": "One sure guarantee of a mediocre life is a life lived in fear."
+    },
+    "78": {
+        "name": "Nelson",
+        "on": "On blessings",
+        "who": "Willie Nelson, Musician",
+        "quote": "When I started counting my blessings, my whole life turned around."
+    },
+    "79": {
+        "name": "Newton",
+        "on": "On Observation",
+        "who": "Sir Isaac Newton, scientist",
+        "quote": "If I have ever made any valuable discoveries, it has been owning more to patient attention than to any other talent."
+    },
+    "80": {
+        "name": "O'Connonr",
+        "on": "On Diligence",
+        "who": "Sandra Day O'Connor, former Supreme Court Justice",
+        "quote": "Do the best you can in every task no matter how unimportant it may seem at the time. No  one learns more about a problem than the person at the bottom."
+    },
+    "81": {
+        "name": "Parks",
+        "on": "On Example",
+        "who": "Rosa Parks, civil rights icon",
+        "quote": "Each person must live their life as a role model for others."
+    },
+    "82": {
+        "name": "Patterson",
+        "on": "On Action",
+        "who": "John H. Patterson, businessman",
+        "quote": "An executive is a person who decides; sometime he decides correctly, but he always decides."
+    },
+    "83": {
+        "name": "Rickover",
+        "on": "On Observation",
+        "who": "Hyman Rickover, admiral",
+        "quote": "It is necessary for us to learn from other's mistakes. You will not live long enough to make tham all yourself."
+    },
+    "84": {
+        "name": "Rometty",
+        "on": "On Growth",
+        "who": "Virginia Rometty, IBM CEO",
+        "quote": "I learned to always take on things I'd never done before. Growth and comfort do not coexist."
+    },
+    "85": {
+        "name": "Roosevelt",
+        "on": "On Conviction",
+        "who": "Elanor Roosevelt, first lady of the U.S.",
+        "quote": "Do what you feel in your heart to be right, for you'll be criticized anyway."
+    },
+    "86": {
+        "name": "Sirleaf",
+        "on": "on Goals",
+        "who": "Ellen Johnson Sirleaf, former president of Liberia",
+        "quote": "If your dreams do not scare you, they are not big enough."
+    },
+    "87": {
+        "name": "Sophocles",
+        "on": "On Adversity",
+        "who": "Sophocles, poet",
+        "quote": "There is no success without hardship."
+    },
+    "88": {
+        "name": "Sotomayor",
+        "on": "On Perseverance",
+        "who": "Sonia Sotomayer, associate justice Supreme Court",
+        "quote": "No matter how things are for you, ther're harder for other people, and if you stick with it you can get around the brick walls in your life."
+    },
+    "89": {
+        "name": "Spade",
+        "on": "On Integrity",
+        "who": "Kate Spade, designer",
+        "quote": "Live in such a way that if anyone speaks badly of you no one would believe it."
+    },
+    "90": {
+        "name": "Stimson",
+        "on": "On Faith",
+        "who": "Henry Stimson, statesman",
+        "quote": "The only way to make a man trustworthy is to trust him."
+    },
+    "91": {
+        "name": "Thoreau",
+        "on": "On Thankfulness",
+        "who": "Henry David Thoreau, essayist",
+        "quote": "I am grateful for what I am and have. My thanksgiving is perpetual."
+    },
+    "92": {
+        "name": "Tillman",
+        "on": "On Passion",
+        "who": "Pat Tillman, football player and U.S. army soldier",
+        "quote": "A passion for life is contagious and uplifting."
+    },
+    "93": {
+        "name": "Van Gogh",
+        "on": "On Passion",
+        "who": "Vincent Van Gogh, artist",
+        "quote": "Your profession is not what brings home your weekly paycheck; your profession is what you\u2019re put here on earth to do, with such passion and such intensity that it becomes a spiritual calling."
+    },
+    "94": {
+        "name": "Walsh",
+        "on": "On Learning",
+        "who": "Bill Walsh, football coach",
+        "quote": "Confidence stops you from learning. I can\u2019t tell you how many confident blowhards I\u2019ve seen in my coaching career who never got better after the age of 40."
+    },
+    "95": {
+        "name": "Watson",
+        "on": "On Originality",
+        "who": "Thomas J. Watson, businessman",
+        "quote": "Expose your ideas to the dangers of controversy. Speak your mind and fear less the label of crackpot than the stigma of conformity."
+    },
+    "96": {
+        "name": "Ziglar",
+        "on": "On Motivation",
+        "who": "Zig Zigler, sales trainer",
+        "quote": "People often say motivation doesn't last. Well neither does bathing--that's why wee recommend it daily."
+    },
+    "97": {
+        "name": "Robert H",
+        "on": "On Motivation",
+        "who": "Robert H, BBT moderator",
+        "quote": "Trade management is more important than pattern identification."
+    },
+    "98": {
+        "name": "O'Neil",
+        "on": "On Trading",
+        "who": "William O'Neil, American Entrepreneur",
+        "quote": "Successful trading is about finding rules that work and then sticking to those rules"
+    }
+}

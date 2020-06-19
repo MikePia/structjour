@@ -353,8 +353,18 @@ class Inspire:
             print(
                 "{0}, {1}\n{2}\n\t\t-{3}\n".format(qt['name'], qt['on'], qt['quote'], qt['who']))
 
+    def getJson(self, writetofile=None):
+        '''Get quotes as json'''
+        import json
+        # raw = '{"quotes":['
+        raw =  self.df.to_json(orient='index')
+        # jobj = json.loads(raw)
+        if writetofile:
+            tfile = open(writetofile, 'w')
+            n = tfile.write(raw)
+        return raw
 
-
+        
 class TradingPlan:
     '''
     Nail down those rules for day trading. Swing trading rules will be a seperate object
@@ -462,6 +472,12 @@ class TradingPlan:
                 print()
 
 
+def notmain():
+    i = Inspire()
+    q = i.getJson(writetofile='quotes.json')
+    print(q)
+    print
+
 def main():
     '''A local run to print a ranom quote'''
     i = Inspire()
@@ -475,4 +491,5 @@ def main():
     # tp.getRules(['a'])
 
 if __name__ == '__main__':
-    main()
+    # main()
+    notmain()
