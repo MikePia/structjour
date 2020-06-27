@@ -134,7 +134,7 @@ class Inspire:
             '''Instead of controlling our surroundings so they conform to our idea of the way thins should be, we can learn to control ourselves.'''
         ])
         quotes.append(["Douglas", "On Attitude", "Mark Douglas, Author Trading in the Zone",
-            '''If you have the right attitude--the right mind-set--then everything else about trading will be relatively easy, even simple, aand certainly a lot more fun.'''
+            '''If you have the right attitude--the right mind-set--then everything else about trading will be relatively easy, even simple, and certainly a lot more fun.'''
         ])
         quotes.append(["Douglas", "On Perception", "Mark Douglas, Author Trading in the Zone",
             '''If you perceive the endless stream of opportunities to enter and exit trades without self-criticism and regret, then you will be in the best frame of mind to act in you own best interest and learn from your experiences.'''
@@ -293,7 +293,7 @@ class Inspire:
             '''There is no success without hardship.'''
         ])
         quotes.append(["Sotomayor", "On Perseverance", "Sonia Sotomayer, associate justice Supreme Court",
-            '''No matter how things are for you, ther're harder for other people, and if you stick with it you can get around the brick walls in your life.'''
+            '''No matter how things are for you, they're harder for other people, and if you stick with it you can get around the brick walls in your life.'''
         ])
         quotes.append(["Spade", "On Integrity", "Kate Spade, designer",
             '''Live in such a way that if anyone speaks badly of you no one would believe it.'''
