@@ -323,7 +323,115 @@ class Inspire:
             '''Trade management is more important than pattern identification.'''
         ])
         quotes.append(["O'Neil", "On Trading", "William O'Neil, American Entrepreneur",
-            '''Successful trading is about finding rules that work and then sticking to those rules'''
+            '''Successful trading is about finding rules that work and then sticking to those rules.'''
+        ])
+        quotes.append(["Ryan", "On Challenges", "Nolan Ryan, Hall of fame basketball player",
+            '''One of the beautiful things about baseball is that every once in a while you come into a situation where you want to, and where you have to, reach down and prove something.'''
+        ])
+        quotes.append(["Roberts", "On Challenges", "Robin Roberts, newscaster",
+            '''Life is not so much what you accomplish as what you overcome.'''
+            ])
+        quotes.append(["Naisbitt", "On Awarness", "John Naisbitt, futurist and author",
+            '''The most reliable way to anticipate the future is to understand the present.'''
+        ])
+        quotes.append(["Federer", "On Perseverance", "Roger Federer, tennis star",
+            '''What I think I've been able to do well over the years is play with pain, play with problems, play in all sorts of conditions.'''
+        ])
+        quotes.append(["Iacocca", "On Goals", "Lee Iacocca, auto executive",
+            '''The discipline of writing something down is the first step toward making it happen.'''
+        ])
+        quotes.append(["Marden", "On Goals", "Orison Swett Marden, author",
+            '''All who have accomplished great things have had a great aim, have fixed their gaze on a goal which was high, one which sometimes seemed impossible.'''
+        ])
+        quotes.append(["Peters", "On Leadership", "Tom Peters, author and management consultant",
+            '''The simple act of paying positive attention to people has a great deal to do with productivity.'''
+        ])
+        quotes.append(["Adler", "On Leadership", "Felix Adler, philosopher",
+            '''The hero is the one who kindles a great light in the world, who sets up blazing torches in the dark streets of life for men to see by. The saint is the man who walks through the dark paths of the world, himself a light.'''
+        ])
+        quotes.append(["Rogers", "On Risk", "Will Rogers, actor",
+            '''You've got to go out on a limb sometimes because that's where the fruit is.'''
+        ])
+        quotes.append(["Sophocles", "On Adversity", "Sophocles, poet",
+            '''There is no success without hardship.'''
+        ])
+        quotes.append(["Washington", "On Confidence", "Booker T. Washington, educator",
+            '''Few things can help an individual more than to place responsibility on him and to let him know that you trust him.'''
+        ])
+        quotes.append(["Mark", "On Integrity", "Reuben Mark, retired Colgate-Palmolive CEO",
+            '''Stand up for what's right, in small matters and large ones, and always do what you promise.'''
+        ])
+        quotes.append(["DiCaprio", "On Personal Accountability", "Leonardo DiCaprio, actor",
+            '''Only you alone can change your situation.'''
+        ])
+        quotes.append(["Blakely", "On Originality", "Sara Blakely, Spanx Founder",
+            '''Don't be intimidated by what you don't know. This can be your greatest strength and ensure you do things differently from everyone else.'''
+        ])
+        quotes.append(["Navritilova", "On Respect", "Martina Navratilova, tennis player",
+            '''Labels are for filing. Labels are for clothing. Labels are not for people.'''
+        ])
+        quotes.append(["Voltaire", "On Admiration", "Voltaire, philosopher",
+            '''Appreciation is a wonderful thing. It makes what is excellent in others belong to us as well.'''
+        ])
+        quotes.append(["Sinek", "On Motivating", "Simon Sinek, author",
+            '''If you actions inspire others to dream more, learn more, do more and become more, you are a leader.'''
+        ])
+        quotes.append(["Bailey", "On Goals", "Donavon Bailey, sprinter",
+            '''Follow your passion, be prepared to work hard and sacrifice, and, above all, don't let anyone limit your dreams.'''
+        ])
+        quotes.append(["De Pree", "On Leadership", "Max De Pree, author",
+            '''The first responsibility of a leader is to define reality. The last is to say thank you. In between the two, the leader must become a servant and a debtor.'''
+        ])
+        quotes.append(["Pink", "On Teamwork", "Daniel Pink, author",
+            '''Control leads to compliance; autonomy leads to engagement.'''
+        ])
+        quotes.append(["Coolidge", "On Self-Improvement", "Calvin Coolidge, 30th U.S. president",
+            '''All growth depends on activity. There is no development physically or intellectually without effort, and effort means work.'''
+        ])
+        quotes.append(["Sowell", "On Empathy", "Thomas Sowell, economist",
+            '''Politeness and consideration for others is like investing pennies and getting dollars back.'''
+        ])
+        quotes.append(["Kelly", "On Leadership", "E.M. Kelly, U.S. Army pilot",
+            '''Remember the difference between a boss and a leader. A boss says, "Go!" -- a leader says, "Let's go!"'''
+        ])
+        quotes.append(["McGill", "On Listeneing", "Bryant McGill, author",
+            '''One of the most sincere forms of respect is actually listening to what another has to say.'''
+        ])
+        quotes.append(["De Bono", "On Ethics", "Edward de Bono, author",
+            '''Effectiveness without values is a tool without a purpose.'''
+        ])
+        quotes.append(["Stanwyck", "On Conscience", "Barbara Stanwyck, actress",
+            '''I don't give a damn what other people think of me, as long as I'm doing something I think is right.'''
+        ])
+        quotes.append(["L'Amour", "On Personal Responsibility", "Louis L'Amour, author",
+            '''Everyone has the power to say, "This I am today. That I shall be tomorrow."'''
+        ])
+        quotes.append(["West", "On Belief", "Jerry West, basketball player",
+            '''Confidence is a lot of this game. If you don't think you can, you won't.'''
+        ])
+        quotes.append(["Earhart", "On Desire", "Amelia Earhart, aviator",
+            '''Whether you are flying the Atlantic, selling sausages, building a skyscraper, driving a truck or painting a picture, your greatest power comes from the fact that you want tremendously to do that very thing well.'''
+        ])
+        quotes.append(["Gracian", "On Character", "Baltasar Gracian, writer",
+            '''A single lie destroys a whole reputation of integrity.'''
+        ])
+        quotes.append(["Ford", "On Focus", "Henry Ford, car pioneer",
+            '''Obstacles are those frightful things you see when you take your eyes off your goal.'''
+        ])
+        quotes.append(["Firestone", "On Teaching", "Harvey Firestone, tire entrepreneur",
+            '''It is only as we develop others that we permanently succeed.'''
+        ])
+        quotes.append(["Rogers", "On Giving Back", "Kenny Rogers, singer",
+            '''I just hope I can spread some of the happiness that's been comming my way.'''
+        ])
+        quotes.append(["Rubin", "On Consistency", "Gretchen Rubin. author",
+            '''What we do every day matters more than what we do once in a while.'''
+        ])
+        quotes.append(["Kondo", "On Productivity", "Marie Kondo, organizing consultant",
+            '''Keep only those things that speak to you heart. Then take the plunge and discard all the rest.'''
+        ])
+        quotes.append(["Garrison", "On Conscience", "William Lloyd Garrison, abolitionist",
+            '''I will be as harsh as truth and as uncompromising as justice.'''
         ])
 
         df = pd.DataFrame(data=quotes, columns=['name', 'on', 'who', 'quote'])
@@ -474,7 +582,7 @@ class TradingPlan:
 
 def notmain():
     i = Inspire()
-    q = i.getJson(writetofile='quotes.json')
+    q = i.getJson(writetofile='structjour/inspiration/quotes.json')
     print(q)
     print
 
