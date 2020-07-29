@@ -15,6 +15,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
+Site is relaunched and it does not work for us. It only suppors the EOD end point for free
+Key = 
+0548796cf6534349cb04c33afaaa4575
+0548796cf6534349cb04c33afaaa4575
+https://marketstack.com/dashboard  Requires you have already logged in. Can change key here
+https://marketstack.com/documentation
+0548796cf6534349cb04c33afaaa4575
+exampleEndPoint =  "http://api.marketstack.com/v1/eod?access_key=0548796cf6534349cb04c33afaaa4575&symbols=AAPL"
 A module to access WorldTradingData API. From the REStful source. This looks like an amazing addition to structjour
 @author: Mike Petersen
 @creation_date: 9/30/19
@@ -33,10 +41,11 @@ base_wtd = 'https://api.worldtradingdata.com/api/v1/'
 
 
 def getExamples():
-    intraday = f'https://intraday.worldtradingdata.com/api/v1/intraday?symbol=BBBY&range=10&interval=60&api_token={getApiKey()}'
-    realTime = f'https://api.worldtradingdata.com/api/v1/stock?symbol=AAPL,MSFT,HSBA.L&api_token={getApiKey()}'
-    histOHLCV = f'https://api.worldtradingdata.com/api/v1/history?symbol=AAPL&sort=newest&api_token={getApiKey()}'
-    fullHistory = f'https://api.worldtradingdata.com/api/v1/history?symbol=SQ&api_token={getApiKey()}&output=csv&sort=oldest'
+    eod = f'http://api.marketstack.com/v1/eod?access_key={getApiKey()}&symbols=AAPL'
+    # intraday = f'https://intraday.worldtradingdata.com/api/v1/intraday?symbol=BBBY&range=10&interval=60&api_token={getApiKey()}'
+    # realTime = f'https://api.worldtradingdata.com/api/v1/stock?symbol=AAPL,MSFT,HSBA.L&api_token={getApiKey()}'
+    # histOHLCV = f'https://api.worldtradingdata.com/api/v1/history?symbol=AAPL&sort=newest&api_token={getApiKey()}'
+    # fullHistory = f'https://api.worldtradingdata.com/api/v1/history?symbol=SQ&api_token={getApiKey()}&output=csv&sort=oldest'
     return [intraday, realTime, histOHLCV, fullHistory]
 
 
@@ -255,9 +264,11 @@ def main():
         print(df.tail(2))
     else:
         print(meta['message'])
-
+def relaunch():
+    print(getApiKey())
 
 if __name__ == '__main__':
+    relaunch()
     # notmain()
-    text = 'You have reached your request limit for the day. Upgrade to get more daily requests.'
-    main()
+    # text = 'You have reached your request limit for the day. Upgrade to get more daily requests.'
+    # main()

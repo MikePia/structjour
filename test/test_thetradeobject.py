@@ -39,7 +39,7 @@ from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.statement import getStatementType
 from structjour.statements.dasstatement import DasStatement
-from structjour.stock.utilities import isNumeric
+from structjour.utilities.util import isNumeric
 
 # pylint: disable = C0103, W0212, C0111
 
