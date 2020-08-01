@@ -447,10 +447,10 @@ def exercisegetListsOfTradesForStrategies():
 
 
 def dostuff():
-    # ModelBase.connect()
-    # ModelBase.createAll()
+    ModelBase.connect()
+    ModelBase.createAll()
 
-    # addTags()
+    addTags()
     # appendTags()
     # releaseTags()
     # setActive()
@@ -460,7 +460,7 @@ def dostuff():
 
     # getIntraStuff()
     # getTradeSumAccounts()
-    getStrategyStuff()
+    # getStrategyStuff()
 
 
 def notmain():
@@ -471,5 +471,5 @@ def notmain():
 
 
 if __name__ == '__main__':
-    # dostuff()
-    notmain()
+    dostuff()
+    # notmain()

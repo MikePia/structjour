@@ -38,10 +38,9 @@ from structjour.version import version
 
 # This is the last of the old DBAPI migrations and will update to sqlalchemy
 # when it, and my evolving rollyourown migration is better understood, fleshed out, and tested.
-# This runs from import before any code is run and causes
-# python to make its own handlers and log to nowhere in particular and it messes
-# with logging.basicConfig
-# For now logging is removed from migration modules. This is transitional code.
+# This runs from import before any code is run and causes python to make its own handlers 
+# and log to nowhere in particular and it messes with logging.basicConfig. For now logging is 
+# removed from migration modules. This is transitional code.
 class Migrate(StatementDB):
 
     settings = QSettings('zero_substance', 'structjour')

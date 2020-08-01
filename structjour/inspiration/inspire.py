@@ -352,9 +352,6 @@ class Inspire:
         quotes.append(["Rogers", "On Risk", "Will Rogers, actor",
             '''You've got to go out on a limb sometimes because that's where the fruit is.'''
         ])
-        quotes.append(["Sophocles", "On Adversity", "Sophocles, poet",
-            '''There is no success without hardship.'''
-        ])
         quotes.append(["Washington", "On Confidence", "Booker T. Washington, educator",
             '''Few things can help an individual more than to place responsibility on him and to let him know that you trust him.'''
         ])
@@ -424,7 +421,7 @@ class Inspire:
         quotes.append(["Rogers", "On Giving Back", "Kenny Rogers, singer",
             '''I just hope I can spread some of the happiness that's been comming my way.'''
         ])
-        quotes.append(["Rubin", "On Consistency", "Gretchen Rubin. author",
+        quotes.append(["Rubin", "On Consistency", "Gretchen Rubin, author",
             '''What we do every day matters more than what we do once in a while.'''
         ])
         quotes.append(["Kondo", "On Productivity", "Marie Kondo, organizing consultant",

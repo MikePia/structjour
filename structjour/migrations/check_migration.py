@@ -26,11 +26,13 @@ import migrations to date and provide success check
 import logging
 import structjour.migrations._0002_structjour_statement_ibstatementdb as migrate0002
 import structjour.migrations._0003_model_trade_sum_dataonly as migrate0003
+import structjour.migrations._0004_addTableInspireQuote as migrate0004
 
 
 def checkMigration(settings):
-    if migrate0002.Migrate.isUpdated() is True and (
-            migrate0003.Migrate.isUpdated() is True):
+    if (migrate0002.Migrate.isUpdated() is True) and (
+            migrate0003.Migrate.isUpdated() is True) and(
+            migrate0004.Migrate.isUpdated() is True):
         logging.info('Database is up to date')
     else:
         logging.error('Failed to update the database')
