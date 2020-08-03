@@ -430,6 +430,18 @@ class Inspire:
         quotes.append(["Garrison", "On Conscience", "William Lloyd Garrison, abolitionist",
             '''I will be as harsh as truth and as uncompromising as justice.'''
         ])
+        quotes.append(["Blevins", "On Wisdom", "Tyler Blevinsn, professional gamer",
+            '''You learn more when you lose than when you win. You just try no to get completely tilted when things are out of your control'''
+        ])
+        quotes.append(["Fauci", "On Teamwork", "Anthony Fauci, NIAID",
+            '''It's almost impossible to do anything meaningful without either leading a team or being part of the team. You want to be able to get someone who's looking to answer the question, as opposed to looking for self-aggrandizement'''
+        ])
+        quotes.append(["Ariely", "On Happiness", "Dan Ariely, psychologist",
+            '''Happiness isn't just about what we have and don't have; it's also about not constantly looking for something better'''
+        ])
+        quotes.append(["Haidt", "On Resilience", "Jonathan Haidt, psychologist",
+            '''The key concept everyone has to understand is hardship generally makes people stronger. Fear, challenge, thread -- unless they are extreme -- tend to produce growth, not damage.'''
+        ])
 
         df = pd.DataFrame(data=quotes, columns=['name', 'on', 'who', 'quote'])
         self.df = df
@@ -444,6 +456,7 @@ class Inspire:
         quote = qt['quote'].replace('\n', ' ')
         ret = "{0}, {1}\n{2}\n\t\t-{3}".format(
             qt['name'], qt['on'], quote, qt['who'])
+            
 
         return ret
 
@@ -459,7 +472,12 @@ class Inspire:
                 "{0}, {1}\n{2}\n\t\t-{3}\n".format(qt['name'], qt['on'], qt['quote'], qt['who']))
 
     def getJson(self, writetofile=None):
-        '''Get quotes as json'''
+        '''
+        This is unrelated to structjour, but the quotes.json file sits in the structjour directory structure.
+        It is available as a raw file hosted by github and used, currently, by a fcc/codepen project.
+        This local utility updates the local quotes.json file. After updating it, format it (vscode) and check 
+        it in.
+        '''
         import json
         # raw = '{"quotes":['
         raw =  self.df.to_json(orient='index')
