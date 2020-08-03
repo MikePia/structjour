@@ -23,7 +23,8 @@ sqlalchemy models for inspire quotes
 
 A Single table to hold quotes. Its use expanded to include a json output unrelated to structjour
 '''
-from sqlalchemy import Column, String, Integer, Boolean
+import logging
+from sqlalchemy import Column, String, Integer, Boolean, func
 from structjour.models.meta import Base, ModelBase
 
 class Inspire(Base):
@@ -44,7 +45,8 @@ class Inspire(Base):
     def loadQuotes(cls, inspireQuote):
         '''
         This is a one-off to load the quotes in the inspiration.inspire.Inspire class.
-        Its a one-off becasue we have to seperate 2 fields from one
+        Its a one-off becasue we have to seperate 2 fields from one. If the quote
+        already exists, leave it and skip it.
         '''
         ModelBase.connect(new_session=True)
         session = ModelBase.session
@@ -74,11 +76,142 @@ class Inspire(Base):
                 session.commit()
             except:
                 pass
+        
+    @classmethod
+    def clear(cls):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        session.query(Inspire).delete()
+        session.commit()
+
+    @classmethod
+    def add(cls, lname='', subject='', name='', who='', quote=''):
+        '''
+         :raises: ValueError if all arguments are not supplied
+        '''
+        if not (lname and subject and name and who and quote):
+            msg = 'All parameters are required to have data'
+            logging.error(msg)
+            raise ValueError(msg)
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        insp = Inspire(
+            lname = lname,
+            subject=subject,
+            name=name,
+            who=who,
+            quote=quote
+        )
+        session.add(insp)
+        session.commit()
+
+    @classmethod
+    def getQuote(cls, id=-1, name=''):
+        '''
+        Get a quote by id or  name 
+        :return: list
+        :raises: ValueError if neither id or name are supplied
+        '''
+        if id == -1  and not name:
+            msg = 'either id or name needs to be supplied'
+            logging.error(msg)
+            raise ValueError(msg)
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        if id > -1:
+            q = session.query(Inspire).filter_by(id=id).one_or_none()
+            if q:
+                return [q]
+            return []
+        q = session.query(Inspire).filter_by(name=name).all()
+        return q
+
+    @classmethod
+    def delete(cls, id=-1, obj=None):
+        new_session = True
+        if id == -1:
+            new_session = False
+        ModelBase.connect(new_session=new_session)
+        session = ModelBase.session
+        if id == -1:
+            session.delete(obj)
+            session.commit()
+            return
+        q = session.query(Inspire).filter_by(id=id).one_or_none()
+        if not q:
+            return
+        session.delete(q)
+        session.commit()
+
+    @classmethod
+    def update(cls, obj):
+        '''
+        Commit obj to database
+        :params obj: <Inspire>  An updated obj to commit
+        '''
+        # ModelBase.connect()
+        if isinstance(obj, Inspire):
+            session = ModelBase.session
+            session.commit()
+
+    @classmethod
+    def getRandom(cls):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Inspire).order_by(func.random()).first()
+        print(q)
+        return q
+    
+
             
+def clearQuotes():
+    '''
+    Local proof of concept
+    '''
+    # from structjour.inspiration.inspire import Inspire as InspireQuote
+    Inspire.clear()
+
+def add():
+    '''Local proof of concept'''
+    try:
+        Inspire.add(lname='Brown')
+    except ValueError:
+        print ('This is supposed to happend')
+    x = Inspire.add(lname="Brown", subject="On Happiness", name="Charlie Brown", who="fictional authority", 
+                quote="Happiness is kicking the football")
+    print()
+
+def getQuote():
+    x = Inspire.getQuote(id=239)
+    if x:
+        print(x[0].quote)
+    x = Inspire.getQuote(name="Michael Jordan")
+    if x:
+        print(x[0].quote)
+    print()
+
+def delete():
+    '''
+    Local proof of concept. Will delete the first Charilie Brown quote or do nothing.
+    '''
+    x = Inspire.getQuote(name='Charlie Brown')
+    if x:
+        Inspire.delete(obj=x[0])
+
+def update():
+    qte = Inspire.getQuote(name='Charlie Brown')
+    qte[0].quote = 'Happiness is two kinds of ice cream'
+    Inspire.update(qte[0])
+
+def getRandom():
+    return Inspire.getRandom()
 
 
 
 def loadQuotes():
+    '''
+    Local proof of concept
+    '''
     from structjour.inspiration.inspire import Inspire as InspireQuote
     import pandas as pd
     iq = InspireQuote()
@@ -86,9 +219,16 @@ def loadQuotes():
 
 
 def doStuff():
-    loadQuotes()
-
-    pass
+    # loadQuotes()
+    # clearQuotes()
+    # try:
+    #     add()
+    # except:
+    #     pass
+    # update()
+    # getQuote()
+    # delete()
+    getRandom()
 
 if __name__ == '__main__':
     doStuff()

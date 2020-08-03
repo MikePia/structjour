@@ -36,7 +36,8 @@ from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon
 
 import pandas as pd
 
-from structjour.inspiration.inspire import Inspire
+# from structjour.inspiration.inspire import Inspire
+from structjour.inspiration.load import InspireCrud as Inspire
 from structjour.models.trademodels import Tags, TradeSum
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.utilities.util import isNumeric

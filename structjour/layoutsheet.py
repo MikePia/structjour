@@ -34,7 +34,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.styles import Font, colors
 
-from structjour.inspiration.inspire import Inspire
+from structjour.inspiration.load import InspireCrud as Inspire
 from structjour.dfutil import DataFrameUtil
 from structjour.colz.finreqcol import FinReqCol
 from structjour.tradestyle import c as tcell
