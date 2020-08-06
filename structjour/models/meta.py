@@ -77,14 +77,14 @@ class ModelBase:
     #         # logging.info(f"Ready to update the database: {cls.settings.value('tradeDb')}")
 
     @classmethod
-    def connect(cls, new_session=False, con_str=None):
+    def connect(cls, new_session=False, con_str=None, db='tradeDb'):
         if con_str is None:
-            if cls.settings.value('tradeDb') is None:
+            if cls.settings.value(db) is None:
                 cls.engine = None
                 cls.session = None
                 return
             else:
-                cls.db = "sqlite:///" + cls.settings.value('tradeDb')
+                cls.db = "sqlite:///" + cls.settings.value(db)
         else:
             cls.db = con_str
 

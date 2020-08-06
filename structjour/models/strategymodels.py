@@ -32,9 +32,9 @@ should probably be a column in strategy-- that means migration. (But after sa tr
 complete)
 '''
 
-from sqlalchemy import (Integer, Column, String, Boolean, ForeignKey)
-from sqlalchemy.orm import relationship
-from structjour.models.meta import Base
+from sqlalchemy import (Integer, Column, String, Boolean, ForeignKey, and_)
+from sqlalchemy.orm import relationship, backref
+from structjour.models.meta import Base, ModelBase
 
 
 class Source(Base):
@@ -56,6 +56,74 @@ class Strategy(Base):
     def __repr__(self):
         return f'<Strategy({self.name})>'
 
+    @classmethod
+    def getId(cls, name):
+        '''
+        Get the id of the strategy named name or return None if not found
+        '''
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        q = session.query(Strategy.id).filter_by(name=name).one_or_none()
+        if not q: return None
+        return q.id
+
+    @classmethod
+    def addStrategy(cls, name, preferred=True):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        strat = Strategy(name=name, preferred = preferred)
+        session.add(strat)
+        session.commit()
+
+    @classmethod
+    def getStrategy(cls, name=None, sid=None):
+
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        if name:
+            q = session.query(Strategy).filter_by(name=name).one_or_none()
+            return q
+
+        return session.query(Strategy).filter_by(id=sid).one_or_none()
+
+    @classmethod
+    def removeStrategy(cls, name):
+        strat = Strategy.getStrategy(name)
+        if strat:
+            ModelBase.session.delete(strat)
+            ModelBase.session.commit()
+
+    @classmethod
+    def getStrategies(cls):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        strats = session.query(Strategy).all()
+        return strats
+
+    @classmethod
+    def getPreferred(cls, pref=1):
+        '''Returns all strategies marked preferred'''
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        pref = session.query(Strategy).filter_by(preferred=True).all()
+        return pref
+
+    @classmethod
+    def setPreferred(cls, name, pref):
+        strat = Strategy.getStrategy(name=name)
+        if strat:
+            strat.preferred = False
+            ModelBase.session.commit()
+        
+
+    @classmethod
+    def removeStrategy(cls, name):
+        '''Uses session from getStrategy'''
+        strat = Strategy.getStrategy(name=name)
+        if strat:
+            ModelBase.session.delete(strat)
+            ModelBase.session.commit()
+
 
 class Description(Base):
     __tablename__ = "description"
@@ -67,11 +135,50 @@ class Description(Base):
     thesource = relationship('Source', backref='descriptionsource')
 
     strategy_id = Column(Integer, ForeignKey('strategy.id'))
-    thestrategy = relationship('Strategy', backref='description')
+    thestrategy = relationship('Strategy', 
+                  backref=backref('description', cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f'<Description({self.thestrategy})>'
 
+    @classmethod
+    def getDescription(cls, name):
+        '''Uses session from getId'''
+        strat_id = Strategy.getId(name)
+        if strat_id:
+            desc = ModelBase.session.query(Description).filter_by(strategy_id = strat_id).one_or_none()
+
+            return desc
+
+    @classmethod
+    def setDescription(self, name, desc):
+        '''
+        Update description or add description if it does noe exist.
+        If the strategy represented by name does not exist ....
+        
+        '''
+        sid = Strategy.getId(name)
+        if not sid:
+            # Going to create a new strategy here
+            Strategy.addStrategy(name)
+            sid = Strategy.getId(name)
+        
+        session = ModelBase.session
+        theDesc = session.query(Description).filter_by(strategy_id=sid).one_or_none()
+        if theDesc:
+            theDesc.description = desc
+        else:
+            theDesc = Description(
+                description = desc,
+                # Set source to user (implementing strat packages?)
+                # TODO this is a bit dodgy, get it from the source  table instead
+                source_id = 2,
+                strategy_id = sid
+
+            )
+        session.add(theDesc)
+        session.commit()
+            
 
 class Images(Base):
     __tablename__ = "images"
@@ -80,7 +187,47 @@ class Images(Base):
     widget = Column(Integer)
     strategy_id = Column(Integer, ForeignKey('strategy.id'))
 
-    strategy = relationship('Strategy', backref='images')
+    strategy = relationship('Strategy', 
+                    backref=backref('images', cascade="all, delete-orphan"))
+
+
+    @classmethod    
+    def getImage(cls, strat, widget):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        # Implicit join retrives a list[image, strategy]
+        q = session.query(Images, Strategy).filter(and_(
+            Strategy.id == Images.strategy_id,
+            Strategy.name == strat,
+            Images.widget == widget)).one_or_none()
+        return q
+
+    @classmethod
+    def setImage(cls, strat, name, widget):
+        '''
+        Uses session created in getImage. 
+        '''
+        img = Images.getImage(strat, widget)
+        if img:
+            img.name = name
+            ModelBase.session.commit()
+        else:
+            strat_id = Strategy.getId(strat)
+            if strat_id:
+                img = Images(
+                    name=name,
+                    widget=widget,
+                    strategy_id = strat_id
+                )
+                ModelBase.session.add(img)
+                ModelBase.session.commit()
+
+    @classmethod
+    def removeImage(cls, strat, widget):
+        img = Images.getImage(strat, widget)
+        if img and isinstance(img[0], Images):
+            ModelBase.session.delete(img[0])
+            ModelBase.session.commit()
 
 
 class Links(Base):
@@ -90,3 +237,27 @@ class Links(Base):
     strategy_id = Column(Integer, ForeignKey('strategy.id'))
 
     strategy = relationship('Strategy', backref='links')
+
+    @classmethod
+    def setLink(cls, name, url):
+        '''Uses session created in getId'''
+        sid = Strategy.getId(name)
+        strat = Links( link=url, strategy_id = sid)
+        ModelBase.session.add(strat)
+        ModelBase.session.commit()
+
+    @classmethod
+    def getLinks(cls, name):
+        '''Uses session created in getId'''
+        sid = Strategy.getId(name)
+        q = ModelBase.session.query(Links).filter_by(strategy_id=sid).all()
+        return q
+
+    @classmethod
+    def removeLink(cls, name, url):
+        '''Uses session created in getId'''
+        sid = Strategy.getId(name)
+        q = ModelBase.session.query(Links).filter_by(strategy_id=sid, link=url).one_or_none()
+        if q:
+            ModelBase.session.delete(q)
+            ModelBase.session.commit()

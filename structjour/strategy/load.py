@@ -16,100 +16,207 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 '''
-This is a temporary version of this file. It loads the strategies entirely from The StrategyObject as the default
-descriptions. Before release, and depending on if this is a webapp, Django, Drupal or standalone, do the right thing.
+Updating this module from an outside utility to a tool that structjour uses.
+By default strategies are empty for new users. All strategies must be added
+by the user using the strategy browser. Note that the strategies in statisticsHub
+are generated from the strategies named in tradeObjects only
 '''
-import sqlite3
-from structjour.strategy.strat import TheStrategyObject
-# import pandas as pd
+from structjour.models.meta import ModelBase
+from structjour.models.strategymodels import Source, Strategy, Description, Images, Links
 
-conn = sqlite3.connect('t1.sqlite')
-cur = conn.cursor()
+class StrategyCrud:
+    '''
+    Implement the required methods of structjour.strategy.strategies.Strategy with SA.
+    '''
+    def getId(self, name):
+        if not name: return []
+        q = Strategy.getId(name)
+        return q
 
-cur.execute('DROP TABLE IF EXISTS strategy')
-cur.execute('DROP TABLE IF EXISTS description')
-cur.execute('DROP TABLE IF EXISTS source')
-cur.execute('DROP TABLE IF EXISTS images')
-cur.execute('DROP TABLE IF EXISTS links')
+    def addStrategy(self, name, preferred=1):
+        Strategy.addStrategy(name, preferred)
 
-cur.execute('''
-    CREATE TABLE strategy (
-        id	INTEGER PRIMARY KEY AUTOINCREMENT,
-        name	text UNIQUE,
-        short_name	text,
-        preferred	INTEGER DEFAULT 1);''')
+    def getStrategy(self, name=None, id=None):
+        s = Strategy.getStrategy(name, id)
+        if not s:
+            return None
+        return s.name
 
-cur.execute('''
-CREATE TABLE source (
-    id integer PRIMARY KEY,
-    datasource text
-);''')
+    def removeStrategy(self, name):
+        Strategy.removeStrategy(name)
 
-cur.execute('''
-CREATE TABLE description (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            description text,
-            source_id integer,
-            strategy_id INTEGER UNIQUE,
-            FOREIGN KEY (source_id) REFERENCES source(id),
-            FOREIGN KEY (strategy_id) REFERENCES strategy(id)
-);''')
+    def getStrategies(self):
+        strats = Strategy.getStrategies()
+        # manipulate this to match the return from the old DBAPI method
+        strats = [[x.id, x.name, x.preferred] for x in strats]
+        return strats
 
-cur.execute('''
-CREATE TABLE images (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name    TEXT UNIQUE,
-    widget	INTEGER CHECK(widget="chart1" OR widget="chart2"),
-    strategy_id	INTEGER,
-    FOREIGN KEY(strategy_id) REFERENCES strategy(id)
-);''')
+    def getPreferred(self, pref=1):
+        strats = Strategy.getPreferred(pref)
+        # Manipulate results to match DBAPI method
+        strats = [[x.id, x.name, x.preferred] for x in strats]
+        return strats
 
-cur.execute('''
-CREATE TABLE links (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    link text,
-    strategy_id integer,
-    FOREIGN  KEY (strategy_id) REFERENCES strategy(id)
-);''')
-conn.commit()
+    def setPreferred(self, name, pref):
+        Strategy.setPreferred(name, pref)
 
-#  Cannot get the FOREIGN KEY constraints to run-- whats wrong?
-#  FOREIGN KEY (strategy_id) REFERENCES strategy(strategy.id)
+    def setLink(self, name, url):
+        return Links.setLink(name, url)
 
+    def getLinks(self, name):
+        '''
+        Get links for the strategey 'name'
+        :return: list<string>: Get a list of urls
+        '''
+        if not name: return []
+        links=Links.getLinks(name)
+        xlist = [link.link for link in links]
+        return xlist
 
-# These three entries are required before adding any strategies
-# I should not have to supply the ID but I get this error without:
-# Incorrect number of bindings supplied. The current statement uses 1, and there are 13 supplied.
-entries = ['default', 'user', 'contrib']
-for i in range(len(entries)):
-    cur.execute('''INSERT INTO source (id, datasource)
-                VALUES(?, ?)''',
-                (i + 1, entries[i]))
+    def removeLink(self, name, url):
+        Links.removeLink(name, url)
 
-tso = TheStrategyObject()
-for strat, count in zip(tso.s1, range(len(tso.s1))):
-    count = count + 1
-    if len(strat) > 1:
-        cur.execute('''INSERT INTO strategy(id, name, short_name, preferred)
-            VALUES(?, ?, ?, ?)''',
-                    (count, strat[0], strat[1], 1))
-    else:
-        cur.execute('''INSERT INTO strategy(id, name, preferred)
-            VALUES(?, ?, ?)''',
-                    (count, strat[0], 1))
+    def getImage(self, strat, widget):
+        obj =  Images.getImage(strat, widget)
+        return obj[0].name if obj else None
 
-cur.execute('SELECT id FROM source WHERE datasource = ?', ('default',))
-source_id = cur.fetchone()[0]
-# cur.execute('SELECT id FROM strategy WHERE name = ?', ('default',))
-conn.commit()
+    def getImage1(self, strat):
+        return self.getImage(strat, 'chart1')
 
-for key, count in zip(tso.strats.keys(), range(len(tso.strats.keys()))):
-    cur.execute('SELECT id FROM strategy WHERE name = ?', (key,))
-    strategy_id = cur.fetchone()[0]
-    cur.execute('''INSERT INTO description(id, description, source_id, strategy_id)
-        VALUES(?, ?, ?, ?)''',
-                (count, tso.strats[key][1], source_id, strategy_id))
-conn.commit()
+    def getImage2(self, strat):
+        return self.getImage(strat, 'chart2')
+
+    def setImage1(self, strat, name):
+        Images.setImage(strat, name, 'chart1')
+
+    def setImage2(self, strat, name):
+        Images.setImage(strat, name, 'chart2')
+
+    def removeImage1(self, strat):
+        Images.removeImage(strat, 'chart1')
+
+    def removeImage2(self, strat):
+        Images.removeImage(strat, 'chart2')
+
+    def getDescription(self, name):
+        desc =  Description.getDescription(name)
+        return desc.description if desc else None
 
 
-conn.commit()
+    def setDescription(self, name, desc):
+        Description.setDescription(name, desc)
+
+
+def getid():
+    '''Local proof of concept'''
+    sCrud = StrategyCrud()
+    print(sCrud.getId('VWAP Support'))
+
+def setlink():
+    '''Local proof of concept'''
+    sCrud = StrategyCrud()
+    sCrud.setLink('VWAP Support', 'https://fictional/web/site')
+
+def getLinks():
+    '''Local proof of concept'''
+    scrud = StrategyCrud()
+    print(scrud.getLinks('ABCD'))
+    print()
+
+def getimage1():
+    scrud = StrategyCrud()
+    print(scrud.getImage1('ABCD'))
+
+
+def setimage1():
+    scrud = StrategyCrud()
+    scrud.setImage1("Schnork", '/c/schnork/image/for/chart/1')
+
+def setimage2():
+    scrud = StrategyCrud()
+    scrud.setImage2("Schnork", '/c/schnork/image/for/chart/2')
+
+def removeimage():
+    scrud = StrategyCrud()
+    scrud.removeImage1('Schnork')
+    scrud.removeImage2('Schnork')
+
+
+
+def removelink():
+    '''Local proof of concept- removes the link added in setlink'''
+    scrud = StrategyCrud()
+    scrud.removeLink('VWAP Support', 'https://fictional/web/site')
+
+ 
+def addstrategy():
+    '''Local proof of concept'''
+    scrud = StrategyCrud()
+    try: 
+        scrud.addStrategy('Schnork')
+    except Exception as ex:
+        print(ex)
+        print('Schnork already exists')
+
+def getstrategy():
+    '''Local proof of concept'''
+    scrud = StrategyCrud()
+    s = scrud.getStrategy(name="ABCD")
+    print(s)
+
+def removestrategy():
+    scrud = StrategyCrud()
+    scrud.removeStrategy('Schnork')
+
+def getstrategies():
+    '''Local proof of concept'''
+    scrud = StrategyCrud()
+    ss = scrud.getStrategies()
+    for s in ss:
+        print(s[1])
+
+def getpreferred():
+    '''Local proof of concept'''
+    scrud = StrategyCrud()
+    ss = scrud.getPreferred()
+    for s in ss:
+        print(s[1])
+
+def setpreferred():
+    '''Local proof of concept'''
+    scrud = StrategyCrud()
+    scrud.setPreferred("Schnork",  pref=True)
+
+
+def getdescription():
+    scrud = StrategyCrud()
+    print (scrud.getDescription(name = 'Rising Devil'))
+    print (scrud.getDescription(name = 'Rising Fred'))
+
+def setdescription():
+    name = 'Mistake'
+    desc = "The description for the mistake category is don't do that anymore. But still ..."
+    scrud = StrategyCrud()
+    scrud.setDescription(name, desc)
+    scrud.setDescription('schnorrkel2', 'No need to describe schnorkel2. Everyone knows it well')
+
+
+if __name__ == '__main__':
+    # getid()
+    # setlink()
+    # getLinks()
+    # removelink()
+    # getimage1()
+    # setimage1()
+    # setimage2()
+    # removeimage()
+    # addstrategy()
+    # getstrategy()
+    removestrategy()
+    # getstrategies()
+    # getpreferred()
+    # setpreferred()
+    # getdescription()
+    # setdescription()
+
+
