@@ -50,7 +50,7 @@ class MigrateModel(Base):
 
 class ModelBase:
     '''
-    Contains common methods for migration and static variables used by sqlalchemy stuff
+    Contains common methods for and static variables used by sqlalchemy stuff. 
     '''
 
     settings = QSettings('zero_substance', 'structjour')
@@ -59,25 +59,15 @@ class ModelBase:
     session = None
     engine = None
 
-    conn = None
-    cur = None
-
-    # @classmethod
-    # def checkDbStatus(cls):
-    #     if cls.settings.value('tradeDb') is None:
-    #         return
-    #     if not os.path.exists(cls.settings.value('tradeDb')):
-    #         msg = f"Database connection is not setup correctly: {cls.settings.value('tradeDb')}"
-    #         # logging.error(msg)
-    #         print(msg)
-    #         cls.settings.remove('tradeDb')
-    #         # raise ValueError(msg)
-    #     else:
-    #         print(f"Ready to update the database: {cls.settings.value('tradeDb')}")
-    #         # logging.info(f"Ready to update the database: {cls.settings.value('tradeDb')}")
-
     @classmethod
     def connect(cls, new_session=False, con_str=None, db='tradeDb'):
+        '''
+        Create the engine and bind the session to a database
+        :params new_session: Bind to a new session if True
+        :params con_str: Use this variable to supply a database url. Using con_str
+        will override the db argument.
+        :params db: A QSettings key to provide a file url to a sqlite db.
+        '''
         if con_str is None:
             if cls.settings.value(db) is None:
                 cls.engine = None
@@ -108,11 +98,3 @@ class ModelBase:
         if cls.engine is None:
             raise ValueError('ModelBase.connect() must be called prior to createAll()')
         Base.metadata.create_all(cls.engine)
-
-
-def dostuff():
-    pass
-
-
-if __name__ == '__main__':
-    dostuff()

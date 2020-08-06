@@ -115,6 +115,9 @@ class Backup:
     def backupDatabase(self, theDir=None):
         '''
         Helper method for backup.
+        If either db file is not found, change the backup dir name to include
+        'FAILED'. That will prevent a bad restore and retain files and settings
+        in the directory
         '''
         self.bdir = self.bdir if theDir is None else theDir
         if not os.path.exists(self.bdir):
@@ -124,11 +127,29 @@ class Backup:
         dbstructjour2 = os.path.split(self.dbstructjour)[1]
         dbtrade2 = os.path.normpath(os.path.join(self.bdir, dbtrade2))
         dbstructjour2 = os.path.normpath(os.path.join(self.bdir, dbstructjour2))
-        copyfile(self.dbtrade, dbtrade2)
-        logging.info(f'Trade database has been backed up to {dbtrade2}')
+        try:
+            copyfile(self.dbtrade, dbtrade2)
+        except FileNotFoundError:
+            logging.error(f'Trade database does not exist at {self.dbtrade} and cannot be copied')
+            changebdir = self.bdir[0:-17] + "FAILED_" + self.bdir[-17:]
+            os.rename(self.bdir, changebdir)
+            self.bdir = changebdir
+            dbstructjour2 = os.path.normpath(os.path.join(self.bdir, os.path.split(dbstructjour2)[1]))
+        else:
+            logging.info(f'Trade database has been backed up to {dbtrade2}')
         if dbtrade2 != dbstructjour2:
-            copyfile(self.dbstructjour, dbstructjour2)
-            logging.info(f'Structjour database has been backed up to {dbstructjour2}')
+            logging.info(f'Trade database has been backed up to {dbtrade2}')
+            try:
+                copyfile(self.dbstructjour, dbstructjour2)
+            except FileNotFoundError:
+                logging.error(f'Structjour database does not exist at {self.dbstructjour} and cannot be copied')
+                if self.bdir.find('FAILED_') == -1:
+                    changedir = self.bdir[0:-17] + "FAILED" + self.bdir[-17:]
+                    os.rename(self.bdir, changebdir)
+
+            else:
+
+                logging.info(f'Structjour database has been backed up to {dbstructjour2}')
 
     def restoreDatabase(self, theDir=None):
         self.bdir = self.bdir if theDir is None else theDir

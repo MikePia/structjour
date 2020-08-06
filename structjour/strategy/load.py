@@ -21,13 +21,21 @@ By default strategies are empty for new users. All strategies must be added
 by the user using the strategy browser. Note that the strategies in statisticsHub
 are generated from the strategies named in tradeObjects only
 '''
+import logging
+
+from PyQt5.QtCore import QSettings
+
 from structjour.models.meta import ModelBase
 from structjour.models.strategymodels import Source, Strategy, Description, Images, Links
 
 class StrategyCrud:
     '''
     Implement the required methods of structjour.strategy.strategies.Strategy with SA.
+    This class is currently wired for sqlite connect to to the application db only 
+    (structjourDb.sqlite in journal dir as pointed to by QSettings key 'structjourDb).
+    To run tests either backup db or manipulate QSettings var.
     '''
+
     def getId(self, name):
         if not name: return []
         q = Strategy.getId(name)
