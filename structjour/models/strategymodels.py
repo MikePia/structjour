@@ -30,8 +30,12 @@ if I will implement the strategy packages. My thinking now is that if I do imple
 is a better abstraction (at a higher level with a 'strategy_packages' table) and description
 should probably be a column in strategy-- that means migration. (But after sa transition is
 complete)
-'''
 
+TODO:
+Several of these methods look for duplicate fields before adding a record. There is probably 
+an add_or_ignore solution to slip past unique constraints. Haven't found it.
+'''
+import logging
 from sqlalchemy import (Integer, Column, String, Boolean, ForeignKey, and_)
 from sqlalchemy.orm import relationship, backref
 from structjour.models.meta import Base, ModelBase
@@ -45,12 +49,31 @@ class Source(Base):
     def __repr__(self):
         return f'<Source({self.datasource})>'
 
+    @classmethod
+    def addSource(cls, name, id=None):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        if id:
+            source = Source(datasource=name, id=id)
+        else:
+            source = Source(datasource=name)
+        session.add(source)
+        session.commit()
+
+    @classmethod
+    def getAllSources(cls):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        return session.query(Source).all()
+        
+
+
 
 class Strategy(Base):
     __tablename__ = "strategy"
     id = Column('id', Integer, primary_key=True)
-    name = Column(String(108))
-    short_name = Column(String(54))
+    name = Column(String(108), unique=True)
+    short_name = Column(String(54), unique=True)
     preferred = Column(Boolean)
 
     def __repr__(self):
@@ -69,11 +92,16 @@ class Strategy(Base):
 
     @classmethod
     def addStrategy(cls, name, preferred=True):
+        if Strategy.getStrategy(name):
+            logging.info(f'Strategy {name} already exists. No strategy added')
+            return
         ModelBase.connect(new_session=True, db="structjourDb")
         session = ModelBase.session
+        
         strat = Strategy(name=name, preferred = preferred)
         session.add(strat)
         session.commit()
+        return strat
 
     @classmethod
     def getStrategy(cls, name=None, sid=None):
@@ -178,6 +206,11 @@ class Description(Base):
             )
         session.add(theDesc)
         session.commit()
+    @classmethod
+    def getAllDescriptions(cls):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        return session.query(Description).all()
             
 
 class Images(Base):
@@ -189,13 +222,15 @@ class Images(Base):
 
     strategy = relationship('Strategy', 
                     backref=backref('images', cascade="all, delete-orphan"))
-
-
+                    
     @classmethod    
     def getImage(cls, strat, widget):
+        '''
+        :return a list of [<Images>, <Strategy>]
+        '''
+        # Implicit join retrives a list[image, strategy]
         ModelBase.connect(new_session=True, db="structjourDb")
         session = ModelBase.session
-        # Implicit join retrives a list[image, strategy]
         q = session.query(Images, Strategy).filter(and_(
             Strategy.id == Images.strategy_id,
             Strategy.name == strat,
@@ -206,21 +241,29 @@ class Images(Base):
     def setImage(cls, strat, name, widget):
         '''
         Uses session created in getImage. 
+        :params strat: str: name of strategy
+        :params name: str: name of image
         '''
+        strat_id = Strategy.getId(strat)
+        if not strat_id:
+            s = Strategy.addStrategy(strat)
+            strat_id =  s.id
+            
         img = Images.getImage(strat, widget)
-        if img:
+        if img and img[0]:
+            img = img[0]
             img.name = name
             ModelBase.session.commit()
         else:
-            strat_id = Strategy.getId(strat)
-            if strat_id:
-                img = Images(
-                    name=name,
-                    widget=widget,
-                    strategy_id = strat_id
-                )
-                ModelBase.session.add(img)
-                ModelBase.session.commit()
+            img = Images(
+                name=name,
+                widget=widget,
+                strategy_id = strat_id
+            )
+            ModelBase.session.add(img)
+            ModelBase.session.commit()
+        ModelBase.session.close()
+        return img
 
     @classmethod
     def removeImage(cls, strat, widget):
@@ -229,22 +272,37 @@ class Images(Base):
             ModelBase.session.delete(img[0])
             ModelBase.session.commit()
 
+    @classmethod
+    def getAllImages(cls):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        return session.query(Images).all()
 
 class Links(Base):
     __tablename__ = 'links'
     id = Column(Integer, primary_key=True)
-    link = Column(String(512))
+    link = Column(String(512), unique=True)
     strategy_id = Column(Integer, ForeignKey('strategy.id'))
 
-    strategy = relationship('Strategy', backref='links')
+    strategy = relationship('Strategy', backref=backref('links', cascade="all, delete-orphan"))
+    
 
     @classmethod
     def setLink(cls, name, url):
         '''Uses session created in getId'''
         sid = Strategy.getId(name)
+        if not sid:
+            logging.error(f'There is no strategy named {name}. Cannot attach link')
+            return
+        q = ModelBase.session.query(Links).filter(and_(Links.strategy_id==sid, Links.link==url)).one_or_none()
+        if q:
+            logging.info('Already have the link. No new link created')
+            return
         strat = Links( link=url, strategy_id = sid)
+
         ModelBase.session.add(strat)
         ModelBase.session.commit()
+        ModelBase.session.close()
 
     @classmethod
     def getLinks(cls, name):
@@ -261,3 +319,9 @@ class Links(Base):
         if q:
             ModelBase.session.delete(q)
             ModelBase.session.commit()
+
+    @classmethod
+    def getAllLinks(cls):
+        ModelBase.connect(new_session=True, db="structjourDb")
+        session = ModelBase.session
+        return session.query(Links).all()

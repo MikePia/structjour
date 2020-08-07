@@ -35,13 +35,24 @@ class StrategyCrud:
     (structjourDb.sqlite in journal dir as pointed to by QSettings key 'structjourDb).
     To run tests either backup db or manipulate QSettings var.
     '''
+    def createTables(self):
+        ModelBase.connect(new_session=True, db='structjourDb')
+        ModelBase.createAll()
+        try:
+            Source.addSource('default', 1)
+            Source.addSource('user', 2)
+            Source.addSource('contrib', 3)
+            logging.info('Creating standard Strategy Source entries')
+        except Exception:
+            logging.info('Standard Strategy Source entries have already been created')
+        
 
     def getId(self, name):
         if not name: return []
         q = Strategy.getId(name)
         return q
 
-    def addStrategy(self, name, preferred=1):
+    def addStrategy(self, name, preferred=True):
         Strategy.addStrategy(name, preferred)
 
     def getStrategy(self, name=None, id=None):
@@ -95,6 +106,10 @@ class StrategyCrud:
         return self.getImage(strat, 'chart2')
 
     def setImage1(self, strat, name):
+        '''
+        :params strat: str: name of strat
+        :params name: str: the image file string
+        '''
         Images.setImage(strat, name, 'chart1')
 
     def setImage2(self, strat, name):
