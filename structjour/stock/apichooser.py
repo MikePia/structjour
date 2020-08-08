@@ -159,7 +159,7 @@ class APIChooser:
         # Rule No 7 API limit has been reached [bc, av, fh, wtd]
         deleteme = []
         for token in suggestedApis:
-            if token == 'ib':
+            if token == 'ib' or token is None:
                 continue
             if getLimitReached(token, self.apiset):
                 deleteme.append(token)
