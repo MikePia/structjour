@@ -153,6 +153,17 @@
     </div>
     <ol>
 
+        <li> <span class="green">Finnhub is suddenly  </span>not returning premarket. Still returns post market. Check the parameters I am feeding it.. Did not find a change of policy. 
+            * It seems to be the data. Older (last month) still retrieves pre market</li>
+        <li> <span class="green">Exception in graphStuff </span>. KeyError at 376 ax1.plot(df_ohlc.date, maDict[ma], lw=1, color=maSetDict[0][ma][1], label=f'{ma}MA').
+            * Happens with ba fh  and av
+            * Narrowed it down to the MA that are figured as EMAs. 
+            * MAs are figured stock.utilities.movingAvreage. * 
+            * Changing to all Simple Moving averages creates a chart. That code has not changed in months but library versions (Matplotlib) have.
+            * The simplest fix is probably massaging the data in utilities.movingAverage for EMA's
+            * <span class=red>Not going to fix. All MAs return the same calc for an ema now</span>
+        </li>
+        <li> <span class="red">The time based chart </span>in the statistics hub is not showing the most recenct trades..</li>
         <li> <span class="red">The time based chart </span>in the statistics hub is not showing the most recenct trades..</li>
         <li> <span class="red">Rewrite graphstuff</span> to use Qt embedded approach where all the graph stuff is
             imlmented in a seperate FigureCanvas class and all the data stuff remains in the FinPlot class but depends

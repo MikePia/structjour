@@ -622,7 +622,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>50 SMA</string>
+                 <string>50 EMA</string>
                 </property>
                </widget>
               </item>
@@ -667,7 +667,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>200 SMA</string>
+                 <string>200 EMA</string>
                 </property>
                </widget>
               </item>
@@ -851,7 +851,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>50 SMA</string>
+                 <string>50 EMA</string>
                 </property>
                </widget>
               </item>
@@ -896,7 +896,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>200 SMA</string>
+                 <string>200 EMA</string>
                 </property>
                </widget>
               </item>
@@ -1090,7 +1090,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>50 SMA</string>
+                 <string>50 EMA</string>
                 </property>
                </widget>
               </item>
@@ -1135,7 +1135,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>200 SMA</string>
+                 <string>200 EMA</string>
                 </property>
                </widget>
               </item>

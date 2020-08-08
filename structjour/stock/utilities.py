@@ -172,21 +172,22 @@ def movingAverage(values, df, beginDay=None):
     maDict = OrderedDict()
 
     for ma in windows:
-        if ma > 20:
+        # Reduce this to one type of Moving average
+        # if ma > 20:
 
-            weights = np.repeat(1.0, ma) / ma
-            smas = np.convolve(values, weights, 'valid')
-            maDict[ma] = smas
-            maDict[ma] = pd.DataFrame(maDict[ma])
-            try:
-                maDict[ma].index = df.index[ma - 1:]
-            except ValueError:
-                del maDict[ma]
-        else:
-            # dataframe = pd.DataFrame(values)
-            dfema = df['close'].ewm(span=ma, adjust=False, min_periods=ma, ignore_na=True).mean()
-            maDict[ma] = dfema
-            maDict[ma].index = df.index
+        #     weights = np.repeat(1.0, ma) / ma
+        #     smas = np.convolve(values, weights, 'valid')
+        #     maDict[ma] = smas
+        #     maDict[ma] = pd.DataFrame(maDict[ma])
+        #     try:
+        #         maDict[ma].index = df.index[ma - 1:]
+        #     except ValueError:
+        #         del maDict[ma]
+        # else:
+        # dataframe = pd.DataFrame(values)
+        dfema = df['close'].ewm(span=ma, adjust=False, min_periods=ma, ignore_na=True).mean()
+        maDict[ma] = dfema
+        maDict[ma].index = df.index
     if mas[1]:
         maDict['vwap'] = vwap(df, beginDay)
 

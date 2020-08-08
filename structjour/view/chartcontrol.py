@@ -387,10 +387,7 @@ class ChartControl(QDialog):
         self.setChart1MA1Color(self.ui.chart1MA1Color.text())
 
     def setCbLabel(self, val, widg):
-        if val <= 20:
-            widg.setText(f'{val} EMA')
-        else:
-            widg.setText(f'{val} SMA')
+        widg.setText(f'{val} EMA')
 
     def setLegend(self, val):
         self.chartSet.setValue('showlegend', val)
