@@ -417,7 +417,7 @@ class SumControl(QMainWindow):
                 # self.ui.tagListWidget.setSelected()
             self.ui.tagListWidget.setToolTip(str([x.name for x in selected]))
             self.ui.tagListWidget.setToolTipDuration(20 * 1000)
-            self.ui.tagListWidget.setFocus(True)
+            # self.ui.tagListWidget.setFocus(True)
 
     def editTags(self, x, event):
         menu = QMenu()
@@ -542,14 +542,14 @@ class SumControl(QMainWindow):
             self.tmpEnd = end
         chooser = APIChooser(apiset)
         (dummy, rules, apilist) = chooser.apiChooserList(begin, end)
-        if apilist:
+        if apilist and apilist[0] is not None:
             chooser.api = apilist[0]
         else:
 
             msg = '<h3>No stock api is selected</h3><ul> '
             for rule in rules:
                 msg = msg + f'<div><strong>Violated rule: {rule}</strong></div>'
-            if not rule:
+            if not rules:
                 msg = msg + '<div>Please select Chart API from the menu</div>'
 
             logging.info(msg)
