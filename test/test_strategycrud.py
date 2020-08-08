@@ -33,7 +33,7 @@ import os
 
 import unittest
 from unittest import TestCase
-from structjour.strategy.load import StrategyCrud
+from structjour.strategy.strategycrud import StrategyCrud
 from structjour.models.meta import ModelBase
 from structjour.models.strategymodels import Strategy, Source, Description, Images, Links
 from structjour.utilities.backup import Backup
