@@ -78,7 +78,7 @@ class ModelBase:
         else:
             cls.db = con_str
 
-        if cls.engine is None:
+        if cls.engine is None or new_session == True:
             cls.engine = create_engine(cls.db)
         if new_session:
             Session.configure(bind=cls.engine)

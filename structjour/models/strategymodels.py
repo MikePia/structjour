@@ -67,8 +67,6 @@ class Source(Base):
         return session.query(Source).all()
         
 
-
-
 class Strategy(Base):
     __tablename__ = "strategy"
     id = Column('id', Integer, primary_key=True)
@@ -177,6 +175,7 @@ class Description(Base):
             desc = ModelBase.session.query(Description).filter_by(strategy_id = strat_id).one_or_none()
 
             return desc
+        return None
 
     @classmethod
     def setDescription(self, name, desc):

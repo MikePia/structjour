@@ -30,7 +30,8 @@ from PyQt5.QtCore import QSettings, QUrl
 
 from structjour.xlimage import XLImage
 from structjour.view.forms.strategybrowser import Ui_Form
-from structjour.strategy.strategies import Strategy
+# from structjour.strategy.strategies import Strategy
+from structjour.strategy.strategycrud import StrategyCrud
 
 
 class StratControl(QDialog):
@@ -66,7 +67,7 @@ class StratControl(QDialog):
         self.ui.addLinkBtn.pressed.connect(self.addLinkToList)
         self.ui.removeLinkBtn.pressed.connect(self.removeLink)
         self.ui.linkList.currentTextChanged.connect(self.loadPage)
-        self.strat = Strategy()
+        self.strat = StrategyCrud()
         self.loadStrategies()
 
     def loadPage(self, val):
@@ -192,15 +193,14 @@ class StratControl(QDialog):
             return
         strat = self.strat.getStrategy(key)
         if strat:
-            check = True if strat[1] == 1 else False
-            if check:
+            if strat.preferred:
                 self.ui.preferred.setChecked(True)
             else:
                 self.ui.notPreferred.setChecked(True)
         desc = self.strat.getDescription(key)
         if desc:
             self.justloaded = True
-            self.ui.strategyNotes.setText(desc[1])
+            self.ui.strategyNotes.setText(desc.description)
         self.setWindowTitle('Strategy Browser')
 
         image1 = self.strat.getImage1(key)

@@ -67,7 +67,8 @@ from structjour.view.backupcontrol import BackupControl
 from structjour.view.disciplinedcontrol import DisciplineControl
 from structjour.xlimage import XLImage
 
-from structjour.strategy.strategies import Strategy
+# from structjour.strategy.strategies import Strategy
+from structjour.strategy.strategycrud import StrategyCrud
 
 # To force the import of the pacakage_data in setup
 # from structjour.images import dummy
@@ -284,7 +285,7 @@ class SumControl(QMainWindow):
         if not text:
             return
         self.markDataChanged()
-        strat = Strategy()
+        strat = StrategyCrud()
         allstrats = strat.getStrategies()
 
         strats = [x[1] for x in allstrats]
@@ -937,7 +938,8 @@ class SumControl(QMainWindow):
         if not self.settings.value('structjourDb'):
             logging.info('Cannot load strategies right now')
             return
-        strats = Strategy()
+        strats = StrategyCrud()
+        prefs = strats.getPreferred()
         stratlist = [x[1] for x in strats.getPreferred()]
         # if strat and not strat in stratlist:
         #     strats.addStrategy(strat)

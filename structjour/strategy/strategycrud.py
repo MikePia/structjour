@@ -59,7 +59,7 @@ class StrategyCrud:
         s = Strategy.getStrategy(name, id)
         if not s:
             return None
-        return s.name
+        return s
 
     def removeStrategy(self, name):
         Strategy.removeStrategy(name)
@@ -96,6 +96,7 @@ class StrategyCrud:
         Links.removeLink(name, url)
 
     def getImage(self, strat, widget):
+        '''Returns the image name or None'''
         obj =  Images.getImage(strat, widget)
         return obj[0].name if obj else None
 
@@ -122,8 +123,10 @@ class StrategyCrud:
         Images.removeImage(strat, 'chart2')
 
     def getDescription(self, name):
-        desc =  Description.getDescription(name)
-        return desc.description if desc else None
+        '''
+        Returns Description object or None
+        '''
+        return Description.getDescription(name)
 
 
     def setDescription(self, name, desc):

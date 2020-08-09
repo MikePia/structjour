@@ -165,7 +165,7 @@ class Test_StrategyCrud(TestCase):
         strat = 'Buy Lower'
         scrud.addStrategy('Buy Lower')
         s = scrud.getStrategy(name="Buy Lower")
-        self.assertEqual(strat, s)
+        self.assertEqual(strat, s.name)
 
     def test_getstrategies(self):
         '''
@@ -262,7 +262,7 @@ class Test_StrategyCrud(TestCase):
 
         d1 = scrud.getDescription(strat1)
         d2 = scrud.getDescription(strat2)
-        self.assertEqual(d1, desc)
+        self.assertEqual(d1.description, desc)
         self.assertIsNone(d2)
 
 
@@ -293,23 +293,23 @@ class Test_StrategyCrud(TestCase):
 def notmain():
     Test_StrategyCrud.setUpClass()
     t = Test_StrategyCrud()
-    t.test_getid()
-    t.test_setlink()
-    t.test_getLinks()
-    t.test_removelink()
-    t.test_setimage1()
-    t.test_setimage2()
-    t.test_removeimage()
-    t.test_getstrategy()
-    t.test_getstrategies()
-    t.test_removestrategy()
-    t.test_getpreferred()
-    t.test_setpreferred()
+    # t.test_getid()
+    # t.test_setlink()
+    # t.test_getLinks()
+    # t.test_removelink()
+    # t.test_setimage1()
+    # t.test_setimage2()
+    # t.test_removeimage()
+    # t.test_getstrategy()
+    # t.test_getstrategies()
+    # t.test_removestrategy()
+    # t.test_getpreferred()
+    # t.test_setpreferred()
     t.test_getdescription()
-    t.test_setdescription()
-    t.test_sourceEntries()
+    # t.test_setdescription()
+    # t.test_sourceEntries()
 
-    # Test_StrategyCrud.tearDownClass()
+    Test_StrategyCrud.tearDownClass()
 
 if __name__ == '__main__':
     unittest.main()
