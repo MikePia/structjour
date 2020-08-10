@@ -240,46 +240,6 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_8">
-      <item>
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.worldtradingdata.com/register&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;World Trade Data free api (right click)&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="wtdCb">
-        <property name="toolTip">
-         <string>&lt;h2&gt;To use World Trade Data APIs get a free API key from&lt;/h2&gt;
-&lt;p&gt;
-&lt;a href=&quot;https://www.worldtradingdata.com/register&quot; &lt;/a&gt;
-&lt;span style=&quot; font-size:11pt;&quot;&gt;The data is realtime Historical data  available for the last 7 days. Data limits are 25 trades per day.&lt;/span&gt;&lt;/p&gt;
-
-</string>
-        </property>
-        <property name="text">
-         <string>WorldTradeData</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_9">
-        <item>
-         <widget class="QLineEdit" name="wtdKey"/>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_11">
-          <property name="text">
-           <string>API Key</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item>
      <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
        <widget class="QLabel" name="label_9">
@@ -331,7 +291,7 @@
       <item>
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Order the tokens ib, bc, av, wtd and fh for preference</string>
+         <string>Order the tokens ib, bc, av,  and fh for preference</string>
         </property>
        </widget>
       </item>
@@ -341,7 +301,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Place the tokkens in order of preference. Structjour will choose from your preference and the availability of the api&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;For Example&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-weight:600;&quot;&gt;ib, bc, av, iex&lt;/span&gt;&lt;span style=&quot; font-size:9pt;&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;If you set the above order and click for a chart update for todays chart at 3:00 PM, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Structjour will use ib if you have opened IBGateway application.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;bc cannot be used for todays data till after 4:30&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Finally av will be chosen with its real time data.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;(iex works OK 1/2 the time)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>ib, bc, av, wtd</string>
+         <string>ib, bc, av, fh</string>
         </property>
        </widget>
       </item>

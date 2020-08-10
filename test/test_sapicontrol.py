@@ -59,7 +59,6 @@ class TestSapi(TestCase):
                    'ibPaperCb': False,
                    'bcCb': True,
                    'avCb': False,
-                   'wtdCb': True,
                    'fhCb': False,
                    'APIPref': 'abc, cde, fg'}
 
@@ -75,7 +74,6 @@ class TestSapi(TestCase):
                    'ibPaperCb': self.w.ui.ibPaperCb,
                    'bcCb': self.w.ui.bcCb,
                    'avCb': self.w.ui.avCb,
-                   'wtdCb': self.w.ui.wtdCb,
                    'fhCb': self.w.ui.fhCb,
                    'APIPref': self.w.ui.APIPref}
         self.testWidgets = testWidgets
@@ -85,7 +83,7 @@ class TestSapi(TestCase):
     def test_initFromSettings(self):
         '''[ibRealPort, ibRealId, ibPaperPort, ibPaperId,
         ibRealCb, ibPaperCb,
-        bcCb, avCb, wtdCb, fhCb,
+        bcCb, avCb, fhCb,
         APIPref]'''
         for key in self.testWidgets:
             widg = self.testWidgets[key]
@@ -104,7 +102,6 @@ class TestSapi(TestCase):
         self.apiSet.setValue('ibPaperCb', False)
         self.apiSet.setValue('bcCb', True)
         self.apiSet.setValue('avCb', False)
-        self.apiSet.setValue('wtdCb', True)
         self.apiSet.setValue('fhCb', False)
         self.w.ui.APIPref.setText('ib, bc')
 

@@ -34,7 +34,7 @@ from structjour.stock.utilities import ManageKeys, checkForIbapi
 class StockApi(QDialog):
     '''
     [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb,
-    avCb, wtdCb, fhCb, APIPref]
+    avCb, fhCb, APIPref]
     The api keys are held in the database
     '''
     def __init__(self, settings, db=None):
@@ -63,9 +63,6 @@ class StockApi(QDialog):
 
         self.ui.avCb.clicked.connect(self.setAvCb)
         self.ui.avKey.editingFinished.connect(self.setAvKey)
-
-        self.ui.wtdCb.clicked.connect(self.setWtdCb)
-        self.ui.wtdKey.editingFinished.connect(self.setWtdKey)
 
         self.ui.fhCb.clicked.connect(self.setFhCb)
         self.ui.fhKey.editingFinished.connect(self.setFhKey)
@@ -120,11 +117,6 @@ class StockApi(QDialog):
 
         val = self.mk.getKey('av')
         self.ui.avKey.setText(val)
-
-        val = self.apiset.value('wtdCb', False, bool)
-        self.ui.wtdCb.setChecked(val)
-        val = self.mk.getKey('wtd')
-        self.ui.wtdKey.setText(val)
 
         val = self.apiset.value('fhCb', False, bool)
         self.ui.fhCb.setChecked(val)
@@ -231,15 +223,6 @@ class StockApi(QDialog):
         val = self.ui.avKey.text()
         self.mk.updateKey('av', val)
 
-    def setWtdCb(self, b):
-        self.apiset.setValue('wtdCb', b)
-        self.appendOrRemoveAPI('wtd', b)
-        self.sortIt('wtd')
-
-    def setWtdKey(self):
-        val = self.ui.wtdKey.text()
-        self.mk.updateKey('wtd', val)
-
     def setFhCb(self, b):
         self.apiset.setValue('fhCb', b)
         self.appendOrRemoveAPI('fh', b)
@@ -280,14 +263,15 @@ class StockApi(QDialog):
         '''
         ulist = strPref.split(',')
         ulist = [x.strip() for x in ulist]
-        if not set(ulist).issubset(set(['bc', 'ib', 'av', 'wtd', 'fh'])):
+        if not set(ulist).issubset(set(['bc', 'ib', 'av', 'fh'])):
             self.ui.APIPref.setStyleSheet('color: red;')
             return
         else:
             self.ui.APIPref.setStyleSheet('color: green;')
-        wdict = {'bc': self.ui.bcCb, 'av': self.ui.avCb,
+        wdict = {'bc': self.ui.bcCb, 
+                 'av': self.ui.avCb,
                  'ib': [self.ui.ibRealCb, self.ui.ibPaperCb],
-                 'wtd': self.ui.wtdCb, 'fh': self.ui.fhCb}
+                 'fh': self.ui.fhCb}
         for token in ulist:
             if token == 'ib':
                 if not wdict[token][0].isChecked and not wdict[token][1].isChecked():
@@ -321,11 +305,6 @@ class StockApi(QDialog):
                 self.ui.APIPref.setStyleSheet('color: red;')
                 return
             compareList.append('av')
-        if 'wtd' in ulist:
-            if not self.ui.wtdCb.isChecked():
-                self.ui.APIPref.setStyleSheet('color: red')
-                return
-            compareList.append('wtd')
 
         if 'fh' in ulist:
             if not self.ui.fhCb.isChecked():

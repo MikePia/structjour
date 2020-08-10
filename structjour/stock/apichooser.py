@@ -28,7 +28,6 @@ from structjour.stock.utilities import ManageKeys, checkForIbapi, getLimitReache
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
 from structjour.stock import myFinhub as fh
-from structjour.stock import myWTD as wtd
 if checkForIbapi():
     from structjour.stock import myib as ib
 
@@ -37,7 +36,7 @@ class APIChooser:
     def __init__(self, apiset, orprefs=None):
         '''
         The currenly supported apis are barchart, alphavantage, world trade data, finnhub and ibapi
-        These are represented by the tokens bc, av, wtd, fh, and ib
+        These are represented by the tokens bc, av, fh, and ib
         :params apiset: QSettings with key 'APIPref'
         :params orprefs: List: Override the api prefs in settings
         '''
@@ -59,11 +58,11 @@ class APIChooser:
 
     def apiChooserList(self, start, end, api=None):
         '''
-        Given the current list of apis as av, bc, wtd, fh and ib, determine if the given api will
+        Given the current list of apis as av, bc, fh and ib, determine if the given api will
             likely return data for the given times.
         :params start: A datetime object or time stamp indicating the intended start of the chart.
         :params end: A datetime object or time stamp indicating the intended end of the chart.
-        :params api: Param must be one of mav, bc, fh, wtd or ib. If given, the return value in
+        :params api: Param must be one of mav, bc, fh or ib. If given, the return value in
             (api, x, x)[0] will reflect the bool result of the api
         :return: (bool, rulesviolated, suggestedStocks) The first entry is only valid if api is
             an argument.
@@ -113,11 +112,6 @@ class APIChooser:
                 lastday = n - pd.Timedelta(days=6)
                 violatedRules.append('AlphaVantage data before {} is unavailable.'.format(
                     lastday.strftime("%b %d")))
-            if delt.days > 6 and 'wtd' in suggestedApis:
-                suggestedApis.remove('wtd')
-                lastday = n - pd.Timedelta(days=6)
-                violatedRules.append('WorldTradeData data before {} is unavailable in 1 minute candles.'.format(
-                    lastday.strftime("%b %d")))
 
         # Rule 3 Don't call ib if the library is not installed
         # Rule 4 Don't call ib if its not connected
@@ -140,7 +134,6 @@ class APIChooser:
         mk = ManageKeys()
         bc_key = mk.getKey('bc')
         av_key = mk.getKey('av')
-        wtd_key = mk.getKey('wtd')
         fh_key = mk.getKey('fh')
         if not bc_key and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
@@ -149,14 +142,11 @@ class APIChooser:
             suggestedApis.remove('av')
             violatedRules.append('There is no apikey in the database for alphavantage')
 
-        if not wtd_key and 'wtd' in suggestedApis:
-            suggestedApis.remove('wtd')
-            violatedRules.append('There is no apikey in the database for WorldTradeData')
         if not fh_key and 'fh' in suggestedApis:
             suggestedApis.remove('fh')
             violatedRules.append('There is no apikey in the database for finnhub')
 
-        # Rule No 7 API limit has been reached [bc, av, fh, wtd]
+        # Rule No 7 API limit has been reached [bc, av, fh]
         deleteme = []
         for token in suggestedApis:
             if token == 'ib' or token is None:
@@ -186,8 +176,6 @@ class APIChooser:
             return mav.getmav_intraday
         if self.api == 'ib':
             return ib.getib_intraday
-        if self.api == 'wtd':
-            return wtd.getWTD_intraday
         if self.api == 'fh':
             return fh.getFh_intraday
 

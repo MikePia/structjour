@@ -39,7 +39,7 @@ from PyQt5.QtGui import QIcon
 
 
 def setLimitReached(token, resetTime, settings=None):
-    if token not in ['av', 'bc', 'fh', 'wtd']:
+    if token not in ['av', 'bc', 'fh']:
         raise ValueError(f'Not a valid stock api token: {token}')
     if settings is None:
         settings = QSettings('zero_substance/stockapi', 'structjour')
@@ -53,7 +53,7 @@ def setLimitReached(token, resetTime, settings=None):
 
 
 def getLimitReached(token, settings=None):
-    if token not in ['av', 'bc', 'fh', 'wtd']:
+    if token not in ['av', 'bc', 'fh']:
         raise ValueError(f'Not a valid stock api token: {token}')
     if settings is None:
         settings = QSettings('zero_substance/stockapi', 'structjour')
@@ -351,15 +351,6 @@ class ManageKeys:
         if not cursor:
             cur.execute('''
                 INSERT INTO api_keys(api)VALUES(?);''', ("av",))
-
-        cur.execute('''
-            SELECT api from api_keys WHERE api = ?;''', ("wtd",))
-
-        cursor = cur.fetchone()
-        if not cursor:
-            cur.execute('''
-                INSERT INTO api_keys(api)VALUES(?);''', ("wtd",))
-        conn.commit()
 
         cur.execute('''
             SELECT api from api_keys WHERE api = ?;''', ("fh",))

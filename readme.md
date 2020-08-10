@@ -55,8 +55,6 @@ Go to file->file settings
 
 ## Optional setup of automatic chart generation using free data from WorldTradeData, barchart, finnhub and alphavantage
 
-### Note regarding WorldTradingData.
-WTD has a limit of only 25 charts per day but the data is good. Thats enough for 12 trades with 2 charts each. Could be useful and its real time data. Its easy enough to switch between data sources.
    * Go to file->stock api 
 
 ![filesettings.png](images/stockapi.png)
@@ -69,7 +67,7 @@ WTD has a limit of only 25 charts per day but the data is good. Thats enough for
       * Do the registration and copy the apikey into the box
    * Get the Finhub apikey [from Finnhub here.](https://finnhub.io/) 
       * Do the registration and copy the apikey into the box 
-   * Select/deselect Barchart, Alphavantage, Finnhub and WorldTradeData boxes and include/delete tokens 'bc', 'av', 'fh' and 'wtd in the box underneath, seperated by commas. 
+   * Select/deselect Barchart, Alphavantage, Finnhub and Interactive Brokers boxes and include/delete tokens 'bc', 'av', 'fh' and 'ib' in the box underneath, seperated by commas. 
 
 ## Setup for Interactive Brokers TWSAPI (ibapi)
 The free APIs produce excellent charts but are limited to market hours and 7 to 30 days history. If you have an Interactive Brokers account and can receive data from them, this is the best data. It includes afterhours data, does not have a practical limit on the dates for which you can receive data, and has no limits to usage. 

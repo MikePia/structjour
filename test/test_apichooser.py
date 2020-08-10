@@ -88,7 +88,7 @@ class TestAPIChooser(unittest.TestCase):
         tests most of the time. Just fiddle with the orprefs and the REPEATS and watch the result
         '''
         REPEATS = 15
-        orprefs = ['av', 'wtd']
+        orprefs = ['av']
         symbol = 'AAPL'
         minutes = 1
         d = util.getPrevTuesWed(pd.Timestamp.now())
@@ -133,7 +133,7 @@ class TestAPIChooser(unittest.TestCase):
                 break
 
         # Now create new APIChoosers and test that the call rolls over
-        for token in ['bc', 'fh', 'wtd']:
+        for token in ['bc', 'fh']:
             chooser = APIChooser(self.apiset, orprefs=['av', token])
             meta, df, ma = chooser.get_intraday(symbol, start, end, minutes)
             if df.empty:
