@@ -31,6 +31,9 @@ import random
 import sqlite3
 import sys
 
+from structjour.models.meta import ModelBase
+from structjour.models.api_keymodel import ApiKey
+
 import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QSettings, QDate, QDateTime
@@ -283,7 +286,6 @@ def clearTables(db):
     cur.execute('''delete from trade_sum''')
     conn.commit()
 
-
 class ManageKeys:
     def __init__(self, create=False, db=None):
         self.settings = QSettings('zero_substance', 'structjour')
@@ -294,6 +296,30 @@ class ManageKeys:
 
         if self.db:
             self.createTables()
+
+    def getDB(self):
+        '''Get the file location of the sqlite database'''
+
+    def createTables(self):
+        '''
+        Creates the api_keys if it doesnt exist then adds a row for each api that requires a key
+        if they dont exist
+        '''
+        ModelBase.connect(new_session=True)
+
+        ModelBase.createAll()
+        curapis = ['fh', 'av', 'bc']      # When this info changes, Use the apisettings control to abstract the data
+        addit = False
+        for api in curapis:
+            key = ApiKey.getKey(api, keyonly=False)
+            if not key:
+                ApiKey.addKey(api)
+
+    def updateKey(self, api, key):
+        return ApiKey.updateKey(api, key)
+
+    def getKey(self, api):
+        return ApiKey.getKey(api)
 
     def setDB(self, db=None):
         '''
@@ -316,81 +342,13 @@ class ManageKeys:
 
             return
 
-        if not os.path.exists(self.db):
-            msg = 'No db listed-- do we recreate the default and add a setting?- or maybe pop and get the db address'
-            # self.createTables()
-            # raise ValueError(msg)
-
-    def createTables(self):
-        '''
-        Creates the api_keys if it doesnt exist then adds a row for each api that requires a key
-        if they dont exist
-        '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        cur.execute('''
-            CREATE TABLE if not exists api_keys (
-            id	INTEGER PRIMARY KEY AUTOINCREMENT,
-            api	TEXT NOT NULL UNIQUE,
-            key	TEXT);''')
-        conn.commit()
-
-        cur.execute('''
-            SELECT api from api_keys WHERE api = ?;''', ("bc",))
-
-        cursor = cur.fetchone()
-        if not cursor:
-            cur.execute('''
-                INSERT INTO api_keys(api)VALUES(?);''', ("bc",))
-
-        cur.execute('''
-            SELECT api from api_keys WHERE api = ?;''', ("av",))
-
-        cursor = cur.fetchone()
-        if not cursor:
-            cur.execute('''
-                INSERT INTO api_keys(api)VALUES(?);''', ("av",))
-
-        cur.execute('''
-            SELECT api from api_keys WHERE api = ?;''', ("fh",))
-
-        cursor = cur.fetchone()
-        if not cursor:
-            cur.execute('''
-                INSERT INTO api_keys(api)VALUES(?);''', ("fh",))
-        conn.commit()
-
-    def updateKey(self, api, key):
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        cur.execute('''UPDATE api_keys
-            SET key = ?
-            WHERE api = ?''', (key, api))
-        conn.commit()
-
-    def getKey(self, api):
-        if not self.db:
-            return None
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        cur.execute('''SELECT key
-            FROM api_keys
-            WHERE api = ?''', (api, ))
-        k = cur.fetchone()
-        if k:
-            return k[0]
-        return k
-
     def getDB(self):
         '''Get the file location of the sqlite database'''
         db = self.settings.value('tradeDb')
         if not db:
             logging.warning('Trying to retrieve db location, the database file location is not set.')
         return db
-
+        
 
 class IbSettings:
     def __init__(self):
@@ -445,10 +403,13 @@ def checkForIbapi():
 
 def notmain():
     '''Run local code. using a db path unique to this machine'''
-    from PyQt5.QtWidgets import QApplication
-    app = QApplication(sys.argv)     # noqa: F841
-    # mk = ManageKeys(create=True, db='C:\\python\\E\\structjour\\test\\testdb.sqlite')
-    mk = ManageKeys()
+    # from PyQt5.QtWidgets import QApplication
+    # app = QApplication(sys.argv)     # noqa: F841
+    mk = ManageKeys(create=True)
+    print(mk.getKey('fh'))
+    print(mk.getKey('bc'))
+    print(mk.getKey('av'))
+    # mk = ManageKeys()
     mk.setDB('notapath')
 
 
@@ -457,5 +418,5 @@ def localstuff():
 
 
 if __name__ == '__main__':
-    # notmain()
-    localstuff()
+    notmain()
+    # localstuff()

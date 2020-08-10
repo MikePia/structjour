@@ -153,16 +153,9 @@
     </div>
     <ol>
 
-        <li> <span class="green">Finnhub is suddenly  </span>not returning premarket. Still returns post market. Check the parameters I am feeding it.. Did not find a change of policy. 
-            * It seems to be the data. Older (last month) still retrieves pre market</li>
-        <li> <span class="green">Exception in graphStuff </span>. KeyError at 376 ax1.plot(df_ohlc.date, maDict[ma], lw=1, color=maSetDict[0][ma][1], label=f'{ma}MA').
-            * Happens with ba fh  and av
-            * Narrowed it down to the MA that are figured as EMAs. 
-            * MAs are figured stock.utilities.movingAvreage. * 
-            * Changing to all Simple Moving averages creates a chart. That code has not changed in months but library versions (Matplotlib) have.
-            * The simplest fix is probably massaging the data in utilities.movingAverage for EMA's
-            * <span class=red>Not going to fix. All MAs return the same calc for an ema now</span>
-        </li>
+
+        <li> <span class="red">SQlite3.Programming Error </span>about creating using an object from a different thread. It occurs some of the time 
+            when getting a new candle chart. I am thinking its around the ManageKeys db access. Will do SA conversion and see if it goes away.</li>
         <li> <span class="red">The time based chart </span>in the statistics hub is not showing the most recenct trades..</li>
         <li> <span class="red">The time based chart </span>in the statistics hub is not showing the most recenct trades..</li>
         <li> <span class="red">Rewrite graphstuff</span> to use Qt embedded approach where all the graph stuff is
@@ -204,6 +197,20 @@
 <h3>Version 0.92-Alpha.003</h3>
 <h4>Checked in June 3, 2020</h4>
 <ol>
+            <li> <span class="green">Finnhub is suddenly </span>not returning premarket. Still returns post market. Check the
+                parameters I am feeding it.. Did not find a change of policy.
+                * It seems to be the data. Older (last month) still retrieves pre market  <code>8/8/20</code> </li>
+            <li> <span class="green">Exception in graphStuff </span>. KeyError at 376 ax1.plot(df_ohlc.date, maDict[ma], lw=1,
+                color=maSetDict[0][ma][1], label=f'{ma}MA').
+                * Happens with ba fh and av
+                * Narrowed it down to the MA that are figured as EMAs.
+                * MAs are figured stock.utilities.movingAvreage. *
+                * Changing to all Simple Moving averages creates a chart. That code has not changed in months but library versions
+                (Matplotlib) have.
+                * The simplest fix is probably massaging the data in utilities.movingAverage for EMA's
+                * <span class=red>Not going to fix. All MAs return the same calc for an ema now</span>
+                <code>8/8/20</code>
+            </li>
         <li> <span class="green">Change the layout </span>so that the right widgets expand the right amount.<code>4/6/20</code></li>
         <li> <span class="green"> The charts should </span>resize, not keeping perspective, with the widget. <code>4/6/20</code></li>
         <li> <span class="green">Add a calendar </span>widget popup to the front dateEdit. <code>4/3/20</code></li>
@@ -235,7 +242,7 @@
         <li> <span class="green">Add backup</span>-restore-initialize utility.</li>
         <li> <span class="green">Chart date widget bug. </span>In ChartMage, the widgets are attempting to upgrade but its in a non-gui thread. Move it out to chartMagic1, 2, and 3.</li>
         <li> <span class="green">API Chooser </span>should choose a working api. When AV trade failed rules, it did not pick up the next choice. (Can't get it to fail)</li>
-        <li><span class="green">Create a setting </span>for each api with a datetime value to indicate quota has been reached until a given time. Note that for av, just implement the 5 per minute throttle as you really have to work at it to reach 500 with the throttle. They don't consistently reset the 1 minute time limit. Try 2 minutes. The api will roll on to the next one and this whould minimize the interference. Implement for av, bc, fh and wtd </li>
+        <li><span class="green">Create a setting </span>for each api with a datetime value to indicate quota has been reached until a given time. Note that for av, just implement the 5 per minute throttle as you really have to work at it to reach 500 with the throttle. They don't consistently reset the 1 minute time limit. Try 2 minutes. The api will roll on to the next one and this whould minimize the interference. Implement for av, bc, fh and ib </li>
         <li><span class="green">Add rules to the </span>api chooser to check for quota</li>
         <li><span class="green">Put the apiChooser </span>call in a while loop dependent on apiList having a value. Created a method in APIChooser to do it.</li>
         <li> <span class="green">Remove a button. </span>Keep only one save/load button. Will involve automatically changing radio button from DAS or IB to DB after reading a file. Should be able to eliminate a runnitDB method. There are two of them in RunController</li>
