@@ -259,7 +259,7 @@ class TestApp(TestWrapper, TestClient):
             return pd.DataFrame()
 
 
-def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy'):
+def getib_intraday(symbol, start=None, end=None, minutes=1, showUrl='dummy', key=None):
     '''
     An interface API to match the other getters. In this case its a substantial
     dumbing down of the capabilities to our one specific need. Output will be resampled

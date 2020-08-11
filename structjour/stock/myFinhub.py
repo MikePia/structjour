@@ -117,7 +117,7 @@ def getStartForRequest(start, end, interval):
 
 
 # def getParams(symbol, start, end, resolution):
-def fh_intraday(base, symbol, start, end, resolution, showUrl=False):
+def fh_intraday(base, symbol, start, end, resolution, showUrl=False, key=None):
     '''
     Set the paramaters and send to finnhub. (The requesed start time should allow for moving average calculations.)
 
@@ -132,7 +132,8 @@ def fh_intraday(base, symbol, start, end, resolution, showUrl=False):
     params['from'] = start
     params['to'] = end
     params['resolution'] = resolution
-    params['token'] = getApiKey()
+
+    params['token'] = key if key else getApiKey()
     
     response = requests.get(base, params=params)
     if showUrl:
@@ -240,7 +241,7 @@ def getDaTime(datime, isStart=True):
     return datime
 
 
-def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
+def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=True, key=None):
     '''
     Common interface for apiChooser.
     :params start: Time string or naive pandas timestamp or naive datetime object.
@@ -262,7 +263,7 @@ def getFh_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     resolution = ni(minutes)
     rstart, rend = getStartForRequest(start, end, minutes)
 
-    meta, j = fh_intraday(base, symbol, rstart, rend, resolution)
+    meta, j = fh_intraday(base, symbol, rstart, rend, resolution, key=key)
     if meta['code'] != 200:
         return meta, pd.DataFrame(), None
 

@@ -154,7 +154,7 @@ class Retries:
 R = None
 
 
-def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
+def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False, key=None):
     '''
     Limited to getting minute data intended to chart day trades. Note that start and end are not
     sent to the api request.
@@ -190,7 +190,7 @@ def getmav_intraday(symbol, start=None, end=None, minutes=None, showUrl=False):
     params['outputsize'] = 'full'
     params['datatype'] = DATATYPES[0]
     # params['apikey'] = APIKEY
-    params['apikey'] = getKey()
+    params['apikey'] = key if key else getKey()
 
     request_url = f"{BASE_URL}"
     response = requests.get(request_url, params=params)

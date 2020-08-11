@@ -70,7 +70,7 @@ class TestMyalphavantage(unittest.TestCase):
             # Each of these should get results every time,beginning times are either before 9:31 or
             # between 9:30 (short days won't produce failures)
             dummy, df, maDict = mav.getmav_intraday("SQ", start=start, end=end,
-                                            minutes=minutes, showUrl=True)
+                                            minutes=minutes, showUrl=True, key=None)
 
             # print("Requested...", start, end)
             # print("Received ...", df.index[0], df.index[-1])

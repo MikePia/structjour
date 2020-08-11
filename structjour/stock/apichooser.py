@@ -24,7 +24,7 @@ import datetime as dt
 import logging
 import pandas as pd
 import requests
-from structjour.stock.utilities import ManageKeys, checkForIbapi, getLimitReached
+from structjour.stock.utilities import checkForIbapi, getLimitReached
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
 from structjour.stock import myFinhub as fh
@@ -33,9 +33,9 @@ if checkForIbapi():
 
 
 class APIChooser:
-    def __init__(self, apiset, orprefs=None):
+    def __init__(self, apiset, orprefs=None, keydict={}):
         '''
-        The currenly supported apis are barchart, alphavantage, world trade data, finnhub and ibapi
+        The currenly supported apis are barchart, alphavantage, finnhub and ibapi
         These are represented by the tokens bc, av, fh, and ib
         :params apiset: QSettings with key 'APIPref'
         :params orprefs: List: Override the api prefs in settings
@@ -44,6 +44,7 @@ class APIChooser:
         self.orprefs = orprefs
         self.preferences = self.getPreferences()
         self.api = self.preferences[0]
+        self.keydict = keydict
 
     def getPreferences(self):
         if self.orprefs:
@@ -131,18 +132,18 @@ class APIChooser:
         # Rule No 6 Don't call WorldTradeDate if there is no apikey in settings
         # Rule No 6 Don't call alphavantage if there is no apikey in settings
         # Rule No 6 Don't call finnhub if there is no api key in settings
-        mk = ManageKeys()
-        bc_key = mk.getKey('bc')
-        av_key = mk.getKey('av')
-        fh_key = mk.getKey('fh')
-        if not bc_key and 'bc' in suggestedApis:
+        # mk = ManageKeys()
+        # bc_key = mk.getKey('bc')
+        # av_key = mk.getKey('av')
+        # fh_key = mk.getKey('fh')
+        if not self.keydict['bc'] and 'bc' in suggestedApis:
             suggestedApis.remove('bc')
             violatedRules.append('There is no apikey in the database for barchart')
-        if not av_key and 'av' in suggestedApis:
+        if not self.keydict['av'] and 'av' in suggestedApis:
             suggestedApis.remove('av')
             violatedRules.append('There is no apikey in the database for alphavantage')
 
-        if not fh_key and 'fh' in suggestedApis:
+        if not self.keydict['fh'] and 'fh' in suggestedApis:
             suggestedApis.remove('fh')
             violatedRules.append('There is no apikey in the database for finnhub')
 
@@ -186,7 +187,8 @@ class APIChooser:
         for token in suggested:
             self.api = token
             try:
-                meta, df, ma = self.apiChooser()(symbol, start, end, minutes)
+                dakey = self.keydict[self.api] if self.api in self.keydict else None
+                meta, df, ma = self.apiChooser()(symbol, start, end, minutes, key=dakey)
             except requests.exceptions.ConnectionError as ex:
                 message = "Please check your internet connection\n" + str(ex)
 

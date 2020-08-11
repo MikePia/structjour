@@ -86,10 +86,10 @@ ORDER = ['asc', 'desc']
 VOLUME = ['total', 'sum', 'contract', 'sumcontract', 'sumtotal']
 
 
-def setParams(symbol, minutes, startDay):
+def setParams(symbol, minutes, startDay, key=None):
     '''Internal utility method'''
     params = {}
-    params['apikey'] = getApiKey()
+    params['apikey'] = key if key else getApiKey()
     params['symbol'] = symbol
     params['type'] = 'minutes'
     params['interval'] = minutes
@@ -104,7 +104,7 @@ def setParams(symbol, minutes, startDay):
 
 
 # Not getting the current date-- maybe after the market closes?
-def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
+def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False, key=None):
     '''
     Note that getHistory will return previous day's prices until 15 minutes after the market
         closes. We will generate a warning if our start or end date differ from the date of the
@@ -146,7 +146,7 @@ def getbc_intraday(symbol, start=None, end=None, minutes=5, showUrl=False):
     fullstart = fullstart - pd.Timedelta(days=40)
     fullstart = fullstart.strftime("%Y%m%d")
 
-    params = setParams(symbol, minutes, fullstart)
+    params = setParams(symbol, minutes, fullstart, key=key)
 
     response = requests.get(BASE_URL, params=params)
     if showUrl:

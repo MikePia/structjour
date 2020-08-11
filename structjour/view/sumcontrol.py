@@ -55,11 +55,12 @@ from structjour.view.sapicontrol import StockApi
 from structjour.view.stratcontrol import StratControl
 from structjour.view.forms.summaryform import Ui_MainWindow
 from structjour.view.tagsedit import EditTagsDlg
+
 from structjour.statements.dailynotes import DailyNotes
 from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
 from structjour.stock.apichooser import APIChooser
-from structjour.stock.utilities import getMAKeys, qtime2pd, pd2qtime
+from structjour.stock.utilities import getMAKeys, qtime2pd, pd2qtime, ManageKeys
 from structjour.utilities.util import fc
 from structjour.view.duplicatecontrol import DupControl
 
@@ -541,7 +542,14 @@ class SumControl(QMainWindow):
             # Update the chart widgets after returning from this thread in chartMagicX
             self.tmpBegin = begin
             self.tmpEnd = end
-        chooser = APIChooser(apiset)
+
+        mk = ManageKeys()
+        keydict = {}
+        keydict['bc'] = mk.getKey('bc')
+        keydict['av'] = mk.getKey('av')
+        keydict['fh'] = mk.getKey('fh')
+        
+        chooser = APIChooser(apiset, keydict=keydict)
         (dummy, rules, apilist) = chooser.apiChooserList(begin, end)
         if apilist and apilist[0] is not None:
             chooser.api = apilist[0]
