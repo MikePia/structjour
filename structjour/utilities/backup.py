@@ -144,8 +144,8 @@ class Backup:
             except FileNotFoundError:
                 logging.error(f'Structjour database does not exist at {self.dbstructjour} and cannot be copied')
                 if self.bdir.find('FAILED_') == -1:
-                    changedir = self.bdir[0:-17] + "FAILED" + self.bdir[-17:]
-                    os.rename(self.bdir, changebdir)
+                    changedir = self.bdir[0:-17] + "FAILED_" + self.bdir[-17:]
+                    os.rename(self.bdir, changedir)
 
             else:
 
