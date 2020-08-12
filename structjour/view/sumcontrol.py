@@ -150,17 +150,15 @@ class SumControl(QMainWindow):
         inspire = Inspire()
         quote = inspire.getrandom().replace("\t", "        ")
         self.ui.inspireQuote.setText(quote)
+        
         # Create connections for widgets on this form
         self.ui.inFileBtn.pressed.connect(self.browseInfile)
         self.ui.targ.textEdited.connect(self.diffTarget)
         self.ui.stop.textEdited.connect(self.stopLoss)
-        # self.ui.dateEdit.dateChanged.connect(self.theDateChanged)
-        # self.ui.dateEdit.dateChanged.connect(self.loadFromDate)
         self.ui.dasImport.clicked.connect(self.dasDefault)
         self.ui.ibImport.clicked.connect(self.ibDefault)
         self.ui.useDatabase.clicked.connect(self.dbDefault)
 
-        # self.ui.dailyNote.clicked.connect(self.saveNotes)
         self.ui.dailyNote.textChanged.connect(self.dNotesChanged)
         self.ui.tradeList.currentTextChanged.connect(self.loadTrade)
         self.ui.calendarBtn.clicked.connect(self.calendarWidgetBtn)
