@@ -81,6 +81,8 @@ class ModelBase:
         if cls.engine is None:
             cls.engine = create_engine(cls.db)
         if new_session:
+            if str(cls.engine.url) != cls.db:
+                cls.engine = create_engine(cls.db)
             Session.configure(bind=cls.engine)
             cls.session = Session()
 
