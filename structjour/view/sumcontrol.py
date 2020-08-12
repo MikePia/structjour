@@ -56,7 +56,7 @@ from structjour.view.stratcontrol import StratControl
 from structjour.view.forms.summaryform import Ui_MainWindow
 from structjour.view.tagsedit import EditTagsDlg
 
-from structjour.statements.dailynotes import DailyNotes
+from structjour.statements.dailynotescrud import DailyNotesCrud
 from structjour.statements.findfiles import checkDateDir, parseDate
 from structjour.stock.graphstuff import FinPlot
 from structjour.stock.apichooser import APIChooser
@@ -322,7 +322,7 @@ class SumControl(QMainWindow):
             oldDate = pd.Timestamp(self.lf.ts[key]['Date'].unique()[0])
         else:
             oldDate = qtime2pd(oldDate)
-        dailyNoteModel = DailyNotes()
+        dailyNoteModel = DailyNotesCrud()
         dailyNoteModel.commitNote(note=self.ui.dailyNote.toPlainText(), daDate=oldDate)
         if t[-1] == '*':
             t = t[:-3]

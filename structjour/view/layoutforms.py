@@ -35,7 +35,7 @@ from structjour.definetrades import DefineTrades
 from structjour.stock.utilities import qtime2pd
 
 from structjour.statements.ibstatementdb import StatementDB
-from structjour.statements.dailynotes import DailyNotes
+from structjour.statements.dailynotescrud import DailyNotesCrud
 from structjour.thetradeobject import SumReqFields, runSummaries, setTradeSummaryHeaders
 
 
@@ -203,7 +203,7 @@ class LayoutForms:
             tradeSummaries.append(self.ts[key])
 
         # Load dailyote
-        dailyNoteModel = DailyNotes(theDate)
+        dailyNoteModel = DailyNotesCrud(theDate)
         note = dailyNoteModel.getNote()
         self.dailyNoteModel = dailyNoteModel
         if not note:
