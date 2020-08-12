@@ -154,8 +154,15 @@
     <ol>
 
 
-        <li> <span class="red">SQlite3.Programming Error </span>about creating using an object from a different thread. It occurs some of the time 
-            when getting a new candle chart. I am thinking its around the ManageKeys db access. Will do SA conversion and see if it goes away.</li>
+        <li> <span class="red">Alpha Vantage- no longer real time </span> Getting yesterdays data. Refer <a href="https://stackoverflow.com/questions/61278195/fail-to-get-real-time-prices-from-alpha-vantage-api-prices-are-one-day-old">Stack Overflow</a>
+            * Good news- they seem to be giving a month of data. None of theses changes are documented.
+            * Stack post got av support answer that prices are frefreshed 4:30 ET. That is prior to now and todays quotes have failed for each stock requested.Yesterday's (Friday) have succeeded.
+            * They say they are providing extended 4AM to 8PM but it does not seem to be true
+            and 30 days of data
+            * Update the rules to ... ??? something that responds to current state I guess. Give it a couple days and tests
+        </li>
+                
+        </li>
         <li> <span class="red">The time based chart </span>in the statistics hub is not showing the most recenct trades..</li>
         <li> <span class="red">The time based chart </span>in the statistics hub is not showing the most recenct trades..</li>
         <li> <span class="red">Rewrite graphstuff</span> to use Qt embedded approach where all the graph stuff is
@@ -197,6 +204,21 @@
 <h3>Version 0.92-Alpha.003</h3>
 <h4>Checked in June 3, 2020</h4>
 <ol>
+            <li> <span class="green">SQlite3.Programming Error </span>about creating using an object from a different thread. It
+                occurs irregularly.
+                It happens more frequently when loading a new chart
+                * The only db call in that code is Manage Keys which happens in ApiChooser and in each api module. The errro happens
+                irregularly in both.
+                * Reduced the frequency by storing a dict of keys
+                * The problem also happens in other places
+                * it is not affecting the operation of structjour except for long annoying errors-- at least not that I have
+                discovered
+                * Seems to be related to the sqlite engine with sqlalchemy and its non-standard thread handling.
+                * Structjour has frequent new sessions. Each new session is a new transaction in sqlachemy. I think I can rely that
+                when sa creates a new transaction, the database is flushed and current.
+                * The problem was calling create_engine with every new session instead of just binding the new session
+                <code>8/11/20</code>
+
             <li> <span class="green">Finnhub is suddenly </span>not returning premarket. Still returns post market. Check the
                 parameters I am feeding it.. Did not find a change of policy.
                 * It seems to be the data. Older (last month) still retrieves pre market  <code>8/8/20</code> </li>
