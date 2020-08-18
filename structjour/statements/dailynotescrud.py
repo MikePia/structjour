@@ -24,7 +24,6 @@ API interface for dailynotes. Reimplemented in SA from the original DBAPI
 '''
 import logging
 import os
-import sqlite3
 
 import pandas as pd
 
@@ -71,7 +70,7 @@ class DailyNotesCrud:
     #     DailyNotes.__table__.drop(ModelBase.engine)
     #     ModelBase.session.commit()
 
-    def commitNote(self, note=None, daDate=None):
+    def commitNote(self, note='', daDate=None):
         '''
         Save or update the db file for the notes field. If no note is given. will retrieve the text
          from the qt dailyNotes widget. Use setNote for a vanilla db commit
@@ -79,8 +78,7 @@ class DailyNotesCrud:
         if daDate:
             daDate = pd.Timestamp(daDate)
             self.date = daDate.strftime("%Y%m%d")
-        if note:
-            self.note = note
+        self.note = note
             
         DailyNotes.commitNote(note=self.note, daDate=self.date)
 

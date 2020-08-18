@@ -164,13 +164,14 @@ class LayoutForms:
             pickle.dump(self.df, f)
 
     def saveTheTradeObject(self, name):
-        '''pickle tto list'''
-        # I believe this renders this toothless. Next step is delete it after awaiting
-        # errors as fallout
+        from structjour.statements.statementcrud import TradeCrud
         if not self.ts or not self.entries:
             return
         ibdb = StatementDB()
-        self.ts = ibdb.updateTradeSummaries(self.ts)
+        tcrud = TradeCrud()
+        self.ts = ibdb.updateTradeSummariesSA(self.ts)
+        # self.ts = ibdb.updateTradeSummaries(self.ts)
+        # tcrud.updateTradeSummaries(self.ts)
         self.sc.ui.useDatabase.setChecked(True)
 
     def loadTradesFromDB(self, theDate=None):

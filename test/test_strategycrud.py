@@ -60,7 +60,6 @@ class Test_StrategyCrud(TestCase):
         scrud.createTables()
         scrud.addStrategy('VWAP Support')
 
-
     @classmethod
     def tearDownClass(cls):
         bu=Backup()

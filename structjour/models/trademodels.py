@@ -111,17 +111,39 @@ class TradeSum(Base):
     stoploss = Column(Float)
     sldiff = Column(Float)
     rr = Column(String(32))
-    realrr = Column(Float(32))
+    realrr = Column(String(32))
     maxloss = Column(Float)
     mstkval = Column(Float)
     mstknote = Column(String)
     explain = Column(String)
     notes = Column(String)
-    clean = Column(Text)
+    clean = Column(String)
 
     tags = relationship('Tags',
                         secondary=trade_sum_tags,
                         back_populates='trade_sums')
+
+    @classmethod
+    def findByTime(cls, date, start=None):
+        '''
+        If start is not given, return all trades from the given date or []
+        If start is given, return a single trade 
+        :params date: str: yyyymmdd
+        :params start: str: HH:MM:SS
+        :raise ValueError if date is misformatted
+        '''
+        try:
+            int(date)
+        except ValueError:
+            raise ValueError(f'date is mis-formatted {date}. Needs to be yyyymmdd')
+        # ModelBase.connect(new_session = True)
+        session = ModelBase.session
+        if not start:
+            q = session.query(TradeSum).filter_by(date=date).all()
+            return q
+        q = session.query(TradeSum).filter_by(date=date).filter_by(start=start).all()
+        return q
+
 
     @classmethod
     def append_tag(cls, trade_sum_id, tag_name=None, tag_id=None):
@@ -285,6 +307,24 @@ class TradeSum(Base):
         print()
         return [x[0] for x in q]
 
+    @classmethod
+    def getById(cls, id):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(TradeSum).filter_by(id=id).one_or_none()
+        return q
+
+
+    @classmethod
+    def deleteById(cls, tsid):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(TradeSum).filter_by(id=tsid).one_or_none()
+        if not q:
+            return 0
+        session.delete(q)
+        return 1
+
 
 class Trade(Base):
     __tablename__ = "ib_trades"
@@ -340,8 +380,66 @@ class Trade(Base):
         print()
         return [x[0] for x in q]
 
+    @classmethod
+    def deleteById(cls, tid):
+        q = Trade.getById(tid)
+        if not q:
+            return 0
+        ModelBase.session.delete(q)
+        return 1
+
+    @classmethod
+    def getById(cls, tid):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Trade).filter_by(id=tid).one_or_none()
+        return q
 
 TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
+TradeSum.charts = relationship("Charts", back_populates="tradesum")
+
+class Charts(Base):
+    __tablename__ = 'chart'
+    id = Column(Integer, primary_key=True)
+    symb = Column(String)
+    path = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    source = Column(String)
+    start = Column(String, nullable=False)
+    end = Column(String, nullable=False)
+    interval = Column(Integer)
+    slot = Column(Integer)
+    trade_sum_id = Column(Integer, ForeignKey('trade_sum.id'))
+    tradesum = relationship('TradeSum', back_populates='charts')
+
+    @classmethod
+    def getChart(cls, tsid, slot):
+        '''Uses an ongoing session'''
+        return ModelBase.session.query(Charts).filter_by(trade_sum_id=tsid).filter_by(slot=slot).one_or_none()
+
+
+    @classmethod
+    def updateChart(cls, tsid, newchart, slot):
+        '''
+        Update or add new chart. The keywords are the field names plus commit. 
+        :commit: Defaults to True. If set to false, uses the current session in ModelBase and does not commit
+        '''
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        chart = Charts.getChart(tsid, slot)
+        if not chart:
+            chart = session.merge(newchart)
+        else:
+            chart.name = newchart.name
+            chart.source = newchart.source
+            chart.start = newchart.start
+            chart.end = newchart.end
+            chart.interval = newchart.interval
+
+
+        session.add(chart)
+        session.commit()
+
 
 # ==================== Proof of concept methods-- will generlly be used in Test_Trademodels_MODEL modules ===========
 
@@ -367,6 +465,15 @@ def removeTag():
 
 def setActive():
     Tags.setActive(False, tag_id=4)
+
+def getTradeSum():
+    x = TradeSum.getById(1079)
+    print(x.shares)
+
+def findTradeByTime():
+    q = TradeSum.findByTime("20180612")
+    print(q)
+    print
 
 
 def appendTags():
@@ -450,13 +557,16 @@ def dostuff():
     ModelBase.connect()
     ModelBase.createAll()
 
-    addTags()
+
+    # addTags()
     # appendTags()
     # releaseTags()
     # setActive()
     # getTagsFromTradeSum()
     # getTags()
     # removeTag()
+    # getTradeSum()
+    findTradeByTime()
 
     # getIntraStuff()
     # getTradeSumAccounts()

@@ -29,7 +29,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDialog
 
 from structjour.view.forms.duplicatetrade import Ui_Dialog as DupDialog
-from structjour.statements.dbdoctor import DbDoctor
+from structjour.statements.dbdoctor import DbDoctorCrud
 # pylint: disable = C0103
 
 
@@ -103,7 +103,7 @@ class DupControl(QDialog):
 
     def initialize(self):
         if not self.dbdr:
-            self.dbdr = DbDoctor(account=self.account)
+            self.dbdr = DbDoctorCrud(account=self.account)
         deleteMe, dups = self.dbdr.doDups()
         if dups:
             self.nextRecord = 0
@@ -192,8 +192,8 @@ class DupControl(QDialog):
         # Beginning of doc
         msg += f'<h2>The records {id1} and {id2} appear to be duplicates.</h2>'
         msg += f'<h3>Trade {self.nextRecord+1} of {self.numDups}.      Recommend to delete {delMe[0]}</h3>'
-        t1 = self.dbdr.getTradesByID(id1)
-        t2 = self.dbdr.getTradesByID(id2)
+        t1 = self.dbdr.getTradesById(id1)
+        t2 = self.dbdr.getTradesById(id2)
 
         if self.actionTaken[self.nextRecord][0][0]:
             msg += f'<h4>Action has been taken. Deleted record {self.actionTaken[self.nextRecord][0][1]}'
@@ -216,7 +216,7 @@ class DupControl(QDialog):
                 tstab = list()
 
                 # Get 1 or 2 records to show and and a column showing the related trade ids for each
-                ts_1 = self.dbdr.getTradeSumByID(delMe[1])
+                ts_1 = self.dbdr.getTradeSumById(delMe[1])
                 t1_ids = self.dbdr.getTradesForTSID(delMe[1])
                 if t1_ids:
                     t1_ids = [x[0] for x in t1_ids]
@@ -230,7 +230,7 @@ class DupControl(QDialog):
                 elif t2 and t2['ts_id'] != delMe[1]:
                     ts2_id = t2['ts_id']
                 if ts2_id:
-                    ts_2 = self.dbdr.getTradeSumByID(ts2_id)
+                    ts_2 = self.dbdr.getTradeSumById(ts2_id)
                     t2_ids = self.dbdr.getTradesForTSID(ts2_id)
                     if t2_ids:
                         t2_ids = [x[0] for x in t2_ids]

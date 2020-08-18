@@ -34,10 +34,14 @@ from PyQt5.QtGui import QIcon
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.statements.findfiles import getDirectory
-from structjour.statements.dbdoctor import DbDoctor
+from structjour.statements.dbdoctor import DbDoctorCrud
+from structjour.statements.statementcrud import TradeCrud
 from structjour.stock.utilities import qtime2pd
 from structjour.utilities.util import isNumeric
 from structjour.thetradeobject import SumReqFields
+
+from structjour.models.trademodels import Charts
+from structjour.models.meta import ModelBase
 
 # pylint: disable = C0103
 
@@ -161,13 +165,13 @@ class StatementDB:
                 {sf.start} TEXT NOT NULL,
                 {sf.date} TEXT NOT NULL,
                 {sf.dur} TEXT NOT NULL,
-                {sf.shares} INTEGER NOT NULL,
+                {sf.shares} TEXT NOT NULL,
                 {sf.mktval} NUMERIC NOT NULL,
                 {sf.targ} NUMERIC,
                 {sf.targdiff} NUMERIC,
                 {sf.stoploss} NUMERIC,
                 {sf.sldiff} NUMERIC,
-                {sf.rr} NUMERIC,
+                {sf.rr} TEXT,
                 {sf.realrr} NUMERIC,
                 {sf.maxloss} NUMERIC,
                 {sf.mstkval} NUMERIC,
@@ -272,14 +276,20 @@ class StatementDB:
         '''
         pass
 
-    def updateCharts(self, cur, trade):
+    def updateChartsSA(self, tradesum, trade):
         '''
         Helper method for updateTradeSummaries. Not intended for api use
         '''
         sf = self.sf
-        trade_sum_id = int(trade['id'].unique()[0])
-        name = trade[sf.name].unique()[0]
+        trade_sum_id = int(tradesum.id)
+        name = tradesum.name
         ticker = name.split(' ')[0]
+        tcrud = TradeCrud()
+
+        chartSA =  Charts()
+        chartSA.symb = ticker
+        chartSA.name = name
+        chartSA.trade_sum_id = trade_sum_id
         for i in range(0, 3):
             chart = 'chart' + str(i + 1)
             start = chart + 'Start'
@@ -290,41 +300,33 @@ class StatementDB:
             end = trade[end].unique()[0]
             start = qtime2pd(start)
             end = qtime2pd(end)
-            start = self.formatDate(start, frmt='%Y%m%d;%H%M%S')
-            end = self.formatDate(end, frmt='%Y%m%d;%H%M%S')
-            interval = int(trade[interval].unique()[0])
-            path, name = os.path.split(chart)
 
-            cursor = self.findChart(cur, trade_sum_id, i + 1)
+            chartSA.start = self.formatDate(start, frmt='%Y%m%d;%H%M%S')
+            chartSA.end = self.formatDate(end, frmt='%Y%m%d;%H%M%S')
+            chartSA.interval = int(trade[interval].unique()[0])
+            chartSA.path, chartSA.name = os.path.split(chart)
+            tcrud.updateChart(trade_sum_id, chartSA,  i+1)
 
-            if cursor:
-                id = cursor[0]
-                cur.execute(f'''
-                UPDATE chart set symb = ?, path = ?, name = ?, start = ?, end = ?,
-                    interval = ?
-                    WHERE id = ?''', (ticker, path, name, start, end, interval, id))
-            else:
-                source = 'user'
-                cursor = cur.execute('''
-                INSERT INTO chart(symb, path, name, source, start, end, interval, slot, trade_sum_id)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                    (ticker, path, name, source, start, end, interval, i + 1, trade_sum_id))
 
     def addCharts(self, cur, ts, symb, ts_id):
         '''
-        Generic creation of chart names. A helper method for addTradeSummaries. Not intended
+        Generic creation of chart entries if none exist. A helper method for addTradeSummaries. Not intended
         for api.
         '''
         dtfrmt = '%Y%m%d;%H%M%S'
         for i in range(3):
+            # Create the key, e.g chart1Start, chart2Start ...
             chart = 'chart' + str(i + 1)
             start = chart + 'Start'
             end = chart + 'End'
             interval = chart + 'Interval'
+
+            # Use the key to access data in ts
             chart = ts[chart].unique()[0]
             start = ts[start].unique()[0]
             end = ts[end].unique()[0]
             interval = int(ts[interval].unique()[0])
+
             path = self.settings.value('outdir')
             if not path:
                 raise ValueError('Fix this with better programming practices for your health and benefit')
@@ -395,85 +397,26 @@ class StatementDB:
             trade[sf.mktval] = 0
         return trade
 
-    def updateTradeSummaries(self, ts):
+
+    def updateTradeSummariesSA(self, ts):
         '''
-        This is called as part of saving trade summaries to db
-        Update the table trad_sum and its relations for the trades in ts.
-        :ts: A dict of dict. The keys for the outer dict are found in the list widget.
-        The inner dicts are the trade object with keys and db fields common to the
-        SumReqFields.columns
-        :params ts: dict<str, dict<k,v> Where the string is trade name like '1 IBM Long' a
-        found in the combo box of the Summary form
         '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
         sf = self.sf
         rc = self.rc
-        # tcols = sf.tcols
+        tcrud = TradeCrud()
         newts = dict()
         for dkey in ts:
             trade = ts[dkey]
             trade = self.doctorTheTrade(trade)
-            # daDay = self.formatDate(trade[sf.date].unique()[0])
-            tradesum = self.findTradeSummary(trade[sf.date].unique()[0], trade[sf.start].unique()[0])
             newts[dkey] = trade
+            tradesum = tcrud.updateTradeSummary(trade)
             if not tradesum:
                 continue
-            trade[sf.id] = tradesum[0]
+            trade[sf.id] = tradesum.id
 
-            # Removed the update for name, acct, pl, start, date, dur, shares. These should not change.
-            cur.execute(f''' UPDATE trade_sum SET
-                {sf.strat} = ?,
-                {sf.link1} = ?,
-                {sf.mktval} = ?,
-                {sf.targ} = ?,
-                {sf.targdiff} = ?,
-                {sf.stoploss} = ?,
-                {sf.sldiff} = ?,
-                {sf.rr} = ?,
-                {sf.realrr} = ?,
-                {sf.maxloss} = ?,
-                {sf.mstkval} = ?,
-                {sf.mstknote} = ?,
-                {sf.explain} = ?,
-                {sf.notes} = ?,
-                {sf.clean} = ?
-                WHERE  id = ?''', (
-                        trade[sf.strat].unique()[0],
-                        trade[sf.link1].unique()[0],
-                        trade[sf.mktval].unique()[0],
-                        trade[sf.targ].unique()[0],
-                        trade[sf.targdiff].unique()[0],
-                        trade[sf.stoploss].unique()[0],
-                        trade[sf.sldiff].unique()[0],
-                        trade[sf.rr].unique()[0],
-                        trade[sf.realrr].unique()[0],
-                        trade[sf.maxloss].unique()[0],
-                        trade[sf.mstkval].unique()[0],
-                        trade[sf.mstknote].unique()[0],
-                        trade[sf.explain].unique()[0],
-                        trade[sf.notes].unique()[0],
-                        trade[sf.clean].unique()[0],
-                        tradesum[0]))
-            self.updateCharts(cur, trade)
+            self.updateChartsSA(tradesum, trade)
 
-            # Check the related table ib_trades
-            id = int(trade[sf.id].unique()[0])
-            tradesDB = cur.execute(f'''
-                SELECT id, datetime, {rc.ticker}, {rc.acct}, trade_sum_id from ib_trades
-                    WHERE trade_sum_id = ?''', (id, ))
-            if tradesDB:
-                tradesDB = tradesDB.fetchall()
-                for tradeDB in tradesDB:
-                    tradeDF = pd.DataFrame(data=tradesDB, columns=['id', 'datetime', 'Symb', 'Acct', 'ts_id'])
-                    assert len(tradeDF['Symb'].unique()) == 1
-                    assert len(tradeDF['Acct'].unique()) == 1
-                    assert len(tradeDF['ts_id'].unique()) == 1
-                    assert tradeDF['ts_id'].unique()[0] == trade[sf.id].unique()[0]
-            else:
-                raise ValueError('Found an instance that requires updating ib_trade.trade_sum_id.')
-
-        conn.commit()
+        ModelBase.session.commit()
         return newts
 
     def addTradeSummaries(self, tsDict, ldf):
@@ -1213,7 +1156,7 @@ class StatementDB:
         self.insertPositions(cur, openPos)
         conn.commit()
         self.reFigureAPL(begin, end)
-        dbdr = DbDoctor()
+        dbdr = DbDoctorCrud()
         dbdr.doDups(autoDelete=True)
 
     def popHol(self):

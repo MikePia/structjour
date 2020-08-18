@@ -1,6 +1,6 @@
 '''
 This was the beginning of a sql query manager. It barely begins to do what sqlalchemy does so much better.
-Its not included in the setup build because the directory has no __init__.py file
+The directory has no __init__.py file so its not included in the setup build.
 '''
 # from structjour.colz.finreqcol import FinReqCol
 import pandas as pd

@@ -22,8 +22,11 @@ Find and correct db errors
 
 import logging
 import os
-import sqlite3
+from structjour.models.meta import ModelBase
+from structjour.models.trademodels import Trade, TradeSum, Tags
 
+from sqlalchemy import and_
+from sqlalchemy.orm import aliased
 import pandas as pd
 # from structjour.statements.ibstatementdb import StatementDB
 from PyQt5.QtCore import QSettings
@@ -31,7 +34,7 @@ from PyQt5.QtCore import QSettings
 # pylint: disable = C0103
 
 
-class DbDoctor:
+class DbDoctorCrud:
     '''
     Methods to look for discrepancies in the DB. Currently, just for finding and eliminting
     duplicate records caused by small time differences between IB and DAS transaction records.
@@ -91,8 +94,8 @@ class DbDoctor:
                 # Else if they have different trade_sum_id and one has only one ib_trade
                 # Delete the single association along with the tradeSum record
                 if not deleteTrade:
-                    trades1 = len(self.getTradesForTSID(t1['tsid']))
-                    trades2 = len(self.getTradesForTSID(t2['tsid']))
+                    trades1 = len(self.getTradesBySumId(t1['tsid']))
+                    trades2 = len(self.getTradesBySumId(t2['tsid']))
                     if trades1 == 1 and trades2 > 1:
                         deleteTrade = t1['id']
                         deleteTSum = t1['tsid']
@@ -106,7 +109,7 @@ class DbDoctor:
             # recommend deletion of the DAS  ('Keep the broker version')
             else:
                 deleteTrade = t1['id'] if t1['das'] == 'DAS' else t2['id']
-                len_t = self.getTradesForTSID(t1['tsid'])
+                len_t = self.getTradesBySumId(t1['tsid'])
                 if len_t:
                     len_t = len(len_t)
                     if(len_t) < 2:
@@ -126,169 +129,165 @@ class DbDoctor:
         return deleteMe, c_dups
 
     def deleteTradeById(self, tid):
-        '''
-        Leaving off the commit till Im nearly done programming it
-        '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''DELETE from ib_trades WHERE id = ?''', (tid, ))
-        conn.commit()
-        return cursor.rowcount
+        return Trade.deleteById(tid)
 
     def deleteTradeSumById(self, tid):
-        '''
-        Leaving off the commit till Im nearly done programming it
-        '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''DELETE from trade_sum WHERE id = ?''', (tid, ))
-        conn.commit()
-        return cursor.rowcount
+        return TradeSum.deleteById(tid)
 
-    def getChartsForTSID(self, tid):
-        '''
-        Retrieve the the records from the chart table that have the foreign key tid to the
-        trade_sum table
-        '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            select c.id
-            from trade_sum as ts
-            left join chart as c on c.trade_sum_id = ts.id
-            where ts.id = ?''', (tid, ))
-        cursor = cursor.fetchall()
-        return cursor
+    def getTradesBySumId(self, tsid):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Trade, TradeSum).filter(Trade.trade_sum_id == TradeSum.id).filter(TradeSum.id==tsid).with_entities(Trade.id).all()
+        return q
 
-    def getTradesForTSID(self, tsid):
-        # ibdb = DbDoctor()
-        # x = ibdb.db
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            select t.id
-            from trade_sum as ts
-            left join ib_trades as t on t.trade_sum_id = ts.id
-            where ts.id = ?''', (tsid,))
-        cursor = cursor.fetchall()
-        return cursor
-
-    def getTradesByID(self, tid):
-        '''
-        Get the trade and return a dict
-        '''
-        # ibdb = DbDoctor()
-        # x = ibdb.db
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            select *
-            from ib_trades
-            where id = ?''', (tid,))
-        cursor = cursor.fetchone()
+    def getTradesById(self, tid):
+        q = Trade.getById(tid)
+        if not q:
+            return None
+        # Now, unfortunately, going to return the same dict that the old interface did ... maybe fix this later to return the SA obj
         t = dict()
-        if cursor:
-            (t['id'], t['sym'], t['dt'], t['qty'], t['bal'], t['p'], t['avg'],
-            t['pl'], t['com'], t['oc'], t['das'], t['ib'], t['acct'], t['ts_id']) = cursor
-            return t
+        t['id'] = q.id
+        t['sym'] = q.symb
+        t['dt'] = q.datetime
+        t['qty'] = q.qty
+        t['bal'] = q.balance
+        t['p'] = q.price
+        t['avg'] = q.average
+        t['pl'] = q.pnl
+        t['com'] = q.commission
+        t['oc'] = q.oc
+        t['das'] = q.das
+        t['ib'] = q.ib
+        t['acct'] = q.account
+        t['ts_id'] = q.trade_sum_id
+        return t
 
-        return None
-
-    def getTradeSumByID(self, tid):
-        '''
-        Get the trade and return a dict
-        '''
-        # ibdb = DbDoctor()
-        # x = ibdb.db
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            select id, Name, Strategy, Account, PnL, Start, Date, Duration, Shares
-            from trade_sum
-            where id = ?''', (tid,))
-        cursor = cursor.fetchone()
+    def getTradeSumById(self, tid):
+        q = TradeSum.getById(tid)
+        if not q:
+            return q
+        # TODO
+        # Unfortunately, formatting to match the old interface. Definitely fix later
         t = dict()
-        if cursor:
-            (t['id'], t['name'], t['strat'], t['accnt'], t['pl'],
-            t['start'], t['date'], t['dur'], t['qty']) = cursor
-            return t
-
-        return None
-
-    def getTicketsWoTrades(self, account, theDate):
-        # ibdb = DbDoctor()
-        # x = ibdb.db
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            select id from ib_trades
-                where trade_sum_id is NULL
-                and Account = ?
-                and datetime > ?
-                order by datetime''', (account, theDate))
-        cursor = cursor.fetchall()
+        t['id'] = q.id
+        t['name'] = q.name
+        t['strat'] = q.strategy
+        t['accnt'] = q.account
+        t['pl'] = q.pnl
+        t['start'] = q.start
+        t['date'] = q.date
+        t['dur'] = q.duration
+        t['qty'] = q.shares
+        return t
 
     def makeDupDict(self, dup):
         '''
-        Create 2 dicts for the data returned from getDuplicateTrades query
+        By reimplementing this for the SA SQL thing, I can avoid rewriting some gnarley stuff
         '''
         t1 = dict()
         t2 = dict()
-        (t1['id'], t2['id'],
-        t1['bal'], t2['bal'],
-        t1['dt'], t2['dt'],
-        t1['das'], t1['ib'],
-        t2['das'], t2['ib'],
-        t1['tsid'], t2['tsid']) = dup
+
+        t1['id'] = dup['t1_id']
+        t1['bal'] = dup['t1_bal']
+        t1['dt'] = dup['t1_dt']
+        t1['das'] = dup['t1_das']
+        t1['ib'] = dup['t1_ib']
+        t1['tsid'] = dup['t1_tsid']
+        t1['price'] = dup['t1_price']
+
+        t2['id'] = dup['t2_id']
+        t2['bal'] = dup['t2_bal']
+        t2['dt'] = dup['t2_dt']
+        t2['das'] = dup['t2_das']
+        t2['ib'] = dup['t2_ib']
+        t2['tsid'] = dup['t2_tsid']
+        t2['price'] = dup['t2_price']
+
         return t1, t2
+
+    def getDuplicateTradesnew(self, account):
+        '''
+        Cold not figure the ORM equiivalent of a bunch of stuff here. Going to get
+        a more basic select/join and then process in python 
+
+        '''
+        import math
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        t1 = aliased(Trade)
+        t2 = aliased(Trade)
+        pairs = session.query(t1, t2).filter(and_(
+            t1.symb == t2.symb, 
+            # (((t1.price - t2.price) < .00001) or ((t2.price - t1.price) < .00001)),
+            # math.isclose(t1.price, t2.price, abs_tol=.00001),
+            t1.datetime < t2.datetime,
+            t1.account == account,
+            t2.account == account, 
+            t1.id != t2.id,
+            # (t2.das is None) and (t1.ib == "IB")
+            # (t2.das is None or t2.das == "") and (t1.ib is None or t1.ib == "")
+            )).all()
+        
+
+
+        # q = session.query(Trade).join(t2).filter( and_(
+            # substr(Trade.datetime, 1, 8) == substr(t2.datetime, 1, 8),
+        #     ((Trade.das is Null or Trade.das == "") and (t2.ib is Null or t2.ib == "")) or (
+        #      (Trade.ib is Null or Trade.ib == "") and (t2.das is Null and t2.das == ""))
+        # )).order_by(Trade.datetime).all()
+        print(q)
+        print()
 
     def getDuplicateTrades(self, account):
         '''
-        Find duplicate trades in which one was created by a DAS export  the other
-        by an IB Statement. Price, Qty and day are the same. In most the Balance
-        is the same. In all verified dups, the time differs by 1 second.
-        This is not an exact science. Make a utility  to alert the user and let
-        them verify
-        Need a way to mark a trade a non dup-tho it passes all these tests...
+        Have been unable to write a usable query using the ORM. Here it is
+        in SQL
         '''
-        # ibdb = DbDoctor()
-        # x = ibdb.db
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            SELECT t.id, t2.id,
-                    t.Balance, t2.Balance,
-                    t.datetime, t2.datetime,
-                    t.DAS, t.IB, t2.DAS, t2.IB,
-                    t.trade_sum_id, t2.trade_sum_id
+        from sqlalchemy.sql import text
+        ModelBase.connect(new_session=True)
+        
+        conn = ModelBase.engine.connect()
+        statement  =  f'''
+            SELECT t.id as t1_id, t2.id as t2_id,
+                    t.balance as t1_bal, t2.balance as t2_bal,
+                    t.datetime as t1_dt, t2.datetime as t2_dt,
+                    t.DAS as t1_das, t2.das as t2_das,
+                     t.ib as t1_ib, t2.ib as t2_ib,
+                    t.trade_sum_id as t1_tsid, t2.trade_sum_id as t2_tsid,
+                    t.price as t1_price, t2.price as t2_price
                 FROM ib_trades AS t
                     INNER  JOIN ib_trades as t2
                 WHERE t.Symb = t2.symb
                 AND t.Qty = t2.Qty
-                AND t.Price = t2.Price
+                AND (t.Price - t2.Price < .00001 or t2.Price - t.price < .00001)
 
                 AND t.datetime < t2.datetime
-                AND t.Account = ?
+                AND t.Account = "{account}"
                 AND t.Account = t2.Account
                 AND substr(t.datetime,1, 8) = substr(t2.datetime,1, 8)
                 AND (((t.DAS is NULL or t.DAS = "") and (t2.IB is NULL or t2.IB = ""))
                     or ((t.IB is NULL or t.IB = "") and (t2.DAS is NULL or t2.DAS = "")))
-                ORDER BY t.datetime''', (account, ))
-
-        cursor = cursor.fetchall()
-        if not cursor:
-            return None
-        return cursor
+                ORDER BY t.datetime'''
+        statement = text(statement)
+        result = ModelBase.engine.execute(statement)
+        result = [x for x in result]
+        return result
+        print()
+   
 
 
 def notmain():
     '''Run some local code'''
+    q = TradeSum.getById(1786)
+    print(q.shares)
+
+    dbdr = DbDoctorCrud()
+    qq= dbdr.getTradeSumById(1786)
 
     # getChartsForTSID(560)
-    # getTradesForTSID(560)
-    # getTicketsWoTrades("U2429974", "201811")
-    dbdr = DbDoctor()
-    dbdr.doDups(autoDelete=True)
+    # dbdr.getDuplicateTrades("U2429974")
+    # dbdr.doDups()
+    # dbdr.getTradesById(5670)
 
 
 if __name__ == '__main__':
