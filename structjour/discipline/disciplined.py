@@ -517,7 +517,7 @@ def registerTrades(wb, theDate):
     tu = DefineTrades('DB')
     df, ldf = tu.processDBTrades(df)
 
-    ts, entries = ibdb.getTradeSummaries(theDate)
+    ts, entries = ibdb.getTradeSummariesSA(theDate)
     # self.ts = setTradeSummaryHeaders(ts)
 
     drc = DisReqCol(theDate)

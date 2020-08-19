@@ -144,7 +144,6 @@ class TradeSum(Base):
         q = session.query(TradeSum).filter_by(date=date).filter_by(start=start).all()
         return q
 
-
     @classmethod
     def append_tag(cls, trade_sum_id, tag_name=None, tag_id=None):
         if (tag_name is None and tag_id is None):
@@ -314,7 +313,6 @@ class TradeSum(Base):
         q = session.query(TradeSum).filter_by(id=id).one_or_none()
         return q
 
-
     @classmethod
     def deleteById(cls, tsid):
         ModelBase.connect(new_session=True)
@@ -325,7 +323,15 @@ class TradeSum(Base):
         session.delete(q)
         return 1
 
+    @classmethod
+    def getEntryTrades(cls, tsid):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(TradeSum).filter_by(id=tsid).one_or_none()
+        if q:
+            print(q.ib_trades)
 
+   
 class Trade(Base):
     __tablename__ = "ib_trades"
     id = Column(Integer, primary_key=True)
@@ -346,7 +352,7 @@ class Trade(Base):
     tradesum = relationship('TradeSum', back_populates='ib_trades')
 
     def __repr__(self):
-        return f"<Trade(Symb={self.symb}: Qty={self.qty}: Date={self.datetime})>"
+        return f"<Trade(symb={self.symb}: qty={self.qty}: datetime={self.datetime})>"
 
     @classmethod
     def getIntradayTrades(cls, daDate):
@@ -394,6 +400,30 @@ class Trade(Base):
         session = ModelBase.session
         q = session.query(Trade).filter_by(id=tid).one_or_none()
         return q
+
+    @classmethod
+    def getStatementQuery(cls, begin, end, account='all'):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Trade).filter(Trade.datetime > begin).filter(Trade.datetime < end)
+        if account != 'all':
+            q = q.filter_by(account=account)
+        return q
+
+    @classmethod
+    def addTradesToSum(cls, tsid, tids):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+    
+        if not isinstance(tids, list):
+            tids = [tids]
+        for t in tids:
+            q = session.query(Trade).filter_by(id=t).one_or_none()
+            if q:
+                q.trade_sum_id = tsid
+
+        session.commit()
+
 
 TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
 TradeSum.charts = relationship("Charts", back_populates="tradesum")
@@ -552,10 +582,12 @@ def exercisegetListsOfTradesForStrategies():
         print(t[0], len(t[1]))
     print()
 
+def getEntries():
+    TradeSum.getEntryTradesSA(2136)
 
 def dostuff():
-    ModelBase.connect()
-    ModelBase.createAll()
+    # ModelBase.connect()
+    # ModelBase.createAll()
 
 
     # addTags()
@@ -566,7 +598,8 @@ def dostuff():
     # getTags()
     # removeTag()
     # getTradeSum()
-    findTradeByTime()
+    # findTradeByTime()
+    getEntries()
 
     # getIntraStuff()
     # getTradeSumAccounts()

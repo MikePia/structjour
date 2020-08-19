@@ -190,7 +190,7 @@ class LayoutForms:
         tu = DefineTrades('DB')
         self.df, ldf = tu.processDBTrades(df)
 
-        ts, self.entries = ibdb.getTradeSummaries(theDate)
+        ts, self.entries = ibdb.getTradeSummariesSA(theDate)
         if not ts:
             logging.info(f"No user data has been saved for {theDate.strftime('%A %B %d')}.")
             return None

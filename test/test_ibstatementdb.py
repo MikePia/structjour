@@ -60,7 +60,7 @@ class Test_StatementDB(unittest.TestCase):
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
 
-    def test_findTradeSummary(self):
+    def test_findTradeSummarySA(self):
         '''
         Test findTradeSummary, a helper method for addTradeSummaries and updateTradeSummaries.
         Note that one of those needs to have run and succeeded inorder to test this method.
@@ -86,15 +86,15 @@ class Test_StatementDB(unittest.TestCase):
         dframe, ldf = trades.processDBTrades(df)
         tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
 
-        ibdb.addTradeSummaries(ts, ldf)
+        ibdb.addTradeSummariesSA(ts, ldf)
 
         # The test database trades_sum should now only the trades from theDate, one
         # entry per trade
         for i, trade in enumerate(tradeSummaries):
-            x = ibdb.findTradeSummary(theDate, trade['Start'].unique()[0])
+            x = ibdb.findTradeSummarySA(theDate, trade['Start'].unique()[0])
             self.assertEqual(trade['Name'].unique()[0], x[1])
 
-    def test_addTradeSummaries(self):
+    def test_addTradeSummariesSA(self):
         '''
         Tests addTradeSummaries. The method requires trades are already in the database.
         We achieve that with openStuff.
@@ -117,11 +117,11 @@ class Test_StatementDB(unittest.TestCase):
                 tu = DefineTrades("DB")
                 dframe, ldf = tu.processDBTrades(df)
                 tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
-                ibdb.addTradeSummaries(ts, ldf)
+                ibdb.addTradeSummariesSA(ts, ldf)
                 summaries = ibdb.getTradeSumByDate(day)
                 for summary in summaries:
                     summary = ibdb.makeTradeSumDict(summary)
-                    entryTrades = ibdb.getEntryTrades(summary['id'])
+                    entryTrades = ibdb.getEntryTradesSA(summary['id'])
                     self.assertGreater(len(entryTrades), 0)
 
                 break   # Use this to just test addTradeSummaries once
@@ -321,11 +321,11 @@ def main():
 
 def notmain():
     t = Test_StatementDB()
-    # t.test_findTradeSummary()
+    # t.test_findTradeSummarySA()
     # t.test_getUncoveredDays()
     # t.test_getStatementDays()
     # t.test_insertTrade()
-    # t.test_addTradeSummaries()
+    # t.test_addTradeSummariesSA()
     # t.test_findTrade()
     t.test_ibstatement()
     # t.test_insertPositions()

@@ -127,7 +127,7 @@ class TestDailyCtrl(TestCase):
         lf = LayoutForms(sc, jf, self.df)
         lf.runTtoSummaries(ldf)
         self.ts = lf.ts
-        ibdb.addTradeSummaries(self.ts, ldf)
+        ibdb.addTradeSummariesSA(self.ts, ldf)
 
     def tearDown(self):
         # just in case the testdb was written to settings

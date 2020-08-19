@@ -23,7 +23,7 @@ sqlalchemy models for trade tables
 Implement the db methods from StatementDB using SA -- 
     Planning to change it a bit to make it more independent. That will require some changes outside this file.
 '''
-
+import pandas as pd
 from structjour.models.meta import ModelBase
 from structjour.models.trademodels import Trade, TradeSum, Charts
 
@@ -40,6 +40,14 @@ def formatDate(daDate, frmt='%Y%m%d'):
 def formatTime(daTime, frmt='%H:%M:%S'):
     daTime = pd.Timestamp(daTime)
     return  daTime.strftime(frmt)
+
+def getFloat(val):
+    if not isinstance(val, (float)):
+        try:
+            val = float(val)
+        except:
+            return 0.0
+    return val
 
 class TradeCrud:
     def __init__(self, db=None, source=None):
@@ -72,9 +80,50 @@ class TradeCrud:
         ModelBase.connect(new_session=True)
         ModelBase.createAll()
 
+    def insertTradeSummary(self, trade):
+        '''
+        Create a new record from the trade object
+        :params trade: DataFrame that uses the column names defined in SumReqFields
+        '''
+        sf = self.sf
+        rc = self.rc
+        # tcols = sf.tcols
+        newts = dict()
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        tradesum = TradeSum()
+
+
+        tradesum.name = trade[sf.name].unique()[0]
+        tradesum.strategy = trade[sf.strat].unique()[0]
+        tradesum.link1 = trade[sf.link1].unique()[0]
+        tradesum.account = trade[sf.acct].unique()[0]
+        tradesum.pnl = trade[sf.pl].unique()[0]
+        tradesum.start = formatTime(trade[sf.start].unique()[0])
+        tradesum.date = formatDate(trade[sf.date].unique()[0])
+        tradesum.duration = trade[sf.dur].unique()[0]
+        tradesum.shares = trade[sf.shares].unique()[0]
+        tradesum.mktval = getFloat(trade[sf.mktval].unique()[0])
+        tradesum.target = getFloat(trade[sf.targ].unique()[0])
+        tradesum.targdiff = getFloat(trade[sf.targdiff].unique()[0])
+        tradesum.stoploss = getFloat(trade[sf.stoploss].unique()[0])
+        tradesum.sldiff = getFloat(trade[sf.sldiff].unique()[0])
+        tradesum.rr = trade[sf.rr].unique()[0]
+        tradesum.realrr = trade[sf.realrr].unique()[0]
+        tradesum.maxloss = getFloat(trade[sf.maxloss].unique()[0])
+        tradesum.mstkval = getFloat(trade[sf.mstkval].unique()[0])
+        tradesum.mstknote = trade[sf.mstknote].unique()[0]
+        tradesum.explain = trade[sf.explain].unique()[0]
+        tradesum.notes = trade[sf.notes].unique()[0]
+        tradesum.clean = ''
+        session.add(tradesum)
+        session.commit()
+        return tradesum
+
     def updateTradeSummary(self, trade):
         '''
-        Use the session from findTradeSummary
+        Update the user fields in trade_sum. 
+        :params trade: DataFrame that uses the column names defined in SumReqFields
         '''
         sf = self.sf
         rc = self.rc
@@ -89,24 +138,22 @@ class TradeCrud:
         tradesum.strategy = trade[sf.strat].unique()[0]
         tradesum.link1 = trade[sf.link1].unique()[0]
 
-        tradesum.mktval = trade[sf.mktval].unique()[0]
-        tradesum.target = float(trade[sf.targ].unique()[0])
-        tradesum.targdiff = trade[sf.targdiff].unique()[0]
-        tradesum.stoploss = trade[sf.stoploss].unique()[0]
-        tradesum.sldiff = trade[sf.sldiff].unique()[0]
+        tradesum.mktval = getFloat(trade[sf.mktval].unique()[0])
+        tradesum.target = getFloat(trade[sf.targ].unique()[0])
+        tradesum.targdiff = getFloat(trade[sf.targdiff].unique()[0])
+        tradesum.stoploss = getFloat(trade[sf.stoploss].unique()[0])
+        tradesum.sldiff = getFloat(trade[sf.sldiff].unique()[0])
         tradesum.rr = trade[sf.rr].unique()[0]
         tradesum.realrr = trade[sf.realrr].unique()[0]
-        tradesum.maxloss = trade[sf.maxloss].unique()[0]
-        tradesum.mstkval = trade[sf.mstkval].unique()[0]
+        tradesum.maxloss = getFloat(trade[sf.maxloss].unique()[0])
+        tradesum.mstkval = getFloat(trade[sf.mstkval].unique()[0])
         tradesum.mstknote = trade[sf.mstknote].unique()[0]
         tradesum.explain = trade[sf.explain].unique()[0]
         tradesum.notes = trade[sf.notes].unique()[0]
-        tradesum.clear = trade[sf.clean].unique()[0]
+        tradesum.clean = trade[sf.clean].unique()[0]
         session.add(tradesum)
         session.commit()
         return tradesum
-
-
 
     def getTradeSumByDate(self, daDate):
         sf = self.sf
@@ -115,16 +162,19 @@ class TradeCrud:
             return None
         return tsums
 
+    def getTradeSumById(self, tsid):
+        return TradeSum.getById(tsid)
+
     def findTradeSummary(self, date, start):
         '''
-        A helper method for addTradeSummaries and updateTradeSummaries
+        A helper method for addTradeSummariesSA and updateTradeSummaries
         Get a single trade summary record by date and time
         :date: A Date string or Timestamp for the date to find.
         :start: A Time string or Timestamp for the time to find
         :return: The found record as a tuple or False
         '''
         
-        x = TradeSum.findByTime(date, start)
+        x = TradeSum.findByTime(formatDate(date), formatTime(start))
         if x:
             if len(x) > 1:
                 logging.error(f'multiple trade summaries found with date:{date}, start: {start}')
@@ -134,6 +184,25 @@ class TradeCrud:
 
     def updateChart(self, tsid, chart, slot):
         Charts.updateChart(tsid, chart, slot)
+
+    def getStatementDf(self, begin, end, account):
+        q = Trade.getStatementQuery(begin, end, account)
+        df = pd.read_sql(q.statement, con=ModelBase.session.bind)
+        print()
+        return df
+
+    def updateEntries(self, tsid, tids):
+        if isinstance(tids, pd.DataFrame):
+            tids = list(tids.id)
+        elif isinstance(tids, int):
+            tids = [tids]
+        elif not isinstance(tids, list):
+            raise ValueError(f'arg typ of tids: {type(tids)} requires more programming')
+        Trade.addTradesToSum(tsid, tids)
+
+    def getEntryTrades(self, tsid):
+        return TradeSum.getEntryTrades(tsid)
+
 
 
 

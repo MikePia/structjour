@@ -170,7 +170,7 @@ class runController:
         lf = LayoutForms(self.sc, jf, dframe)
         lf.pickleitnow()
         lf.runTtoSummaries(ldf)
-        self.statement.addTradeSummaries(lf.ts, ldf)
+        self.statement.addTradeSummariesSA(lf.ts, ldf)
         return True
 
     def gotTrades(self):
