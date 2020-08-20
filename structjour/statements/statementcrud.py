@@ -26,6 +26,7 @@ Implement the db methods from StatementDB using SA --
 import pandas as pd
 from structjour.models.meta import ModelBase
 from structjour.models.trademodels import Trade, TradeSum, Charts
+from structjour.models.coveredmodel import Covered
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.thetradeobject import SumReqFields
@@ -203,7 +204,47 @@ class TradeCrud:
     def getEntryTrades(self, tsid):
         return TradeSum.getEntryTrades(tsid)
 
+    def findTrade(self, datetime, symbol, quantity, account):
+        # Looking for a duplicate trade
+        t = Trade.findTrade(datetime, symbol, quantity, account)
+        return t if t else False
 
+    def insertTrade(self, row, oc, source, new_session=False):
+        '''
+        Verify before calling, check findTrade for duplicates and if found,
+        assign trade argument  (to update pnl, avg, balance and oc)
+        :params row: pd.Series
+        :params oc: The Open/Close code
+        :params source: Currently DAS or IB
+        '''
+        if new_session:
+            ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        das, ib = ('DAS', None) if source == 'DAS' else (None, 'IB')
+
+        trade = Trade(
+            symb = row['Symb'],
+            datetime = row['DateTime'],
+            qty = row['Qty'],
+            balance = row['Balance'],
+            price = row['Price'],
+            average = row['Average'],
+            pnl = row['PnL'],
+            commission = row['Commission'],
+            oc = oc,
+            das =  das,
+            ib = ib,
+            account = row['Account']
+            # trade_sum_id=Column(Integer, ForeignKey('trade_sum.id'))
+        )
+        session.add(trade)
+        return True
+
+    def isDateCovered(self, account, d):
+        return Covered.isDateCovered(account, d)
+
+    def insertCovered(self, account, d):
+        Covered.insertCovered(account, d)
 
 
 def dostuff():

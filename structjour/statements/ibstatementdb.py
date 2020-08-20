@@ -394,6 +394,13 @@ class StatementDB:
             return x
         return False
 
+    def findTradeSA(self, datetime, symbol, quantity, account):
+        '''
+        Find a unique trade for date, symbol, quantity and account. This method is here
+        to prevent duplicate trades, not to get a collection of trades.
+        '''
+        return self.tcrud.findTrade(datetime, symbol, quantity, account)
+
     def findTrade(self, datetime, symbol, quantity, account, cur=None):
         '''
         Find a unique trade for date, symbol, quantity and account. This method is here
@@ -419,6 +426,44 @@ class StatementDB:
                 pass
             return x
         return False
+
+    def insertTradeSA(self, row, update=False):
+        '''
+        Insert a trade into ib_trades table. Commit not included for speed.
+        :params row:A pandas object that includes the headers:
+            ticker, 'DateTime', shares, price, comm, acct, bal, avg, rc.PL. For the precise
+            names of the headers see the required columns object self.rc
+
+        '''
+        rc = self.rc
+        atrade = self.findTradeSA(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct])
+        if atrade:
+            if update:
+                # atrade = self.makeTradeDict(atrade[0])
+                raise ValueError('That piece of the program does not yet exist.')
+                self.updateAvgBalPlOC(cur, atrade, row[rc.avg], row[rc.bal], row[rc.PL], row[rc.oc])
+            return True
+        if rc.oc in row.keys():
+            codes = row[rc.oc]
+        else:
+            codes = ''
+        das = None
+        ib = None
+        if self.source == 'DAS':
+            das = 'DAS'
+        elif self.source == 'IB':
+            ib = 'IB'
+        return self.tcrud.insertTrade(row, codes, self.source)
+        # x = cur.execute(f'''
+        #     INSERT INTO ib_trades ({rc.ticker}, datetime, {rc.shares}, {rc.price}, {rc.comm},
+        #                            {rc.oc}, {rc.acct}, {rc.bal}, {rc.avg}, {rc.PL}, DAS, IB)
+        #     VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        #     (row[rc.ticker], row['DateTime'], row[rc.shares], row[rc.price], row[rc.comm],
+        #      codes, row[rc.acct], row[rc.bal], row[rc.avg], row[rc.PL], das, ib))
+        # if x.rowcount == 1:
+        #     return True
+
+        # return False
 
     def insertTrade(self, row, cur, update=False):
         '''
@@ -482,13 +527,10 @@ class StatementDB:
         x = cursor.fetchone()
         return x
 
-    def coveredDates(self, begin, end, account, cur=None):
+    def coveredDatesSA(self, begin, end, account):
         '''
         Inserts the dates between begin and end  into the ib_covered table
         '''
-        if not cur:
-            conn = sqlite3.connect(self.db)
-            cur = conn.cursor()
         delt = pd.Timedelta(days=1)
         begin = pd.Timestamp(begin).date()
         current = begin
@@ -497,13 +539,10 @@ class StatementDB:
         else:
             end = pd.Timestamp(end).date()
         while current <= end:
-            if not self.isDateCovered(cur, account, current):
+            if not self.tcrud.isDateCovered(account, current):
                 d = current.strftime('%Y%m%d')
-                cur.execute('''
-                    INSERT INTO ib_covered(day, covered, account)
-                    VALUES(?, ?, ?)''', (d, 'true', account))
+                self.tcrud.insertCovered(account, d)
             current = current + delt
-        # conn.commit()
 
     def insertPositions(self, cur, posTab):
         '''
@@ -1013,6 +1052,34 @@ class StatementDB:
                             if j == 0:
                                 conn.commit()
                                 return
+
+    def processStatementSA(self, tdf, account, begin, end, openPos=None):
+        '''
+        Processs the trade, positions, and covered tables using the Trades table and the
+        OpenPositions table.
+        '''
+        rc = self.rc
+        assert begin
+        assert isinstance(begin, dt.date)
+        if end:
+            assert isinstance(end, dt.date)
+
+        count = 0
+        for i, row in tdf.iterrows():
+            if self.insertTradeSA(row, update=True):
+                count = count + 1
+        if count == len(tdf):
+            accounts = tdf[rc.acct].unique()
+            for account in accounts:
+                self.coveredDatesSA(begin, end, account)
+        else:
+            pass
+        # self.insertPositions(openPos)
+        ModelBase.session.commit()
+        # conn.commit()
+        self.reFigureAPL(begin, end)
+        dbdr = DbDoctorCrud()
+        dbdr.doDups(autoDelete=True)
 
     def processStatement(self, tdf, account, begin, end, openPos=None):
         '''

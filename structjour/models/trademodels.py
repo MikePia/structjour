@@ -392,6 +392,7 @@ class Trade(Base):
         if not q:
             return 0
         ModelBase.session.delete(q)
+        ModelBase.session.commit()
         return 1
 
     @classmethod
@@ -424,6 +425,17 @@ class Trade(Base):
 
         session.commit()
 
+    @classmethod
+    def findTrade(cls, datetime, symbol, quantity, account):
+        '''
+        Must use existing session
+        :raise ValueError: If ModelBase.session is not already initialized 
+        '''
+        if not ModelBase.session or not ModelBase.engine:
+            raise ValueError('Sqlalchemy must be initialized with a session prior to this call')
+        session = ModelBase.session
+        q = session.query(Trade).filter_by(symb=symbol).filter_by(datetime=datetime).filter_by(qty=quantity).filter_by(account=account).one_or_none()
+        return q
 
 TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
 TradeSum.charts = relationship("Charts", back_populates="tradesum")

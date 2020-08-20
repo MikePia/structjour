@@ -392,7 +392,7 @@ class IbStatement:
             tables['Trades'] = self.figureBAPL(tables['Trades'], tables['OpenPositions'])
             # Here we need to combine with cheatForBAPL to accomodate statements with no
             # OpenPositions
-            ibdb.processStatement(tables['Trades'], self.account, self.beginDate, self.endDate,
+            ibdb.processStatementSA(tables['Trades'], self.account, self.beginDate, self.endDate,
                                   openPos=openpos)
         return tables, tablenames
 
@@ -847,7 +847,7 @@ class IbStatement:
             if 'POST' in tables.keys():
                 positions = tables['POST']
                 tables['TRNT'] = self.figureBAPL(tables['TRNT'], positions)
-            ibdb.processStatement(tables['TRNT'], self.account, self.beginDate, self.endDate,
+            ibdb.processStatementSA(tables['TRNT'], self.account, self.beginDate, self.endDate,
                                   openPos=positions)
         return tables, tablenames
 

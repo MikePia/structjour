@@ -679,7 +679,8 @@ class DasStatement:
         account = self.settings.value('account')
         if not account:
             account = ''
-        ibdb.processStatement(newdf, account, self.theDate, self.theDate)
+        ibdb.processStatementSA(newdf, account, self.theDate, self.theDate)
+        # ibdb.processStatement(newdf, account, self.theDate, self.theDate)
 
         return newdf
 
