@@ -78,6 +78,7 @@ class TradeCrud:
         self.rc = FinReqCol()
         self.sf = SumReqFields()
         self.createTable()
+        ModelBase.session.close()
 
     def getTableNames(self):
         if not ModelBase.engine:
@@ -102,6 +103,8 @@ class TradeCrud:
         rc = self.rc
         # tcols = sf.tcols
         newts = dict()
+        ModelBase.session.rollback()
+        ModelBase.session.close()
         ModelBase.connect(new_session=True)
         session = ModelBase.session
         tradesum = TradeSum()
@@ -194,6 +197,9 @@ class TradeCrud:
             return x[0]
 
         return False
+
+    def updateMstkVals(self, tsid, val, note):
+        TradeSum.updateMstkVals(self, tsid, val, note)
 
     def getTradesByTsid(self, tsid):
         return Trade.getByTsid(tsid)

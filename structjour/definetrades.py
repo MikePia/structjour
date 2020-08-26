@@ -227,6 +227,7 @@ class DefineTrades(object):
                 x[0].pnl = daSum
                 ModelBase.session.commit()
                 logging.info(f'Structjour updated the pnl for {x[0].name} on {d} {s}')
+        ModelBase.session.close()
 
     def addTradeDurationDB(self, dframe):
         '''

@@ -257,59 +257,12 @@ class StatementDB:
                 self.updateChartsSA(tradesum, ts)
                 self.updateEntriesSA(tradesum.id, tdf)
 
-    def findTrades(self, datetime, symbol, quantity, price, account, cur=None):
-        '''return: a tuple'''
-        rc = self.rc
-        if not cur:
-            conn = sqlite3.connect(self.db)
-            cur = conn.cursor()
-        cursor = cur.execute(f'''
-            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct}
-                FROM ib_trades
-                    WHERE datetime = ?
-                    AND {rc.ticker} = ?
-                    AND {rc.price} = ?
-                    AND {rc.shares} = ?
-                    AND {rc.acct} = ?
-            ''',
-            (datetime, symbol, price, quantity, account))
-        x = cursor.fetchall()
-        if x:
-            return x
-        return False
-
-    def findTradeSA(self, datetime, symbol, quantity, account):
+    def findTradesSA(self, datetime, symbol, quantity, account):
         '''
         Find a unique trade for date, symbol, quantity and account. This method is here
         to prevent duplicate trades, not to get a collection of trades.
         '''
         return self.tcrud.findTrade(datetime, symbol, quantity, account)
-
-    def findTrade(self, datetime, symbol, quantity, account, cur=None):
-        '''
-        Find a unique trade for date, symbol, quantity and account. This method is here
-        to prevent duplicate trades, not to get a collection of trades.
-        '''
-        rc = self.rc
-        if not cur:
-            conn = sqlite3.connect(self.db)
-            cur = conn.cursor()
-        # The select order is that used by makeTradeDict
-        cursor = cur.execute(f'''
-            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg}, {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm}
-                FROM ib_trades
-                    WHERE datetime = ?
-                    AND {rc.ticker} = ?
-                    AND {rc.shares} = ?
-                    AND {rc.acct} = ?
-            ''',
-            (datetime, symbol, quantity, account))
-        x = cursor.fetchall()
-        if x:
-            if len(x) != 1:
-                pass
-            return x
-        return False
 
     def insertTradeSA(self, row, update=False):
         '''
@@ -320,48 +273,25 @@ class StatementDB:
 
         '''
         rc = self.rc
-        atrade = self.findTradeSA(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct])
+        atrade = self.findTradesSA(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct])
         if atrade:
             if update:
                 self.updateAvgBalPlOC_SA(atrade, row[rc.avg], row[rc.bal], row[rc.PL], row[rc.oc], new_session=False)
             return True
         return self.tcrud.insertTrade(row, self.source)
 
-    def insertTrade(self, row, cur, update=False):
-        '''
-        Insert a trade into ib_trades table. Commit not included for speed.
-        :params row:A pandas object that includes the headers:
-            ticker, 'DateTime', shares, price, comm, acct, bal, avg, rc.PL. For the precise
-            names of the headers see the required columns object self.rc
+    def updateMstkValsSA(self, ts_id, val, note):
+        if not ts_id:
+            return
+        if not conn:
+            conn = sqlite3.connect(self.db)
 
-        '''
-        rc = self.rc
-        atrade = self.findTrade(row['DateTime'], row[rc.ticker], row[rc.shares], row[rc.acct], cur)
-        if atrade:
-            if update:
-                atrade = self.makeTradeDict(atrade[0])
-                self.updateAvgBalPlOC(cur, atrade, row[rc.avg], row[rc.bal], row[rc.PL], row[rc.oc])
-            return True
-        if rc.oc in row.keys():
-            codes = row[rc.oc]
-        else:
-            codes = ''
-        das = None
-        ib = None
-        if self.source == 'DAS':
-            das = 'DAS'
-        elif self.source == 'IB':
-            ib = 'IB'
-        x = cur.execute(f'''
-            INSERT INTO ib_trades ({rc.ticker}, datetime, {rc.shares}, {rc.price}, {rc.comm},
-                                   {rc.oc}, {rc.acct}, {rc.bal}, {rc.avg}, {rc.PL}, DAS, IB)
-            VALUES(?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (row[rc.ticker], row['DateTime'], row[rc.shares], row[rc.price], row[rc.comm],
-             codes, row[rc.acct], row[rc.bal], row[rc.avg], row[rc.PL], das, ib))
-        if x.rowcount == 1:
-            return True
-
-        return False
+        cur = conn.cursor()
+        ts_id = int(ts_id)
+        sf = self.sf
+        cur.execute(f'''UPDATE trade_sum SET {sf.mstkval} = ?, {sf.mstknote} = ?
+                WHERE id = ?''', (val, note, ts_id))
+        conn.commit()
 
     def updateMstkVals(self, ts_id, val, note, conn=None):
         if not ts_id:
@@ -1287,35 +1217,6 @@ class StatementDB:
         dbdr = DbDoctorCrud()
         dbdr.doDups(autoDelete=True)
 
-    def processStatement(self, tdf, account, begin, end, openPos=None):
-        '''
-        Processs the trade, positions, and covered tables using the Trades table and the
-        OpenPositions table.
-        '''
-        rc = self.rc
-        assert begin
-        assert isinstance(begin, dt.date)
-        if end:
-            assert isinstance(end, dt.date)
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        count = 0
-        for i, row in tdf.iterrows():
-            if self.insertTrade(row, cur, update=True):
-                count = count + 1
-        if count == len(tdf):
-            accounts = tdf[rc.acct].unique()
-            for account in accounts:
-                self.coveredDates(begin, end, account, cur)
-        else:
-            pass
-        self.insertPositions(cur, openPos)
-        conn.commit()
-        self.reFigureAPL(begin, end)
-        dbdr = DbDoctorCrud()
-        dbdr.doDups(autoDelete=True)
-
     def popHol(self):
         '''
         Populat the holidays table.
@@ -1328,6 +1229,7 @@ class StatementDB:
                     self.tcrud.insertHoliday(holiday[i], holiday[0], commit=False)
         if didsomething:
             ModelBase.session.commit()
+            ModelBase.session.close()
 
     def isCovered(self, account, d):
         '''
