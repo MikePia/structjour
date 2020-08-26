@@ -27,6 +27,7 @@ import pandas as pd
 from structjour.models.meta import ModelBase
 from structjour.models.trademodels import Trade, TradeSum, Charts
 from structjour.models.coveredmodel import Covered
+from structjour.models.holidaysmodel import Holidays
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.thetradeobject import SumReqFields
@@ -183,8 +184,14 @@ class TradeCrud:
 
         return False
 
+    def getTradesByTsid(self, tsid):
+        return Trade.getByTsid(tsid)
+
     def updateChart(self, tsid, chart, slot):
         Charts.updateChart(tsid, chart, slot)
+
+    def getCharts(self, tsid):
+        return Charts.getCharts(tsid)
 
     def getStatementDf(self, begin, end, account):
         q = Trade.getStatementQuery(begin, end, account)
@@ -209,10 +216,8 @@ class TradeCrud:
         t = Trade.findTrade(datetime, symbol, quantity, account)
         return t if t else False
 
-    def insertTrade(self, row, oc, source, new_session=False):
+    def insertTrade(self, row, source, new_session=False):
         '''
-        Verify before calling, check findTrade for duplicates and if found,
-        assign trade argument  (to update pnl, avg, balance and oc)
         :params row: pd.Series
         :params oc: The Open/Close code
         :params source: Currently DAS or IB
@@ -221,6 +226,7 @@ class TradeCrud:
             ModelBase.connect(new_session=True)
         session = ModelBase.session
         das, ib = ('DAS', None) if source == 'DAS' else (None, 'IB')
+        oc = row['OC'] if 'OC' in row.keys() else ''
 
         trade = Trade(
             symb = row['Symb'],
@@ -238,6 +244,8 @@ class TradeCrud:
             # trade_sum_id=Column(Integer, ForeignKey('trade_sum.id'))
         )
         session.add(trade)
+        if new_session:
+            session.commit()
         return True
 
     def isDateCovered(self, account, d):
@@ -245,6 +253,31 @@ class TradeCrud:
 
     def insertCovered(self, account, d):
         Covered.insertCovered(account, d)
+
+    def isHoliday(self, d):
+        return Holidays.isHoliday(d)
+    
+    def insertHoliday(self, day, name, commit=False):
+        Holidays.insertHoliday(day, name, commit)
+
+    def updateAvgBalPlOC(self, atrade, avg, bal, pl, oc, new_session=True):
+        Trade.updateAvgBalPlOC(atrade, avg, bal, pl, oc, new_session)
+
+    def getBadTrades(self):
+        return Trade.getBadTrades()
+    
+    def getPreviousTrades(self, atrade):
+        return Trade.getPreviousTrades(atrade)
+
+    def getNextTrades(self, atrade):
+        return Trade.getNextTrades(atrade)
+
+    def getCoveredDays(self, account, beg, end):
+        return Covered.getCoveredDays(account, beg, end)
+
+    def updateBal(self, t, balance):
+        x = Trade.updateBal(t, balance)
+        return x if x else t
 
 
 def dostuff():

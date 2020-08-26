@@ -455,7 +455,8 @@ class LayoutForms:
                 note = 'Loss exceeds max loss!'
                 tto[rc.mstknote] = note
                 ibdb = StatementDB()
-                ibdb.updateMstkVals(tto['id'].unique()[0], lost, note)
+                if 'id' in tto:
+                    ibdb.updateMstkVals(tto['id'].unique()[0], lost, note)
         return (lost, note, clean)
 
     def setClean(self, key, b):

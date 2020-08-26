@@ -39,13 +39,18 @@ from structjour.dailysumforms import MistakeSummary
 from structjour.definetrades import DefineTrades
 from structjour.journalfiles import JournalFiles
 
+from structjour.models.meta import ModelBase
+
 from structjour.utilities.rtg import RTG
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
 from structjour.statements.dasstatement import DasStatement
+from structjour.statements.dailynotescrud import DailyNotesCrud
+
 from structjour.stock.utilities import clearTables
 from structjour.tradestyle import c as tcell
+from structjour.utilities.backup import Backup
 from structjour.view.dailycontrol import DailyControl
 from structjour.view.exportexcel import ExportToExcel
 from structjour.view.layoutforms import LayoutForms
@@ -85,6 +90,10 @@ class Test_ExportToExcel(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        bu = Backup()
+        bu.backup()
+        if ModelBase.session:
+            ModelBase.session.rollback()
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -132,6 +141,11 @@ class Test_ExportToExcel(TestCase):
             cls.lfs.append(lf)
         # rw = runController(w)
 
+    @classmethod
+    def tearDownClass(cls):
+        bu = Backup()
+        bu.restore()
+
     def test_exportExcel(self):
         '''Using a random trade generator, test exportExcel creates a file'''
 
@@ -148,9 +162,9 @@ class Test_ExportToExcel(TestCase):
         method the workbook contains the note as expected
         '''
         for jf, lf, df in zip(self.jfs, self.lfs, self.dframes):
-            dc = DailyControl(jf.theDate)
+            dnc = DailyNotesCrud(jf.theDate)
             note = 'Ipsum solarium magus coffeum brewum'
-            dc.setNote(note)
+            dnc.setNote(note)
 
             t = ExportToExcel(lf.ts, jf, df)
             wb = Workbook()

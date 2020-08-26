@@ -27,13 +27,15 @@ import types
 import unittest
 
 import pandas as pd
+from sqlalchemy.sql import text
 
 from PyQt5.QtCore import QSettings
 
+from structjour.models.meta import ModelBase
 from structjour.stock import mybarchart as bc
 
 from structjour.stock import utilities as util
-# pylint: disable = C0103
+from structjour.utilities.backup import Backup
 
 
 class PickleSettings:
@@ -169,46 +171,22 @@ class TestUtilities(unittest.TestCase):
             self.assertTrue(dd.isoweekday() > 0)
 
     def test_updateKey(self):
-        t = PickleSettings()
-        t.storeSettings()
-        t.initializeSettings()
         settings = QSettings('zero_substance', 'structjour')
-        # apiset = QSettings('zero_substance/stockapi', 'structjour')
+        bu = Backup()
+        bu.backup()
+        statement = text('delete from api_keys')
+        ModelBase.connect(new_session=True)
+        statement = text('delete from api_keys')
+        ModelBase.engine.execute(statement)
 
-        settings.setValue('journal', self.p)
-        testdb = 'test_db.db'
-        mk = util.ManageKeys(db=testdb, create=True)
+        mk = util.ManageKeys(create=True)
         mk.updateKey('bc', 'Its the end of the world')
         mk.updateKey('av', 'as we know it')
         bck = mk.getKey('bc')
         avk = mk.getKey('av')
         self.assertTrue(bck == 'Its the end of the world')
         self.assertTrue(avk == 'as we know it')
-
-        t.restoreSettings()
-        # print(apiset.allKeys())
-        # print(settings.allKeys())
-        os.remove(testdb)
-
-    def test_ibSettings(self):
-        t = PickleSettings()
-        t.storeSettings()
-        t.initializeSettings()
-
-        apiset = QSettings('zero_substance/stockapi', 'structjour')
-        apiset.setValue('ibRealCb', True)
-        apiset.setValue('ibPaperCb', False)
-        ibs = util.IbSettings()
-        defport = 7496
-        defid = 7878
-        defhost = '127.0.0.1'
-        p = ibs.getIbSettings()
-        self.assertEqual(defhost, p['host'])
-        self.assertEqual(defid, p['id'])
-        self.assertEqual(defport, p['port'])
-
-        t.restoreSettings()
-        # print(apiset.allKeys())
+        bu.restore()
 
 
 def notmain():
@@ -219,11 +197,10 @@ def notmain():
     # p.restoreSettings()
     t = TestUtilities()
 
-    t.test_makeupEntries()
+    # t.test_makeupEntries()
     # t.test_getLastWorkDay()
     # t.test_setDB()
     # t.test_updateKey()
-    # t.test_ibSettings()
     # t = PickleSettings()
     # t.storeSettings()
     # t.initializeSettings()
@@ -238,19 +215,6 @@ def notmain():
 def main():
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
-
-
-def localrun():
-    '''
-    test discovery is not working in vscode. Use this for debugging. Then run cl python -m unittest
-    discovery
-    '''
-    f = TestUtilities()
-    for name in dir(f):
-        if name.startswith('test'):
-            attr = getattr(f, name)
-            if isinstance(attr, types.MethodType):
-                attr()
 
 
 if __name__ == '__main__':

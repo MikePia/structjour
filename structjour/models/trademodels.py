@@ -26,9 +26,10 @@ from collections import OrderedDict
 import logging
 import pandas as pd
 from sqlalchemy import (Table, Integer, Text, Column, String, Boolean, Float, ForeignKey,
-                        CheckConstraint, func, desc)
+                        CheckConstraint, func, desc, or_, and_)
 from sqlalchemy.orm import relationship
 from structjour.models.meta import Base, ModelBase
+from structjour.utilities.util import isNumeric
 # from .meta import Base, ModelBase
 
 
@@ -331,7 +332,7 @@ class TradeSum(Base):
         if q:
             print(q.ib_trades)
 
-   
+
 class Trade(Base):
     __tablename__ = "ib_trades"
     id = Column(Integer, primary_key=True)
@@ -396,10 +397,18 @@ class Trade(Base):
         return 1
 
     @classmethod
-    def getById(cls, tid):
-        ModelBase.connect(new_session=True)
+    def getById(cls, tid, new_session=True):
+        if new_session:
+            ModelBase.connect(new_session=True)
         session = ModelBase.session
         q = session.query(Trade).filter_by(id=tid).one_or_none()
+        return q
+
+    @classmethod
+    def getByTsid(cls, tsid):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Trade).filter_by(trade_sum_id=tsid).all()
         return q
 
     @classmethod
@@ -415,7 +424,7 @@ class Trade(Base):
     def addTradesToSum(cls, tsid, tids):
         ModelBase.connect(new_session=True)
         session = ModelBase.session
-    
+
         if not isinstance(tids, list):
             tids = [tids]
         for t in tids:
@@ -437,8 +446,52 @@ class Trade(Base):
         q = session.query(Trade).filter_by(symb=symbol).filter_by(datetime=datetime).filter_by(qty=quantity).filter_by(account=account).one_or_none()
         return q
 
+    @classmethod
+    def updateBal(cls, t, balance):
+        '''Uses an ongoing session. Update balance only if there is no current balance'''
+        if not isNumeric(t.balance):
+            t.balance = balance
+            ModelBase.session.add(t)
+            return t
+
+    @classmethod
+    def updateAvgBalPlOC(cls, atrade, avg, bal, pl, oc, new_session=True):
+        if new_session:
+            ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        if not isinstance(atrade, Trade):
+            logging.error('atrade record ust be a Trade instance.')
+            return
+        atrade.average = avg
+        atrade.balance = bal
+        atrade.pnl = pl
+        atrade.oc = oc
+        session.add(atrade)
+        if new_session:
+            session.commit()
+
+    @classmethod
+    def getBadTrades(cls):
+        '''Uses an ongoing session'''
+        session = ModelBase.session
+        q = session.query(Trade).filter(or_(Trade.average == None, Trade.balance == None)).all()
+        return q
+
+    @classmethod
+    def getPreviousTrades(cls, t):
+        ''' Get trades previous to t.datetime for t.symb. Use an ongoing session '''
+        q = ModelBase.session.query(Trade).filter_by(symb=t.symb).filter_by(account=t.account).filter(Trade.datetime < t.datetime).all()
+        return q
+
+    @classmethod
+    def getNextTrades(cls, t):
+        q = ModelBase.session.query(Trade).filter_by(symb=t.symb).filter_by(account=t.account).filter(Trade.datetime > t.datetime).all()
+        return q
+
+
 TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
 TradeSum.charts = relationship("Charts", back_populates="tradesum")
+
 
 class Charts(Base):
     __tablename__ = 'chart'
@@ -459,6 +512,12 @@ class Charts(Base):
         '''Uses an ongoing session'''
         return ModelBase.session.query(Charts).filter_by(trade_sum_id=tsid).filter_by(slot=slot).one_or_none()
 
+    @classmethod
+    def getCharts(cls, tsid):
+        '''Uses an ongoing session'''
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        return ModelBase.session.query(Charts).filter_by(trade_sum_id=tsid).all()
 
     @classmethod
     def updateChart(cls, tsid, newchart, slot):
@@ -477,7 +536,6 @@ class Charts(Base):
             chart.start = newchart.start
             chart.end = newchart.end
             chart.interval = newchart.interval
-
 
         session.add(chart)
         session.commit()
@@ -508,9 +566,11 @@ def removeTag():
 def setActive():
     Tags.setActive(False, tag_id=4)
 
+
 def getTradeSum():
     x = TradeSum.getById(1079)
     print(x.shares)
+
 
 def findTradeByTime():
     q = TradeSum.findByTime("20180612")
@@ -594,13 +654,14 @@ def exercisegetListsOfTradesForStrategies():
         print(t[0], len(t[1]))
     print()
 
+
 def getEntries():
     TradeSum.getEntryTradesSA(2136)
+
 
 def dostuff():
     # ModelBase.connect()
     # ModelBase.createAll()
-
 
     # addTags()
     # appendTags()

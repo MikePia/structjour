@@ -113,8 +113,6 @@ class DailyNotesCrud:
         n =  DailyNotes.getNote(self.date)
         return n.note if n else None
 
-
-
 def createnote():
     d = pd.Timestamp("20300205")
     dn = DailyNotesCrud(daDate=d)

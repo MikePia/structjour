@@ -46,6 +46,7 @@ from structjour.statements.dasstatement import DasStatement
 from structjour.stock.utilities import clearTables
 from structjour.thetradeobject import SumReqFields
 from structjour.tradestyle import TradeFormat, c as tcell
+from structjour.utilities.backup import Backup
 from structjour.view.exportexcel import ExportToExcel
 from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
@@ -72,6 +73,8 @@ class Test_ExportToExcel_MistakeData(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        bu = Backup()
+        bu.backup()
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -142,6 +145,11 @@ class Test_ExportToExcel_MistakeData(TestCase):
         cls.mistake = MistakeSummary(numTrades=len(cls.ldf), anchor=mstkAnchor)
         cls.t = t
         cls.a = mstkAnchor
+
+    @classmethod
+    def tearDownClass(cls):
+        bu = Backup()
+        bu.restore()
 
     def test_populateXLMistakeForm_hyperlinks(self):
         '''

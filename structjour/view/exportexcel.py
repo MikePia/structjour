@@ -41,6 +41,7 @@ from structjour.thetradeobject import SumReqFields
 from structjour.tradestyle import c as tcell
 from structjour.layoutsheet import LayoutSheet
 from structjour.dailysumforms import MistakeSummary
+from structjour.statements.dailynotescrud import DailyNotesCrud
 from structjour.view.dailycontrol import DailyControl
 from structjour.xlimage import XLImage
 
@@ -94,7 +95,7 @@ class ExportToExcel:
         '''
         cell = (1, 6)
         cell = tcell(cell)
-        dc = DailyControl(self.jf.theDate)
+        dc = DailyNotesCrud(self.jf.theDate)
         note = dc.getNote()
         if note:
             ws[cell] = note

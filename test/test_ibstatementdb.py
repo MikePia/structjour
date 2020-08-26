@@ -30,14 +30,18 @@ import unittest
 
 import pandas as pd
 
+from sqlalchemy.sql import text
 from PyQt5.QtCore import QSettings
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
 # from structjour.dfutil import DataFrameUtil
+
+from structjour.models.meta import ModelBase
 from structjour.statements import findfiles as ff
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
+from structjour.utilities.backup import Backup
 from structjour.thetradeobject import runSummaries
 # from structjour.view.layoutforms import LayoutForms
 
@@ -92,7 +96,7 @@ class Test_StatementDB(unittest.TestCase):
         # entry per trade
         for i, trade in enumerate(tradeSummaries):
             x = ibdb.findTradeSummarySA(theDate, trade['Start'].unique()[0])
-            self.assertEqual(trade['Name'].unique()[0], x[1])
+            self.assertEqual(trade['Name'].unique()[0], x.name)
 
     def test_addTradeSummariesSA(self):
         '''
@@ -118,7 +122,7 @@ class Test_StatementDB(unittest.TestCase):
                 dframe, ldf = tu.processDBTrades(df)
                 tradeSummaries, ts, entries, initialImageNames = runSummaries(ldf)
                 ibdb.addTradeSummariesSA(ts, ldf)
-                summaries = ibdb.getTradeSumByDate(day)
+                summaries = ibdb.getTradeSumByDateSA(day)
                 for summary in summaries:
                     summary = ibdb.makeTradeSumDict(summary)
                     entryTrades = ibdb.getEntryTradesSA(summary['id'])
@@ -190,13 +194,11 @@ class Test_StatementDB(unittest.TestCase):
 
         # This call loads the statement into the db
         ibs.openIBStatementCSV(infile)
-        print()
 
         # This call will then retrieve one day of trades as a dataframe. theDate is string or timestamp
         df2 = ibdb.getStatement(theDate)
         self.assertIsInstance(df2, pd.DataFrame)
         self.assertFalse(df2.empty)
-        print()
 
     def test_StatementDB(self):
         '''Test table creation called from __init__'''
@@ -208,16 +210,30 @@ class Test_StatementDB(unittest.TestCase):
         tabnames = ['chart', 'holidays', 'ib_covered', 'ib_trades', 'ib_positions', 'trade_sum']
         self.assertTrue(set(tabnames).issubset(set([y[0] for y in x])))
 
+    def test_popHol(self):
+        ModelBase.connect(new_session=True)
+        statement = text('delete from holidays')
+        ModelBase.engine.execute(statement)
+        ibdb = StatementDB()
+        for holiday in ibdb.holidays:
+            for day in holiday[1:]:
+                if day:
+                    self.assertTrue(ibdb.tcrud.isHoliday(day))
+
+
+
     def clearTables(self):
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cur.execute('''delete from chart''')
-        # cur.execute('''delete from holidays''')
-        cur.execute('''delete from ib_covered''')
-        cur.execute('''delete from ib_trades''')
-        cur.execute('''delete from ib_positions''')
-        cur.execute('''delete from trade_sum''')
-        conn.commit()
+        statements = ['''delete from chart''',
+                      '''delete from holidays''',
+                      '''delete from ib_covered''',
+                      '''delete from ib_trades''',
+                      '''delete from ib_positions''',
+                      '''delete from trade_sum'''
+        ]
+        ModelBase.connect(new_session=True)
+        for statement in statements:
+            s = text(statement)
+            result = ModelBase.engine.execute(s)
 
     def test_insertTrade(self):
         '''
@@ -276,7 +292,7 @@ class Test_StatementDB(unittest.TestCase):
     def test_getUncoveredDays(self):
         '''Tests several methods in the covered process from'''
         self.clearTables()
-        ibdb = StatementDB(self.db)
+        ibdb = StatementDB()
         ibs, x = self.openStuff()
         delt = ibs.endDate - ibs.beginDate
         assert delt.days > 20
@@ -288,31 +304,9 @@ class Test_StatementDB(unittest.TestCase):
         for c in covered:
             self.assertTrue(c > ibs.endDate)
             self.assertTrue(c <= end)
+        bu = Backup()
+        bu.restore()
 
-    def test_getStatementDays(self):
-        '''
-        The tested method is not currently used by structjour.
-        Test the method StatementDB.getStatementDays. Exercises getUncovered. Specifically test that
-        when it returns data, it has the correct fields required in FinReqCol. And that the trades
-        all occur within the specified dates (this tests on a single day). Noticd that openStuff
-        exercises a bunch of stuff.
-        '''
-        frc = FinReqCol()
-        ibs, x = self.openStuff()
-        current = ibs.endDate
-        ibdb = StatementDB(db=self.db)
-        days = list(pd.date_range(start=current - pd.Timedelta(days=21), end=current))
-        days.sort(reverse=True)
-        for day in days:
-            if day.weekday() > 4 or ibdb.isHoliday(current):
-                continue
-            s = ibdb.getStatementDays(ibs.account, beg=day)
-            if not s.empty:
-                cols = [frc.ticker, frc.date, frc.shares, frc.bal, frc.price,
-                        frc.avg, frc.comm, frc.acct, frc.oc, frc.PL, 'id']
-                self.assertTrue(set(cols) == set(list(s.columns)))
-                for daDate in s[frc.date].unique():
-                    self.assertEqual(day.date(), pd.Timestamp(daDate).date())
 
 
 def main():
@@ -321,16 +315,17 @@ def main():
 
 def notmain():
     t = Test_StatementDB()
-    # t.test_findTradeSummarySA()
+    t.test_findTradeSummarySA()
     # t.test_getUncoveredDays()
     # t.test_getStatementDays()
     # t.test_insertTrade()
     # t.test_addTradeSummariesSA()
     # t.test_findTrade()
-    t.test_ibstatement()
+    # t.test_ibstatement()
     # t.test_insertPositions()
+    # t.test_popHol()
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

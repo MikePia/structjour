@@ -25,7 +25,7 @@ import unittest
 from unittest import TestCase
 from sqlalchemy import MetaData, inspect
 
-from structjour.statements.dailynotes import DailyNotesCrud
+from structjour.statements.dailynotescrud import DailyNotesCrud
 from structjour.models.meta import ModelBase
 from structjour.models.dailynotemodel import DailyNotes
 from structjour.utilities.backup import Backup
@@ -38,14 +38,16 @@ class TestDailyNotesCrud(TestCase):
     def setUpClass(cls):
         bu = Backup()
         bu.backup()
+        if ModelBase.session:
+            ModelBase.session.rollback()
         print(f'Files have been backed up. Most recent back is {bu.mostRecent()}')
         settings = QSettings('zero_substance', 'structjour')
-        tdb = settings.value('tradeDb')
-        if tdb and os.path.exists(tdb):
-            os.remove(tdb)
-        sdb = settings.value('structjourDb')
-        if sdb and os.path.exists(sdb):
-            os.remove(sdb)
+        # tdb = settings.value('tradeDb')
+        # if tdb and os.path.exists(tdb):
+        #     os.remove(tdb)
+        # sdb = settings.value('structjourDb')
+        # if sdb and os.path.exists(sdb):
+        #     os.remove(sdb)
 
         dcrud = DailyNotesCrud(daDate="20301231")
         dcrud.createTable()
@@ -133,11 +135,11 @@ def dostuff():
     TestDailyNotesCrud.setUpClass()
 
     t = TestDailyNotesCrud()
-    # t.test_commitNote()
+    t.test_commitNote()
     # t.test_getNote()
     # t.test_setNote()
-    t.test_removeNote()
-    # TestDailyNotesCrud.tearDownClass()
+    # t.test_removeNote()
+    TestDailyNotesCrud.tearDownClass()
 
 if __name__ == '__main__':
     dostuff()

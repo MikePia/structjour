@@ -50,6 +50,7 @@ from structjour.view.layoutforms import LayoutForms
 from structjour.view.sumcontrol import SumControl
 from structjour.journalfiles import JournalFiles
 from structjour.utilities.rtg import RTG
+from structjour.utilities.backup import Backup
 
 # from PyQt5.QtWidgets import QApplication
 
@@ -70,6 +71,8 @@ class Test_LayoutForms(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        bu = Backup()
+        bu.backup()
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr + '/../'))
 
@@ -116,6 +119,12 @@ class Test_LayoutForms(unittest.TestCase):
             # cls.ldfs.append(ldf)
             cls.lfs.append(lf)
         # rw = runController(w)
+
+    @classmethod
+    def tearDownClass(cls):
+        bu = Backup()
+        bu.restore()
+
 
     def setUp(self):
         ddiirr = os.path.dirname(__file__)
@@ -293,7 +302,7 @@ def notmain():
     # t.test_setNotes()
     # t.test_setStrategy()
     t.test_setStopVals()
-    t.test_setTargVals()
+    # t.test_setTargVals()
 
 
 def main():
@@ -301,5 +310,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # notmain()
-    main()
+    notmain()
+    # main()

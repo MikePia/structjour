@@ -46,14 +46,16 @@ class Test_StrategyCrud(TestCase):
     def setUpClass(cls):
         bu = Backup()
         bu.backup()
+        if ModelBase.session:
+            ModelBase.session.rollback()
         print(f'Files have been backed up. Most recent back is {bu.mostRecent()}')
         settings = QSettings('zero_substance', 'structjour')
         tdb = settings.value('tradeDb')
-        if tdb and os.path.exists(tdb):
-            os.remove(tdb)
-        sdb = settings.value('structjourDb')
-        if sdb and os.path.exists(sdb):
-            os.remove(sdb)
+        # if tdb and os.path.exists(tdb):
+        #     os.remove(tdb)
+        # sdb = settings.value('structjourDb')
+        # if sdb and os.path.exists(sdb):
+        #     os.remove(sdb)
 
         # create the schema
         scrud = StrategyCrud()

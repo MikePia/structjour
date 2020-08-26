@@ -44,7 +44,8 @@ class TestAPIChooser(unittest.TestCase):
         Test the method FinPlot.apiChooser for the same interface in each api
         '''
         chooser = APIChooser(self.apiset)
-        biz = util.getLastWorkDay()
+        yesterday = dt.datetime.today() - dt.timedelta(1)
+        biz = util.getLastWorkDay(yesterday)
         start = dt.datetime(biz.year, biz.month, biz.day, 12, 30)
         end = dt.datetime(biz.year, biz.month, biz.day, 16, 1)
         minutes = 1
@@ -144,6 +145,7 @@ class TestAPIChooser(unittest.TestCase):
 
 def notmain():
     t = TestAPIChooser()
+    # t.test_apiChooser()
     # t.test_apiChooserLimitReached()
     t.test_get_intraday()
 

@@ -294,12 +294,19 @@ class ManageKeys:
         if not self.db:
             self.setDB()
 
-        if self.db:
+        if self.db or create:
             self.createTables()
+
+    def getKeyDict(self):
+        keydict = {}
+        keydict['bc'] = self.getKey('bc')
+        keydict['av'] = self.getKey('av')
+        keydict['fh'] = self.getKey('fh')
+        return keydict
 
     def getDB(self):
         '''Get the file location of the sqlite database'''
-
+ 
     def createTables(self):
         '''
         Creates the api_keys if it doesnt exist then adds a row for each api that requires a key

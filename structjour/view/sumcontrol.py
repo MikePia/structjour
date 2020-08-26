@@ -542,10 +542,7 @@ class SumControl(QMainWindow):
             self.tmpEnd = end
 
         mk = ManageKeys()
-        keydict = {}
-        keydict['bc'] = mk.getKey('bc')
-        keydict['av'] = mk.getKey('av')
-        keydict['fh'] = mk.getKey('fh')
+        keydict = mk.getKeyDict()
         
         chooser = APIChooser(apiset, keydict=keydict)
         (dummy, rules, apilist) = chooser.apiChooserList(begin, end)
@@ -1130,7 +1127,6 @@ class SumControl(QMainWindow):
                 # self.ui.loadBtn.setStyleSheet('color: black;')
                 self.ui.goBtn.setStyleSheet('color: black;')
                 statusstring = "No tickets or trades have been saved to the DB for this date"
-            # statement = statementDb.getStatementDays(account, beg=daDate)
             self.setStatusTip(statusstring)
             self.ui.dateEdit.setToolTip(statusstring)
             self.ui.infileEdit.setToolTip(statusstring)

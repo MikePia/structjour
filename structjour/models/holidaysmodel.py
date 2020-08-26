@@ -33,7 +33,7 @@ class Holidays(Base):
     def __repr__(self):
         return f'<holidays({self.name})>'
 
-    @classmethod
+    @classmethod 
     def insertHoliday(cls, day, name, commit=False):
         if commit:
             ModelBase.connect(new_session=True)

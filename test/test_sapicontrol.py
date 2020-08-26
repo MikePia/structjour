@@ -38,7 +38,7 @@ from structjour.view.sapicontrol import StockApi
 # pylint: disable = C0103
 
 app = QApplication(sys.argv)
-
+ 
 
 class TestSapi(TestCase):
 
@@ -111,10 +111,22 @@ class TestSapi(TestCase):
         s = self.w.ui.APIPref.styleSheet()
         self.assertTrue(s.find('red') > 0)
 
+        if self.w.gotibapi:
+            QTest.mouseClick(self.w.ui.avCb, Qt.LeftButton)
+            QTest.mouseClick(self.w.ui.ibRealCb, Qt.LeftButton)
+            QTest.mouseClick(self.w.ui.ibRealCb, Qt.LeftButton)
+            self.assertEqual(self.w.ui.APIPref.text(), 'bc, av, ib')
+
+        #  The clicks are not getting received
+        QTest.mouseClick(self.w.ui.fhCb, Qt.LeftButton)
         QTest.mouseClick(self.w.ui.avCb, Qt.LeftButton)
-        QTest.mouseClick(self.w.ui.ibRealCb, Qt.LeftButton)
-        QTest.mouseClick(self.w.ui.ibRealCb, Qt.LeftButton)
-        self.assertEqual(self.w.ui.APIPref.text(), 'bc, av, ib')
+        QTest.mouseClick(self.w.ui.bcCb, Qt.LeftButton)
+
+
+def notmain():
+    t = TestSapi()
+    t.setUp()
+    t.test_sortIt()
 
 
 def main():
@@ -122,4 +134,5 @@ def main():
 
 
 if __name__ == '__main__':
+    # notmain()
     main()

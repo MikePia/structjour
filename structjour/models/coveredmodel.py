@@ -38,8 +38,7 @@ class Covered(Base):
     @classmethod
     def isDateCovered(cls, account, d, new_session=False):
         '''
-        Generally handle the commit elsewhere. This allows processStatements to commit
-        at it's end.
+        Use an ongoing session
         '''
 
         d = pd.Timestamp(d)
@@ -62,5 +61,11 @@ class Covered(Base):
             session.add(cov)
             if new_session:
                 session.commit()
+
+    @classmethod
+    def getCoveredDays(cls, account, beg, end):
+        session = ModelBase.session
+        q = session.query(Covered).filter_by(account=account).filter(Covered.day >= beg).filter(Covered.day <= end).order_by(Covered.day).all()
+        return q
 
 

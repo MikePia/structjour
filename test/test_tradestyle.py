@@ -23,6 +23,7 @@ Test the methods and functions in journal.tradestyle
 '''
 import os
 from unittest import TestCase
+import unittest
 
 from openpyxl import load_workbook
 from openpyxl import Workbook
@@ -171,6 +172,9 @@ def notmain():
     # t.test_formatTrade()
     t.test_c()
 
+def main():
+    unittest.main()
 
 if __name__ == '__main__':
-    notmain()
+    # notmain()
+    main()

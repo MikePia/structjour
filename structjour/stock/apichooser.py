@@ -24,7 +24,7 @@ import datetime as dt
 import logging
 import pandas as pd
 import requests
-from structjour.stock.utilities import checkForIbapi, getLimitReached
+from structjour.stock.utilities import checkForIbapi, getLimitReached, ManageKeys
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
 from structjour.stock import myFinhub as fh
@@ -45,6 +45,11 @@ class APIChooser:
         self.preferences = self.getPreferences()
         self.api = self.preferences[0]
         self.keydict = keydict
+        if len(self.keydict) == 0:
+            mk = ManageKeys()
+
+            self.keydict = mk.getKeyDict()
+
 
     def getPreferences(self):
         if self.orprefs:

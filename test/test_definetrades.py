@@ -41,6 +41,7 @@ from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.statement import getStatementType
 from structjour.stock.utilities import clearTables
+from structjour.utilities.backup import Backup
 
 from structjour.utilities.rtg import RTG
 
@@ -60,6 +61,8 @@ class TestDefineTrades(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        bu = Backup()
+        bu.backup()
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
@@ -97,6 +100,12 @@ class TestDefineTrades(TestCase):
         cls.trades = cls.trades[rccolumns]
         cls.trades.copy()
         cls.trades = cls.trades.sort_values([cls.rc.ticker, cls.rc.acct, cls.rc.date])
+
+    @classmethod
+    def tearDownClass(cls):
+        bu = Backup()
+        bu.restore()
+
 
     def test_addFinReqCol(self):
         '''
@@ -259,13 +268,13 @@ def notmain():
     # for i in range(3):
     TestDefineTrades.setUpClass()
     t = TestDefineTrades()
-    t.test_addFinReqCol()
-    t.test_addStartTimeDB()
+    # t.test_addFinReqCol()
+    # t.test_addStartTimeDB()
     t.test_addTradeIndex()
-    t.test_addTradePL()
-    t.test_addTradeDurationDB()
-    t.test_addTradeNameDB()
-    t.test_postProcessingDB()
+    # t.test_addTradePL()
+    # t.test_addTradeDurationDB()
+    # t.test_addTradeNameDB()
+    # t.test_postProcessingDB()
     # t.test_addSummaryPL()
 
     # t.test_addSummaryPL()
@@ -276,5 +285,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()
