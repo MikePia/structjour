@@ -456,7 +456,7 @@ class LayoutForms:
                 tto[rc.mstknote] = note
                 ibdb = StatementDB()
                 if 'id' in tto:
-                    ibdb.updateMstkVals(tto['id'].unique()[0], lost, note)
+                    ibdb.updateMstkValsSA(tto['id'].unique()[0], lost, note)
         return (lost, note, clean)
 
     def setClean(self, key, b):

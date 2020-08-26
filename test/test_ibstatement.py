@@ -107,9 +107,6 @@ class TestIbStatement(TestCase):
     # def test_combinePartialsFlexTrade(self):
     #     pass
 
-    # def test_cheatForBAPL(self):
-    #     pass
-
     # def test_combineOrdersByTime(self):
     #     pass
 

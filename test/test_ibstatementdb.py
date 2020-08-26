@@ -160,7 +160,7 @@ class Test_StatementDB(unittest.TestCase):
         ibdb.insertTradeSA(x.iloc[0])
         ModelBase.session.commit()
         # conn.commit()
-        foundit = ibdb.findTradeSA(x.iloc[0]['DateTime'], x.iloc[0][rc.ticker], x.iloc[0][rc.shares], x.iloc[0][rc.acct])
+        foundit = ibdb.findTradesSA(x.iloc[0]['DateTime'], x.iloc[0][rc.ticker], x.iloc[0][rc.shares], x.iloc[0][rc.acct])
         self.assertTrue(foundit)
         bu = Backup()
         bu.restore()

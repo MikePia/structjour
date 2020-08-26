@@ -332,6 +332,19 @@ class TradeSum(Base):
         if q:
             return q.ib_trades
 
+    @classmethod
+    def updateMstkVals(cls, tsid, val, note):
+        if not tsid: return
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(TradeSum).filter_by(id=tsid).one_or_none()
+        if q:
+            q.mstkval = val
+            q.mstknote = note
+            session.add(q)
+            session.commit()
+
+
 
 class Trade(Base):
     __tablename__ = "ib_trades"
