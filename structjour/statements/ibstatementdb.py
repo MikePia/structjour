@@ -27,23 +27,21 @@ import os
 import sqlite3
 
 import pandas as pd
-
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMessageBox
+from sqlalchemy import inspect
+from sqlalchemy.sql import text
 
 from structjour.colz.finreqcol import FinReqCol
-from structjour.statements.findfiles import getDirectory
+from structjour.models.meta import ModelBase
+from structjour.models.trademodels import Charts
 from structjour.statements.dbdoctor import DbDoctorCrud
+from structjour.statements.findfiles import getDirectory
 from structjour.statements.statementcrud import TradeCrud
 from structjour.stock.utilities import qtime2pd
-from structjour.utilities.util import isNumeric
 from structjour.thetradeobject import SumReqFields
-
-from structjour.models.trademodels import Charts
-from structjour.models.meta import ModelBase
-
-from sqlalchemy import inspect
+from structjour.utilities.util import isNumeric
 
 # pylint: disable = C0103
 
@@ -80,7 +78,6 @@ class StatementDB:
         self.rc = FinReqCol()
         self.sf = SumReqFields()
         self.tcrud = TradeCrud()
-        self.createTradeTables()
 
         self.holidays = [
                         ['New Year’s Day', '20180101', '20190101', '20200101', '21210101', '20220101', '20230101'],
@@ -96,127 +93,26 @@ class StatementDB:
         self.popHol()
         self.covered = None
 
-    def createTradeTables(self):
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        rc = self.rc
-        sf = self.sf
-        cur.execute(f'''
-            CREATE TABLE if not exists ib_trades (
-                id	INTEGER PRIMARY KEY AUTOINCREMENT,
-                {rc.ticker}	TEXT NOT NULL,
-                datetime	TEXT NOT NULL,
-                {rc.shares}	INTEGER NOT NULL CHECK({rc.shares} != 0),
-                {rc.bal} INTEGER,
-                {rc.price}	NUMERIC NOT NULL,
-                {rc.avg} NUMERIC,
-                {rc.PL} NUMERIC,
-                {rc.comm}	NUMERIC,
-                {rc.oc}	TEXT,
-                DAS TEXT,
-                IB TEXT,
-                {rc.acct}	TEXT NOT NULL,
-                trade_sum_id INTEGER,
-                FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id)
-                );''')
-
-        cur.execute('''
-            CREATE TABLE if not exists ib_positions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                account TEXT NOT NULL,
-                symbol TEXT NOT NULL,
-                quantity INTEGER NOT NULL,
-                date TEXT NOT NULL);''')
-
-        cur.execute('''
-            CREATE TABLE if not exists ib_covered (
-                day	TEXT NOT NULL,
-                account TEXT NOT NULL,
-                covered	TEXT NOT NULL DEFAULT "false",
-                PRIMARY KEY(day, account))''')
-
-        cur.execute('''
-            CREATE TABLE if not exists holidays(
-                day TEXT NOT NULL,
-                name TEXT)''')
-
-        cur.execute('''
-            CREATE TABLE if not exists chart(
-                id	INTEGER,
-                symb TEXT,
-                path TEXT NOT NULL,
-                name TEXT NOT NULL,
-                source TEXT,
-                start TEXT NOT NULL,
-                end TEXT NOT NULL,
-                interval INTEGER,
-                slot INTEGER,
-                trade_sum_id INTEGER,
-                FOREIGN KEY(trade_sum_id) REFERENCES trade_sum(id),
-                PRIMARY KEY(id))''')
-
-        cur.execute(f'''
-            CREATE TABLE if not exists trade_sum (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                {sf.name} TEXT NOT NULL,
-                {sf.strat} TEXT,
-                {sf.link1} TEXT,
-                {sf.acct} TEXT,
-                {sf.pl} NUMERIC,
-                {sf.start} TEXT NOT NULL,
-                {sf.date} TEXT NOT NULL,
-                {sf.dur} TEXT NOT NULL,
-                {sf.shares} TEXT NOT NULL,
-                {sf.mktval} NUMERIC NOT NULL,
-                {sf.targ} NUMERIC,
-                {sf.targdiff} NUMERIC,
-                {sf.stoploss} NUMERIC,
-                {sf.sldiff} NUMERIC,
-                {sf.rr} TEXT,
-                {sf.realrr} NUMERIC,
-                {sf.maxloss} NUMERIC,
-                {sf.mstkval} NUMERIC,
-                {sf.mstknote} TEXT,
-                {sf.explain} TEXT,
-                {sf.notes} TEXT,
-                clean TEXT)''')
-
-        cur.execute('''CREATE UNIQUE INDEX if not exists date_start on trade_sum('Date', 'Start')''')
-        conn.commit()
-
     def reinitializeTradeTables(self):
         '''
         This is intended for testing code only. Be sure the db either
-        on backup or is initialized to a test db.
+        has a backup or is initialized to a test db.
         '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cur.execute('''DROP TABLE IF EXISTS ib_covered;''')
-        cur.execute('''DROP TABLE IF EXISTS ib_positions;''')
-        cur.execute('''DROP TABLE IF EXISTS ib_trades;''')
-        cur.execute('''DROP TABLE IF EXISTS holidays;''')
-        cur.execute('''DROP TABLE IF EXISTS chart;''')
-        cur.execute('''DROP TABLE IF EXISTS chart_sum;''')
-        cur.execute('''DROP TABLE IF EXISTS entries;''')
-        cur.execute('''DROP TABLE IF EXISTS trade_sum;''')
-        cur.execute('''DROP TABLE IF EXISTS date_start;''')
-        conn.commit()
+        statements = ['DROP TABLE IF EXISTS ib_covered', 'DROP TABLE IF EXISTS ib_positions',
+                      'DROP TABLE IF EXISTS ib_trades', 'DROP TABLE IF EXISTS holidays',
+                      'DROP TABLE IF EXISTS chart', 'DROP TABLE IF EXISTS chart_sum',
+                      'DROP TABLE IF EXISTS entries', 'DROP TABLE IF EXISTS trade_sum',
+                      'DROP TABLE IF EXISTS date_start']
+        ModelBase.connect(new_session=True)
+        for statement in statements:
+            ModelBase.engine.execute(text(statement))
 
     def makeTradeSumDict(self, ts):
         '''
-        Using the db order of trade_summaries create a dict
         :ts: a trade_sum record as retrieved by getTradeSumBy... methods
         '''
-        sf = self.sf
-        ts = list(ts)
-
-        t = dict()
-        (t['id'], t[sf.name], t[sf.strat], t[sf.link1], t[sf.acct], t[sf.pl], t[sf.start],
-            t[sf.date], t[sf.dur], t[sf.shares], t[sf.mktval], t[sf.targ], t[sf.targdiff],
-            t[sf.stoploss], t[sf.sldiff], t[sf.rr], t[sf.realrr], t[sf.maxloss], t[sf.mstkval],
-            t[sf.mstknote], t[sf.explain], t[sf.notes], t['clean']) = ts
-        return t
+        ts = self.renameKeys(ts.__dict__)
+        return ts
 
     def findTradeSummarySA(self, date, start):
         '''

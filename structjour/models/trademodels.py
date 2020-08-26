@@ -330,7 +330,7 @@ class TradeSum(Base):
         session = ModelBase.session
         q = session.query(TradeSum).filter_by(id=tsid).one_or_none()
         if q:
-            print(q.ib_trades)
+            return q.ib_trades
 
 
 class Trade(Base):

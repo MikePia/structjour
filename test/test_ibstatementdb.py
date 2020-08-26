@@ -29,20 +29,20 @@ import sqlite3
 import unittest
 
 import pandas as pd
-
-from sqlalchemy.sql import text
 from PyQt5.QtCore import QSettings
+from sqlalchemy.sql import text
 
 from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
-# from structjour.dfutil import DataFrameUtil
-
 from structjour.models.meta import ModelBase
 from structjour.statements import findfiles as ff
-from structjour.statements.ibstatementdb import StatementDB
 from structjour.statements.ibstatement import IbStatement
-from structjour.utilities.backup import Backup
+from structjour.statements.ibstatementdb import StatementDB
 from structjour.thetradeobject import runSummaries
+from structjour.utilities.backup import Backup
+
+# from structjour.dfutil import DataFrameUtil
+
 # from structjour.view.layoutforms import LayoutForms
 
 # from structjour.colz.finreqcol import FinReqCol
@@ -56,7 +56,6 @@ class Test_StatementDB(unittest.TestCase):
         super(Test_StatementDB, self).__init__(*args, **kwargs)
         self.settings = QSettings('zero_substance', 'structjour')
 
-        self.db = "test/testdb.sqlite"
 
     def setUp(self):
 
@@ -73,8 +72,8 @@ class Test_StatementDB(unittest.TestCase):
         theDate = pd.Timestamp('2019-10-16')
 
         # Create these three objects
-        ibs = IbStatement(db=self.db)
-        ibdb = StatementDB(self.db)
+        ibs = IbStatement()
+        ibdb = StatementDB()
         ibdb.reinitializeTradeTables()
         trades = DefineTrades("DB")
 
@@ -98,6 +97,9 @@ class Test_StatementDB(unittest.TestCase):
             x = ibdb.findTradeSummarySA(theDate, trade['Start'].unique()[0])
             self.assertEqual(trade['Name'].unique()[0], x.name)
 
+        bu = Backup()
+        bu.restore()
+
     def test_addTradeSummariesSA(self):
         '''
         Tests addTradeSummaries. The method requires trades are already in the database.
@@ -109,7 +111,7 @@ class Test_StatementDB(unittest.TestCase):
         the trade summaries in mass. Its desinged to load up a single day. ITs day-trader
         centric. Let it stay slow for now.
         '''
-        ibdb = StatementDB(self.db)
+        ibdb = StatementDB()
         self.clearTables()
         ibs, x = self.openStuff()
         # ibdb.getUncoveredDays
@@ -124,11 +126,12 @@ class Test_StatementDB(unittest.TestCase):
                 ibdb.addTradeSummariesSA(ts, ldf)
                 summaries = ibdb.getTradeSumByDateSA(day)
                 for summary in summaries:
-                    summary = ibdb.makeTradeSumDict(summary)
-                    entryTrades = ibdb.getEntryTradesSA(summary['id'])
+                    entryTrades = ibdb.getEntryTradesSA(summary.id)
                     self.assertGreater(len(entryTrades), 0)
 
                 break   # Use this to just test addTradeSummaries once
+        bu = Backup()
+        bu.restore()
 
     def test_findTrade(self):
         '''
@@ -137,7 +140,7 @@ class Test_StatementDB(unittest.TestCase):
         '''
         rc = FinReqCol()
 
-        ibdb = StatementDB(self.db)
+        ibdb = StatementDB()
         row = {
             rc.ticker: 'SNRK',
             "DateTime": '20191212;093145',
@@ -154,12 +157,13 @@ class Test_StatementDB(unittest.TestCase):
         data = list(row.values())
         columns = list(row.keys())
         x = pd.DataFrame(data=[data], columns=columns)
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        ibdb.insertTrade(x.iloc[0], cur)
-        conn.commit()
-        foundit = ibdb.findTrade(x.iloc[0]['DateTime'], x.iloc[0][rc.ticker], x.iloc[0][rc.shares], x.iloc[0][rc.acct])
+        ibdb.insertTradeSA(x.iloc[0])
+        ModelBase.session.commit()
+        # conn.commit()
+        foundit = ibdb.findTradeSA(x.iloc[0]['DateTime'], x.iloc[0][rc.ticker], x.iloc[0][rc.shares], x.iloc[0][rc.acct])
         self.assertTrue(foundit)
+        bu = Backup()
+        bu.restore()
 
     def test_insertPositions(self):
         '''
@@ -178,9 +182,6 @@ class Test_StatementDB(unittest.TestCase):
         # ibdb.insertPositions(cur, posTab)
         # print()
 
-    def test_getNumTicketsForDay(self):
-        pass
-
     def test_ibstatement(self):
         '''Test basic usage loading an ib statement and getting a statement'''
 
@@ -188,8 +189,8 @@ class Test_StatementDB(unittest.TestCase):
         theDate = pd.Timestamp('2019-10-16')
 
         # Create these two objects
-        ibs = IbStatement(db=self.db)
-        ibdb = StatementDB(self.db)
+        ibs = IbStatement()
+        ibdb = StatementDB()
         ibdb.reinitializeTradeTables()
 
         # This call loads the statement into the db
@@ -199,16 +200,19 @@ class Test_StatementDB(unittest.TestCase):
         df2 = ibdb.getStatement(theDate)
         self.assertIsInstance(df2, pd.DataFrame)
         self.assertFalse(df2.empty)
+        bu = Backup()
+        bu.restore()
 
     def test_StatementDB(self):
         '''Test table creation called from __init__'''
-        StatementDB(self.db)
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        x = cur.execute('''SELECT name FROM sqlite_master WHERE type='table'; ''')
-        x = x.fetchall()
-        tabnames = ['chart', 'holidays', 'ib_covered', 'ib_trades', 'ib_positions', 'trade_sum']
-        self.assertTrue(set(tabnames).issubset(set([y[0] for y in x])))
+    
+        ibdb = StatementDB()
+        tns_expected = ['api_keys', 'chart', 'daily_notes', 'description', 'holidays', 'ib_covered',
+               'ib_positions', 'ib_trades', 'images', 'inspire', 'links', 'migrate_model',
+               'source', 'sqlite_sequence', 'strategy', 'tags', 'trade_sum', 'trade_sum_tags']
+        tns = ibdb.tcrud.getTableNames()
+        print(set(tns))
+        self.assertEqual(set(tns_expected), set(tns))
 
     def test_popHol(self):
         ModelBase.connect(new_session=True)
@@ -253,25 +257,21 @@ class Test_StatementDB(unittest.TestCase):
         row[rc.avg] = 205.43
         row[rc.PL] = 0
 
-        ibdb = StatementDB(self.db)
-
+        ibdb = StatementDB()
         self.clearTables()
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        ibdb.insertTrade(row, cur)
-        conn.commit()
 
-        x = cur.execute('''SELECT count() from ib_trades ''')
-        x = x.fetchone()
+        ibdb.insertTradeSA(row)
+        ModelBase.session.commit()
+        c = ibdb.tcrud.getTradeCount()
+        self.assertEqual(c, 1)
 
-        self.assertEqual(x[0], 1)
+        ibdb.insertTradeSA(row)
+        ModelBase.session.commit()
+        c = ibdb.tcrud.getTradeCount()
+        self.assertEqual(c, 1)
 
-        ibdb.insertTrade(row, cur)
-        conn.commit()
-        x = cur.execute('''SELECT count() from ib_trades ''')
-        x = x.fetchone()
-        self.assertEqual(x[0], 1)
-        self.clearTables()
+        bu = Backup()
+        bu.restore()
 
     def openStuff(self, allofit=None):
         '''Site specific testing stuff-- open a multi  day statement'''
@@ -279,7 +279,7 @@ class Test_StatementDB(unittest.TestCase):
         # Currently set to search the journal root dir, so it may load an annual or two.
         bdir = ff.getBaseDir()
         fs = ff.findFilesInDir(bdir, 'U242.csv', True)
-        ibs = IbStatement(db=self.db)
+        ibs = IbStatement()
         for f in fs:
 
             x = ibs.openIBStatement(f)
@@ -315,15 +315,16 @@ def main():
 
 def notmain():
     t = Test_StatementDB()
-    t.test_findTradeSummarySA()
-    # t.test_getUncoveredDays()
-    # t.test_getStatementDays()
-    # t.test_insertTrade()
     # t.test_addTradeSummariesSA()
     # t.test_findTrade()
+    # t.test_findTradeSummarySA()
+    # t.test_getUncoveredDays()
     # t.test_ibstatement()
     # t.test_insertPositions()
+    # t.test_insertTrade()
     # t.test_popHol()
+    # t.test_getStatementDays()
+    t.test_StatementDB()
 
 
 if __name__ == '__main__':

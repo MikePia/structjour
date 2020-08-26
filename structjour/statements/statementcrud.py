@@ -32,6 +32,7 @@ from structjour.models.holidaysmodel import Holidays
 from structjour.colz.finreqcol import FinReqCol
 from structjour.thetradeobject import SumReqFields
 
+from sqlalchemy import inspect
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QMessageBox
 
@@ -77,6 +78,16 @@ class TradeCrud:
         self.rc = FinReqCol()
         self.sf = SumReqFields()
         self.createTable()
+
+    def getTableNames(self):
+        if not ModelBase.engine:
+            ModelBase.connect(new_session=True)
+            ModelBase.createAll()
+        inspector = inspect(ModelBase.engine)
+
+        tns = inspector.get_table_names()
+        return tns
+            
 
     def createTable(self):
         ModelBase.connect(new_session=True)
@@ -196,7 +207,6 @@ class TradeCrud:
     def getStatementDf(self, begin, end, account):
         q = Trade.getStatementQuery(begin, end, account)
         df = pd.read_sql(q.statement, con=ModelBase.session.bind)
-        print()
         return df
 
     def updateEntries(self, tsid, tids):
@@ -248,6 +258,10 @@ class TradeCrud:
             session.commit()
         return True
 
+    def getTradeCount(self):
+        q = ModelBase.session.query(Trade).count()
+        return q
+
     def isDateCovered(self, account, d):
         return Covered.isDateCovered(account, d)
 
@@ -282,7 +296,8 @@ class TradeCrud:
 
 def dostuff():
     t = TradeCrud()
-    print(t.findTradeSummary('20190103', "10:54:46"))
+    # print(t.findTradeSummary('20190103', "10:54:46"))
+    x = t.getTradeCount()
 
 if __name__ == '__main__':
     dostuff()

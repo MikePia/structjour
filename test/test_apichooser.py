@@ -122,7 +122,9 @@ class TestAPIChooser(unittest.TestCase):
         '''
         # First exhaust the 1 minute quota of AlphaVantage
         avonly = APIChooser(self.apiset, orprefs=['av'])
-        d = util.getPrevTuesWed(pd.Timestamp.now())
+
+        yesterday = dt.datetime.today() - dt.timedelta(1)
+        d = util.getPrevTuesWed(yesterday)
         symbol = 'TSLA'
         start = pd.Timestamp(d.strftime("%Y%m%d " + '09:36:42'))
         end = pd.Timestamp(d.strftime("%Y%m%d " + '10:38:53'))
@@ -139,7 +141,7 @@ class TestAPIChooser(unittest.TestCase):
             meta, df, ma = chooser.get_intraday(symbol, start, end, minutes)
             if df.empty:
                 logging.info(meta)
-            msg = f"Failed to retrieve data from {token}. This could be normal operation or not. Its an http call."
+            msg = f"Failed to retrieve data from {token}. This could be normal operation or not. Its an http call. {start}-{end}"
             self.assertTrue(not df.empty, msg)
 
 
