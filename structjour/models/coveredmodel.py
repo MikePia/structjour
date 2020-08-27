@@ -61,6 +61,7 @@ class Covered(Base):
             session.add(cov)
             if new_session:
                 session.commit()
+                session.close()
 
     @classmethod
     def getCoveredDays(cls, account, beg, end):

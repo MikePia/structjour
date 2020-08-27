@@ -33,6 +33,7 @@ from structjour.colz.finreqcol import FinReqCol
 from structjour.thetradeobject import SumReqFields
 
 from sqlalchemy import inspect
+from sqlalchemy.orm.session import close_all_sessions
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QMessageBox
 
@@ -104,7 +105,7 @@ class TradeCrud:
         # tcols = sf.tcols
         newts = dict()
         ModelBase.session.rollback()
-        ModelBase.session.close()
+        close_all_sessions()
         ModelBase.connect(new_session=True)
         session = ModelBase.session
         tradesum = TradeSum()
@@ -134,6 +135,7 @@ class TradeCrud:
         tradesum.clean = ''
         session.add(tradesum)
         session.commit()
+        # session.close()
         return tradesum
 
     def updateTradeSummary(self, trade):
@@ -169,7 +171,15 @@ class TradeCrud:
         tradesum.clean = trade[sf.clean].unique()[0]
         session.add(tradesum)
         session.commit()
+        # session.close()
         return tradesum
+
+    def updateTSID(self, tid, tsid):
+        '''
+        Needs a test. It does not get regularly called by running the program. 
+        It requires a db mistake and called by the dbdoctor
+        '''
+        Trade.updateTSID(tid, tsid)
 
     def getTradeSumByDate(self, daDate):
         sf = self.sf
@@ -199,7 +209,7 @@ class TradeCrud:
         return False
 
     def updateMstkVals(self, tsid, val, note):
-        TradeSum.updateMstkVals(self, tsid, val, note)
+        TradeSum.updateMstkVals(tsid, val, note)
 
     def getTradesByTsid(self, tsid):
         return Trade.getByTsid(tsid)
@@ -262,6 +272,7 @@ class TradeCrud:
         session.add(trade)
         if new_session:
             session.commit()
+            session.close()
         return True
 
     def getTradeCount(self):
@@ -292,13 +303,19 @@ class TradeCrud:
     def getNextTrades(self, atrade):
         return Trade.getNextTrades(atrade)
 
-    def getCoveredDays(self, account, beg, end):
-        return Covered.getCoveredDays(account, beg, end)
-
     def updateBal(self, t, balance):
         x = Trade.updateBal(t, balance)
         return x if x else t
 
+    def getNumTicketsForDay(self, day, account='all'):
+        '''Get the counts of both Trade and TradeSum transactactions for given day'''
+        tcount = Trade.getNumTicketsForDay(day, account)
+        tscount = TradeSum.getNumTradesForDay(day, account)
+        return tcount, tscount
+
+
+    def getCoveredDays(self, account, beg, end):
+        return Covered.getCoveredDays(account, beg, end)
 
 def dostuff():
     t = TradeCrud()

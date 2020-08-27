@@ -189,7 +189,7 @@ class runController:
                 except Exception:
                     pass
         if self.statement is not None:
-            count, countt = self.statement.getNumTicketsForDay(qtime2pd(self.sc.ui.dateEdit.date()))
+            count, countt = self.statement.getNumTicketsForDaySA(qtime2pd(self.sc.ui.dateEdit.date()))
             if count > 0 or countt > 0:
                 return True
         return False

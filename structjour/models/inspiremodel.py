@@ -76,6 +76,7 @@ class Inspire(Base):
                 session.commit()
             except:
                 pass
+        session.close()
         
     @classmethod
     def clear(cls):
@@ -83,6 +84,7 @@ class Inspire(Base):
         session = ModelBase.session
         session.query(Inspire).delete()
         session.commit()
+        session.close()
 
     @classmethod
     def add(cls, lname='', subject='', name='', who='', quote=''):
@@ -104,6 +106,7 @@ class Inspire(Base):
         )
         session.add(insp)
         session.commit()
+        session.close()
 
     @classmethod
     def getQuote(cls, id=-1, name=''):
@@ -136,12 +139,14 @@ class Inspire(Base):
         if id == -1:
             session.delete(obj)
             session.commit()
+            session.close()
             return
         q = session.query(Inspire).filter_by(id=id).one_or_none()
         if not q:
             return
         session.delete(q)
         session.commit()
+        session.close()
 
     @classmethod
     def update(cls, obj):
@@ -153,6 +158,7 @@ class Inspire(Base):
         if isinstance(obj, Inspire):
             session = ModelBase.session
             session.commit()
+            session.close()
 
     @classmethod
     def getRandom(cls):

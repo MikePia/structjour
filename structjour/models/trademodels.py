@@ -75,6 +75,7 @@ class Tags(Base):
             msg = f'Error while adding tag "{tag.name}": {type(ex)}'
             print(msg)
             session.rollback()
+        session.close()
 
     @classmethod
     def setActive(cls, active, tag_id=None, tag_name=None):
@@ -91,7 +92,7 @@ class Tags(Base):
             q = ModelBase.session.query(Tags).filter_by(name=tag_name).one()
         q.active = active
         ModelBase.session.commit()
-    #     ModelBase.session.close()
+        ModelBase.session.close()
 
 
 class TradeSum(Base):
@@ -322,6 +323,7 @@ class TradeSum(Base):
         if not q:
             return 0
         session.delete(q)
+        session.close()
         return 1
 
     @classmethod
@@ -343,6 +345,14 @@ class TradeSum(Base):
             q.mstknote = note
             session.add(q)
             session.commit()
+            session.close()
+
+    @classmethod
+    def getNumTradesForDay(cls, day, account='all'):
+        session = ModelBase.session
+        day = pd.Timestamp(day)
+        begin = day.strftime('%Y%m%d')
+        return session.query(TradeSum).filter(TradeSum.date == begin).count()
 
 
 
@@ -407,6 +417,7 @@ class Trade(Base):
             return 0
         ModelBase.session.delete(q)
         ModelBase.session.commit()
+        ModelBase.session.close()
         return 1
 
     @classmethod
@@ -446,6 +457,7 @@ class Trade(Base):
                 q.trade_sum_id = tsid
 
         session.commit()
+        session.close()
 
     @classmethod
     def findTrade(cls, datetime, symbol, quantity, account):
@@ -482,6 +494,20 @@ class Trade(Base):
         session.add(atrade)
         if new_session:
             session.commit()
+            session.close()
+
+    @classmethod
+    def updateTSID(cls, tid, tsid):
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Trade).filter_by(id=tid).one_or_none()
+        if q:
+            if not isNumeric(q.trade_sum_id) or  tsid != q.trade_sum_id:
+                q.trade_sum_id = tsid
+                session.add(q)
+                session.commit()
+        session.close()
+
 
     @classmethod
     def getBadTrades(cls):
@@ -501,6 +527,17 @@ class Trade(Base):
         q = ModelBase.session.query(Trade).filter_by(symb=t.symb).filter_by(account=t.account).filter(Trade.datetime > t.datetime).all()
         return q
 
+    @classmethod
+    def getNumTicketsForDay(cls, day, account='all'):
+        session = ModelBase.session
+        day = pd.Timestamp(day)
+        begin = day.strftime('%Y%m%d')
+        end = day.strftime('%Y%m%d;99')
+        q = session.query(Trade).filter(Trade.datetime > begin).filter(Trade.datetime < end)
+        if account == 'all':
+            return q.count()
+        return q.filter_by(account=account).account()
+            
 
 TradeSum.ib_trades = relationship("Trade", order_by=Trade.datetime, back_populates="tradesum")
 TradeSum.charts = relationship("Charts", back_populates="tradesum")
@@ -552,6 +589,7 @@ class Charts(Base):
 
         session.add(chart)
         session.commit()
+        session.close()
 
 
 # ==================== Proof of concept methods-- will generlly be used in Test_Trademodels_MODEL modules ===========

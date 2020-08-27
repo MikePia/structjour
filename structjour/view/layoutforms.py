@@ -443,7 +443,7 @@ class LayoutForms:
         pl = tto[rc.pl].unique()[0]
         if isinstance(pl, bytes):
             pl = 0
-        if maxloss and clean:
+        if maxloss:
             if 'long' in name.lower() and diff >= 0:
                 return lost, note, clean
             if 'short' in name.lower() and diff <= maxloss:

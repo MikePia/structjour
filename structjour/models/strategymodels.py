@@ -59,6 +59,7 @@ class Source(Base):
             source = Source(datasource=name)
         session.add(source)
         session.commit()
+        session.close()
 
     @classmethod
     def getAllSources(cls):
@@ -99,6 +100,7 @@ class Strategy(Base):
         strat = Strategy(name=name, preferred = preferred)
         session.add(strat)
         session.commit()
+        session.close()
         return strat
 
     @classmethod
@@ -118,6 +120,7 @@ class Strategy(Base):
         if strat:
             ModelBase.session.delete(strat)
             ModelBase.session.commit()
+            ModelBase.session.close()
 
     @classmethod
     def getStrategies(cls):
@@ -140,6 +143,7 @@ class Strategy(Base):
         if strat:
             strat.preferred = False
             ModelBase.session.commit()
+            ModelBase.session.close()
         
 
     @classmethod
@@ -149,6 +153,7 @@ class Strategy(Base):
         if strat:
             ModelBase.session.delete(strat)
             ModelBase.session.commit()
+            ModelBase.session.close()
 
 
 class Description(Base):
@@ -205,6 +210,7 @@ class Description(Base):
             )
         session.add(theDesc)
         session.commit()
+        session.close()
     @classmethod
     def getAllDescriptions(cls):
         ModelBase.connect(new_session=True, db="structjourDb")
@@ -270,6 +276,7 @@ class Images(Base):
         if img and isinstance(img[0], Images):
             ModelBase.session.delete(img[0])
             ModelBase.session.commit()
+            ModelBase.session.close()
 
     @classmethod
     def getAllImages(cls):

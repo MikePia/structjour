@@ -24,7 +24,6 @@ import datetime as dt
 import logging
 import math
 import os
-import sqlite3
 
 import pandas as pd
 from PyQt5.QtCore import QSettings
@@ -242,6 +241,7 @@ class StatementDB:
             self.updateChartsSA(tradesum, trade)
 
         ModelBase.session.commit()
+        ModelBase.session.close()
         return newts
 
     def addTradeSummariesSA(self, tsDict, ldf):
@@ -281,30 +281,7 @@ class StatementDB:
         return self.tcrud.insertTrade(row, self.source)
 
     def updateMstkValsSA(self, ts_id, val, note):
-        if not ts_id:
-            return
-        if not conn:
-            conn = sqlite3.connect(self.db)
-
-        cur = conn.cursor()
-        ts_id = int(ts_id)
-        sf = self.sf
-        cur.execute(f'''UPDATE trade_sum SET {sf.mstkval} = ?, {sf.mstknote} = ?
-                WHERE id = ?''', (val, note, ts_id))
-        conn.commit()
-
-    def updateMstkVals(self, ts_id, val, note, conn=None):
-        if not ts_id:
-            return
-        if not conn:
-            conn = sqlite3.connect(self.db)
-
-        cur = conn.cursor()
-        ts_id = int(ts_id)
-        sf = self.sf
-        cur.execute(f'''UPDATE trade_sum SET {sf.mstkval} = ?, {sf.mstknote} = ?
-                WHERE id = ?''', (val, note, ts_id))
-        conn.commit()
+        self.tcrud.updateMstkVals(ts_id, val, note)
 
     def isDateCovered(self, cur, account, d):
         '''
@@ -332,29 +309,6 @@ class StatementDB:
                 d = current.strftime('%Y%m%d')
                 self.tcrud.insertCovered(account, d)
             current = current + delt
-
-    def coveredDates(self, begin, end, account, cur=None):
-        '''
-        Inserts the dates between begin and end  into the ib_covered table
-        '''
-        if not cur:
-            conn = sqlite3.connect(self.db)
-            cur = conn.cursor()
-        delt = pd.Timedelta(days=1)
-        begin = pd.Timestamp(begin).date()
-        current = begin
-        if not end:
-            end = current
-        else:
-            end = pd.Timestamp(end).date()
-        while current <= end:
-            if not self.isDateCovered(cur, account, current):
-                d = current.strftime('%Y%m%d')
-                cur.execute('''
-                    INSERT INTO ib_covered(day, covered, account)
-                    VALUES(?, ?, ?)''', (d, 'true', account))
-            current = current + delt
-        # conn.commit()
 
     def insertPositions(self, cur, posTab):
         '''
@@ -394,7 +348,7 @@ class StatementDB:
     # ########################### methods for structjour ###################################
     ########################################################################################
 
-    def getNumTicketsForDay(self, day, account='all'):
+    def getNumTicketsForDaySA(self, day, account='all'):
         '''
         Queries the database to get the count of transactions recorded from a single day.
         By default will retrieve the tickets from all accouts.
@@ -402,39 +356,7 @@ class StatementDB:
         :param all: str, send an account number to restrict to a single account
         :return: int
         '''
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        day = pd.Timestamp(day)
-        begin = day.strftime('%Y%m%d')
-        end = day.strftime('%Y%m%d;99')
-        count = 0
-        countt = 0
-        if account == 'all':
-            count = cur.execute(f'''
-            SELECT count() FROM ib_trades
-                where datetime > ?
-                and datetime < ?
-            ''', (begin, end))
-
-        else:
-            count = cur.execute(f'''
-                SELECT count() FROM ib_trades
-                where datetime > ?
-                and datetime < ?
-                and Account = ?
-            ''', (begin, end, account))
-        if count:
-            count = count.fetchone()
-            count = count[0] if count else 0
-
-        countt = cur.execute('''
-            SELECT count() FROM trade_sum
-                WHERE Date = ?''', (begin, ))
-        if countt:
-            countt = countt.fetchone()
-            countt = countt[0] if countt else 0
-        return count, countt
+        return self.tcrud.getNumTicketsForDay(day, account)
 
     def updateTSID(self, t_id, ts_id):
         '''
@@ -442,17 +364,7 @@ class StatementDB:
         :params t_id: Trade id from the ib_trades table
         :params ts_id: Trade summary id from the trade_sums table (foreign key) relation to ib_trades
         '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        ts_id = int(ts_id)
-
-        cursor = cur.execute(f'''
-            SELECT trade_sum_id FROM ib_trades WHERE id = ?''', (t_id, ))
-        theId = cursor.fetchone()
-        if not isNumeric(theId[0]) or theId[0] != ts_id:
-            cur.execute(f''' UPDATE ib_trades SET trade_sum_id = ?
-                WHERE  id = ?''', (ts_id, t_id))
-            conn.commit()
+        self.tcrud.updateTSID(t_id, ts_id)
 
     ########################################################################################
     # ################### DB Helper methods for refigureAPL ################################
@@ -591,23 +503,6 @@ class StatementDB:
         Retrive all trades in ib_trades missing either average or balance
         '''
         return self.tcrud.getBadTrades()
-
-    def getBadTrades(self):
-        '''
-        Retrive all trades in ib_trades missing either average or balance
-        '''
-        rc = self.rc
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        rc = self.rc
-        found = cur.execute(f'''
-            SELECT {rc.ticker}, datetime, {rc.shares}, {rc.bal}, {rc.price}, {rc.avg},
-            {rc.PL}, {rc.acct}, {rc.oc}, id, {rc.comm} FROM ib_trades
-                WHERE {rc.avg} IS NULL
-                OR {rc.bal} IS NULL
-        ''')
-        badTrades = found.fetchall()
-        return badTrades
 
     def getPreviousTradesSA(self, bt):
         '''
@@ -797,6 +692,7 @@ class StatementDB:
                                 if ft.balance == 0:
                                     pastPrimo = False
                         ModelBase.session.commit()
+                        ModelBase.session.close()
                         break
                         # ######
                     elif isNumeric([pt.average, pt.pnl, pt.balance]) and pt.pnl != 0:
@@ -877,6 +773,7 @@ class StatementDB:
                             else:
                                 raise ValueError('What else we got here?')
                         ModelBase.session.commit()
+                        ModelBase.session.close()
                         break
                     elif i == len(prevTrades) - 1 and isNumeric(bt.pnl) and bt.pnl != 0:
                         # This catches a badTrade if the conditions above have failed (end of
@@ -887,202 +784,11 @@ class StatementDB:
                         # (incase its possible to generalize this and share code.)
                         if self.DBfigureUnbalancedPL_SA(prevTrades, bt):
                             ModelBase.session.commit()
+                            ModelBase.session.close()
                             break
                     else:
                         fixthese.append(pt)
         self.reFigureAPL_backwardsSA()
-
-
-    def reFigureAPL(self, begin, end):
-        '''
-        Its sketchy still
-        Process the ib_trades.balance field for all trade entries between begin and end
-        :prerequisites: Balance-- the differenc between refigureBAPL and this one.
-        '''
-        rc = self.rc
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        badTrades = self.getBadTrades()
-        for badTrade in badTrades:
-            bt = self.makeTradeDict(badTrade)
-
-            if isNumeric([bt[rc.avg], bt[rc.bal]]):
-                continue
-            account = bt[rc.acct]
-            prevTrades = self.getPreviousTrades(cur, bt)
-
-            fixthese = []
-            for i, prevTrade in enumerate(prevTrades):
-                pt = self.makeTradeDict(prevTrade)
-                uncovered = self.getUncoveredDays(account, beg=pt[rc.date], end=bt[rc.date])
-                if uncovered:
-                    break
-                else:
-                    # We have continuous coverage...
-                    # We can update badTrade if we found a trade that has either
-                    # 1) both average and PL (PL tells us if we are long or short-(closing trade))
-                    # or 2) A trade opener identified by quantity == balance
-                    LONG = True
-                    SHORT = False
-
-                    # if pt[rc.avg] and pt[rc.shares] == pt[rc.bal]:
-                    if pt[rc.avg] and pt[rc.bal] == pt[rc.shares]:
-                        # Found Trade opener good trade
-                        fixthese.append(prevTrade)
-                        fixthese.insert(0, badTrade)
-                        fixthese_r = reversed(fixthese)
-
-                        #######
-                        balance = 0
-                        # Discriminator for first opening transaction
-                        pastPrimo = False
-                        side = LONG
-
-                        for ft in fixthese_r:
-                            # ft = self.makeTradeDict(fixthis)
-
-                            # Figure Balance first -- adjust offset for overnight
-                            prevBalance = balance
-                            balance = balance + ft[rc.shares]
-
-                            if not ft[rc.bal]:
-                                self.updateBal(cur, ft, balance)
-                                ft[rc.bal] = balance
-
-                            # Check for a flipped position. The flipper is figured as an Opener;
-                            # the average changes, and no PL is taken.
-                            if pastPrimo and side == LONG and balance < 0:
-                                side = SHORT
-                            elif pastPrimo and side == SHORT and balance > 0:
-                                side = LONG
-
-                            # This the first trade Open; average == price and set the side-
-                            if not pastPrimo and ft[rc.bal] == ft[rc.shares]:
-
-                                pastPrimo = True
-                                average = ft[rc.price]
-                                assert math.isclose(ft[rc.price], ft[rc.avg], abs_tol=1e-5)
-
-                                # average should be set for this one
-                                # tdf.at[i, 'Average'] = average
-                                side = LONG if ft[rc.shares] >= 0 else SHORT
-
-                            # Here are openers -- adding to the trade; average changes
-                            # newAvg = ((prevAverage * prevBalance) + (quantity * price)) / balance
-                            elif (pastPrimo and side is LONG and ft[rc.shares] >= 0) or (
-                                    pastPrimo and side is SHORT and ft[rc.shares] < 0):
-                                newAverage = ((average * prevBalance) + (ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
-                                average = newAverage
-                                ft[rc.oc] = 'O'
-                                if not ft[rc.avg]:
-                                    ft[rc.avg] = average
-                                    self.updateAvgOC(cur, ft, average, 'O')
-
-                            # Here are closers; PL is figured and check for trade ending
-                            elif pastPrimo:
-                                # Close Tx, P/L is figured on CLOSING transactions only
-                                pl = (average - ft[rc.price]) * ft[rc.shares]
-                                ft[rc.oc] = 'C'
-                                self.updateAvgPlOC(cur, ft, average, pl, 'C')
-                                if ft[rc.bal] == 0:
-                                    pastPrimo = False
-                        conn.commit()
-                        break
-                        # ######
-                    elif isNumeric([pt[rc.avg], pt[rc.PL], pt[rc.bal]]) and pt[rc.PL] != 0:
-                        # Found a good closer (has PL and avg)
-                        fixthese.append(prevTrade)
-                        fixthese.insert(0, badTrade)
-                        fixthese_r = reversed(fixthese)
-
-                        average = None
-                        nextTrade = False
-                        pastPrimo = False
-                        for ft in fixthese_r:
-                            # ft = self.makeTradeDict(fixthis)
-
-                            if pastPrimo and not isNumeric(ft[rc.bal]):
-                                # ## Has the balance variable been set????
-                                prevBalance = balance
-                                balance = balance + ft[rc.shares]
-                                self.updateBal(cur, ft, balance)
-                                # side = LONG if quantity >= 0 else SHORT
-                                ft[rc.bal] = balance
-
-                            if isNumeric([ft[rc.PL], ft[rc.bal], ft[rc.avg]]) and (
-                                    ft[rc.PL] != 0 and not pastPrimo):
-                                # found a good trade closer
-                                pastPrimo = True
-                                side = LONG if ft[rc.shares] < 0 else SHORT
-                                balance = ft[rc.bal]
-                                average = ft[rc.avg]
-                                if ft[rc.bal] == 0:
-                                    # Found a trade ender
-                                    nextTrade = True
-                            elif nextTrade:
-                                # This is a baginning trade opener. We know because it was
-                                # preceeded by bal==0, fix and DB UPDATE
-                                nextTrade = False
-                                ft[rc.oc] = 'O'
-                                if not ft[rc.bal] or math.isnan(ft[rc.bal]):
-                                    ft[rc.bal] = ft[rc.shares]
-                                else:
-                                    assert ft[rc.bal] == ft[rc.shares]
-
-                                if not ft[rc.avg] or math.isnan(ft[rc.avg]):
-                                    ft[rc.avg] = ft[rc.price]
-                                else:
-                                    assert math.isclose(ft[rc.avg], ft[rc.price], abs_tol=1e-5)
-                                average = ft[rc.avg]
-                                # prevBal = ft[rc.bal]
-                                pl = 0
-                                self.updateAvgBalPlOC(cur, ft, average, ft[rc.bal], pl, 'O')
-                                nextTrade = False
-                                break
-                            elif average and not ft[rc.avg]:
-                                # A badTrade -
-
-                                if (side is LONG and ft[rc.shares] >= 0) or (
-                                        side is SHORT and ft[rc.shares] < 0):
-                                    # Opener
-                                    # newAverage = ((prevAverage * prevBalance) +
-                                    #                (quantity * price)) / balance
-                                    newAverage = ((average * balance) + (
-                                        ft[rc.shares] * ft[rc.price])) / ft[rc.bal]
-                                    average = newAverage
-                                    balance = ft[rc.bal]
-                                    ft[rc.avg] = average
-                                    ft[rc.oc] = 'O'
-                                    self.updateAvgOC(cur, ft, average, 'O')
-                                elif average:
-                                    # Closer. Enter PL and check for last trade --
-                                    pl = (average - ft[rc.price]) * ft[rc.shares]
-                                    ft[rc.oc] = 'C'
-                                    # if ft[rc.bal] == 0:
-                                    #     average = None
-                                    self.updateAvgPlOC(cur, ft, average, pl, 'C')
-                                    break
-                            elif ft[rc.avg]:
-                                average = ft[rc.avg]
-                                prevBalance = ft[rc.bal]
-                                # raise ValueError('Programmer exception to find the statements')
-                            else:
-                                raise ValueError('What else we got here?')
-                        conn.commit()
-                        break
-                    elif i == len(prevTrades) - 1 and isNumeric(bt[rc.PL]) and bt[rc.PL] != 0:
-                        # This catches a badTrade if the conditions above have failed (end of
-                        # prevTrades) and the badTrade has a PL. Its possible we can figure out the
-                        # some of the rest of the details by comparing average price to previous
-                        # average price, or the previous price, if the average price is mssing
-                        # there too. This algo was worke out in DASStatement.figureUnbalancedPL
-                        # (incase its possible to generalize this and share code.)
-                        if self.DBfigureUnbalancedPL(cur, prevTrades, bt):
-                            conn.commit()
-                            break
-                    else:
-                        fixthese.append(prevTrade)
-        self.reFigureAPL_backwards()
 
     def reFigureAPL_backwardsSA(self):
         '''
@@ -1093,8 +799,6 @@ class StatementDB:
             (to the closer) and previous opener will have the same average.
         '''
         rc = self.rc
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
 
         # LONG = True
         # SHORT = False
@@ -1116,6 +820,7 @@ class StatementDB:
                         ft.oc = 'O'
                         ModelBase.session.add(ft)
                         ModelBase.session.commit()
+                        ModelBase.session.close()
                         return
                 elif isNumeric(ft.pnl) and ft.pnl != 0:
                     # pastPrimo = True
@@ -1132,61 +837,9 @@ class StatementDB:
                             balance = balance - fixthese[j + 1].qty
                             fixthese[j].balance = balance
                             ModelBase.session.add(fixthese[j])
-                            # self.updateBal(cur, fixthese[j], balance)
                             if j == 0:
                                 ModelBase.session.commit()
-                                return
-    def reFigureAPL_backwards(self):
-        '''
-        A second algorithm to try to fill in some blanks. A bad trade is missing average and/or
-        balance.
-        A trade where balance == shares can set avg = price and is an opener (OC = O).
-        A trade with a PL value != 0  is a closer and we can figure average. An adjacent
-            (to the closer) and previous opener will have the same average.
-        '''
-        rc = self.rc
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-
-        # LONG = True
-        # SHORT = False
-
-        badTrades = self.getBadTrades()
-        for badTrade in badTrades:
-            bt = self.makeTradeDict(badTrade)
-            nextTrades = self.getNextTrades(cur, bt)
-            fixthese = [bt]
-            nextTrades = [self.makeTradeDict(x) for x in nextTrades]
-            # pastPrimo = False
-            for nt in nextTrades:
-                uncovered = self.getUncoveredDays(bt[rc.acct], bt[rc.date], nt[rc.date])
-                if uncovered:
-                    break
-                fixthese.append(nt)
-            for i, ft in enumerate(fixthese):
-                if isNumeric(ft[rc.bal]) and ft[rc.shares] == ft[rc.bal]:
-                    if not isNumeric(ft[rc.avg]):
-                        ft[rc.avg] = ft[rc.price]
-                        ft[rc.oc] = 'O'
-                        self.updateAvgOC(cur, ft, ft[rc.avg], ft[rc.oc])
-                        conn.commit()
-                        return
-                elif isNumeric(ft[rc.PL]) and ft[rc.PL] != 0:
-                    # pastPrimo = True
-                    average = ((ft[rc.PL] / ft[rc.shares]) + ft[rc.price])
-                    if not ft[rc.avg] or not isNumeric(ft[rc.avg]):
-                        ft[rc.avg] = average
-                    else:
-                        assert math.isclose(average, ft[rc.avg], abs_tol=1e-2)
-                    ft[rc.oc] = 'C'
-                    # side = LONG if ft[rc.shares] < 0 else SHORT
-                    if isNumeric(ft[rc.bal]):
-                        balance = ft[rc.bal]
-                        for j in range(i - 1, -1, -1):
-                            balance = balance - fixthese[j + 1][rc.shares]
-                            self.updateBal(cur, fixthese[j], balance)
-                            if j == 0:
-                                conn.commit()
+                                ModelBase.session.close()
                                 return
 
     def processStatementSA(self, tdf, account, begin, end, openPos=None):
@@ -1212,6 +865,7 @@ class StatementDB:
             pass
         # self.insertPositions(openPos)
         ModelBase.session.commit()
+        ModelBase.session.close()
         # conn.commit()
         self.reFigureAPL_SA(begin, end)
         dbdr = DbDoctorCrud()
@@ -1230,21 +884,6 @@ class StatementDB:
         if didsomething:
             ModelBase.session.commit()
             ModelBase.session.close()
-
-    def isCovered(self, account, d):
-        '''
-        returns True or False if this day is covered in the db. It is True if we have processed a
-        Statement that covers this day. There may be no trades on a covered day. It imay be marked
-        covered when processing a multi-day statement that spans the day or when processing a
-        statement with no trades. We assume statments coave an  entire day. If the user imports
-        partial DAS data, it may be untrue.
-        '''
-        d = pd.Timestamp(d).date()
-        beg = end = d
-        unc = self.getUncoveredDays(account, beg, end)
-        if d in unc:
-            return False
-        return True
 
     def getTradeSumByDateSA(self, daDate):
         tsums2 = self.tcrud.getTradeSumByDate(daDate)
@@ -1278,24 +917,6 @@ class StatementDB:
             tsd['clean'] = ts.clean
             ret.append(tsd)
         return ret
-
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        sf = self.sf
-
-        daDate = self.formatDate(daDate)
-        tsums = cur.execute(f'''
-            SELECT id,
-                   {sf.name}, {sf.strat}, {sf.link1}, {sf.acct}, {sf.pl}, {sf.start},
-                   {sf.date}, {sf.dur}, {sf.shares}, {sf.mktval}, {sf.targ}, {sf.targdiff},
-                   {sf.stoploss}, {sf.sldiff}, {sf.rr}, {sf.realrr}, {sf.maxloss}, {sf.mstkval},
-                   {sf.mstknote}, {sf.explain}, {sf.notes}, clean
-            FROM trade_sum Where date = ?''', (daDate, ))
-        tsums = tsums.fetchall()
-        if not tsums:
-            return None
-        return tsums
-
 
     def renameKeys(self, d):
         '''Rename the sa names in a dict to the SumReqFields as used every where else'''
@@ -1438,28 +1059,6 @@ class StatementDB:
                 df.at[i, rc.side] = 'S'
         return df
 
-
-    def getCoveredDays(self):
-        '''
-        :return: a list of dates representing a complete list of days in the db
-        '''
-        conn = sqlite3.connect(self.db)
-        cur = conn.cursor()
-        cursor = cur.execute('''
-            SELECT min(day), max(day) from ib_covered ORDER BY day''')
-        days = cursor.fetchall()
-        returnMe = list()
-        current = days[0][0]
-        last = days[0][-1]
-        last = pd.Timestamp(last)
-        delt = pd.Timedelta(days=1)
-        current = pd.Timestamp(current)
-        while current <= last:
-            if current.weekday() < 5 and not self.tcrud.isHoliday(current):
-                returnMe.append(current)
-            current = current + delt
-        return returnMe
-
     def getUncoveredDaysSA(self, account, beg='20180301', end=None, usecache=False):
         '''
         Get Market days between beg and end for which we are not covered by a statement saved to the db.
@@ -1498,56 +1097,6 @@ class StatementDB:
             if current > end.date():
                 break
         return notcovered
-
-    def getUncoveredDays(self, account, beg='20180301', end=None, usecache=False):
-        '''
-        Get Market days between beg and end for which we are not covered by a statement saved to the db.
-
-        Paramaters:
-        :params account:
-        :params beg:
-        :params end:
-        :params usecache: Use the default True is this is to be called repeatedly to check the same dates
-                   within a loop.
-                   Use usecache=False to check for unique dates.
-        '''
-        if not beg:
-            raise ValueError('Missing a value for beg. beg must have a value')
-        beg = pd.Timestamp(beg)
-        if not end:
-            end = pd.Timestamp.now()
-        else:
-            end = pd.Timestamp(end)
-        if not self.covered or not usecache:
-            conn = sqlite3.connect(self.db)
-            cur = conn.cursor()
-            strbeg = beg.strftime('%Y%m%d')
-            strend = end.strftime('%Y%m%d')
-            days = cur.execute('''
-                SELECT day FROM ib_covered
-                    WHERE covered = 'true'
-                    AND day >= ?
-                    AND day <= ?
-                    AND account = ?
-                    ORDER BY day''', (strbeg, strend, account))
-
-            days = days.fetchall()
-            self.covered = [pd.Timestamp(x[0]).date() for x in days]
-        notcovered = []
-        current = beg.date()
-        delt = pd.Timedelta(days=1)
-        while True:
-            if current.weekday() > 4 or self.tcrud.isHoliday(current):
-                pass
-            elif current not in self.covered:
-                notcovered.append(current)
-            else:
-                pass
-            current = current + delt
-            if current > end.date():
-                break
-        return notcovered
-
 
 def notmain():
     '''Run some local code for devel'''

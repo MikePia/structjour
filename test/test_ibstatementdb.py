@@ -25,7 +25,6 @@ processStatement and refigureAPL (Still sketchy).
 '''
 
 import os
-import sqlite3
 import unittest
 
 import pandas as pd
@@ -36,16 +35,11 @@ from structjour.colz.finreqcol import FinReqCol
 from structjour.definetrades import DefineTrades
 from structjour.models.meta import ModelBase
 from structjour.statements import findfiles as ff
+from structjour.statements.statementcrud import TradeCrud
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
 from structjour.thetradeobject import runSummaries
 from structjour.utilities.backup import Backup
-
-# from structjour.dfutil import DataFrameUtil
-
-# from structjour.view.layoutforms import LayoutForms
-
-# from structjour.colz.finreqcol import FinReqCol
 
 
 class Test_StatementDB(unittest.TestCase):
@@ -115,7 +109,8 @@ class Test_StatementDB(unittest.TestCase):
         self.clearTables()
         ibs, x = self.openStuff()
         # ibdb.getUncoveredDays
-        covered = ibdb.getCoveredDays()
+        tcrud = TradeCrud()
+        covered = tcrud.getCoveredDays()
 
         for count, day in enumerate(covered):
             df = ibdb.getStatement(day)
@@ -173,14 +168,6 @@ class Test_StatementDB(unittest.TestCase):
         The data in the active db has 339 rows between 20181231 and 20200122.
         '''
         pass
-        # data = [['XXXXXXX', 'GOG', -349, '20170304'], ['XXXXXXX', 'ORNG', 550, '20170304']]
-
-        # posTab = pd.DataFrame(data=data, columns=['Account', 'Symbol', 'Quantity', 'Date'])
-        # conn = sqlite3.connect(self.db)
-        # cur = conn.cursor()
-        # ibdb = StatementDB(db=self.db)
-        # ibdb.insertPositions(cur, posTab)
-        # print()
 
     def test_ibstatement(self):
         '''Test basic usage loading an ib statement and getting a statement'''
@@ -299,7 +286,7 @@ class Test_StatementDB(unittest.TestCase):
 
         begin = ibs.endDate - pd.Timedelta(days=15)
         end = ibs.endDate + pd.Timedelta(days=15)
-        covered = ibdb.getUncoveredDays(ibs.account, begin, end)
+        covered = ibdb.getUncoveredDaysSA(ibs.account, begin, end)
         self.assertTrue(len(covered) > 0)
         for c in covered:
             self.assertTrue(c > ibs.endDate)

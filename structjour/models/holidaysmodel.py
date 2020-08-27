@@ -44,6 +44,8 @@ class Holidays(Base):
              session.add(h)
              if commit:
                  session.commit()
+                 session.close()
+
 
     @classmethod
     def isHoliday(self, d, new_session=False):

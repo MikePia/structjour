@@ -28,7 +28,6 @@ import logging
 
 import os
 import random
-import sqlite3
 import sys
 
 from structjour.models.meta import ModelBase
@@ -36,6 +35,7 @@ from structjour.models.api_keymodel import ApiKey
 
 import numpy as np
 import pandas as pd
+from sqlalchemy.sql import text
 from PyQt5.QtCore import QSettings, QDate, QDateTime
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon
@@ -276,15 +276,10 @@ def getPrevTuesWed(td):
 
 
 def clearTables(db):
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-    cur.execute('''delete from chart''')
-    # cur.execute('''delete from holidays''')
-    cur.execute('''delete from ib_covered''')
-    cur.execute('''delete from ib_trades''')
-    cur.execute('''delete from ib_positions''')
-    cur.execute('''delete from trade_sum''')
-    conn.commit()
+    statements = ['delete from chart', 'delete from holidays', 'delete from ib_covered',
+                 'delete from ib_trades', 'delete from ib_positions', 'delete from trade_sum']
+    for statement in statements:
+        ModelBase.engine.execute(text(statement))
 
 class ManageKeys:
     def __init__(self, create=False, db=None):

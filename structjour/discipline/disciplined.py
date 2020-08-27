@@ -510,7 +510,7 @@ def registerTrades(wb, theDate):
 
     ibdb = StatementDB()
     df = ibdb.getStatement(theDate)
-    x = ibdb.getNumTicketsForDay(theDate)
+    x = ibdb.getNumTicketsForDaySA(theDate)
     if not x[0] or not x[1]:
         msg = f'''found {x[0]} tickets and {x[1]} trades. Nothing to process for the date {theDate.strftime('%A %d, %Y')}in the DB'''
         return msg

@@ -27,7 +27,6 @@ import unittest
 from unittest import TestCase
 
 import pandas as pd
-import sqlite3
 
 
 # https://stackoverflow.com/questions/57426219/how-to-import-qtwebenginewidgets-after-qapplication-has-been-created
@@ -99,7 +98,6 @@ class TestDailyCtrl(TestCase):
         ddiirr = os.path.dirname(__file__)
         os.chdir(os.path.realpath(ddiirr))
         os.chdir(os.path.realpath('../'))
-        self.conn = sqlite3.connect(self.testdb)
         self.inputtype = 'IB_CSV'
 
         indir = 'data/'

@@ -61,6 +61,7 @@ class ApiKey(Base):
         newkey = ApiKey(api=api, key=key)
         session.add(newkey)
         session.commit()
+        session.close()
 
     @classmethod
     def removeKey(cls, api):
@@ -70,6 +71,7 @@ class ApiKey(Base):
         if q:
             ModelBase.session.delete(q)
             ModelBase.session.commit()
+            ModelBase.session.close()
 
 def removekey():
     a = ApiKey()

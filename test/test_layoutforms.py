@@ -22,7 +22,6 @@ Created on June 1, 2019
 
 @author: Mike Petersen
 '''
-# import sqlite3
 import sys
 from PyQt5 import QtCore
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)

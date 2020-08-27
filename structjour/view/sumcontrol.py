@@ -1110,7 +1110,7 @@ class SumControl(QMainWindow):
             self.ui.goBtn.setText('Load DB Data')
             # dbDate = daDate.strftime('%Y%m%d')
             statementDb = StatementDB()
-            count, t_count = statementDb.getNumTicketsForDay(daDate)
+            count, t_count = statementDb.getNumTicketsForDaySA(daDate)
             if t_count:
                 s = f"{count} DB tickets in {t_count} trades for {daDate.strftime('%A, %B %d, %Y')}"
             else:

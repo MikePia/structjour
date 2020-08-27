@@ -24,7 +24,6 @@ Created on May 22, 2019
 import os
 import sys
 import unittest
-import sqlite3
 from unittest import TestCase
 import pandas as pd
 

@@ -61,6 +61,7 @@ class DailyNotes(Base):
         else:
             session.add(DailyNotes(date= int(d), note=note))
         session.commit()
+        session.close()
 
     @classmethod
     def getNote(cls, date):
@@ -86,6 +87,7 @@ class DailyNotes(Base):
         if q:
             ModelBase.session.delete(q)
             ModelBase.session.commit()
+            ModelBase.session.close()
 
 
 

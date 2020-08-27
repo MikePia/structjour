@@ -110,6 +110,7 @@ class EditTagsDlg(QDialog):
                 print(key, f'widget: {self.tagDict[key][1].isChecked()}, tag:{self.tagDict[key][0].active}')
                 self.tagDict[key][0].active = self.tagDict[key][1].isChecked()
                 ModelBase.session.commit()
+                ModelBase.session.close()
 
     def labelClicked(self, x, event):
         print('got a click', x, event)
@@ -128,6 +129,7 @@ class EditTagsDlg(QDialog):
                         return
                 ModelBase.session.delete(self.tagDict[x.text()][0])
                 ModelBase.session.commit()
+                ModelBase.session.close()
                 # self.updateLayout()
                 self.tagDict[x.text()][1].setHidden(True)
                 self.tagDict[x.text()][2].setHidden(True)
