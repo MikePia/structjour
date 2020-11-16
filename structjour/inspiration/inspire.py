@@ -610,9 +610,9 @@ def main():
 
     print('\n', q, '\n')
 
-    # tp = TradingPlan()
-    # tp.getRules(['a'])
+    tp = TradingPlan()
+    tp.getRules(['a'])
 
 if __name__ == '__main__':
-    # main()
-    notmain()
+    main()
+    # notmain()

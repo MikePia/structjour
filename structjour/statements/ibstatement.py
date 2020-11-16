@@ -90,6 +90,8 @@ class IbStatement:
     def figureBAPL(self, tt, tos):
         '''
         Figure Balance, Average price and PL
+        :params tt: Trades table from statement
+        :params tos: Positions table from statement
         '''
         rc = self.rc
         tt[rc.bal] = np.nan
