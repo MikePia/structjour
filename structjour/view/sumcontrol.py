@@ -334,15 +334,7 @@ class SumControl(QMainWindow):
         loaded for each file name
         '''
         outdir = self.getOutdir()
-        infile = self.ui.infileEdit.text()
-        p, infile = os.path.split(infile)
-
-        savename, ext = os.path.splitext(infile)
-        d = self.settings.value('theDate')
-        d = qtime2pd(d)
-        d = pd.Timestamp(d)
-
-        savename = f'''.{savename}{d.strftime('%A_%m%d')}.zst'''
+        savename = os.path.splitext(self.settings.value('infile'))[0] + '.zst'
         outpathfile = os.path.normpath(os.path.join(outdir, savename))
         return outpathfile
 
@@ -619,11 +611,13 @@ class SumControl(QMainWindow):
 
     def chartMagic1(self):
         '''Update button was pressed for chart1. We will get a chart using a stock api'''
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         x = threading.Thread(target=self.chartMage,
                             args=(self.ui.chart1Start, self.ui.chart1End, self.ui.chart1Interval,
                             self.ui.chart1Name, self.ui.chart1, 'chart1', ))
         x.start()
         x.join()
+        QApplication.restoreOverrideCursor()
         self.markDataChanged()
         if self.chartErrorMessage:
             self.warnChartError()
@@ -635,11 +629,13 @@ class SumControl(QMainWindow):
 
     def chartMagic2(self):
         '''Update button was pressed for chart2. We will get a chart using a stock api'''
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         x = threading.Thread(target=self.chartMage,
                              args=(self.ui.chart2Start, self.ui.chart2End, self.ui.chart2Interval,
                                self.ui.chart2Name, self.ui.chart2, 'chart2'))
         x.start()
         x.join()
+        QApplication.restoreOverrideCursor()
         self.markDataChanged()
         if self.chartErrorMessage:
             self.warnChartError()
@@ -651,11 +647,13 @@ class SumControl(QMainWindow):
 
     def chartMagic3(self):
         '''Update button was pressed for chart3. We will get a chart using a stock api'''
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         x = threading.Thread(target=self.chartMage,
                              args=(self.ui.chart3Start, self.ui.chart3End, self.ui.chart3Interval,
                                self.ui.chart3Name, self.ui.chart3, 'chart3'))
         x.start()
         x.join()
+        QApplication.restoreOverrideCursor()
         self.markDataChanged()
         if self.chartErrorMessage:
             self.warnChartError()
