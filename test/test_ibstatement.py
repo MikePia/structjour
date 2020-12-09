@@ -26,8 +26,11 @@ import unittest
 from unittest import TestCase
 import pandas as pd
 
+from structjour.models.meta import ModelBase
+from structjour.models.trademodels import Trade
 from structjour.statements.ibstatement import IbStatement
 from structjour.statements.ibstatementdb import StatementDB
+from structjour.utilities.backup import Backup
 
 from PyQt5.QtCore import QSettings
 
@@ -36,7 +39,6 @@ class TestIbStatement(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestIbStatement, self).__init__(*args, **kwargs)
         self.fred = 'Fred'
-        self.db = 'test/testdb.sqlite'
         self.apiset = QSettings('zero_substance/stockapi', 'structjour')
 
         # The date of file1
@@ -45,10 +47,15 @@ class TestIbStatement(TestCase):
 
         self.testfile2 = "data/flex.369463.ActivityFlexMonth.20191008.20191106.csv"
 
-    def test_openIbStatement(self):
+    @classmethod
+    def setUpClass(cls):
+        bu = Backup()
+        bu.backup()
 
-        ibs = IbStatement(db=self.db)
-        ibdb = StatementDB(db=self.db)
+    def test_openIbStatement(self):
+        
+        ibs = IbStatement()
+        ibdb = StatementDB()
         ibdb.reinitializeTradeTables()
         x = ibs.openIBStatement(self.testfile1)
         self.assertIsNotNone(x)
@@ -58,10 +65,12 @@ class TestIbStatement(TestCase):
         self.assertIsInstance(st, pd.DataFrame)
         self.assertGreater(len(st), 0)
 
+        bu = Backup()
+        bu.restore()
+
     def test_openIbStatement_notcsv(self):
-        ibs = IbStatement(db=self.db)
-        ibdb = StatementDB(db=self.db)
-        ibdb.reinitializeTradeTables()
+        ibs = IbStatement()
+        ibdb = StatementDB()
         x = ibs.openIBStatement('data\alittleOrgTODO.txt')
         self.assertEqual(len(x[0]), 0)
 
@@ -84,8 +93,33 @@ class TestIbStatement(TestCase):
         df = ibs.unifyDateFormat(df)
         self.assertTrue(df['DateTime'].unique()[0] == '20200304;153045')
 
-    # def test_figureBAPL(self):
-    #     pass
+    def test_figureBAPL(self):
+        '''
+        figureBAPL is called by openIBStatement and is give the trade tables and
+        position tables from an IB statement. figureBAPL fills in Balance, Average
+        and pnl. Every Balance entry should be filled. There could be blanks for
+        Average. Here we can test all balance entries made it to the db
+        '''
+        ibs = IbStatement()
+        ibdb = StatementDB()
+        ibdb.reinitializeTradeTables()
+
+        # These two files are a multiday flex and an activity. 
+        # Find a way to find recent files to test
+        # trades1, meta1 = ibs.openIBStatement(self.testfile1)
+        trades2, meta2 = ibs.openIBStatement(self.testfile2)
+        len2 = len(trades2['TRNT']) if 'TRNT' in trades2.keys() else len(trades2['Trades'])
+        
+
+        ModelBase.connect(new_session=True)
+        session = ModelBase.session
+        q = session.query(Trade).all()
+        q2 = session.query(Trade).filter(Trade.balance is None).all()
+        self.assertEqual(len2, len(q))
+        self.assertEqual(len(q2), 0)
+
+        bu = Backup()
+        bu.restore()
 
     # def test_openIBStatementCSV(self):
     #     # openIBStatment is now just a wrapper for openIbStatementCSV
@@ -131,6 +165,16 @@ class TestIbStatement(TestCase):
     # def test_verifyAvailableCols(self):
     #     pass
 
+def main():
+    unittest.main()
+
+def notmain():
+    TestIbStatement.setUpClass()
+    t = TestIbStatement()
+    # t.test_openIbStatement()
+    # t.test_openIbStatement_notcsv()
+    t.test_figureBAPL()
+
 
 if __name__ == '__main__':
-    unittest.main()
+    notmain()
