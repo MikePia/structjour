@@ -40,7 +40,7 @@ def autoGenCreateDirs(settings, testDate=None):
     theDate = pd.Timestamp.now()
     if testDate:
         theDate = testDate
-    nextMonth = pd.Timestamp(theDate.year, theDate.month + 1, 1)
+    nextMonth = pd.Timestamp(theDate.year, (theDate.month % 12) + 1, 1)
     jdir = settings.value('journal')
     scheme = settings.value('scheme')
     schemex = scheme.format(Year='%Y', month='%m', MONTH='%B', day='%d', DAY='%A').split('/')
