@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 '''
 Alphavantage  stuff using their own intraday RESTful  API. Only implemented TIME_SERIES_INTRADAY.
+Need to check TIME_SERIES_INTRADAY_EXTENDED. Not sure if it is free. (It may require polygon account?)
+Getting a precise historical time may be weird. They give 2 yrs data in 24 slices.
 @author: Mike Petersen
 @creation_date:2018-12-11
 Calls the RESTapi for intraday. There is a limit on the free API of 5 calls per minute

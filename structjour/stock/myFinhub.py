@@ -192,6 +192,7 @@ def resample(df, minutes, resolution):
 
 
 def trimit(df, maDict, start, end, meta):
+    '''Use utilities.trimit instead.'''
     start = pd.Timestamp(start).tz_localize(df.index[0].tzinfo)
     end = pd.Timestamp(end).tz_localize(df.index[0].tzinfo)
     if start > df.index[0]:
@@ -210,7 +211,7 @@ def trimit(df, maDict, start, end, meta):
         for ma in maDict:
             maDict[ma] = maDict[ma].loc[maDict[ma].index <= end]
         if len(df) < 1:
-            msg = f"Tou have sliced off all the data with the end date {end}"
+            msg = f"You have sliced off all the data with the end date {end}"
             logging.warning(msg)
             meta = {}
             meta['code'] = 666

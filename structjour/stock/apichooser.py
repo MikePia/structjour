@@ -28,6 +28,7 @@ from structjour.stock.utilities import checkForIbapi, getLimitReached, ManageKey
 from structjour.stock import myalphavantage as mav
 from structjour.stock import mybarchart as bc
 from structjour.stock import myFinhub as fh
+from structjour.stock.mytiingo import get_intraday as get_tgo_intraday
 if checkForIbapi():
     from structjour.stock import myib as ib
 
@@ -35,8 +36,9 @@ if checkForIbapi():
 class APIChooser:
     def __init__(self, apiset, orprefs=None, keydict={}):
         '''
-        The currenly supported apis are barchart, alphavantage, finnhub and ibapi
-        These are represented by the tokens bc, av, fh, and ib
+        The currenly supported apis are barchart, alphavantage, finnhub,
+        tiingo and ibapi
+        These are represented by the tokens bc, av, fh, tgo and ib
         :params apiset: QSettings with key 'APIPref'
         :params orprefs: List: Override the api prefs in settings
         '''
@@ -134,9 +136,9 @@ class APIChooser:
             suggestedApis = []
             violatedRules.append('No data is available for the future.')
         # Rule No 6 Don't call barchart if there is no apikey in settings
-        # Rule No 6 Don't call WorldTradeDate if there is no apikey in settings
         # Rule No 6 Don't call alphavantage if there is no apikey in settings
         # Rule No 6 Don't call finnhub if there is no api key in settings
+        # Rule No 6 Don't call tiingo if there is no api key in settings
         # mk = ManageKeys()
         # bc_key = mk.getKey('bc')
         # av_key = mk.getKey('av')
@@ -151,6 +153,9 @@ class APIChooser:
         if not self.keydict['fh'] and 'fh' in suggestedApis:
             suggestedApis.remove('fh')
             violatedRules.append('There is no apikey in the database for finnhub')
+        if not self.keydict['tgo'] and 'tgo' in suggestedApis:
+            suggestedApis.remove('tgo')
+            violatedRules.append('There is no apikey in the database for tiingo')
 
         # Rule No 7 API limit has been reached [bc, av, fh]
         deleteme = []
@@ -184,6 +189,8 @@ class APIChooser:
             return ib.getib_intraday
         if self.api == 'fh':
             return fh.getFh_intraday
+        if self.api == 'tgo':
+            return get_tgo_intraday
 
         return None
 

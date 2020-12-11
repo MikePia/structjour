@@ -56,8 +56,12 @@ def setLimitReached(token, resetTime, settings=None):
 
 
 def getLimitReached(token, settings=None):
-    if token not in ['av', 'bc', 'fh']:
+
+    if token not in ['av', 'bc', 'fh', 'tgo']:
         raise ValueError(f'Not a valid stock api token: {token}')
+    if token == 'tgo':
+        # Tiingo limit is 500/hr, 20k/month. For now while building it, treat as no limit
+        return False
     if settings is None:
         settings = QSettings('zero_substance/stockapi', 'structjour')
 
@@ -154,10 +158,11 @@ def vwap(df, bd=None):
     return dfv['VWAP']
 
 
-def excludeAfterHours():
+def excludeAfterHours(string=False):
     chartSet = QSettings('zero_substance/chart', 'structjour')
-    val = chartSet.value('afterhours', False, type=bool)
-    return val
+    if string:
+        return chartSet.value('afterhours', 'false')
+    return chartSet.value('afterhours', False, type=bool)
 
 
 def movingAverage(values, df, beginDay=None):
@@ -297,6 +302,7 @@ class ManageKeys:
         keydict['bc'] = self.getKey('bc')
         keydict['av'] = self.getKey('av')
         keydict['fh'] = self.getKey('fh')
+        keydict['tgo'] = self.getKey('tgo')
         return keydict
 
     def getDB(self):
@@ -310,7 +316,7 @@ class ManageKeys:
         ModelBase.connect(new_session=True)
 
         ModelBase.createAll()
-        curapis = ['fh', 'av', 'bc']      # When this info changes, Use the apisettings control to abstract the data
+        curapis = ['fh', 'av', 'bc', 'tgo']      # When this info changes, Use the apisettings control to abstract the data
         addit = False
         for api in curapis:
             key = ApiKey.getKey(api, keyonly=False)
@@ -401,6 +407,24 @@ def checkForIbapi():
     except ImportError:
         apisettings.setValue('gotibapi', False)
         return False
+
+def dictDate2NYTime(d):
+    '''
+    Get the offset for ny time on the last index time and set
+    the date values to a naive Timestamp adjusted from Grenwich (Aware) to NY Naive
+    Note this returns the time index in terms of the end time. 
+    :params d: A list of dict that includes 'date' as a key
+    '''
+    # Creates an aware ts from date string 
+    end = pd.Timestamp(d[-1]['date'])
+    # Gets the delta for end in NY tz
+    delt = pd.Timestamp(end.strftime('%Y-%m-%d %H:%M:%S'), tz='US/Eastern').utcoffset() 
+    # add the delta to each date and create a naive ts 
+    for t in d:
+        newdate = pd.Timestamp(t['date'])
+        t['date'] = pd.Timestamp(newdate.strftime('%Y-%m-%d %H:%M:%S')) + delt
+    return d
+    
 
 
 def notmain():

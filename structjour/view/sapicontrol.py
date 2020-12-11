@@ -34,7 +34,7 @@ from structjour.stock.utilities import ManageKeys, checkForIbapi
 class StockApi(QDialog):
     '''
     [ibRealPort, ibRealId, ibPaperPort, ibPaperId, ibRealCb, ibPaperCb, bcCb,
-    avCb, fhCb, APIPref]
+    avCb, fhCb, tgoCb, APIPref]
     The api keys are held in the database
     '''
     def __init__(self, settings, db=None):
@@ -57,6 +57,9 @@ class StockApi(QDialog):
         self.ui.ibRealId.editingFinished.connect(self.setIbRealId)
         self.ui.ibPaperPort.editingFinished.connect(self.setIbPaperPort)
         self.ui.ibPaperId.editingFinished.connect(self.setIbPaperId)
+
+        self.ui.tgoCb.clicked.connect(self.setTgoCb)
+        self.ui.tgoKey.editingFinished.connect(self.setTgoKey)
 
         self.ui.bcCb.clicked.connect(self.setBcCb)
         self.ui.bcKey.editingFinished.connect(self.setBcKey)
@@ -105,6 +108,12 @@ class StockApi(QDialog):
 
         val = self.apiset.value('ibPaperCb', False, bool)
         self.ui.ibPaperCb.setChecked(val)
+
+        val = self.apiset.value('tgoCb', False, bool)
+        self.ui.tgoCb.setChecked(val)
+
+        val = self.mk.getKey('tgo')
+        self.ui.tgoKey.setText(val)
 
         val = self.apiset.value('bcCb', False, bool)
         self.ui.bcCb.setChecked(val)
@@ -202,6 +211,19 @@ class StockApi(QDialog):
             newul = self.setAPIPrefFromList(ulist)
             self.ui.APIPref.setText(newul)
 
+    def setTgoCb(self, b):
+        '''
+        Check or uncheck the tgo checkbox and append or remove 'tgo' from the pref list
+        '''
+        self.apiset.setValue('tgoCb', b)
+        self.appendOrRemoveAPI('tgo', b)
+        self.sortIt('tgo')
+
+    def setTgoKey(self):
+        val = self.ui.tgoKey.text()
+        self.mk.updateKey('tgo', val)
+
+
     def setBcCb(self, b):
         '''
         Check or uncheck the bc checkbox and append or remove 'bc' from the pref list
@@ -263,7 +285,7 @@ class StockApi(QDialog):
         '''
         ulist = strPref.split(',')
         ulist = [x.strip() for x in ulist]
-        if not set(ulist).issubset(set(['bc', 'ib', 'av', 'fh'])):
+        if not set(ulist).issubset(set(['bc', 'ib', 'av', 'fh', 'tgo'])):
             self.ui.APIPref.setStyleSheet('color: red;')
             return
         else:
@@ -271,7 +293,8 @@ class StockApi(QDialog):
         wdict = {'bc': self.ui.bcCb, 
                  'av': self.ui.avCb,
                  'ib': [self.ui.ibRealCb, self.ui.ibPaperCb],
-                 'fh': self.ui.fhCb}
+                 'fh': self.ui.fhCb,
+                 'tgo': self.ui.tgoCb}
         for token in ulist:
             if token == 'ib':
                 if not wdict[token][0].isChecked and not wdict[token][1].isChecked():
@@ -295,6 +318,11 @@ class StockApi(QDialog):
                 self.ui.APIPref.setStyleSheet('color: red;')
                 return
             compareList.append('ib')
+        if 'tgo' in ulist:
+            if not self.ui.tgoCb.isChecked():
+                self.ui.APIPref.setStyleSheet('color: red;')
+                return
+            compareList.append('tgo')
         if 'bc' in ulist:
             if not self.ui.bcCb.isChecked():
                 self.ui.APIPref.setStyleSheet('color: red;')

@@ -235,8 +235,9 @@ def main():
     '''Local runs for debugging'''
     symbol = 'SQ'
     showUrl = True
-    end = '2020-01-28 15:30'
-    start = pd.Timestamp('2020-01-27')
+    end = pd.Timestamp.today() - pd.Timedelta(days=1)
+    start = end - pd.Timedelta(days=7)
+
     minutes = 1
     meta, d, daMas = getbc_intraday(symbol, start=start, end=end, minutes=minutes, showUrl=showUrl)
     print(len(d))

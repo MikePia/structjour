@@ -102,6 +102,7 @@ class FinPlot:
         self.markercolordown = self.chartSet.value('markercolordown', 'r')
         self.interactive = self.chartSet.value('interactive', False, bool)
         self.legend = self.chartSet.value('showlegend', False, bool)
+        self.max_candles = 500
 
         # Pieces of the file name for the next FinPlot graph, format and base should rarely change.
         p = self.apiset.value('APIPref')
@@ -270,6 +271,9 @@ class FinPlot:
                 self.apiset.setValue('errorMessage', meta['message'])
             return None
         df['date'] = df.index
+        if len(df.index) > self.max_candles:
+            print(f"Your graph would have {len(df.index)} candles. Please limit the dates or increse the candle size")
+            return None
 
         df['date'] = df['date'].map(mdates.date2num)
 
@@ -405,7 +409,14 @@ class FinPlot:
 
 def localRun():
     '''Just running through the paces'''
-    pass
+    from structjour.stock.apichooser import APIChooser
+
+    apiset = QSettings('zero_substance/stockapi', 'structjour')
+    chooser = APIChooser(apiset)
+
+    fp = FinPlot()
+    fp.graph_candlestick('AAPL', chooser, start="2020-12-01", minutes=60)
+
 
 
 if __name__ == '__main__':
