@@ -307,10 +307,7 @@
          <bool>true</bool>
         </property>
         <property name="toolTip">
-         <string>&lt;h2&gt;To use Finnhub APIs get a free API key from&lt;/h2&gt;
-&lt;p&gt;
-&lt;a href=&quot;https://finnhub.io/&quot;&gt;https://finnhub.io &lt;/a&gt;
-&lt;span style=&quot; font-size:11pt;&quot;&gt;The data is realtime Historical data Data limts are 60 calls per minute. AND data is available ro 20 years! This seems too good to be true.&lt;/span&gt;&lt;/p&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;h2 style=&quot; margin-top:16px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:x-large; font-weight:600;&quot;&gt;To use Tiingo APIs get a free API key from&lt;/span&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;https://finnhub.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://api.tiingo.com/ &lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;The data is realtime Historical data. Data limts for the free account are 20,000 calls per month. Need to test how far back the access goes for the free plan but they claim 50+ years of history.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Tiingo</string>

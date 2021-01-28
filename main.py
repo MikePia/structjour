@@ -19,8 +19,20 @@ Created on Apr 1, 2019
 
 @author: Mike Petersen
 '''
+import argparse
 from structjour.view.runtrade import main
+from structjour.version import version
 
+p = argparse.ArgumentParser()
+p.add_argument('-v', '--version', action="store_true") 
+args = p.parse_args()
+
+def runit():
+    if args.version:
+        print(version)
+    return
+
+    main()
 
 if __name__ == '__main__':
-    main()
+    runit()
