@@ -28,11 +28,11 @@ def getApiKey():
     return key
 
 
-KEY = getApiKey()
 docs = 'https://api.tiingo.com/documentation/general/overview'
 developers = 'https://api.tiingo.com/documentation/appendix/developers'
 
-HEADERS = {'Content-Type': 'application/json', 'Authorization' : 'Token '+ KEY}
+def getHeaders():
+    return {'Content-Type': 'application/json', 'Authorization' : 'Token '+ getApiKey()}
 
 
 def getLimits():
@@ -44,7 +44,7 @@ def getLimits():
     MaX Requests per Dat 20K
     '''
 
-# requestResponse = requests.get("https://api.tiingo.com/api/test/", headers=HEADERS)
+# requestResponse = requests.get("https://api.tiingo.com/api/test/", headers=getHeaders())
 # print(requestResponse.json())
 
 # Endpoints
@@ -64,21 +64,21 @@ class Tingo_REST(StockApi):
 
     def getMetadata(self, ticker):
         md = TGO_URL_METADATA.format(ticker=ticker)
-        r = requests.get(md, headers=HEADERS)
+        r = requests.get(md, headers=getHeaders())
         if r.status_code != 200:
             return {r.status_code: r.text}
         return r.json()
 
     def getLatestprice(self, ticker):
         lp = TGO_URL_LATESTPRICE.format(ticker=ticker)
-        r = requests.get(lp, headers=HEADERS)
+        r = requests.get(lp, headers=getHeaders())
         if r.status_code != 200:
             return {r.status_code: r.text}
         return r.json()
 
     def getHistoricalDailyPrice(self, ticker, start, end):
         hp = TGO_URL_HISTPRICE.format(ticker=ticker, sd="2019-1-1", ed="2020-12-1")
-        r = requests.get(hp, headers=HEADERS)
+        r = requests.get(hp, headers=getHeaders())
         if r.status_code != 200:
             return {r.status_code: r.text}
         return r.json()
@@ -109,11 +109,11 @@ class Tingo_REST(StockApi):
         params['afterHours'] = 'false' if excludeAfterHours() else 'true'
         params['forceFill'] = 'true'
         params['format'] = 'json'
-        # params['token'] = KEY
+        # params['token'] = getApiKey
         params['columns'] = "date,open,high,low,close,volume"
 
 
-        r = requests.get(hd, params=params, headers=HEADERS)
+        r = requests.get(hd, params=params, headers=getHeaders())
 
         meta = {'code': r.status_code}
         if r.status_code != 200:

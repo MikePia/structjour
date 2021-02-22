@@ -57,7 +57,7 @@ class Migrate(StatementDB):
             msg = f"Database connection is not setup correctly: {cls.settings.value('tradeDb')}"
             # logging.error(msg)
             print(msg)
-            cls.settings.remove('tradeDb')
+            # cls.settings.remove('tradeDb')
             # raise ValueError(msg)
         else:
             print(f"Ready to update the database: {cls.settings.value('tradeDb')}")

@@ -334,6 +334,9 @@ class SumControl(QMainWindow):
         loaded for each file name
         '''
         outdir = self.getOutdir()
+        savename = self.settings.value('infile')
+        if not savename:
+            return ''
         savename = os.path.splitext(self.settings.value('infile'))[0] + '.zst'
         outpathfile = os.path.normpath(os.path.join(outdir, savename))
         return outpathfile

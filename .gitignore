@@ -30,3 +30,4 @@ structjour.log
 venv/
 *.reg
 loadold.py
+journaldir

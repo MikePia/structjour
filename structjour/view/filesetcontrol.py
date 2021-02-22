@@ -177,8 +177,8 @@ class FileSetCtrl(QDialog):
 
     def tradeDbBrowse(self):
         '''
-        Open a file dialog and set the results to the tradeDbEdit
-        '''
+            Open a file dialog and set the results to the tradeDbEdit
+            '''
         jdir = self.settings.value('journal')
         path = QFileDialog.getSaveFileName(self, "Select trade db", jdir,
                                            f'Sqlite db(*db *.sqlite *.sqlite3 *.db3))',

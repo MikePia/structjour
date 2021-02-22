@@ -21,7 +21,7 @@ sqlalchemy models for strategy tables
 @creation_date: April 17, 2020
 '''
 
-# import logging
+import logging
 
 from PyQt5.QtCore import QSettings
 from sqlalchemy.ext.declarative import declarative_base
@@ -98,5 +98,9 @@ class ModelBase:
     @classmethod
     def createAll(cls):
         if cls.engine is None:
-            raise ValueError('ModelBase.connect() must be called prior to createAll()')
+            msg = "Unable to create database. Connection has not been created"
+            print(msg)
+            logging.error(msg + "\nThis error may have occured before the logging file is set up")
+            # raise ValueError('ModelBase.connect() must be called prior to createAll()')
+            return
         Base.metadata.create_all(cls.engine)

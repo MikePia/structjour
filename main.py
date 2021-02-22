@@ -19,6 +19,7 @@ Created on Apr 1, 2019
 
 @author: Mike Petersen
 '''
+import structjour.setupstructjour
 import argparse
 from structjour.view.runtrade import main
 from structjour.version import version
@@ -30,7 +31,7 @@ args = p.parse_args()
 def runit():
     if args.version:
         print(version)
-    return
+        return
 
     main()
 

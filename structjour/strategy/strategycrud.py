@@ -35,6 +35,17 @@ class StrategyCrud:
     (structjourDb.sqlite in journal dir as pointed to by QSettings key 'structjourDb).
     To run tests either backup db or manipulate QSettings var.
     '''
+    def __init__(self, create=False, db=None):
+        self.settings = QSettings('zero_substance', 'structjour')
+        self.apiset = QSettings('zero_substance/stockapi', 'structjour')
+        self.db = db
+        if not self.db:
+            self.db = self.settings.value('structjourDb')
+
+        if self.db or create:
+            self.createTables()
+
+
     def createTables(self):
         ModelBase.connect(new_session=True, db='structjourDb')
         ModelBase.createAll()
