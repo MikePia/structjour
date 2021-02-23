@@ -165,7 +165,6 @@ class Inspire(Base):
         ModelBase.connect(new_session=True)
         session = ModelBase.session
         q = session.query(Inspire).order_by(func.random()).first()
-        print(q)
         return q
     
 

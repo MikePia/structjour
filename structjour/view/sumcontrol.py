@@ -378,7 +378,6 @@ class SumControl(QMainWindow):
         '''
         if self.lf is None:
             return
-        print('Getpnl in tto')
         if d is None:
             d = self.settings.value('theDate')
         d = qtime2pd(d)
@@ -1383,8 +1382,8 @@ class SumControl(QMainWindow):
         return inpath
 
     def getOutdir(self):
-        '''Return the location of outdir as found in self.settings'''
-        return self.settings.value('outdir', '')
+        '''Return the location of outdir'''
+        return self.settings.value('outdir')
 
     # =================================================================
     # ==================== File setting dialog  methods ===============
