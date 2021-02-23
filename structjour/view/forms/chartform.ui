@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../images/ZSLogo.png</normaloff>../images/ZSLogo.png</iconset>
+    <normaloff>../../images/ZSLogo.png</normaloff>../../images/ZSLogo.png</iconset>
   </property>
   <widget class="Line" name="line_15">
    <property name="geometry">
@@ -152,7 +152,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="markerColorUp"/>
+           <widget class="QLineEdit" name="markerColorUp">
+            <property name="text">
+             <string>green</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -191,7 +195,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="markerColorDown"/>
+           <widget class="QLineEdit" name="markerColorDown">
+            <property name="text">
+             <string>red</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -230,7 +238,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="markerEdgeColor"/>
+           <widget class="QLineEdit" name="markerEdgeColor">
+            <property name="text">
+             <string>black</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -272,6 +284,9 @@
            <widget class="QLineEdit" name="markerAlpha">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Values between 0 and 1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>.7</string>
             </property>
            </widget>
           </item>
@@ -340,7 +355,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="colorUp"/>
+           <widget class="QLineEdit" name="colorUp">
+            <property name="text">
+             <string>green</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -379,7 +398,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="colorDown"/>
+           <widget class="QLineEdit" name="colorDown">
+            <property name="text">
+             <string>red</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -534,6 +557,9 @@
                 <property name="text">
                  <string>9 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -550,7 +576,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart1MA1Color"/>
+               <widget class="QLineEdit" name="chart1MA1Color">
+                <property name="text">
+                 <string>red</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -579,6 +609,9 @@
                 <property name="text">
                  <string>20 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -595,7 +628,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart1MA2Color"/>
+               <widget class="QLineEdit" name="chart1MA2Color">
+                <property name="text">
+                 <string>blue</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -624,6 +661,9 @@
                 <property name="text">
                  <string>50 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -640,7 +680,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart1MA3Color"/>
+               <widget class="QLineEdit" name="chart1MA3Color">
+                <property name="text">
+                 <string>black</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -669,6 +713,9 @@
                 <property name="text">
                  <string>200 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -685,7 +732,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart1MA4Color"/>
+               <widget class="QLineEdit" name="chart1MA4Color">
+                <property name="text">
+                 <string>green</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -695,6 +746,9 @@
                <widget class="QCheckBox" name="chart1VWAP">
                 <property name="text">
                  <string>VWAP</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -712,7 +766,11 @@
                </spacer>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart1VWAPColor"/>
+               <widget class="QLineEdit" name="chart1VWAPColor">
+                <property name="text">
+                 <string>violet</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -763,6 +821,9 @@
                 <property name="text">
                  <string>9 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -779,7 +840,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart2MA1Color"/>
+               <widget class="QLineEdit" name="chart2MA1Color">
+                <property name="text">
+                 <string>red</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -808,6 +873,9 @@
                 <property name="text">
                  <string>20 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -824,7 +892,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart2MA2Color"/>
+               <widget class="QLineEdit" name="chart2MA2Color">
+                <property name="text">
+                 <string>blue</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -853,6 +925,9 @@
                 <property name="text">
                  <string>50 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -869,7 +944,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart2MA3Color"/>
+               <widget class="QLineEdit" name="chart2MA3Color">
+                <property name="text">
+                 <string>black</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -898,6 +977,9 @@
                 <property name="text">
                  <string>200 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -914,7 +996,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart2MA4Color"/>
+               <widget class="QLineEdit" name="chart2MA4Color">
+                <property name="text">
+                 <string>green</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -924,6 +1010,9 @@
                <widget class="QCheckBox" name="chart2VWAP">
                 <property name="text">
                  <string>VWAP</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -941,7 +1030,11 @@
                </spacer>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart2VWAPColor"/>
+               <widget class="QLineEdit" name="chart2VWAPColor">
+                <property name="text">
+                 <string>violet</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1002,6 +1095,9 @@
                 <property name="text">
                  <string>9 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -1018,7 +1114,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart3MA1Color"/>
+               <widget class="QLineEdit" name="chart3MA1Color">
+                <property name="text">
+                 <string>red</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1047,6 +1147,9 @@
                 <property name="text">
                  <string>20 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -1063,7 +1166,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart3MA2Color"/>
+               <widget class="QLineEdit" name="chart3MA2Color">
+                <property name="text">
+                 <string>blue</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1092,6 +1199,9 @@
                 <property name="text">
                  <string>50 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -1108,7 +1218,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart3MA3Color"/>
+               <widget class="QLineEdit" name="chart3MA3Color">
+                <property name="text">
+                 <string>black</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1137,6 +1251,9 @@
                 <property name="text">
                  <string>200 EMA</string>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
               <item>
@@ -1153,7 +1270,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart3MA4Color"/>
+               <widget class="QLineEdit" name="chart3MA4Color">
+                <property name="text">
+                 <string>green</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -1163,6 +1284,9 @@
                <widget class="QCheckBox" name="chart3VWAP">
                 <property name="text">
                  <string>VWAP</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1180,7 +1304,11 @@
                </spacer>
               </item>
               <item>
-               <widget class="QLineEdit" name="chart3VWAPColor"/>
+               <widget class="QLineEdit" name="chart3VWAPColor">
+                <property name="text">
+                 <string>violet</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
