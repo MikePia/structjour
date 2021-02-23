@@ -25,6 +25,7 @@ import os
 import sys
 
 import pandas as pd
+import structjour.setupstructjour
 from PyQt5.QtCore import QDate, QDateTime, QSettings
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QStyleFactory, QMessageBox, QInputDialog, QLineEdit
@@ -90,6 +91,8 @@ class runController:
         self.sc.theDateChanged(val)
         if self.sc.ui.useDatabase.isChecked() and self.gotTrades():
             self.runnit()
+            outdir = os.path.join(self.sc.getDirectory(), 'out')
+            self.settings.setValue('outdir', outdir)
 
     def initialize(self):
         '''
@@ -116,7 +119,7 @@ class runController:
         self.positions = self.settings.value('dasInfile2')
 
         # end blitz
-        self.infile = self.settings.value(inkey)
+        self.infile = self.settings.value(inkey, "")
         self.inpathfile = self.ui.infileEdit.text()
         if os.path.splitext(self.inpathfile)[1].lower() == ".csv":
             self.infile = os.path.split(self.inpathfile)[1]
