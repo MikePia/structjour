@@ -20,6 +20,7 @@ doodles
 *.sql*
 *.db
 *.txt
+!requirements.txt
 .coverage
 *.zst
 *egg-info*

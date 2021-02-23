@@ -31,19 +31,18 @@ setuptools.setup(
         'Operating System :: Microsoft :: Windows'
     ],
     install_requires=[
-        'requests',
-        'Pillow',
-        'numpy>=1.16.0',
-        'pandas>=0.24.0',
-        'matplotlib>=3.1.0',
-        'sqlalchemy>=1.3.16',
-        'seaborn>=0.9.0',
-        'PyQtWebEngine>=5.12.1',
-        'PyQt5>=5.13.0',
-        'pyqt5-sip',
-        'openpyxl>=2.5.14',
-        'beautifulsoup4>=4.7.1',
-        'mpl-finance==0.10.0'
+        'requests==2.25.1',
+        'Pillow==8.1.0',
+        'numpy==1.20.1',
+        'pandas==1.2.2',
+        'matplotlib==3.3.4',
+        'SQLAlchemy==1.3.23',
+        'PyQtWebEngine==5.15.2',
+        'PyQt5==5.15.2',
+        'PyQt5-sip==12.8.1',
+        'openpyxl==3.0.6',
+        'beautifulsoup4==4.9.3',
+        'mplfinance'
     ],
     include_package_data=True,
 

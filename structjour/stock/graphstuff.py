@@ -33,7 +33,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import markers, style
 from matplotlib.ticker import FuncFormatter
-from mpl_finance import candlestick_ohlc
+# from mpl_finance import candlestick_ohlc
+from mplfinance.original_flavor import candlestick_ohlc
 from pandas.plotting import register_matplotlib_converters
 from PyQt5.QtCore import QSettings
 
