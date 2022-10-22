@@ -39,10 +39,11 @@ class FileSetCtrl(QDialog):
     The file settings dialog. Top level dialg triggered by File->FileSettings menu. Display
     the current settings (QSetting), define the dialog actions, and store the new settings.
     '''
-    def __init__(self, settings):
+    def __init__(self, settings, initialize=False):
         super().__init__(parent=None)
 
         self.settings = settings
+        self.initialize = initialize
 
         # Create the dialog; retrieve and set the settings
         fui = FileSettingsDlg()
@@ -443,6 +444,14 @@ class FileSetCtrl(QDialog):
         else:
             self.fui.journal.setStyleSheet("color: green;")
             self.settings.setValue('journal', path)
+        if self.initialize and self.settings.value('journal'):
+            self.setDASInfileDefault()
+            self.setDASInfile2Default()
+            self.setIBInfileName()
+            self.fui.structjourDbEdit.setText(os.path.join(self.settings.value('journal'), 'structjour.sqlite'))
+            self.fui.tradeDbEdit.setText(os.path.join(self.settings.value('journal'), 'trade.sqlite'))
+
+    
 
     # ============== DUPLICATED WHILE MOVING STUFF ================== FIX LATER  or not =======
     # It is convenient having these two nudgy accessors in a more central object. duplication
