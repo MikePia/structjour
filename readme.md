@@ -1,3 +1,5 @@
+https://img.shields.io/pypi/dm/structjour
+
 # Structjour - A Structured Daily Journal for Day Traders of Stock Equities
 https://github.com/MikePia/structjour
 
