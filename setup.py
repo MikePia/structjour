@@ -33,7 +33,7 @@ setuptools.setup(
     install_requires=[
         'requests==2.25.1',
         'Pillow==8.1.1',
-        'numpy==1.20.1',
+        'numpy==1.22.0',
         'pandas==1.2.2',
         'matplotlib==3.3.4',
         'SQLAlchemy==1.3.23',
