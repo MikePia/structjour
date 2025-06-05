@@ -383,6 +383,8 @@ class IbSettings:
             elif ibPaper:
                 self.ibPort = self.apiset.value('ibPaperPort', 4001, int)
                 self.ibId = self.apiset.value('ibPaperId', 7979, int)
+            else:
+                logging.warning("Ib values are not set, could not set the port")
 
     def getIbSettings(self):
         # TODO abstrast host like port and id-- set it in the stockapi dialog
