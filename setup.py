@@ -31,7 +31,7 @@ setuptools.setup(
         'Operating System :: Microsoft :: Windows'
     ],
     install_requires=[
-        'requests==2.25.1',
+        'requests==2.31.0',
         'Pillow==8.1.1',
         'numpy==1.20.1',
         'pandas==1.2.2',
